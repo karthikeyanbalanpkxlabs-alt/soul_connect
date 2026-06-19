@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/karthikeyanbalan/Development/POC/Sashti/sashti/src/pages)"
+    ],
+    "additionalDirectories": [
+      "/Users/karthikeyanbalan/Development/POC/Sashti/sashti/src"
+    ]
+  }
+}
