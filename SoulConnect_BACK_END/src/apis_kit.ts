@@ -154,44 +154,6 @@ mongoose
   })
   .catch((error) => console.error("❌ MongoDB connection error:", error));
 
-// -----------------------------------
-
-// GET /api/customer_list for frontend compatibility (protected by keycloak)
-app.get(
-  "/api/customer_list",
-  keycloak.protect(),
-  async (req: Request, res: Response) => {
-    const token = (req as any).kauth?.grant?.access_token?.content;
-    const keycloakId = token?.sub;
-
-    if (!keycloakId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    try {
-      const email = token?.email;
-      let customer = await Customers.findOne({ keycloakId });
-
-      if (!customer && email) {
-        customer = await Customers.findOne({ email });
-        if (customer) {
-          await Customers.updateOne({ _id: customer._id }, { $set: { keycloakId } });
-          customer.keycloakId = keycloakId;
-        }
-      }
-
-      if (customer) {
-        res.json(customer);
-      } else {
-        res.json(null);
-      }
-    } catch (err) {
-      console.error("MongoDB Fetch Error:", err);
-      res.status(500).json({ error: "Database error during fetch" });
-    }
-  },
-);
-
 // Helper handlers to be reused for both Keycloak-protected and public endpoints
 async function handleCustomerList(req: Request, res: Response) {
   try {
