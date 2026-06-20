@@ -10,14 +10,15 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const memoryStore = new express_session_1.default.MemoryStore();
 const keycloakConfig = {
-    realm: process.env.KEYCLOAK_REALM || "saas-realm",
-    "auth-server-url": process.env.KEYCLOAK_URL || "http://localhost:4000",
+    realm: process.env.KEYCLOAK_REALM,
+    "auth-server-url": process.env.KEYCLOAK_URL,
     "ssl-required": "external",
-    resource: process.env.KEYCLOAK_CLIENT_ID || "saas-backend",
+    resource: process.env.KEYCLOAK_CLIENT_ID,
     credentials: {
-        secret: process.env.KEYCLOAK_CLIENT_SECRET || "secret",
+        secret: process.env.KEYCLOAK_CLIENT_SECRET,
     },
     "confidential-port": 0,
+    "bearer-only": true,
 };
 exports.keycloak = new keycloak_connect_1.default({ store: memoryStore }, keycloakConfig);
 exports.sessionStore = memoryStore;

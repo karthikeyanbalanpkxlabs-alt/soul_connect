@@ -5,6 +5,8 @@ import { keycloak, sessionStore } from "./keycloak-config";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
+const nodemailer = require("nodemailer");
+import { Resend } from "resend";
 // import KcAdminClient from '@keycloak/keycloak-admin-client'
 import fs from "fs";
 import path from "path";
@@ -111,13 +113,15 @@ const seedCustomers = async () => {
   try {
     const count = await Customers.countDocuments();
     if (count === 0) {
-      console.log("🌱 Customers collection is empty. Seeding from sample_customer.json...");
+      console.log(
+        "🌱 Customers collection is empty. Seeding from sample_customer.json...",
+      );
       const pathsToTry = [
         path.join(__dirname, "sample_customer.json"),
         path.join(__dirname, "../src/sample_customer.json"),
         path.join(__dirname, "../sample_customer.json"),
         path.join(process.cwd(), "src/sample_customer.json"),
-        path.join(process.cwd(), "sample_customer.json")
+        path.join(process.cwd(), "sample_customer.json"),
       ];
       let filePath = "";
       for (const p of pathsToTry) {
@@ -136,9 +140,13 @@ const seedCustomers = async () => {
           return cust;
         });
         await Customers.insertMany(processedData);
-        console.log(`✅ Successfully seeded ${processedData.length} customers!`);
+        console.log(
+          `✅ Successfully seeded ${processedData.length} customers!`,
+        );
       } else {
-        console.warn("⚠️ Seed file sample_customer.json not found in search paths.");
+        console.warn(
+          "⚠️ Seed file sample_customer.json not found in search paths.",
+        );
       }
     }
   } catch (err) {
@@ -149,7 +157,9 @@ const seedCustomers = async () => {
 mongoose
   .connect(MONGODB_URL, { dbName: "soul_connect_india" })
   .then(() => {
-    console.log("✅ Successfully connected to MongoDB Atlas (soul_connect_india)");
+    console.log(
+      "✅ Successfully connected to MongoDB Atlas (soul_connect_india)",
+    );
     seedCustomers();
   })
   .catch((error) => console.error("❌ MongoDB connection error:", error));
@@ -179,17 +189,29 @@ app.get(
       if (customer) {
         console.log(`✅ Customer found by keycloakId: ${keycloakId}`);
       } else {
-        console.log(`🔍 Customer not found by keycloakId. Searching by email: [${email}]...`);
+        console.log(
+          `🔍 Customer not found by keycloakId. Searching by email: [${email}]...`,
+        );
         if (email) {
           customer = await Customers.findOne({ email });
           if (customer) {
-            console.log(`✅ Customer found by email. Linking keycloakId: ${keycloakId}`);
-            await Customers.updateOne({ _id: customer._id }, { $set: { keycloakId } });
+            console.log(
+              `✅ Customer found by email. Linking keycloakId: ${keycloakId}`,
+            );
+            await Customers.updateOne(
+              { _id: customer._id },
+              { $set: { keycloakId } },
+            );
             customer.keycloakId = keycloakId;
           } else {
-            console.log(`❌ Customer not found by email: [${email}] in database.`);
-            const dbEmails = await Customers.find({}, 'email').limit(10);
-            console.log(`📋 Existing customer emails in DB (up to 10):`, dbEmails.map(c => c.email));
+            console.log(
+              `❌ Customer not found by email: [${email}] in database.`,
+            );
+            const dbEmails = await Customers.find({}, "email").limit(10);
+            console.log(
+              `📋 Existing customer emails in DB (up to 10):`,
+              dbEmails.map((c) => c.email),
+            );
           }
         } else {
           console.warn("⚠️ Token email field is undefined!");
@@ -219,7 +241,9 @@ async function handleCustomerList(req: Request, res: Response) {
     res.json(list);
   } catch (err: any) {
     console.error("customer_list error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch customer list" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch customer list" });
   }
 }
 
@@ -232,7 +256,10 @@ async function handleCustomerDetail(req: Request, res: Response) {
     else if (email) query.email = email;
     else if (keycloakId) query.keycloakId = keycloakId;
     else {
-      return res.status(400).json({ error: "Missing identifier (id, customer_id, email, or keycloakId) in request body" });
+      return res.status(400).json({
+        error:
+          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+      });
     }
 
     const customer = await Customers.findOne(query);
@@ -242,7 +269,9 @@ async function handleCustomerDetail(req: Request, res: Response) {
     res.json(customer);
   } catch (err: any) {
     console.error("customer_detail error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch customer detail" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch customer detail" });
   }
 }
 
@@ -255,7 +284,10 @@ async function handleCustomerEdit(req: Request, res: Response) {
     else if (email) query.email = email;
     else if (keycloakId) query.keycloakId = keycloakId;
     else {
-      return res.status(400).json({ error: "Missing identifier (id, customer_id, email, or keycloakId) in request body" });
+      return res.status(400).json({
+        error:
+          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+      });
     }
 
     // Map camelCase fields to snake_case if present to align with database naming
@@ -269,13 +301,17 @@ async function handleCustomerEdit(req: Request, res: Response) {
     const customer = await Customers.findOneAndUpdate(
       query,
       { $set: updateFields },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!customer) {
       return res.status(404).json({ error: "Customer not found" });
     }
-    res.json({ success: true, message: "Customer updated successfully", customer });
+    res.json({
+      success: true,
+      message: "Customer updated successfully",
+      customer,
+    });
   } catch (err: any) {
     console.error("customer_edit error:", err);
     res.status(500).json({ error: err.message || "Failed to update customer" });
@@ -291,7 +327,10 @@ async function handleCustomerDelete(req: Request, res: Response) {
     else if (email) query.email = email;
     else if (keycloakId) query.keycloakId = keycloakId;
     else {
-      return res.status(400).json({ error: "Missing identifier (id, customer_id, email, or keycloakId) in request body" });
+      return res.status(400).json({
+        error:
+          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+      });
     }
 
     const customer = await Customers.findOneAndDelete(query);
@@ -307,18 +346,28 @@ async function handleCustomerDelete(req: Request, res: Response) {
 
 async function handleCustomerCreate(req: Request, res: Response) {
   try {
-    const { firstName, lastName, first_name, last_name, email, ...otherFields } = req.body;
+    const {
+      firstName,
+      lastName,
+      first_name,
+      last_name,
+      email,
+      ...otherFields
+    } = req.body;
 
     if (email) {
       const existing = await Customers.findOne({ email });
       if (existing) {
-        return res.status(400).json({ error: "Customer with this email already exists" });
+        return res
+          .status(400)
+          .json({ error: "Customer with this email already exists" });
       }
     }
 
     const first = firstName || first_name;
     const last = lastName || last_name;
-    const customer_id = req.body.customer_id || `cid_${new mongoose.Types.ObjectId()}`;
+    const customer_id =
+      req.body.customer_id || `cid_${new mongoose.Types.ObjectId()}`;
 
     const newCustomer = new Customers({
       customer_id,
@@ -327,11 +376,15 @@ async function handleCustomerCreate(req: Request, res: Response) {
       first_name: first,
       last_name: last,
       email,
-      ...otherFields
+      ...otherFields,
     });
 
     await newCustomer.save();
-    res.status(201).json({ success: true, message: "Customer created successfully", customer: newCustomer });
+    res.status(201).json({
+      success: true,
+      message: "Customer created successfully",
+      customer: newCustomer,
+    });
   } catch (err: any) {
     console.error("customer_create error:", err);
     res.status(500).json({ error: err.message || "Failed to create customer" });
@@ -362,6 +415,90 @@ app.get("/api/protected", keycloak.protect(), (req: Request, res: Response) => {
     message: "This is a protected endpoint. You are authenticated!",
     user: (req as any).kauth?.grant?.access_token?.content,
   });
+});
+
+// console.log("USER:", process.env.GMAIL_USER);
+// console.log("PASS:", process.env.GMAIL_PASS?.length);
+
+// const transporter = nodemailer.createTransport({
+//   // secure: true,
+//   // host: 'smtp.gmail.com',
+//   // port: 465,
+//   service: "gmail",
+//   auth: {
+//     user: process.env.GMAIL_USER || "karthikeyanbalan.pklabs@gmail.com",
+//     pass: process.env.GMAIL_PASS || "qizzdwxyqgvdykrv",
+//   },
+// });
+
+// transporter
+//   .verify()
+//   .then(() => console.log("Email Connected"))
+//   .catch((err: any) => console.error("Email Connection error :", err?.message));
+
+// app.post("/api/send-email-gmail", async (req, res) => {
+//   const { to, subject, message } = req.body;
+
+//   try {
+//     console.log(to, subject, message);
+//     await transporter.sendMail({
+//       // from: process.env.GMAIL_USER || 'karthikeyanbalan.pklabs@gmail.com',
+//       to,
+//       subject,
+//       html: `<h1>${message}</h1>`,
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Email sent successfully",
+//     });
+//   } catch (error: any) {
+//     res.status(500).json({
+//       success: false,
+//       error: error?.message,
+//     });
+//   }
+// });
+
+const resend = new Resend(
+  process.env.RESEND_API_KEY || "re_BTQAxNCr_DnGTK7KM7SAY4rpVq6aGorD2",
+);
+app.post("/api/send-email", async (req, res) => {
+  const { to, subject, message } = req.body;
+
+  console.log("resend mail loaded!!! sending to:", to);
+
+  try {
+    const { data, error } = await resend.emails.send({
+      // from: process.env.RESEND_FROM || "onboarding@resend.dev",
+      from: "karthikeyanbalan.pkxlabs@gmail.com",
+      to: to,
+      subject: subject || "Hello World",
+      html: message
+        ? `<h1>${message}</h1>`
+        : `<p>Congrats on sending your <strong>first email</strong>!</p>`,
+    });
+
+    if (error) {
+      console.error("Resend send error:", error);
+      return res.status(400).json({
+        success: false,
+        error: error.message || error,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Email sent successfully",
+      data,
+    });
+  } catch (error: any) {
+    console.error("Resend exception:", error);
+    res.status(500).json({
+      success: false,
+      error: error?.message,
+    });
+  }
 });
 
 app.listen(PORT, () => {
