@@ -39,7 +39,7 @@ app.use(
 // --- KEYCLOAK ADMIN CLIENT SETUP ---
 const kcAdminClient = new KeycloakAdminClient({
   baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
-  realmName: process.env.KEYCLOAK_REALM || "sashti",
+  realmName: process.env.KEYCLOAK_REALM || "soul_connect",
 });
 
 const connectAdminClient = async () => {
@@ -183,6 +183,7 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
     if (customer_type) {
       list = await list?.filter((itm: any) => itm?.public_verify);
     }
+
     res.json(list);
   } catch (err: any) {
     console.error("customer_list error:", err);
@@ -546,6 +547,201 @@ app.post("/api/send-email", async (req, res) => {
     });
   }
 });
+
+/* USER MODULE */
+
+// --- USER INFO CRUD API ---
+const userInfoSchema = new mongoose.Schema(
+  {
+    keycloakId: { type: String, unique: true }, // Linking to Keycloak ID
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    role: { type: String, default: "User" },
+    status: { type: String, default: "Active" },
+  },
+  { collection: "user_info", timestamps: true },
+);
+
+const UserInfo = mongoose.model("UserInfo", userInfoSchema);
+
+app.get(
+  "/api/users",
+  keycloak.protect(),
+  async (req: Request, res: Response) => {
+    try {
+      const users = await UserInfo.find({}).sort({ createdAt: -1 });
+      res.json(users);
+    } catch (err) {
+      console.error("Fetch Users Error:", err);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  },
+);
+
+const handleUserCreate = () => {};
+app.post(
+  "/api/users",
+  keycloak.protect(),
+  async (req: Request, res: Response) => {
+    const { firstName, lastName, email, role, status } = req.body;
+    console.log("🚀 Attempting to create user:", email);
+    try {
+      const kcAdminClient = new KeycloakAdminClient({
+        baseUrl: "http://localhost:4000",
+        realmName: "master", // Admin API auth usually goes through master
+      });
+
+      await kcAdminClient.auth({
+        username: "admin",
+        password: "admin",
+        grantType: "password",
+        clientId: "admin-cli",
+      });
+
+      kcAdminClient.setConfig({
+        realmName: process.env.KEYCLOAK_REALM || "soul_connect", // Switch context to our specific realm
+      });
+
+      // 1. Create User in Keycloak
+
+      const kcUser = await kcAdminClient.users.create({
+        username: firstName,
+        email,
+        firstName,
+        lastName,
+        enabled: true,
+        emailVerified: true,
+        credentials: [
+          {
+            type: "password",
+            value: "password@123",
+            temporary: false,
+          },
+        ],
+      });
+
+      // const kcUser = await kcAdminClient.users.create({
+      //   username: email,
+      //   email,
+      //   firstName,
+      //   lastName,
+      //   enabled: status === "Active",
+      //   emailVerified: true,
+      // });
+
+      const keycloakId = kcUser.id;
+      console.log("✅ User created in Keycloak, ID:", keycloakId);
+
+      // 2. Map role in Keycloak (Optional, can be expanded to Keycloak roles)
+
+      // 3. Save User in MongoDB linked by Keycloak ID
+      const newUser = new UserInfo({
+        keycloakId,
+        firstName,
+        lastName,
+        email,
+        role,
+        status,
+      });
+      await newUser.save();
+      console.log("✅ User saved in MongoDB");
+
+      res.json(newUser);
+    } catch (err: any) {
+      console.error("❌ Create User Error Detaiils:");
+      if (err.response) {
+        console.error("Keycloak Status Code:", err.response.status);
+        console.error("Keycloak Error Message:", err.response.data);
+      } else {
+        console.error("Error Message:", err.message);
+        console.error("Stack Trace:", err.stack);
+      }
+
+      const message =
+        err.response?.data?.errorMessage ||
+        err.message ||
+        "Failed to create user";
+      res.status(500).json({ error: message });
+    }
+  },
+);
+
+app.put(
+  "/api/users/:id",
+  keycloak.protect(),
+  async (req: Request, res: Response) => {
+    const { firstName, lastName, email, role, status } = req.body;
+
+    try {
+      // 1. Get user from MongoDB
+      const user = await UserInfo.findById(req.params.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found in DB" });
+      }
+
+      // 2. Initialize Keycloak Admin Client
+      const kcAdminClient = new KeycloakAdminClient({
+        baseUrl: "http://127.0.0.1:4000",
+        realmName: "master",
+      });
+
+      await kcAdminClient.auth({
+        username: "admin",
+        password: "admin",
+        grantType: "password",
+        clientId: "admin-cli",
+      });
+
+      kcAdminClient.setConfig({
+        realmName: process.env.KEYCLOAK_REALM || "soul_connect",
+      });
+
+      // 3. Ensure we have Keycloak ID
+      let keycloakId = user.keycloakId;
+
+      if (!keycloakId) {
+        const kcUsers = await kcAdminClient.users.find({ email });
+
+        if (!kcUsers.length) {
+          return res.status(404).json({ error: "User not found in Keycloak" });
+        }
+
+        keycloakId = kcUsers[0].id;
+
+        // Save it for future use
+        user.keycloakId = keycloakId;
+        await user.save();
+      }
+
+      // 4. Update user in Keycloak
+      await kcAdminClient.users.update(
+        { id: keycloakId as string },
+        {
+          firstName,
+          lastName,
+          email,
+          enabled: status === "Active",
+        },
+      );
+
+      // 5. Update user in MongoDB
+      const updatedUser = await UserInfo.findByIdAndUpdate(
+        req.params.id,
+        { firstName, lastName, email, role, status },
+        { new: true },
+      );
+
+      return res.json(updatedUser);
+    } catch (err: any) {
+      console.error("Update User Error:", err.response?.data || err.message);
+
+      return res.status(err.response?.status || 500).json({
+        error: err.response?.data || "Failed to update user",
+      });
+    }
+  },
+);
 
 app.listen(PORT, () => {
   console.log(`Backend is running on http://localhost:${PORT}`);
