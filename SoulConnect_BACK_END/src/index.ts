@@ -276,6 +276,67 @@ async function handleCustomerDetail(req: Request, res: Response) {
   }
 }
 
+function processUploadedImages(imagesInput: any[], req: Request): any[] | string {
+  const savedImages = [];
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  for (let i = 0; i < imagesInput.length; i++) {
+    const item = imagesInput[i];
+    let imgStr = "";
+
+    if (typeof item === "string") {
+      imgStr = item;
+    } else if (item && typeof item === "object" && typeof item.url === "string") {
+      imgStr = item.url;
+    } else {
+      return `Invalid image item structure at index ${i}. Expected string or object with url property.`;
+    }
+
+    // If it's already a hosted URL (does not start with data:), just preserve it
+    if (imgStr.startsWith("http://") || imgStr.startsWith("https://") || (!imgStr.startsWith("data:") && imgStr.length < 200)) {
+      savedImages.push({
+        url: imgStr,
+        default: true,
+      });
+      continue;
+    }
+
+    try {
+      const matches = imgStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      let ext = "png";
+      let data = imgStr;
+
+      if (matches && matches.length === 3) {
+        const mimeType = matches[1];
+        data = matches[2];
+        const parts = mimeType.split("/");
+        if (parts.length === 2) {
+          ext = parts[1];
+        }
+      }
+
+      const buffer = Buffer.from(data, "base64");
+      const filename = `img_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.${ext}`;
+      const filepath = path.join(uploadDir, filename);
+      fs.writeFileSync(filepath, buffer);
+
+      const host = req.get("host");
+      const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
+      savedImages.push({
+        url: imageUrl,
+        default: true,
+      });
+    } catch (err: any) {
+      return `Failed to process image ${i + 1}: ${err.message}`;
+    }
+  }
+
+  return savedImages;
+}
+
 async function handleCustomerEdit(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
@@ -297,6 +358,25 @@ async function handleCustomerEdit(req: Request, res: Response) {
     }
     if (updateFields.lastName && !updateFields.last_name) {
       updateFields.last_name = updateFields.lastName;
+    }
+
+    // Check if images are being updated
+    const imagesInput = updateFields.image || updateFields.images;
+    if (imagesInput !== undefined) {
+      if (!Array.isArray(imagesInput)) {
+        return res.status(400).json({ error: "Invalid image upload. Expected array." });
+      }
+      if (imagesInput.length < 1 || imagesInput.length > 3) {
+        return res.status(400).json({ error: "Invalid image upload. Must upload minimum 1 and maximum 3 images." });
+      }
+      const processed = processUploadedImages(imagesInput, req);
+      if (typeof processed === "string") {
+        return res.status(400).json({ error: processed });
+      }
+      updateFields.image = processed;
+      if (updateFields.images) {
+        delete updateFields.images;
+      }
     }
 
     const customer = await Customers.findOneAndUpdate(
@@ -359,51 +439,21 @@ async function handleCustomerCreate(req: Request, res: Response) {
     } = req.body;
 
     const imagesInput = image || images;
-    if (!imagesInput || !Array.isArray(imagesInput) || imagesInput.length < 1 || imagesInput.length > 3) {
-      return res
-        .status(400)
-        .json({ error: "Invalid image upload. Must upload minimum 1 and maximum 3 images." });
+    if (
+      !imagesInput ||
+      !Array.isArray(imagesInput) ||
+      imagesInput.length < 1 ||
+      imagesInput.length > 3
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid image upload. Must upload minimum 1 and maximum 3 images.",
+      });
     }
 
-    const savedImages = [];
-    const uploadDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    for (let i = 0; i < imagesInput.length; i++) {
-      const imgStr = imagesInput[i];
-      if (typeof imgStr !== "string") {
-        return res.status(400).json({ error: "Invalid image format. Expected base64 string." });
-      }
-      try {
-        const matches = imgStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-        let ext = "png";
-        let data = imgStr;
-
-        if (matches && matches.length === 3) {
-          const mimeType = matches[1];
-          data = matches[2];
-          const parts = mimeType.split("/");
-          if (parts.length === 2) {
-            ext = parts[1];
-          }
-        }
-
-        const buffer = Buffer.from(data, "base64");
-        const filename = `img_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.${ext}`;
-        const filepath = path.join(uploadDir, filename);
-        fs.writeFileSync(filepath, buffer);
-
-        const host = req.get("host");
-        const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
-        savedImages.push({
-          url: imageUrl,
-          default: true,
-        });
-      } catch (err: any) {
-        return res.status(400).json({ error: `Failed to process image ${i + 1}: ${err.message}` });
-      }
+    const processed = processUploadedImages(imagesInput, req);
+    if (typeof processed === "string") {
+      return res.status(400).json({ error: processed });
     }
 
     if (email) {
@@ -427,7 +477,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       first_name: first,
       last_name: last,
       email,
-      image: savedImages,
+      image: processed,
       ...otherFields,
     });
 

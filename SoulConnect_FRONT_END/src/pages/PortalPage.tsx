@@ -102,21 +102,24 @@ function PortalPage() {
           partner_preference: "NA",
           subscription_type: "guest",
           subscription_view_access: 4,
-          // image: [
-          //   {
-          //     url: "",
-          //     default: true,
-          //   },
-          // ],
+          image: [
+            {
+              url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              default: true,
+            },
+            {
+              url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+            },
+          ],
           video: "",
           transaction: [],
           public_verify: true,
           keycloakId: dataGenerateId,
           firstName: "John",
           lastName: "Doe",
-          image: [
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-          ],
+          // image: [
+          //   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          // ],
         }),
       })
         .then((r) => r.json())
