@@ -5,9 +5,9 @@ import { keycloak, sessionStore } from "./keycloak-config";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
-const nodemailer = require("nodemailer");
+
 import { Resend } from "resend";
-// import KcAdminClient from '@keycloak/keycloak-admin-client'
+
 import fs from "fs";
 import path from "path";
 
@@ -92,8 +92,6 @@ app.use(keycloak.middleware());
 // --- MONGODB CLUSTER INTEGRATION ---
 const MONGODB_URL =
   "mongodb+srv://karthimailu_db_user:Rma1zgLmDktUJ3yD@soulconnectcluster.uszzhth.mongodb.net/soul_connect_india";
-// const MONGODB_URL =
-//   "mongodb+srv://admin:admin@simba-cluster.wv87zgs.mongodb.net/Simba_Sample";
 
 const customerSchema = new mongoose.Schema(
   {
@@ -108,6 +106,13 @@ const customerSchema = new mongoose.Schema(
 );
 
 const Customers = mongoose.model("Customers", customerSchema);
+
+const subscriptionSchema = new mongoose.Schema(
+  {},
+  { collection: "subscription", strict: false },
+);
+
+const Subscription = mongoose.model("Subscription", subscriptionSchema);
 
 // Seeding function from sample_customer.json if database is empty
 const seedCustomers = async () => {
@@ -167,70 +172,6 @@ mongoose
 
 // -----------------------------------
 
-// GET /api/customer_list for frontend compatibility (protected by keycloak)
-app.get(
-  "/api/customer_list",
-  keycloak.protect(),
-  async (req: Request, res: Response) => {
-    const token = (req as any).kauth?.grant?.access_token?.content;
-    const keycloakId = token?.sub;
-
-    if (!keycloakId) {
-      console.warn("⚠️ GET /api/customer_list - No keycloakId found in token!");
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    console.log(`📡 GET /api/customer_list requested.`);
-    console.log(`🔑 Decoded Keycloak Token:`, JSON.stringify(token, null, 2));
-
-    try {
-      const email = token?.email;
-      let customer = await Customers.findOne({ keycloakId });
-
-      if (customer) {
-        console.log(`✅ Customer found by keycloakId: ${keycloakId}`);
-      } else {
-        console.log(
-          `🔍 Customer not found by keycloakId. Searching by email: [${email}]...`,
-        );
-        if (email) {
-          customer = await Customers.findOne({ email });
-          if (customer) {
-            console.log(
-              `✅ Customer found by email. Linking keycloakId: ${keycloakId}`,
-            );
-            await Customers.updateOne(
-              { _id: customer._id },
-              { $set: { keycloakId } },
-            );
-            customer.keycloakId = keycloakId;
-          } else {
-            console.log(
-              `❌ Customer not found by email: [${email}] in database.`,
-            );
-            const dbEmails = await Customers.find({}, "email").limit(10);
-            console.log(
-              `📋 Existing customer emails in DB (up to 10):`,
-              dbEmails.map((c) => c.email),
-            );
-          }
-        } else {
-          console.warn("⚠️ Token email field is undefined!");
-        }
-      }
-
-      if (customer) {
-        res.json(customer);
-      } else {
-        res.json(null);
-      }
-    } catch (err) {
-      console.error("MongoDB Fetch Error:", err);
-      res.status(500).json({ error: "Database error during fetch" });
-    }
-  },
-);
-
 // Helper handlers to be reused for both Keycloak-protected and public endpoints
 async function handleCustomerList(req: Request, res: Response) {
   try {
@@ -276,7 +217,10 @@ async function handleCustomerDetail(req: Request, res: Response) {
   }
 }
 
-function processUploadedImages(imagesInput: any[], req: Request): any[] | string {
+function processUploadedImages(
+  imagesInput: any[],
+  req: Request,
+): any[] | string {
   const savedImages = [];
   const uploadDir = path.join(process.cwd(), "uploads");
   if (!fs.existsSync(uploadDir)) {
@@ -289,18 +233,30 @@ function processUploadedImages(imagesInput: any[], req: Request): any[] | string
 
     if (typeof item === "string") {
       imgStr = item;
-    } else if (item && typeof item === "object" && typeof item.url === "string") {
+    } else if (
+      item &&
+      typeof item === "object" &&
+      typeof item.url === "string"
+    ) {
       imgStr = item.url;
     } else {
       return `Invalid image item structure at index ${i}. Expected string or object with url property.`;
     }
 
+    const isDefault =
+      item && typeof item === "object" ? item.default === true : i === 0;
+
     // If it's already a hosted URL (does not start with data:), just preserve it
-    if (imgStr.startsWith("http://") || imgStr.startsWith("https://") || (!imgStr.startsWith("data:") && imgStr.length < 200)) {
-      savedImages.push({
-        url: imgStr,
-        default: true,
-      });
+    if (
+      imgStr.startsWith("http://") ||
+      imgStr.startsWith("https://") ||
+      (!imgStr.startsWith("data:") && imgStr.length < 200)
+    ) {
+      const imgObj: any = { url: imgStr };
+      if (isDefault) {
+        imgObj.default = true;
+      }
+      savedImages.push(imgObj);
       continue;
     }
 
@@ -325,10 +281,11 @@ function processUploadedImages(imagesInput: any[], req: Request): any[] | string
 
       const host = req.get("host");
       const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
-      savedImages.push({
-        url: imageUrl,
-        default: true,
-      });
+      const imgObj: any = { url: imageUrl };
+      if (isDefault) {
+        imgObj.default = true;
+      }
+      savedImages.push(imgObj);
     } catch (err: any) {
       return `Failed to process image ${i + 1}: ${err.message}`;
     }
@@ -364,10 +321,15 @@ async function handleCustomerEdit(req: Request, res: Response) {
     const imagesInput = updateFields.image || updateFields.images;
     if (imagesInput !== undefined) {
       if (!Array.isArray(imagesInput)) {
-        return res.status(400).json({ error: "Invalid image upload. Expected array." });
+        return res
+          .status(400)
+          .json({ error: "Invalid image upload. Expected array." });
       }
       if (imagesInput.length < 1 || imagesInput.length > 3) {
-        return res.status(400).json({ error: "Invalid image upload. Must upload minimum 1 and maximum 3 images." });
+        return res.status(400).json({
+          error:
+            "Invalid image upload. Must upload minimum 1 and maximum 3 images.",
+        });
       }
       const processed = processUploadedImages(imagesInput, req);
       if (typeof processed === "string") {
@@ -493,12 +455,26 @@ async function handleCustomerCreate(req: Request, res: Response) {
   }
 }
 
+async function handleSubscriptionGet(req: Request, res: Response) {
+  try {
+    const subscriptions = await Subscription.find({});
+    res.json(subscriptions);
+  } catch (err: any) {
+    console.error("subscription get error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch subscriptions" });
+  }
+}
+
 // --- CUSTOMER APIs (With Keycloak Access / Protected) ---
 app.post("/api/customer_list", keycloak.protect(), handleCustomerList);
 app.post("/api/customer_detail", keycloak.protect(), handleCustomerDetail);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
+app.get("/api/subscription", keycloak.protect(), handleSubscriptionGet);
+app.get("/api/subscriptions", keycloak.protect(), handleSubscriptionGet);
 
 // --- CUSTOMER APIs (Without Keycloak Access / Public) ---
 app.post("/api/public/customer_list", handleCustomerList);
@@ -506,6 +482,8 @@ app.post("/api/public/customer_detail", handleCustomerDetail);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);
+app.get("/api/public/subscription", handleSubscriptionGet);
+app.get("/api/public/subscriptions", handleSubscriptionGet);
 app.get("/api/public", (req: Request, res: Response) => {
   res.json({
     message: "This is a public endpoint. No authentication required.",
@@ -518,49 +496,6 @@ app.get("/api/protected", keycloak.protect(), (req: Request, res: Response) => {
     user: (req as any).kauth?.grant?.access_token?.content,
   });
 });
-
-// console.log("USER:", process.env.GMAIL_USER);
-// console.log("PASS:", process.env.GMAIL_PASS?.length);
-
-// const transporter = nodemailer.createTransport({
-//   // secure: true,
-//   // host: 'smtp.gmail.com',
-//   // port: 465,
-//   service: "gmail",
-//   auth: {
-//     user: process.env.GMAIL_USER || "karthikeyanbalan.pklabs@gmail.com",
-//     pass: process.env.GMAIL_PASS || "qizzdwxyqgvdykrv",
-//   },
-// });
-
-// transporter
-//   .verify()
-//   .then(() => console.log("Email Connected"))
-//   .catch((err: any) => console.error("Email Connection error :", err?.message));
-
-// app.post("/api/send-email-gmail", async (req, res) => {
-//   const { to, subject, message } = req.body;
-
-//   try {
-//     console.log(to, subject, message);
-//     await transporter.sendMail({
-//       // from: process.env.GMAIL_USER || 'karthikeyanbalan.pklabs@gmail.com',
-//       to,
-//       subject,
-//       html: `<h1>${message}</h1>`,
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Email sent successfully",
-//     });
-//   } catch (error: any) {
-//     res.status(500).json({
-//       success: false,
-//       error: error?.message,
-//     });
-//   }
-// });
 
 const resend = new Resend(
   process.env.RESEND_API_KEY || "re_BTQAxNCr_DnGTK7KM7SAY4rpVq6aGorD2",

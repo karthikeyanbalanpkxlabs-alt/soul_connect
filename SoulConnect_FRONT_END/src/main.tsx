@@ -4,15 +4,17 @@ import "./index.css";
 import App from "./App.tsx";
 import keycloak from "./keycloak";
 
-const pageLoad = () =>
-  createRoot(document.getElementById("root")!).render(
+const pageLoad = () => {
+  console.log("Trigger pageLoad ");
+  return createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <App />
-    </StrictMode>
+    </StrictMode>,
   );
+};
+
 const load = () => {
   const { pathname = "" } = window.location || {};
-
   if (pathname.includes("portal")) {
     keycloak
       .init({

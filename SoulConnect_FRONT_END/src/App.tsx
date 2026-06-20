@@ -6,6 +6,7 @@ import PortalCustomerPage from "./pages/PortalCustomerPage";
 import "./App.css";
 
 function App() {
+  console.log("Loaded!!");
   return (
     <BrowserRouter>
       <Routes>
