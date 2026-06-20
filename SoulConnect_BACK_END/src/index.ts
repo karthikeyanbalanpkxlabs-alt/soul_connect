@@ -173,13 +173,16 @@ mongoose
 // -----------------------------------
 
 // Helper handlers to be reused for both Keycloak-protected and public endpoints
-async function handleCustomerList(req: Request, res: Response) {
+async function handleCustomerList(req: Request, res: Response, type: any) {
   try {
     const filter = req.body.filter || {};
+    const customer_type = req.body.customer_type || false;
     const limit = parseInt(req.body.limit) || 100;
     const skip = parseInt(req.body.skip) || 0;
-
-    const list = await Customers.find(filter).skip(skip).limit(limit);
+    let list = await Customers.find(filter).skip(skip).limit(limit);
+    if (customer_type) {
+      list = await list?.filter((itm: any) => itm?.public_verify);
+    }
     res.json(list);
   } catch (err: any) {
     console.error("customer_list error:", err);
@@ -468,7 +471,11 @@ async function handleSubscriptionGet(req: Request, res: Response) {
 }
 
 // --- CUSTOMER APIs (With Keycloak Access / Protected) ---
-app.post("/api/customer_list", keycloak.protect(), handleCustomerList);
+app.post(
+  "/api/customer_list",
+  keycloak.protect(),
+  (req: Request, res: Response) => handleCustomerList(req, res, "protected"),
+);
 app.post("/api/customer_detail", keycloak.protect(), handleCustomerDetail);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
@@ -477,7 +484,9 @@ app.get("/api/subscription", keycloak.protect(), handleSubscriptionGet);
 app.get("/api/subscriptions", keycloak.protect(), handleSubscriptionGet);
 
 // --- CUSTOMER APIs (Without Keycloak Access / Public) ---
-app.post("/api/public/customer_list", handleCustomerList);
+app.post("/api/public/customer_list", (req: Request, res: Response) =>
+  handleCustomerList(req, res, "public"),
+);
 app.post("/api/public/customer_detail", handleCustomerDetail);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);

@@ -52,6 +52,7 @@ function PortalPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
+        // body: JSON.stringify({ customer_type: true }),
       })
         .then((r) => r.json())
         .then((data) => console.log("customer_list data response:", data))
