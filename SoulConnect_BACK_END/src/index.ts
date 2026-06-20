@@ -25,6 +25,7 @@ app.use(
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(
   session({
@@ -352,8 +353,58 @@ async function handleCustomerCreate(req: Request, res: Response) {
       first_name,
       last_name,
       email,
+      image,
+      images,
       ...otherFields
     } = req.body;
+
+    const imagesInput = image || images;
+    if (!imagesInput || !Array.isArray(imagesInput) || imagesInput.length < 1 || imagesInput.length > 3) {
+      return res
+        .status(400)
+        .json({ error: "Invalid image upload. Must upload minimum 1 and maximum 3 images." });
+    }
+
+    const savedImages = [];
+    const uploadDir = path.join(process.cwd(), "uploads");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    for (let i = 0; i < imagesInput.length; i++) {
+      const imgStr = imagesInput[i];
+      if (typeof imgStr !== "string") {
+        return res.status(400).json({ error: "Invalid image format. Expected base64 string." });
+      }
+      try {
+        const matches = imgStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        let ext = "png";
+        let data = imgStr;
+
+        if (matches && matches.length === 3) {
+          const mimeType = matches[1];
+          data = matches[2];
+          const parts = mimeType.split("/");
+          if (parts.length === 2) {
+            ext = parts[1];
+          }
+        }
+
+        const buffer = Buffer.from(data, "base64");
+        const filename = `img_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.${ext}`;
+        const filepath = path.join(uploadDir, filename);
+        fs.writeFileSync(filepath, buffer);
+
+        const host = req.get("host");
+        const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
+        savedImages.push({
+          url: imageUrl,
+          default: true,
+        });
+      } catch (err: any) {
+        return res.status(400).json({ error: `Failed to process image ${i + 1}: ${err.message}` });
+      }
+    }
 
     if (email) {
       const existing = await Customers.findOne({ email });
@@ -376,6 +427,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       first_name: first,
       last_name: last,
       email,
+      image: savedImages,
       ...otherFields,
     });
 
