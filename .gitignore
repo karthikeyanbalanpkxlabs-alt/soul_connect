@@ -23,3 +23,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+SoulConnect_BACK_END/src/index.ts

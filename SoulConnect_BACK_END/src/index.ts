@@ -436,8 +436,55 @@ async function handleCustomerCreate(req: Request, res: Response) {
     const customer_id =
       req.body.customer_id || `cid_${new mongoose.Types.ObjectId()}`;
 
+    // Create Keycloak user
+    let keycloakId = undefined;
+    try {
+      const kcAdmin = new KeycloakAdminClient({
+        baseUrl: "http://localhost:4000",
+        realmName: "master",
+      });
+
+      await kcAdmin.auth({
+        username: "admin",
+        password: "admin",
+        grantType: "password",
+        clientId: "admin-cli",
+      });
+
+      kcAdmin.setConfig({
+        realmName: process.env.KEYCLOAK_REALM || "soul_connect",
+      });
+
+      const kcUser = await kcAdmin.users.create({
+        username: first || email,
+        email,
+        firstName: first,
+        lastName: last,
+        enabled: true,
+        emailVerified: true,
+        credentials: [
+          {
+            type: "password",
+            value: "password@123",
+            temporary: false,
+          },
+        ],
+      });
+      keycloakId = kcUser.id;
+      console.log("✅ Inner Keycloak User created with ID:", keycloakId);
+    } catch (kcErr: any) {
+      console.error(
+        "❌ Keycloak user creation failed:",
+        kcErr.response?.data || kcErr.message,
+      );
+      return res.status(400).json({
+        error: `Failed to create Keycloak user: ${kcErr.response?.data?.errorMessage || kcErr.message}`,
+      });
+    }
+
     const newCustomer = new Customers({
       customer_id,
+      keycloakId,
       firstName: first,
       lastName: last,
       first_name: first,
@@ -579,7 +626,6 @@ app.get(
   },
 );
 
-const handleUserCreate = () => {};
 app.post(
   "/api/users",
   keycloak.protect(),
