@@ -401,6 +401,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       email,
       image,
       images,
+      role,
       ...otherFields
     } = req.body;
 
@@ -472,6 +473,45 @@ async function handleCustomerCreate(req: Request, res: Response) {
       });
       keycloakId = kcUser.id;
       console.log("✅ Inner Keycloak User created with ID:", keycloakId);
+
+      if (role) {
+        try {
+          const groups = await kcAdmin.groups.find({ search: role });
+          const targetGroup = groups.find((g: any) => g.name === role);
+          if (targetGroup && targetGroup.id) {
+            await kcAdmin.users.addToGroup({
+              id: keycloakId,
+              groupId: targetGroup.id,
+            });
+            console.log(`✅ Added Keycloak user to group: ${role}`);
+          } else {
+            console.log(`⚠️ Keycloak group not found: ${role}`);
+          }
+        } catch (groupErr: any) {
+          console.error(
+            `❌ Failed to assign group ${role} in Keycloak:`,
+            groupErr.message || groupErr,
+          );
+        }
+
+        try {
+          const realmRole = await kcAdmin.roles.findOneByName({ name: role });
+          if (realmRole && realmRole.id && realmRole.name) {
+            await kcAdmin.users.addRealmRoleMappings({
+              id: keycloakId,
+              roles: [{ id: realmRole.id, name: realmRole.name }],
+            });
+            console.log(`✅ Assigned Keycloak realm role: ${role}`);
+          } else {
+            console.log(`⚠️ Keycloak realm role not found: ${role}`);
+          }
+        } catch (roleErr: any) {
+          console.error(
+            `❌ Failed to assign realm role ${role} in Keycloak:`,
+            roleErr.message || roleErr,
+          );
+        }
+      }
     } catch (kcErr: any) {
       console.error(
         "❌ Keycloak user creation failed:",
@@ -491,6 +531,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       last_name: last,
       email,
       image: processed,
+      role,
       ...otherFields,
     });
 
