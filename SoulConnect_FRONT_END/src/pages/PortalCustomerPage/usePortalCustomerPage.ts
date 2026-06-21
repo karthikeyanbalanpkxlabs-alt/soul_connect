@@ -5,7 +5,7 @@ const generateId = () => {
   return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
 };
 
-function usePortalPage() {
+function usePortalCustomerPage() {
   const [getRoles, setRoles] = React.useState<any>("");
   const [loading, setLoading] = React.useState(true);
   const [rows, setRows] = React.useState<any[]>([]);
@@ -374,4 +374,4 @@ function usePortalPage() {
   };
 }
 
-export default usePortalPage;
+export default usePortalCustomerPage;

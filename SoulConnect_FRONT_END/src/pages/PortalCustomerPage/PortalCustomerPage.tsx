@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import videoUrl from "./video.mp4";
 // import DynamicTable from "../components/DynamicTable";
 import DynamicTable from "../../components/DynamicTable";
-import usePortalPage from "./usePortalPage";
+import usePortalPage from "./usePortalCustomerPage";
 
 function PortalPage() {
   const stateProps = usePortalPage();
