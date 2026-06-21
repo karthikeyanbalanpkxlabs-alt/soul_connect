@@ -3,19 +3,24 @@ import LandingPage from "./pages/LandingPage";
 import ProfilePage from "./pages/ProfilePage";
 import PortalPage from "./pages/PortalPage";
 import PortalCustomerPage from "./pages/PortalCustomerPage";
+import Navbar from "./components/Navbar";
+
 import "./App.css";
 
 function App() {
   console.log("Loaded!!");
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/portal" element={<PortalPage />} />
-        <Route path="/portal/customer" element={<PortalCustomerPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <Navbar />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/portal" element={<PortalPage />} />
+          <Route path="/portal/customer" element={<PortalCustomerPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 

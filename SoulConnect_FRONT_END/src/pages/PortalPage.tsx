@@ -230,9 +230,6 @@ function PortalPage() {
         Welcome, {keycloak.tokenParsed?.preferred_username} and your role is{" "}
         {getRoles}
       </p>
-      <button style={{ marginRight: 10 }} onClick={() => keycloak.logout()}>
-        {"Logout"}
-      </button>
       <button
         style={{ marginRight: 10 }}
         onClick={() => navigate("/portal/customer")}

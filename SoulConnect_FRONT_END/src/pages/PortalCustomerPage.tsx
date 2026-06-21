@@ -8,10 +8,6 @@ function PortalCustomerPage() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Customer Page</h1>
-
-      <button style={{ marginRight: 10 }} onClick={() => keycloak.logout()}>
-        Logout
-      </button>
       <button onClick={() => navigate("/portal")}>Back</button>
     </div>
   );

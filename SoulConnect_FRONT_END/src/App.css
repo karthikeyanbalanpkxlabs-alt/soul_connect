@@ -144,7 +144,7 @@ nav {
   align-items: center;
   gap: 1.75rem;
 }
-.nav-links a {
+.nav-links a , .nav-links p{
   font-size: 0.875rem;
   color: var(--ink-60);
   text-decoration: none;
