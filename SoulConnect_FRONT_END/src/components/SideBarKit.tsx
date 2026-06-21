@@ -11,15 +11,14 @@ import {
 } from "lucide-react";
 import keycloak from "../keycloak";
 import { useNavigate } from "react-router-dom";
-// import { useNavigate } from "react-router-dom";
 function SideBarKit() {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
   const menus = [
-    { name: "Landing", icon: Home, router: "/" },
-    { name: "Customer", icon: Users, router: "/customer" },
-    { name: "Settings", icon: Settings },
+    { name: "Landing", icon: Home, router: "/portal" },
+    { name: "Customer", icon: Users, router: "/portal/customer" },
+    { name: "Profile", icon: Settings, router: "/portal/profile" },
   ];
 
   const tokenParsed: any = keycloak?.tokenParsed;
@@ -85,7 +84,7 @@ function SideBarKit() {
                 style={{ cursor: "pointer" }}
                 key={menu.name}
                 className="w-full c-p flex items-center gap-3 px-4 py-3 bg-white transition-colors"
-                // onClick={() => navigate(menu?.router)}
+                onClick={() => navigate(menu?.router)}
               >
                 <Icon size={20} color="#7c3aed" />
                 {!collapsed && (
