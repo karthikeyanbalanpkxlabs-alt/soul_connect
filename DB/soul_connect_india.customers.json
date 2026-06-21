@@ -1,0 +1,46 @@
+[{
+  "_id": {
+    "$oid": "6a3787fa0e97b93c3c622d57"
+  },
+  "keycloakId": "19ee8eb283d98422350",
+  "firstName": "Jessica19ee8eb283d98422350",
+  "lastName": "John19ee8eb283d98422350",
+  "first_name": "Jessica19ee8eb283d98422350",
+  "last_name": "John19ee8eb283d98422350",
+  "email": "john.doe.19ee8eb283d98422350@gmail.com",
+  "customer_id": "cid_19ee8eb283d98422350",
+  "image": [
+    {
+      "url": "http://localhost:3000/uploads/img_1782024185925_0_791.jpeg",
+      "default": true
+    },
+    {
+      "url": "http://localhost:3000/uploads/img_1782024185926_1_715.jpeg"
+    }
+  ],
+  "role": "customer_g",
+  "dob": "02-12-1999",
+  "gender": "female",
+  "phone_number": "8870688606",
+  "phone_code": "+91",
+  "district": "coimbatore",
+  "taluk_town": "r.spuram",
+  "state": "tamilnadu",
+  "zipcode": "641001",
+  "religion": "hindhu",
+  "caste": "bc",
+  "mother_tongue": "tamil",
+  "maritial_status": "unmarried",
+  "education": "ba",
+  "profession": "employee",
+  "annual_income": "10000",
+  "height": "5.2",
+  "about_self": "NA",
+  "partner_preference": "NA",
+  "subscription_type": "guest",
+  "subscription_view_access": 4,
+  "video": "",
+  "transaction": [],
+  "public_verify": true,
+  "__v": 0
+}]

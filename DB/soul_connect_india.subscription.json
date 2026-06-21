@@ -1,0 +1,40 @@
+[{
+  "_id": {
+    "$oid": "6a34f8e0f742fdf3998088ec"
+  },
+  "type": "premium",
+  "name": "connect",
+  "price": "999",
+  "currency_type": "₹",
+  "plan": {
+    "period_type": "month",
+    "period_value": 1
+  },
+  "feature": [
+    {
+      "key": "unlimited_profile",
+      "value": "unlimited profile"
+    }
+  ],
+  "most_popluar": true
+},
+{
+  "_id": {
+    "$oid": "6a34fa85f742fdf3998088ee"
+  },
+  "type": "free",
+  "name": "free",
+  "price": "0",
+  "currency_type": "₹",
+  "plan": {
+    "period_type": "month",
+    "period_value": 1
+  },
+  "feature": [
+    {
+      "key": "unlimited_profile",
+      "value": "unlimited profile"
+    }
+  ],
+  "most_popluar": false
+}]

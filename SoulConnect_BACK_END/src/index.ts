@@ -467,7 +467,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
           {
             type: "password",
             value: "password@123",
-            temporary: false,
+            temporary: true,
           },
         ],
       });

@@ -1,0 +1,25 @@
+{
+  "type": "Compass Connections",
+  "version": {
+    "$numberInt": "1"
+  },
+  "connections": [
+    {
+      "id": "31ac14dc-70cb-4124-8ee2-d9b026d1ab2c",
+      "lastUsed": {
+        "$date": {
+          "$numberLong": "1782024197250"
+        }
+      },
+      "favorite": {
+        "name": "soulconnectcluster.uszzhth.mongodb.net",
+        "color": "color1"
+      },
+      "savedConnectionType": "recent",
+      "connectionOptions": {
+        "connectionString": "mongodb+srv://karthimailu_db_user@soulconnectcluster.uszzhth.mongodb.net/",
+        "oidc": {}
+      }
+    }
+  ]
+}
