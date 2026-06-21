@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 // @ts-ignore
 import videoUrl from "./video.mp4";
 
-
 const generateId = () => {
   return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
 };
@@ -234,16 +233,24 @@ function PortalPage() {
         {getRoles}
       </p>
       <button
-        style={{ marginRight: 10 }}
+        style={{ marginRight: 10, color: "#fff" }}
         onClick={() => navigate("/portal/customer")}
       >
         {"Customer"}
       </button>
-      <button style={{ marginRight: 10 }} onClick={onHandleClickCreateCustomer}>
+      <button
+        style={{ marginRight: 10, color: "#fff" }}
+        onClick={onHandleClickCreateCustomer}
+      >
         + Create Customer
       </button>
       {getRoles?.includes("manager") && (
-        <button onClick={onHandleClickCreateManager}>+ Create Manager</button>
+        <button
+          style={{ marginRight: 10, color: "#fff" }}
+          onClick={onHandleClickCreateManager}
+        >
+          + Create Manager
+        </button>
       )}
     </div>
   );

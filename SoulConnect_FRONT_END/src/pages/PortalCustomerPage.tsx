@@ -8,7 +8,12 @@ function PortalCustomerPage() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Customer Page</h1>
-      <button onClick={() => navigate("/portal")}>Back</button>
+      <button
+        style={{ marginRight: 10, color: "#fff" }}
+        onClick={() => navigate("/portal")}
+      >
+        Back
+      </button>
     </div>
   );
 }
