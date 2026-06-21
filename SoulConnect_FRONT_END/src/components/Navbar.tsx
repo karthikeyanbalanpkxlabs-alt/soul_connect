@@ -1,5 +1,5 @@
 import keycloak from "../keycloak";
-
+import { LogOut } from "lucide-react";
 const Navbar = () => {
   const tokenParsed: any = keycloak?.tokenParsed;
   let roles: any = tokenParsed?.realm_access?.roles || [];
@@ -58,13 +58,19 @@ const Navbar = () => {
               </p>
               <a
                 href="#app"
+                style={{
+                  display: "flex",
+                  marginRight: 10,
+                  alignItems: "center",
+                }}
                 onClick={() =>
                   keycloak.logout({
                     redirectUri: "http://localhost:5173",
                   })
                 }
               >
-                Logout
+                <LogOut size={16} />
+                <span style={{ marginLeft: 8 }}>Logout</span>
               </a>
             </div>
           ) : (

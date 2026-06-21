@@ -1,130 +1,146 @@
 import { useState } from "react";
-import {
-  Home,
-  Users,
-  Settings,
-  Package,
-  BarChart3,
-  Menu,
-  ChevronLeft,
-  LogOut,
-} from "lucide-react";
+import { Home, Users, Settings, Menu, ChevronLeft, LogOut } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import keycloak from "../keycloak";
-import { useNavigate } from "react-router-dom";
+
 function SideBarKit() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [collapsed, setCollapsed] = useState(false);
 
   const menus = [
-    { name: "Landing", icon: Home, router: "/portal" },
-    { name: "Customer", icon: Users, router: "/portal/customer" },
-    { name: "Profile", icon: Settings, router: "/portal/profile" },
+    {
+      name: "Landing",
+      icon: Home,
+      router: "/portal",
+    },
+    {
+      name: "Customer",
+      icon: Users,
+      router: "/portal/customer",
+    },
+    {
+      name: "Profile",
+      icon: Settings,
+      router: "/portal/profile",
+    },
   ];
 
   const tokenParsed: any = keycloak?.tokenParsed;
+
   let roles: any = tokenParsed?.realm_access?.roles || [];
-  roles = roles?.filter(
-    (itm: any) => itm === "manager_admin" || itm === "customer_admin",
+
+  roles = roles.filter(
+    (role: string) => role === "manager_admin" || role === "customer_admin",
   );
-  roles = roles?.length > 0 ? roles[0] : "no_roles";
-  let name = keycloak.tokenParsed?.preferred_username;
-  if (roles?.includes("manager") && location.href.includes("portal")) {
-    return (
+
+  const role = roles.length > 0 ? roles[0] : "no_roles";
+
+  const isPortalUser =
+    role.includes("manager") && window.location.pathname.includes("/portal");
+
+  if (!isPortalUser) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        borderRight: "1px solid var(--border-soft)",
+      }}
+      className={`h-screen bg-white transition-all duration-300
+      ${collapsed ? "w-[100px]" : "w-64"}`}
+    >
+      {/* Header */}
       <div
-        style={{ borderRight: "1px solid var(--border-soft)" }}
-        className={`h-screen bg-white text-white transition-all duration-300
-      ${collapsed ? "w-20" : "w-64"}`}
+        style={{
+          borderBottom: "1px solid var(--border-soft)",
+        }}
+        className="flex items-center justify-between p-4"
       >
-        {/* Logo & Toggle */}
-        <div
-          style={{ borderBottom: "1px solid var(--border-soft)" }}
-          className="flex items-center justify-between p-4  border-slate-700"
-        >
-          <div className="flex items-center gap-3 overflow-hidden">
-            {!collapsed ? (
-              <a href="#" className="nav-logo">
-                Soul<span>Connect</span>
-                <div className="logo-dot"></div>
-              </a>
-            ) : (
-              <a href="#" className="nav-logo">
-                S<span>C</span>
-                <div className="logo-dot"></div>
-              </a>
-            )}
-            {/* <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center font-bold">
-              B
-            </div>
-
-            {!collapsed && (
-              <h1 className="text-lg font-semibold whitespace-nowrap">
-                BK Portal
-              </h1>
-            )} */}
-          </div>
-
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded bg-white hover:bg-white"
-          >
-            {collapsed ? (
-              <Menu color="#7c3aed" size={20} />
-            ) : (
-              <ChevronLeft color="#7c3aed" size={20} />
-            )}
-          </button>
+        <div className="flex items-center overflow-hidden pr-10">
+          {!collapsed ? (
+            <a href="#" className="nav-logo">
+              Soul<span>Connect</span>
+              <div className="logo-dot"></div>
+            </a>
+          ) : (
+            <a href="#" className="nav-logo-mini">
+              S<span>C</span>
+              <div className="logo-dot"></div>
+            </a>
+          )}
         </div>
 
-        {/* Menu */}
-        <div className="mt-4">
-          {menus?.map((menu: any) => {
-            const Icon = menu.icon;
-            return (
-              <div
-                style={{ cursor: "pointer" }}
-                key={menu.name}
-                className="w-full c-p flex items-center gap-3 px-4 py-3 bg-white transition-colors"
-                onClick={() => navigate(menu?.router)}
-              >
-                <Icon size={20} color="#7c3aed" />
-                {!collapsed && (
-                  <span
-                    style={{ color: "#7c3aed" }}
-                    className="text-sm font-medium"
-                  >
-                    {menu.name}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-1 rounded bg-white hover:bg-white"
+        >
+          {collapsed ? (
+            <Menu size={20} className="text-violet-600" />
+          ) : (
+            <ChevronLeft size={20} className="text-violet-600" />
+          )}
+        </button>
+      </div>
 
-          <div
-            key={"Logout"}
-            style={{ cursor: "pointer" }}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-white transition-colors"
-            onClick={() =>
-              keycloak.logout({
-                redirectUri: "http://localhost:5173",
-              })
-            }
-          >
-            <LogOut size={20} color="#7c3aed" />
-            {!collapsed && (
-              <span
-                style={{ color: "#7c3aed" }}
-                className="text-sm font-medium"
-              >
-                {"Logout"}
-              </span>
-            )}
-          </div>
+      {/* Menus */}
+      <div className="mt-4 px-2">
+        {menus.map((menu) => {
+          const Icon = menu.icon;
+
+          const isActive = location.pathname === menu.router;
+
+          return (
+            <div
+              key={menu.name}
+              onClick={() => navigate(menu.router)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 cursor-pointer transition-all duration-200
+                ${
+                  isActive
+                    ? "bg-pink-100 border-r-4 border-pink-500"
+                    : "hover:bg-pink-50"
+                }
+              `}
+            >
+              <Icon
+                size={20}
+                style={{ margin: !collapsed ? 0 : "auto" }}
+                className={isActive ? "text-pink-500" : "text-violet-600"}
+              />
+
+              {!collapsed && (
+                <span
+                  className={`text-sm font-medium
+                    ${isActive ? "text-pink-500" : "text-violet-600"}
+                  `}
+                >
+                  {menu.name}
+                </span>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Logout */}
+        <div
+          onClick={() => keycloak.logout()}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer hover:bg-red-50 transition-all duration-200"
+        >
+          <LogOut
+            style={{ margin: !collapsed ? 0 : "auto" }}
+            size={20}
+            className="text-red-500"
+          />
+
+          {!collapsed && (
+            <span className="text-sm font-medium text-red-500">Logout</span>
+          )}
         </div>
       </div>
-    );
-  } else {
-    return <></>;
-  }
+    </div>
+  );
 }
 
 export default SideBarKit;
