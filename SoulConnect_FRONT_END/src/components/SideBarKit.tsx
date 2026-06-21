@@ -49,8 +49,8 @@ function SideBarKit() {
       style={{
         borderRight: "1px solid var(--border-soft)",
       }}
-      className={`h-screen bg-white transition-all duration-300
-      ${collapsed ? "w-[100px]" : "w-64"}`}
+      className={`relative overflow-hidden h-screen bg-white transition-all duration-300
+      ${collapsed ? "w-[110px]" : "w-64"}`}
     >
       {/* Header */}
       <div
@@ -124,19 +124,27 @@ function SideBarKit() {
         })}
 
         {/* Logout */}
-        <div
-          onClick={() => keycloak.logout()}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer hover:bg-red-50 transition-all duration-200"
-        >
-          <LogOut
-            style={{ margin: !collapsed ? 0 : "auto" }}
-            size={20}
-            className="text-red-500"
-          />
+        <div className="absolute bottom-0 w-[calc(100%-20px)]">
+          <div className="flex flex-col gap-1 px-4 py-2 rounded-lg text-left">
+            <div className="overflow-hidden capitalize">
+              {keycloak.tokenParsed?.preferred_username}
+            </div>
+            <div className="capitalize">{role?.replaceAll("_admin", "")}</div>
+          </div>
+          <div
+            onClick={() => keycloak.logout()}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer hover:bg-red-50 transition-all duration-200"
+          >
+            <LogOut
+              style={{ margin: !collapsed ? 0 : "auto" }}
+              size={20}
+              className="text-red-500"
+            />
 
-          {!collapsed && (
-            <span className="text-sm font-medium text-red-500">Logout</span>
-          )}
+            {!collapsed && (
+              <span className="text-sm font-medium text-red-500">Logout</span>
+            )}
+          </div>
         </div>
       </div>
     </div>

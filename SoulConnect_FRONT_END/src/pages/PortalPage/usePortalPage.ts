@@ -1,15 +1,19 @@
-import keycloak from "../keycloak";
+import keycloak from "../../keycloak";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-// @ts-ignore
-import videoUrl from "./video.mp4";
-
 const generateId = () => {
   return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
 };
 
-function PortalPage() {
+function usePortalPage() {
   const [getRoles, setRoles] = React.useState<any>("");
+  const [loading, setLoading] = React.useState(true);
+  const [rows, setRows] = React.useState<any[]>([]);
+  const [skip, setSkip] = React.useState(0);
+  const [limit, setLimit] = React.useState(10);
+  const [total, setTotal] = React.useState(0);
+  const [filters, setFilters] = React.useState<Record<string, string>>({});
+
   const navigate = useNavigate();
 
   const onHandleClickCreateCustomer = () => {
@@ -18,12 +22,12 @@ function PortalPage() {
 
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
-      first_name: "Jessica" + dataGenerateId,
-      last_name: "John" + dataGenerateId,
-      email: `john.doe.${dataGenerateId}@gmail.com`,
+      first_name: "Karthik" + dataGenerateId,
+      last_name: "balu" + dataGenerateId,
+      email: `[EMAIL_ADDRESS]`,
       role: "customer_g",
       dob: "02-12-1999",
-      gender: "female",
+      gender: "male",
       phone_number: "8870688606",
       phone_code: "+91",
       district: "coimbatore",
@@ -66,7 +70,10 @@ function PortalPage() {
       body: JSON.stringify(createFixture),
     })
       .then((r) => r.json())
-      .then((data) => console.log("customer_create response:", data))
+      .then((data) => {
+        loadCustomers();
+        console.log("customer_create response:", data);
+      })
       .catch((e) => console.error("Error creating customer:", e));
   };
 
@@ -145,6 +152,7 @@ function PortalPage() {
   };
 
   const getCustomerListAPI = () => {
+    setLoading(true);
     if (keycloak.authenticated) {
       const token = keycloak?.token;
       const tokenParsed: any = keycloak.tokenParsed;
@@ -159,16 +167,26 @@ function PortalPage() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        // body: JSON.stringify({}),
         body: JSON.stringify({
           customer_type: roles?.includes("customer"),
-          limit: 10,
-          skip: 0,
+          skip,
+          limit,
+          filters,
         }),
       })
         .then((r) => r.json())
-        .then((data) => console.log("customer_list data response:", data))
-        .catch((e) => console.error("Error fetching customer_list:", e));
+        .then((data) => {
+          setLoading(false);
+          setRows(data?.data);
+          setTotal(data?.total || 0);
+          console.log("customer_list data response:", data);
+        })
+        .catch((e) => {
+          setLoading(false);
+          setRows([]);
+          setTotal(0);
+          console.error("Error fetching customer_list:", e);
+        });
     }
   };
 
@@ -218,42 +236,130 @@ function PortalPage() {
     }
   };
 
+  const columns = [
+    {
+      key: "first_name",
+      label: "First Name",
+      isFilterable: true,
+    },
+    {
+      key: "last_name",
+      label: "Last Name",
+      isFilterable: true,
+    },
+    {
+      key: "email",
+      label: "Email",
+      isFilterable: true,
+    },
+    {
+      key: "public_verify",
+      label: "Approval Type",
+      isFilterable: true,
+    },
+    {
+      key: "subscription_type",
+      label: "Subscription Type",
+      isFilterable: true,
+    },
+    // {
+    //   key: "id",
+    //   label: "ID",
+    // },
+    // {
+    //   key: "name",
+    //   label: "Name",
+    //   isFilterable: true,
+    // },
+
+    // {
+    //   key: "status",
+    //   label: "Status",
+    //   render: (row) => (
+    //     <span
+    //       className={`rounded px-2 py-1 text-xs ${
+    //         row.status === "ACTIVE"
+    //           ? "bg-green-100 text-green-700"
+    //           : "bg-red-100 text-red-700"
+    //       }`}
+    //     >
+    //       {row.status}
+    //     </span>
+    //   ),
+    // },
+  ];
+
+  const loadCustomers = async () => {
+    setLoading(true);
+
+    // API Call
+    // const response = await axios.post("/customers", {
+    //   skip,
+    //   limit,
+    //   filters,
+    // });
+
+    // Demo Data
+    // const data = Array.from({ length: limit }, (_, i) => ({
+    //   id: skip + i + 1,
+    //   name: `Customer ${skip + i + 1}`,
+    //   email: `customer${skip + i + 1}@mail.com`,
+    //   status: i % 2 === 0 ? "ACTIVE" : "INACTIVE",
+    // }));
+
+    // setRows(data);
+    // setTotal(125);
+
+    getCustomerListAPI();
+
+    setLoading(false);
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setSkip(0);
+
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
   React.useEffect(() => {
     getSubscriptionListAPI();
-    getCustomerListAPI();
     getReadyRoleValue();
     getSendMailAPI();
   }, []);
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>PORTAL</h1>
-      <p>
-        Welcome, {keycloak.tokenParsed?.preferred_username} and your role is{" "}
-        {getRoles}
-      </p>
-      <button
-        style={{ marginRight: 10, color: "#fff" }}
-        onClick={() => navigate("/portal/customer")}
-      >
-        {"Customer"}
-      </button>
-      <button
-        style={{ marginRight: 10, color: "#fff" }}
-        onClick={onHandleClickCreateCustomer}
-      >
-        + Create Customer
-      </button>
-      {getRoles?.includes("manager") && (
-        <button
-          style={{ marginRight: 10, color: "#fff" }}
-          onClick={onHandleClickCreateManager}
-        >
-          + Create Manager
-        </button>
-      )}
-    </div>
-  );
+  React.useEffect(() => {
+    loadCustomers();
+  }, [skip, limit, filters]);
+
+  return {
+    getRoles,
+    setRoles,
+    loading,
+    setLoading,
+    rows,
+    setRows,
+    skip,
+    setSkip,
+    limit,
+    setLimit,
+    total,
+    setTotal,
+    filters,
+    setFilters,
+    navigate,
+    onHandleClickCreateCustomer,
+    onHandleClickCreateManager,
+    getSubscriptionListAPI,
+    getCustomerListAPI,
+    getSendMailAPI,
+    getReadyRoleValue,
+    columns,
+    loadCustomers,
+    handleFilterChange,
+  };
 }
 
-export default PortalPage;
+export default usePortalPage;
