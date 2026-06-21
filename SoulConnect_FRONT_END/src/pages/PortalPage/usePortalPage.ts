@@ -177,7 +177,16 @@ function usePortalPage() {
         .then((r) => r.json())
         .then((data) => {
           setLoading(false);
-          setRows(data?.data);
+
+          let dataKit = data?.data;
+          dataKit = dataKit.map((itm: any) => {
+            return {
+              ...itm,
+              approvalStatus:
+                itm?.public_verify === true ? "Approved" : "Wait for approval",
+            };
+          });
+          setRows(dataKit);
           setTotal(data?.total || 0);
           console.log("customer_list data response:", data);
         })
@@ -253,9 +262,9 @@ function usePortalPage() {
       isFilterable: true,
     },
     {
-      key: "public_verify",
-      label: "Approval Type",
-      isFilterable: true,
+      key: "approvalStatus",
+      label: "Approval Status",
+      isFilterable: !true,
     },
     {
       key: "subscription_type",
