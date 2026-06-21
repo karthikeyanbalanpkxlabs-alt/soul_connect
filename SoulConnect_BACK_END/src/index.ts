@@ -306,6 +306,65 @@ function processUploadedImages(
   return savedImages;
 }
 
+function processUploadedVideo(
+  videoInput: any,
+  req: Request,
+): { url: string } | string {
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let vidStr = "";
+
+  if (typeof videoInput === "string") {
+    vidStr = videoInput;
+  } else if (
+    videoInput &&
+    typeof videoInput === "object" &&
+    typeof videoInput.url === "string"
+  ) {
+    vidStr = videoInput.url;
+  } else {
+    return "Invalid video item structure. Expected string or object with url property.";
+  }
+
+  // If it's already a hosted URL (does not start with data:), just preserve it
+  if (
+    vidStr.startsWith("http://") ||
+    vidStr.startsWith("https://") ||
+    (!vidStr.startsWith("data:") && vidStr.length < 200)
+  ) {
+    return { url: vidStr };
+  }
+
+  try {
+    const matches = vidStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    let ext = "mp4";
+    let data = vidStr;
+
+    if (matches && matches.length === 3) {
+      const mimeType = matches[1];
+      data = matches[2];
+      const parts = mimeType.split("/");
+      if (parts.length === 2) {
+        ext = parts[1];
+      }
+    }
+
+    const buffer = Buffer.from(data, "base64");
+    const filename = `vid_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+    fs.writeFileSync(filepath, buffer);
+
+    const host = req.get("host");
+    const videoUrl = `${req.protocol}://${host}/uploads/${filename}`;
+    return { url: videoUrl };
+  } catch (err: any) {
+    return `Failed to process video: ${err.message}`;
+  }
+}
+
 async function handleCustomerEdit(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
@@ -350,6 +409,20 @@ async function handleCustomerEdit(req: Request, res: Response) {
       updateFields.image = processed;
       if (updateFields.images) {
         delete updateFields.images;
+      }
+    }
+
+    // Check if video is being updated
+    const videoInput = updateFields.video;
+    if (videoInput !== undefined) {
+      if (videoInput === null || videoInput === "") {
+        updateFields.video = null;
+      } else {
+        const processed = processUploadedVideo(videoInput, req);
+        if (typeof processed === "string") {
+          return res.status(400).json({ error: processed });
+        }
+        updateFields.video = processed;
       }
     }
 
@@ -409,6 +482,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       email,
       image,
       images,
+      video,
       role,
       ...otherFields
     } = req.body;
@@ -429,6 +503,15 @@ async function handleCustomerCreate(req: Request, res: Response) {
     const processed = processUploadedImages(imagesInput, req);
     if (typeof processed === "string") {
       return res.status(400).json({ error: processed });
+    }
+
+    let processedVideo = undefined;
+    if (video !== undefined && video !== null && video !== "") {
+      const processedVid = processUploadedVideo(video, req);
+      if (typeof processedVid === "string") {
+        return res.status(400).json({ error: processedVid });
+      }
+      processedVideo = processedVid;
     }
 
     if (email) {
@@ -539,6 +622,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       last_name: last,
       email,
       image: processed,
+      video: processedVideo,
       role,
       ...otherFields,
     });
