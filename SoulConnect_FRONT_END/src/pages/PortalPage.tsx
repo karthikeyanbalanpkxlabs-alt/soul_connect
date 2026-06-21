@@ -1,6 +1,9 @@
 import keycloak from "../keycloak";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+// @ts-ignore
+import videoUrl from "./video.mp4";
+
 
 const generateId = () => {
   return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
