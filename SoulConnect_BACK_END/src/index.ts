@@ -179,12 +179,20 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
     const customer_type = req.body.customer_type || false;
     const limit = parseInt(req.body.limit) || 100;
     const skip = parseInt(req.body.skip) || 0;
-    let list = await Customers.find(filter).skip(skip).limit(limit);
+
     if (customer_type) {
-      list = await list?.filter((itm: any) => itm?.public_verify);
+      filter.public_verify = true;
     }
 
-    res.json(list);
+    const total = await Customers.countDocuments(filter);
+    const list = await Customers.find(filter).skip(skip).limit(limit);
+
+    res.json({
+      total,
+      limit,
+      skip,
+      data: list,
+    });
   } catch (err: any) {
     console.error("customer_list error:", err);
     res
