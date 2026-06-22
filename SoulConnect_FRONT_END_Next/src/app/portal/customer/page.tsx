@@ -15,14 +15,16 @@ function PortalPage() {
         <h1 className="text-xl font-bold">Customers</h1>
         <div>
           <button
-            style={{ marginRight: 10, color: "#fff" }}
+            className="color-black"
+            style={{ marginRight: 10, color: "#000000ff" }}
             onClick={stateProps?.onHandleClickCreateCustomer}
           >
             + Create Customer
           </button>
           {stateProps?.getRoles?.includes("manager") && (
             <button
-              style={{ marginRight: 10, color: "#fff" }}
+              className="color-black"
+              style={{ marginRight: 10, color: "#000000ff" }}
               onClick={stateProps?.onHandleClickCreateManager}
             >
               + Create Manager
