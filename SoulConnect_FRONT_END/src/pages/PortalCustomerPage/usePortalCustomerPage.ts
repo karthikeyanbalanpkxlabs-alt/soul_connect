@@ -22,9 +22,9 @@ function usePortalCustomerPage() {
 
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
-      first_name: "Karthik" + dataGenerateId,
-      last_name: "balu" + dataGenerateId,
-      email: `john.doe.${dataGenerateId}@gmail.com`,
+      first_name: "praba" + dataGenerateId,
+      last_name: "nat" + dataGenerateId,
+      email: `praba.nat.${dataGenerateId}@gmail.com`,
       role: "customer_g",
       dob: "02-12-1999",
       gender: "male",

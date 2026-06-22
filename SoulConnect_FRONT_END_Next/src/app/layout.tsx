@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, DM_Sans, Noto_Sans_Tamil } from "next/font/google";
 import "./globals.css";
+import KeycloakProvider from "@/providers/KeycloakProvider";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -23,7 +24,8 @@ const notoTamil = Noto_Sans_Tamil({
 
 export const metadata: Metadata = {
   title: "Soul Connect – Tamil Nadu's Most Trusted Matrimony Platform",
-  description: "Deep compatibility matching powered by psychology — not just horoscopes and biodata. Covering all 38 districts of Tamil Nadu, every community, and every dream.",
+  description:
+    "Deep compatibility matching powered by psychology — not just horoscopes and biodata. Covering all 38 districts of Tamil Nadu, every community, and every dream.",
 };
 
 export default function RootLayout({
