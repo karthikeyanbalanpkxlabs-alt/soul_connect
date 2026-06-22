@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
+
 import Hero from "@/components/Hero";
 import Districts from "@/components/Districts";
 import HowItWorks from "@/components/HowItWorks";
@@ -71,7 +71,6 @@ export default function Home() {
 
   return (
     <>
-      <Navbar />
       <Hero />
       <Districts
         selectedDistrict={selectedDistrict}

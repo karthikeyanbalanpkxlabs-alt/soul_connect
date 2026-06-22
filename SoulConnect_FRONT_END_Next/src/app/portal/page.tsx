@@ -71,8 +71,9 @@ export default function Home() {
 
   return (
     <>
-      <Navbar />
-      <Hero />
+      <VibeMatch showToast={showToast} />
+      {/* <Navbar /> */}
+      {/* <Hero />
       <Districts
         selectedDistrict={selectedDistrict}
         onSelectDistrict={handleSelectDistrict}
@@ -88,12 +89,12 @@ export default function Home() {
         }
         onOpenPayment={handleOpenPayment}
         showToast={showToast}
-      />
-      <Pricing onOpenPayment={handleOpenPayment} />
+      /> */}
+      {/* <Pricing onOpenPayment={handleOpenPayment} />
       <Verification showToast={showToast} />
       <VibeMatch showToast={showToast} />
       <AppDownload />
-      <CTA />
+      <CTA /> */}
       <Footer />
 
       <PaymentModal
