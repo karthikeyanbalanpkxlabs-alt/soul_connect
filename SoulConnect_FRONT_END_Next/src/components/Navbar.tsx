@@ -86,9 +86,14 @@ export default function Navbar(props: any) {
                 </svg>
                 <span>{name + " |"}</span>
               </p>
-              <a
-                href="#app"
+              <div
                 style={{
+                  cursor: "pointer",
+                  color: "var(--ink-60)",
+                  fontSize: ".875rem",
+                  fontWeight: 400,
+                  textDecoration: "none",
+                  transition: "color .2s",
                   display: "flex",
                   marginRight: 10,
                   alignItems: "center",
@@ -101,17 +106,24 @@ export default function Navbar(props: any) {
               >
                 <LogOut size={16} />
                 <span style={{ marginLeft: 8 }}>Logout</span>
-              </a>
+              </div>
             </div>
           ) : (
-            <a
-              href="#app"
+            <div
+              style={{
+                cursor: "pointer",
+                color: "var(--ink-60)",
+                fontSize: ".875rem",
+                fontWeight: 400,
+                textDecoration: "none",
+                transition: "color .2s",
+              }}
               onClick={() => {
                 window.location.href = window.location.origin + "/portal";
               }}
             >
               Login
-            </a>
+            </div>
           )}
           <a href="#register" className="btn-nav" onClick={handleLinkClick}>
             Begin Journey ✦

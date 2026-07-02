@@ -1,0 +1,1 @@
+<!doctype html><html><head><link rel="stylesheet" href="${url.resourcesPath}/css/styles.css"></head><body><div class="bg"><div class="card"><div class="logo">MyCompany</div><h1>Welcome Back</h1><p>Sign in to continue</p><form><input placeholder="Username"><input type="password" placeholder="Password"><button>Sign In</button></form></div></div></body></html>
