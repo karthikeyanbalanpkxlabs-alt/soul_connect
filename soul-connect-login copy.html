@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soul Connect – Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Noto+Sans+Tamil:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --rose: #F2688C; --rose-light: #FDE8EF; --rose-dark: #C0436A;
+  --plum: #7C3AED; --plum-light: #EDE9FE; --plum-dark: #5B21B6;
+  --sage: #059669; --sage-light: #D1FAE5;
+  --amber: #D97706; --amber-light: #FEF3C7;
+  --saffron: #F59E0B; --saffron-light: #FFFBEB;
+  --ink: #0F0A1E; --ink-80: #2D2645; --ink-60: #4B4468; --ink-40: #8B85A0;
+  --surface: #FAFAF8; --white: #FFFFFF;
+  --border: rgba(124,58,237,0.12); --border-soft: rgba(0,0,0,0.07);
+  --font-display: 'Sora', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-tamil: 'Noto Sans Tamil', sans-serif;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.06);
+  --shadow-hover: 0 16px 48px rgba(0,0,0,0.10);
+  --radius-lg: 24px; --radius-md: 16px; --radius-sm: 12px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); background: var(--surface); color: var(--ink); line-height: 1.65; overflow-x: hidden; min-height: 100vh; }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(250,250,248,0.94); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 0 5vw; height: 68px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--plum); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.nav-logo span { color: var(--rose); }
+.logo-dot { width: 8px; height: 8px; background: var(--rose); border-radius: 50%; animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.7} }
+.nav-right { display: flex; align-items: center; gap: 14px; }
+.nav-link { font-size: .875rem; color: var(--ink-60); text-decoration: none; font-weight: 400; transition: color .2s; }
+.nav-link:hover { color: var(--plum); }
+.btn-nav { background: linear-gradient(135deg, var(--rose), var(--plum)); color: white; padding: 9px 20px; border-radius: 100px; font-size: .875rem; font-weight: 500; text-decoration: none; border: none; cursor: pointer; font-family: var(--font-body); display: inline-flex; align-items: center; gap: 6px; transition: transform .15s, box-shadow .15s; }
+.btn-nav:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(242,104,140,.3); }
+
+.page-wrapper { padding-top: 68px; min-height: 100vh; display: flex; }
+
+/* RIGHT PANEL BECOMES LEFT ON LOGIN */
+.auth-form-side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 52px 40px 80px; }
+.auth-form-wrap { width: 100%; max-width: 420px; }
+
+/* DECORATIVE RIGHT PANEL */
+.auth-deco-side {
+  width: 44%; min-height: calc(100vh - 68px);
+  background: linear-gradient(155deg, var(--plum-dark) 0%, var(--plum) 40%, var(--rose-dark) 80%, var(--rose) 100%);
+  position: sticky; top: 68px; align-self: flex-start; height: calc(100vh - 68px);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 60px 52px; overflow: hidden;
+}
+.auth-deco-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(255,255,255,.09) 0%, transparent 60%); pointer-events: none; }
+.auth-deco-pattern { position: absolute; inset: 0; opacity: .05; background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; }
+.auth-deco-content { position: relative; z-index: 1; text-align: center; }
+
+/* PROFILE MOSAIC */
+.profile-mosaic { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; justify-content: center; margin-bottom: 36px; }
+.mosaic-card { border-radius: var(--radius-md); background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); padding: 14px 10px; text-align: center; transition: transform .3s; }
+.mosaic-card:nth-child(2) { transform: translateY(-8px); }
+.mosaic-card:nth-child(5) { transform: translateY(-8px); }
+.mosaic-av { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.25); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: .95rem; color: white; margin: 0 auto 7px; }
+.mosaic-name { font-size: .62rem; color: rgba(255,255,255,.85); font-weight: 600; margin-bottom: 2px; }
+.mosaic-match { font-size: .58rem; color: rgba(255,255,255,.55); }
+.mosaic-badge { display: inline-block; font-size: .52rem; font-weight: 700; background: rgba(255,255,255,.2); color: white; padding: 2px 7px; border-radius: 100px; margin-top: 4px; }
+
+.deco-title { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; color: white; line-height: 1.2; margin-bottom: 12px; }
+.deco-subtitle { font-size: .87rem; color: rgba(255,255,255,.65); line-height: 1.65; max-width: 280px; margin: 0 auto 28px; }
+.deco-subtitle .tamil { font-family: var(--font-tamil); display: block; font-size: .78rem; color: rgba(255,255,255,.45); margin-top: 7px; }
+.deco-stats { display: flex; justify-content: center; gap: 32px; }
+.deco-stat-num { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: white; }
+.deco-stat-label { font-size: .7rem; color: rgba(255,255,255,.5); margin-top: 3px; }
+
+/* FORM SIDE */
+.auth-back { display: inline-flex; align-items: center; gap: 5px; font-size: .8rem; color: var(--ink-40); text-decoration: none; font-weight: 500; margin-bottom: 32px; transition: color .2s; }
+.auth-back:hover { color: var(--plum); }
+.auth-title { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+.auth-subtitle { font-size: .88rem; color: var(--ink-60); margin-bottom: 30px; }
+.auth-subtitle a { color: var(--plum); text-decoration: none; font-weight: 500; }
+.auth-subtitle a:hover { text-decoration: underline; }
+
+.social-auth { display: flex; gap: 10px; margin-bottom: 22px; }
+.btn-social { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-soft); background: white; font-size: .85rem; font-weight: 500; font-family: var(--font-body); color: var(--ink); cursor: pointer; transition: all .2s; box-shadow: var(--shadow-card); }
+.btn-social:hover { border-color: var(--plum); background: var(--plum-light); color: var(--plum); transform: translateY(-1px); }
+
+.divider { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.divider-line { flex: 1; height: 1px; background: var(--border-soft); }
+.divider-text { font-size: .75rem; color: var(--ink-40); font-weight: 500; white-space: nowrap; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: .78rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.form-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.form-label-row .form-label { margin-bottom: 0; }
+.forgot-link { font-size: .75rem; color: var(--plum); text-decoration: none; font-weight: 500; }
+.forgot-link:hover { text-decoration: underline; }
+.form-input { width: 100%; padding: 13px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-soft); background: white; font-size: .9rem; font-family: var(--font-body); color: var(--ink); transition: border-color .2s, box-shadow .2s; outline: none; box-shadow: var(--shadow-card); }
+.form-input:focus { border-color: var(--plum); box-shadow: 0 0 0 3px var(--plum-light), var(--shadow-card); }
+.form-input::placeholder { color: var(--ink-40); }
+.form-input-wrap { position: relative; }
+.form-input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: .95rem; pointer-events: none; }
+.form-input-wrap .form-input { padding-left: 40px; }
+.form-input-suffix { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: .8rem; color: var(--ink-40); cursor: pointer; user-select: none; }
+
+/* LOGIN METHOD TOGGLE */
+.method-toggle { display: flex; background: white; border: 1.5px solid var(--border-soft); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 22px; box-shadow: var(--shadow-card); }
+.method-btn { flex: 1; padding: 9px; border-radius: 9px; font-size: .82rem; font-weight: 500; font-family: var(--font-body); color: var(--ink-60); border: none; background: transparent; cursor: pointer; transition: all .2s; }
+.method-btn.active { background: linear-gradient(135deg, var(--rose), var(--plum)); color: white; box-shadow: 0 2px 10px rgba(124,58,237,.25); font-weight: 600; }
+.method-btn:hover:not(.active) { background: var(--surface); color: var(--ink); }
+
+/* OTP INPUTS */
+.otp-group { display: flex; gap: 10px; }
+.otp-input { flex: 1; text-align: center; padding: 14px 6px; font-size: 1.4rem; font-weight: 700; font-family: var(--font-display); border-radius: var(--radius-sm); border: 1.5px solid var(--border-soft); background: white; color: var(--ink); outline: none; box-shadow: var(--shadow-card); transition: border-color .2s, box-shadow .2s; }
+.otp-input:focus { border-color: var(--plum); box-shadow: 0 0 0 3px var(--plum-light); }
+
+.otp-timer { font-size: .77rem; color: var(--ink-40); text-align: center; margin-top: 10px; }
+.otp-timer a { color: var(--plum); text-decoration: none; font-weight: 600; }
+
+/* REMEMBER ME */
+.remember-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.checkbox-group { display: flex; align-items: center; gap: 8px; }
+.checkbox-group input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--plum); cursor: pointer; }
+.checkbox-label { font-size: .8rem; color: var(--ink-60); }
+
+.btn-submit { width: 100%; padding: 15px; border-radius: var(--radius-md); border: none; background: linear-gradient(135deg, var(--rose), var(--plum)); color: white; font-size: 1rem; font-weight: 600; font-family: var(--font-body); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform .2s, box-shadow .2s; margin-top: 20px; }
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(242,104,140,.35); }
+
+.auth-divider-section { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+.auth-divider-section .divider-line { background: var(--border-soft); }
+
+.auth-already { text-align: center; font-size: .83rem; color: var(--ink-60); margin-top: 20px; }
+.auth-already a { color: var(--plum); font-weight: 600; text-decoration: none; }
+.auth-already a:hover { text-decoration: underline; }
+
+/* SECURITY BADGE */
+.security-badge { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; padding: 10px 18px; background: var(--sage-light); border: 1px solid rgba(5,150,105,.15); border-radius: 100px; }
+.security-badge-icon { font-size: .9rem; }
+.security-badge-text { font-size: .74rem; color: var(--sage); font-weight: 600; }
+
+/* PANEL VISIBILITY */
+.panel-email { display: block; }
+.panel-phone { display: none; }
+.panel-otp { display: none; }
+
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 900px) {
+  .auth-deco-side { display: none; }
+  .auth-form-side { padding: 40px 24px 60px; justify-content: flex-start; padding-top: 48px; }
+}
+@media (max-width: 480px) {
+  .auth-title { font-size: 1.6rem; }
+  .social-auth { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo"><img src="img/logo.png" width="251" height="63" alt=""/></a>
+  <div class="nav-right">
+    <a href="#" class="nav-link">Browse Profiles</a>
+    <a href="soul-connect-signup.html" class="btn-nav">Join Free ✦</a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+
+  <!-- FORM SIDE (LEFT ON LOGIN) -->
+  <div class="auth-form-side">
+    <div class="auth-form-wrap">
+
+      <a href="#" class="auth-back reveal" style="transition-delay:.05s">← Back to home</a>
+
+      <div class="reveal" style="transition-delay:.1s">
+        <div class="auth-title">Welcome back 🙏</div>
+        <div class="auth-subtitle">Don't have an account? <a href="soul-connect-signup.html">Create your profile →</a></div>
+      </div>
+
+      <!-- SOCIAL AUTH -->
+      <div class="social-auth reveal" style="transition-delay:.15s">
+        <button class="btn-social">G Continue with Google</button>
+        <button class="btn-social">📱 Use OTP instead</button>
+      </div>
+
+      <div class="divider reveal" style="transition-delay:.18s">
+        <div class="divider-line"></div>
+        <span class="divider-text">or sign in with</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- METHOD TOGGLE -->
+      <div class="method-toggle reveal" id="methodToggle" style="transition-delay:.2s">
+        <button class="method-btn active" onclick="switchMethod('email', this)">✉ Email</button>
+        <button class="method-btn" onclick="switchMethod('phone', this)">📱 Mobile OTP</button>
+        <button class="method-btn" onclick="switchMethod('id', this)">🆔 Profile ID</button>
+      </div>
+
+      <form onsubmit="return false;">
+
+        <!-- EMAIL LOGIN -->
+        <div class="panel-email" id="panelEmail">
+          <div class="reveal" style="transition-delay:.22s">
+            <div class="form-group">
+              <label class="form-label" for="loginEmail">Email Address</label>
+              <div class="form-input-wrap">
+                <span class="form-input-icon">✉</span>
+                <input id="loginEmail" type="email" class="form-input" placeholder="you@example.com" autocomplete="email">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label" for="loginPwd">Password</label>
+                <a href="#" class="forgot-link">Forgot password?</a>
+              </div>
+              <div class="form-input-wrap">
+                <span class="form-input-icon">🔒</span>
+                <input id="loginPwd" type="password" class="form-input" placeholder="Your password" autocomplete="current-password">
+                <span class="form-input-suffix" onclick="togglePwd('loginPwd')">👁</span>
+              </div>
+            </div>
+            <div class="remember-row">
+              <div class="checkbox-group">
+                <input type="checkbox" id="remember" checked>
+                <label class="checkbox-label" for="remember">Keep me signed in</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PHONE OTP LOGIN -->
+        <div class="panel-phone" id="panelPhone">
+          <div class="form-group">
+            <label class="form-label" for="loginPhone">Mobile Number</label>
+            <div style="display:flex;gap:8px">
+              <select class="form-select" style="width:110px;flex-shrink:0">
+                <option>🇮🇳 +91</option>
+                <option>🇺🇸 +1</option>
+                <option>🇬🇧 +44</option>
+                <option>🇦🇺 +61</option>
+                <option>🇸🇬 +65</option>
+              </select>
+              <input id="loginPhone" type="tel" class="form-input" placeholder="98765 43210" style="flex:1">
+            </div>
+          </div>
+          <button type="button" class="btn-submit" onclick="showOtp()" style="margin-top:0">Send OTP →</button>
+        </div>
+
+        <!-- PROFILE ID LOGIN -->
+        <div class="panel-id" id="panelId" style="display:none">
+          <div class="form-group">
+            <label class="form-label" for="profileId">Profile ID</label>
+            <div class="form-input-wrap">
+              <span class="form-input-icon">🆔</span>
+              <input id="profileId" type="text" class="form-input" placeholder="e.g. SC-TN-2024-08142">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label-row">
+              <label class="form-label" for="idPwd">Password</label>
+              <a href="#" class="forgot-link">Forgot password?</a>
+            </div>
+            <div class="form-input-wrap">
+              <span class="form-input-icon">🔒</span>
+              <input id="idPwd" type="password" class="form-input" placeholder="Your password">
+              <span class="form-input-suffix" onclick="togglePwd('idPwd')">👁</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OTP ENTRY (shown after Send OTP) -->
+        <div id="panelOtp" style="display:none">
+          <div class="form-group">
+            <label class="form-label" style="text-align:center;display:block;margin-bottom:14px">Enter the 6-digit OTP sent to your number</label>
+            <div class="otp-group" id="otpGroup">
+              <input class="otp-input" type="text" maxlength="1" oninput="otpNext(this,0)">
+              <input class="otp-input" type="text" maxlength="1" oninput="otpNext(this,1)">
+              <input class="otp-input" type="text" maxlength="1" oninput="otpNext(this,2)">
+              <input class="otp-input" type="text" maxlength="1" oninput="otpNext(this,3)">
+              <input class="otp-input" type="text" maxlength="1" oninput="otpNext(this,4)">
+              <input class="otp-input" type="text" maxlength="1" oninput="otpNext(this,5)">
+            </div>
+            <div class="otp-timer">Didn't receive it? <a href="#" onclick="resetOtp()">Resend OTP</a> in <span id="timerDisplay">00:59</span></div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit reveal" id="mainSubmitBtn" style="transition-delay:.25s">
+          Sign In ✦
+        </button>
+      </form>
+
+      <div class="security-badge reveal" style="transition-delay:.28s">
+        <span class="security-badge-icon">🔒</span>
+        <span class="security-badge-text">256-bit SSL encrypted · Your data is safe</span>
+      </div>
+
+      <div class="auth-already reveal" style="transition-delay:.3s">
+        New to Soul Connect? <a href="soul-connect-signup.html">Create a free profile →</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DECORATIVE RIGHT PANEL -->
+  <div class="auth-deco-side">
+    <div class="auth-deco-bg"></div>
+    <div class="auth-deco-pattern"></div>
+    <div class="auth-deco-content">
+
+      <div class="profile-mosaic">
+        <div class="mosaic-card"><div class="mosaic-av" style="background:linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,255,255,.15))">P</div><div class="mosaic-name">Priya K.</div><div class="mosaic-match">Chennai</div><div class="mosaic-badge">88% match</div></div>
+        <div class="mosaic-card"><div class="mosaic-av" style="background:linear-gradient(135deg,rgba(255,255,255,.35),rgba(255,255,255,.12))">A</div><div class="mosaic-name">Ananya S.</div><div class="mosaic-match">Bangalore</div><div class="mosaic-badge">91% match</div></div>
+        <div class="mosaic-card"><div class="mosaic-av" style="background:linear-gradient(135deg,rgba(255,255,255,.3),rgba(255,255,255,.1))">D</div><div class="mosaic-name">Divya R.</div><div class="mosaic-match">Mumbai</div><div class="mosaic-badge">84% match</div></div>
+        <div class="mosaic-card"><div class="mosaic-av" style="background:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,.1))">M</div><div class="mosaic-name">Meera N.</div><div class="mosaic-match">Hyderabad</div><div class="mosaic-badge">79% match</div></div>
+        <div class="mosaic-card"><div class="mosaic-av" style="background:linear-gradient(135deg,rgba(255,255,255,.38),rgba(255,255,255,.14))">L</div><div class="mosaic-name">Lakshmi T.</div><div class="mosaic-match">Coimbatore</div><div class="mosaic-badge">93% match</div></div>
+        <div class="mosaic-card"><div class="mosaic-av" style="background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.08))">S</div><div class="mosaic-name">Swetha G.</div><div class="mosaic-match">Pune</div><div class="mosaic-badge">86% match</div></div>
+      </div>
+
+      <div class="deco-title">Your matches<br>are waiting</div>
+      <div class="deco-subtitle">
+        Sign in to see who's interested in you, respond to messages, and discover daily compatible profiles.
+        <span class="tamil">உங்கள் பொருத்தங்கள் காத்திருக்கின்றன</span>
+      </div>
+
+      <div class="deco-stats">
+        <div class="auth-stat">
+          <div class="deco-stat-num">1,240</div>
+          <div class="deco-stat-label">New profiles today</div>
+        </div>
+        <div class="auth-stat">
+          <div class="deco-stat-num">316</div>
+          <div class="deco-stat-label">Active right now</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.05 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+function switchMethod(method, btn) {
+  document.querySelectorAll('#methodToggle .method-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panelEmail').style.display = 'none';
+  document.getElementById('panelPhone').style.display = 'none';
+  document.getElementById('panelId').style.display = 'none';
+  document.getElementById('panelOtp').style.display = 'none';
+  const submitBtn = document.getElementById('mainSubmitBtn');
+  if (method === 'email') {
+    document.getElementById('panelEmail').style.display = 'block';
+    submitBtn.style.display = 'flex';
+    submitBtn.textContent = 'Sign In ✦';
+  } else if (method === 'phone') {
+    document.getElementById('panelPhone').style.display = 'block';
+    submitBtn.style.display = 'none';
+  } else if (method === 'id') {
+    document.getElementById('panelId').style.display = 'block';
+    submitBtn.style.display = 'flex';
+    submitBtn.textContent = 'Sign In ✦';
+  }
+}
+
+function showOtp() {
+  document.getElementById('panelPhone').style.display = 'none';
+  document.getElementById('panelOtp').style.display = 'block';
+  const submitBtn = document.getElementById('mainSubmitBtn');
+  submitBtn.style.display = 'flex';
+  submitBtn.textContent = 'Verify & Sign In ✦';
+  startTimer();
+  document.querySelector('.otp-input').focus();
+}
+
+function resetOtp() {
+  document.getElementById('panelOtp').style.display = 'none';
+  document.getElementById('panelPhone').style.display = 'block';
+  document.getElementById('mainSubmitBtn').style.display = 'none';
+}
+
+let timerInterval;
+function startTimer() {
+  clearInterval(timerInterval);
+  let s = 59;
+  const el = document.getElementById('timerDisplay');
+  timerInterval = setInterval(() => {
+    el.textContent = '00:' + String(s).padStart(2,'0');
+    if (s-- <= 0) { clearInterval(timerInterval); el.textContent = '00:00'; }
+  }, 1000);
+}
+
+function otpNext(input, idx) {
+  const inputs = document.querySelectorAll('.otp-input');
+  if (input.value && idx < 5) inputs[idx + 1].focus();
+}
+
+function togglePwd(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+</script>
+</body>
+</html>
