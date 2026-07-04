@@ -41,6 +41,12 @@
             >Create your profile →</a></div>
       </div>
 
+      <#if message?has_content && (message.type != 'warning')>
+        <div class="alert alert-${message.type} reveal" style="transition-delay:.12s; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 14px; text-align: center; border: 1px solid #f87171;">
+            ${kcSanitize(message.summary)?no_esc}
+        </div>
+      </#if>
+
       <!-- SOCIAL AUTH -->
       <div class="social-auth reveal" style="display:none; transition-delay:.15s">
         <button class="btn-social">G Continue with Google</button>
