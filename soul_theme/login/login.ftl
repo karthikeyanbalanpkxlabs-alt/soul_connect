@@ -14,7 +14,9 @@
   <#-- <a href="index.html" class="nav-logo"><img src="img/logo.png" width="251" height="63" alt=""/></a> -->
   <div class="nav-right">
     <a href="#" class="nav-link">Browse Profiles</a>
-    <a href="soul-connect-signup.html" class="btn-nav">Join Free ✦</a>
+    <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
+            ? 'http://localhost:5174/#register'
+            : 'https://soulconect.com/#register'); return false;" class="btn-nav">Join Free ✦</a>
   </div>
 </nav>
 
@@ -23,15 +25,24 @@
   <div class="auth-form-side">
     <div class="auth-form-wrap">
 
-      <a href="http://localhost:5174/" class="auth-back reveal" style="transition-delay:.05s">← Back to home</a>
+      <a href="#"
+        class="auth-back reveal"
+        onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
+            ? 'http://localhost:5174/'
+            : 'https://soulconect.com/'); return false;">
+        ← Back to home
+        </a>
 
       <div class="reveal" style="transition-delay:.1s">
         <div class="auth-title">Welcome back 🙏</div>
-        <div class="auth-subtitle">Don't have an account? <a href="soul-connect-signup.html">Create your profile →</a></div>
+        <div class="auth-subtitle">Don't have an account? <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
+            ? 'http://localhost:5174/#register'
+            : 'https://soulconect.com/#register'); return false;"
+            >Create your profile →</a></div>
       </div>
 
       <!-- SOCIAL AUTH -->
-      <div class="social-auth reveal" style="transition-delay:.15s">
+      <div class="social-auth reveal" style="display:none; transition-delay:.15s">
         <button class="btn-social">G Continue with Google</button>
         <button class="btn-social">📱 Use OTP instead</button>
       </div>
@@ -142,13 +153,16 @@
         </button>
       </form>
 
-      <div class="security-badge reveal" style="transition-delay:.28s">
+      <div class="security-badge reveal" style="display:none; transition-delay:.28s">
         <span class="security-badge-icon">🔒</span>
         <span class="security-badge-text">256-bit SSL encrypted · Your data is safe</span>
       </div>
 
       <div class="auth-already reveal" style="transition-delay:.3s">
-        New to Soul Connect? <a href="soul-connect-signup.html">Create a free profile →</a>
+        New to Soul Connect? <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
+            ? 'http://localhost:5174/#register'
+            : 'https://soulconect.com/#register'); return false;"
+            >Create a free profile →</a>
       </div>
 
     </div>
