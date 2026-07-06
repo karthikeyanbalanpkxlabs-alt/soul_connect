@@ -1,1 +1,0 @@
-<!DOCTYPE html><html><head><title>Login</title><link rel="stylesheet" href="${url.resourcesPath}/css/styles.css"></head><body><h1>Welcome</h1><form><input placeholder="Username"><input type="password" placeholder="Password"><button>Sign In</button></form></body></html>
