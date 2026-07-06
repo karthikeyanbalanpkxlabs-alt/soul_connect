@@ -18,10 +18,7 @@ export default function LayoutKit({ children }: { children: React.ReactNode }) {
   return (
     <>
       {role === "manager_admin" ? (
-        <div className="flex-1 flex">
-          <SideBarKit />
-          <div className="w-full">{children}</div>
-        </div>
+        <SideBarKit>{children}</SideBarKit>
       ) : role === "customer_admin" ? (
         <>
           <Navbar />

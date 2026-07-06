@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import keycloak from "@/lib/keycloak";
+
+interface KeycloakContextType {
+  authenticated: boolean;
+  roles: string[];
+}
+
+const KeycloakContext = createContext<KeycloakContextType>({
+  authenticated: false,
+  roles: [],
+});
+
+export const useKeycloak = () => useContext(KeycloakContext);
 
 export default function KeycloakProvider({
   children,
@@ -9,6 +21,8 @@ export default function KeycloakProvider({
   children: React.ReactNode;
 }) {
   const [ready, setReady] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [roles, setRoles] = useState<string[]>([]);
 
   useEffect(() => {
     keycloak
@@ -16,7 +30,9 @@ export default function KeycloakProvider({
         onLoad: "login-required",
         pkceMethod: "S256",
       })
-      .then(() => {
+      .then((auth) => {
+        setAuthenticated(auth);
+        setRoles(keycloak.realmAccess?.roles || []);
         setReady(true);
       })
       .catch(console.error);
@@ -26,45 +42,9 @@ export default function KeycloakProvider({
     return <div>Loading...</div>;
   }
 
-  return <>{children}</>;
+  return (
+    <KeycloakContext.Provider value={{ authenticated, roles }}>
+      {children}
+    </KeycloakContext.Provider>
+  );
 }
-
-// "use client";
-
-// import { createContext, useEffect, useState } from "react";
-// import keycloak from "@/lib/keycloak";
-
-// export const KeycloakContext = createContext<any>(null);
-
-// export default function KeycloakProvider({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//   const [authenticated, setAuthenticated] = useState(false);
-
-//   useEffect(() => {
-//     keycloak
-//       .init({
-//         onLoad: "check-sso",
-//         pkceMethod: "S256",
-//       })
-//       .then((auth) => {
-//         setAuthenticated(auth);
-//       })
-//       .catch((err) => {
-//         console.error("Keycloak init failed", err);
-//       });
-//   }, []);
-
-//   return (
-//     <KeycloakContext.Provider
-//       value={{
-//         keycloak,
-//         authenticated,
-//       }}
-//     >
-//       {children}
-//     </KeycloakContext.Provider>
-//   );
-// }

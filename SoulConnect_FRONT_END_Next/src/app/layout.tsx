@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Sora, DM_Sans, Noto_Sans_Tamil } from "next/font/google";
 import "./globals.css";
-import KeycloakProvider from "@/providers/KeycloakProvider";
 
 const sora = Sora({
   subsets: ["latin"],
