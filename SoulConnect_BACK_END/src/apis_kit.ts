@@ -14,12 +14,34 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5500",
+  "https://dev.soulconnect.com",
+  "https://soulconnect.com",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // Frontend URL
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, mobile apps, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
+
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // Frontend URL
+//     credentials: true,
+//   }),
+// );
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -111,13 +133,15 @@ const seedCustomers = async () => {
   try {
     const count = await Customers.countDocuments();
     if (count === 0) {
-      console.log("🌱 Customers collection is empty. Seeding from sample_customer.json...");
+      console.log(
+        "🌱 Customers collection is empty. Seeding from sample_customer.json...",
+      );
       const pathsToTry = [
         path.join(__dirname, "sample_customer.json"),
         path.join(__dirname, "../src/sample_customer.json"),
         path.join(__dirname, "../sample_customer.json"),
         path.join(process.cwd(), "src/sample_customer.json"),
-        path.join(process.cwd(), "sample_customer.json")
+        path.join(process.cwd(), "sample_customer.json"),
       ];
       let filePath = "";
       for (const p of pathsToTry) {
@@ -136,9 +160,13 @@ const seedCustomers = async () => {
           return cust;
         });
         await Customers.insertMany(processedData);
-        console.log(`✅ Successfully seeded ${processedData.length} customers!`);
+        console.log(
+          `✅ Successfully seeded ${processedData.length} customers!`,
+        );
       } else {
-        console.warn("⚠️ Seed file sample_customer.json not found in search paths.");
+        console.warn(
+          "⚠️ Seed file sample_customer.json not found in search paths.",
+        );
       }
     }
   } catch (err) {
@@ -149,7 +177,9 @@ const seedCustomers = async () => {
 mongoose
   .connect(MONGODB_URL)
   .then(() => {
-    console.log("✅ Successfully connected to MongoDB Atlas (soul_connect_india)");
+    console.log(
+      "✅ Successfully connected to MongoDB Atlas (soul_connect_india)",
+    );
     seedCustomers();
   })
   .catch((error) => console.error("❌ MongoDB connection error:", error));
@@ -172,7 +202,9 @@ async function handleCustomerList(req: Request, res: Response) {
     });
   } catch (err: any) {
     console.error("customer_list error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch customer list" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch customer list" });
   }
 }
 
@@ -185,7 +217,10 @@ async function handleCustomerDetail(req: Request, res: Response) {
     else if (email) query.email = email;
     else if (keycloakId) query.keycloakId = keycloakId;
     else {
-      return res.status(400).json({ error: "Missing identifier (id, customer_id, email, or keycloakId) in request body" });
+      return res.status(400).json({
+        error:
+          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+      });
     }
 
     const customer = await Customers.findOne(query);
@@ -195,7 +230,9 @@ async function handleCustomerDetail(req: Request, res: Response) {
     res.json(customer);
   } catch (err: any) {
     console.error("customer_detail error:", err);
-    res.status(500).json({ error: err.message || "Failed to fetch customer detail" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch customer detail" });
   }
 }
 
@@ -208,7 +245,10 @@ async function handleCustomerEdit(req: Request, res: Response) {
     else if (email) query.email = email;
     else if (keycloakId) query.keycloakId = keycloakId;
     else {
-      return res.status(400).json({ error: "Missing identifier (id, customer_id, email, or keycloakId) in request body" });
+      return res.status(400).json({
+        error:
+          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+      });
     }
 
     // Map camelCase fields to snake_case if present to align with database naming
@@ -222,13 +262,17 @@ async function handleCustomerEdit(req: Request, res: Response) {
     const customer = await Customers.findOneAndUpdate(
       query,
       { $set: updateFields },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!customer) {
       return res.status(404).json({ error: "Customer not found" });
     }
-    res.json({ success: true, message: "Customer updated successfully", customer });
+    res.json({
+      success: true,
+      message: "Customer updated successfully",
+      customer,
+    });
   } catch (err: any) {
     console.error("customer_edit error:", err);
     res.status(500).json({ error: err.message || "Failed to update customer" });
@@ -244,7 +288,10 @@ async function handleCustomerDelete(req: Request, res: Response) {
     else if (email) query.email = email;
     else if (keycloakId) query.keycloakId = keycloakId;
     else {
-      return res.status(400).json({ error: "Missing identifier (id, customer_id, email, or keycloakId) in request body" });
+      return res.status(400).json({
+        error:
+          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+      });
     }
 
     const customer = await Customers.findOneAndDelete(query);
@@ -300,10 +347,7 @@ app.post(
 
       // Find existing customer by keycloakId or email
       let customer = await Customers.findOne({
-        $or: [
-          { keycloakId },
-          { email }
-        ]
+        $or: [{ keycloakId }, { email }],
       });
 
       if (customer) {
@@ -316,9 +360,9 @@ app.post(
               lastName,
               first_name: firstName,
               last_name: lastName,
-              email
-            }
-          }
+              email,
+            },
+          },
         );
       } else {
         const newCustomer = new Customers({
@@ -327,7 +371,7 @@ app.post(
           lastName,
           first_name: firstName,
           last_name: lastName,
-          email
+          email,
         });
         await newCustomer.save();
       }
