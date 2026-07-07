@@ -17,10 +17,7 @@ import Toast from "@/components/Toast";
 
 export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "info" | "error";
-  } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
   const [paymentModal, setPaymentModal] = useState({
     isOpen: false,
     planName: "",
@@ -28,10 +25,7 @@ export default function Home() {
     features: [] as string[],
   });
 
-  const showToast = (
-    message: string,
-    type: "success" | "info" | "error" = "success",
-  ) => {
+  const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
     setToast({ message, type });
     // Auto dismiss after 4 seconds
     setTimeout(() => {
@@ -41,10 +35,7 @@ export default function Home() {
 
   const handleSelectDistrict = (districtName: string) => {
     setSelectedDistrict(districtName);
-    showToast(
-      `Selected district: ${districtName}. Autofilled in registration!`,
-      "info",
-    );
+    showToast(`Selected district: ${districtName}. Autofilled in registration!`, "info");
     // Smooth scroll to register section
     const regSection = document.getElementById("register");
     if (regSection) {
@@ -52,11 +43,7 @@ export default function Home() {
     }
   };
 
-  const handleOpenPayment = (
-    planName: string,
-    price: string,
-    features: string[],
-  ) => {
+  const handleOpenPayment = (planName: string, price: string, features: string[]) => {
     setPaymentModal({
       isOpen: true,
       planName,
@@ -71,9 +58,8 @@ export default function Home() {
 
   return (
     <>
-      <VibeMatch showToast={showToast} />
-      {/* <Navbar /> */}
-      {/* <Hero />
+      <Navbar />
+      <Hero />
       <Districts
         selectedDistrict={selectedDistrict}
         onSelectDistrict={handleSelectDistrict}
@@ -81,20 +67,21 @@ export default function Home() {
       <HowItWorks />
       <Registration
         selectedDistrict={selectedDistrict}
-        onRegisterSuccess={() =>
-          showToast(
-            "Registration submitted! Proceeding to verification.",
-            "success",
-          )
-        }
+        onRegisterSuccess={() => showToast("Registration submitted! Proceeding to verification.", "success")}
         onOpenPayment={handleOpenPayment}
         showToast={showToast}
-      /> */}
-      {/* <Pricing onOpenPayment={handleOpenPayment} />
-      <Verification showToast={showToast} />
-      <VibeMatch showToast={showToast} />
+      />
+      <Pricing
+        onOpenPayment={handleOpenPayment}
+      />
+      <Verification
+        showToast={showToast}
+      />
+      <VibeMatch
+        showToast={showToast}
+      />
       <AppDownload />
-      <CTA /> */}
+      <CTA />
       <Footer />
 
       <PaymentModal
