@@ -98,11 +98,13 @@ export default function Navbar(props: any) {
                   marginRight: 10,
                   alignItems: "center",
                 }}
-                onClick={() =>
+                onClick={() => {
+                  localStorage.clear();
+
                   keycloak.logout({
                     redirectUri: "http://localhost:5174/",
-                  })
-                }
+                  });
+                }}
               >
                 <LogOut size={16} />
                 <span style={{ marginLeft: 8 }}>Logout</span>

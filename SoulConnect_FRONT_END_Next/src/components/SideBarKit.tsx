@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Home, Users, Settings, Menu, ChevronLeft, LogOut } from "lucide-react";
+import {
+  Home,
+  Users,
+  Settings,
+  Menu,
+  ChevronLeft,
+  LogOut,
+  X,
+} from "lucide-react";
 
 import keycloak from "../lib/keycloak";
 
@@ -16,6 +24,12 @@ export default function SideBarKit({ children }: SideBarKitProps) {
   const pathname = usePathname();
 
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile sidebar on route change automatically
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const menus = [
     {
@@ -52,21 +66,52 @@ export default function SideBarKit({ children }: SideBarKitProps) {
   }
 
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-gray-50">
+      {/* Mobile Top Bar */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 z-40 relative">
+        <Link
+          href="/portal"
+          className="nav-logo"
+          style={{ textDecoration: "none" }}
+        >
+          Soul<span>Connect</span>
+          <div className="logo-dot"></div>
+        </Link>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="p-1 rounded focus:outline-none"
+        >
+          {mobileOpen ? (
+            <X size={24} className="text-violet-600" />
+          ) : (
+            <Menu size={24} className="text-violet-600" />
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/20 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         style={{
           borderRight: "1px solid var(--border-soft)",
         }}
-        className={`relative overflow-hidden h-screen bg-white transition-all duration-300
-        ${collapsed ? "w-[110px]" : "w-64"}`}
+        className={`fixed md:static inset-y-0 left-0 z-50 h-screen overflow-hidden bg-white transition-transform duration-300 transform md:translate-x-0
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+        ${collapsed ? "md:w-[110px] w-64" : "w-64"}`}
       >
-        {/* Header */}
+        {/* Header - Desktop Only */}
         <div
           style={{
             borderBottom: "1px solid var(--border-soft)",
           }}
-          className="flex items-center justify-between p-4"
+          className="hidden md:flex items-center justify-between p-4"
         >
           <div className="flex items-center overflow-hidden pr-10">
             {!collapsed ? (
@@ -142,7 +187,10 @@ export default function SideBarKit({ children }: SideBarKitProps) {
             </div>
 
             <div
-              onClick={() => keycloak.logout()}
+              onClick={() => {
+                localStorage.clear();
+                keycloak.logout();
+              }}
               className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer hover:bg-red-50 transition-all duration-200"
             >
               <LogOut
@@ -162,7 +210,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       </div>
 
       {/* Page Content */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }

@@ -50,8 +50,8 @@ function DynamicTable<T>({
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
       {/* TABLE */}
-      <div className="overflow-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto w-full">
+        <table className="w-full text-sm">
           <thead>
             {/* HEADER */}
             <tr className="bg-gray-100">
@@ -61,7 +61,7 @@ function DynamicTable<T>({
                   style={{
                     width: column.width,
                   }}
-                  className="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+                  className="px-4 py-3 text-left text-sm font-semibold text-gray-700 whitespace-nowrap"
                 >
                   {column.label}
                 </th>
@@ -77,7 +77,7 @@ function DynamicTable<T>({
                       type="text"
                       value={filters[String(column.key)] || ""}
                       placeholder={`Search ${column.label}`}
-                      className="w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
+                      className="w-full min-w-[120px] bg-white rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
                       onChange={(e) =>
                         onFilterChange(String(column.key), e.target.value)
                       }
@@ -113,7 +113,7 @@ function DynamicTable<T>({
                   {columns.map((column) => (
                     <td
                       key={String(column.key)}
-                      className="px-4 py-3 text-sm text-gray-700 text-left"
+                      className="px-4 py-3 text-sm text-gray-700 text-left whitespace-nowrap"
                     >
                       {column.render ? column.render(row) : row[column.key]}
                     </td>
@@ -126,15 +126,15 @@ function DynamicTable<T>({
       </div>
 
       {/* FOOTER */}
-      <div className="flex flex-col gap-3 border-t p-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 border-t p-4 md:flex-row md:items-center md:justify-between">
         {/* Total */}
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 flex justify-between items-center md:justify-start">
           Total Records:
           <span className="ml-1 font-semibold">{total}</span>
         </div>
 
         {/* Limit */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between md:justify-start gap-2">
           <span className="text-sm">Rows Per Page:</span>
 
           <select
@@ -158,7 +158,7 @@ function DynamicTable<T>({
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between md:justify-start gap-2">
           <button
             disabled={currentPage === 1}
             className="bg-white rounded border px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"

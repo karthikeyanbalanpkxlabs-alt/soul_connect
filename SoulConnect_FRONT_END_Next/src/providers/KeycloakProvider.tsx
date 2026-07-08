@@ -31,11 +31,14 @@ export default function KeycloakProvider({
         pkceMethod: "S256",
       })
       .then((auth) => {
+        localStorage.setItem("logged_in", auth ? "true" : "false");
         setAuthenticated(auth);
         setRoles(keycloak.realmAccess?.roles || []);
         setReady(true);
       })
-      .catch(console.error);
+      .catch(() => {
+        console.error();
+      });
   }, []);
 
   if (!ready) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Districts from "@/components/Districts";
@@ -27,6 +27,14 @@ export default function Home() {
     price: "",
     features: [] as string[],
   });
+
+  useEffect(() => {
+    if (localStorage.getItem("logged_in") === "true") {
+      window.location.href = "/portal";
+    } else {
+      window.location.href = "/";
+    }
+  }, []);
 
   const showToast = (
     message: string,
