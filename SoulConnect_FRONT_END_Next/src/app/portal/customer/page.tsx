@@ -5,6 +5,7 @@ import React from "react";
 // @ts-ignore
 // import DynamicTable from "../components/DynamicTable";
 import DynamicTable from "../../../components/DynamicTable";
+import CustomerModal from "../../../components/CustomerModal";
 import usePortalPage from "./usePortalCustomerPage";
 
 function PortalPage() {
@@ -16,15 +17,26 @@ function PortalPage() {
         <div>
           <button
             className="color-black"
-            style={{ marginRight: 10, color: "#000000ff" }}
+            style={{ cursor: "pointer", marginRight: 10, color: "#000000ff" }}
             onClick={stateProps?.onHandleClickCreateCustomer}
           >
-            + Create Customer
+            + Create
+          </button>
+          <button
+            className="color-black"
+            style={{
+              cursor: "pointer",
+              marginRight: 10,
+              color: "#000000ff",
+            }}
+            onClick={stateProps?.onHandleClickCreateClient}
+          >
+            + Create Client
           </button>
           {stateProps?.getRoles?.includes("manager") && (
             <button
               className="color-black"
-              style={{ marginRight: 10, color: "#000000ff" }}
+              style={{ cursor: "pointer", marginRight: 10, color: "#000000ff" }}
               onClick={stateProps?.onHandleClickCreateManager}
             >
               + Create Manager
@@ -45,6 +57,15 @@ function PortalPage() {
         onLimitChange={stateProps?.setLimit}
         onPageChange={(newSkip: any) => stateProps?.setSkip(newSkip)}
       />
+
+      {stateProps?.isModalOpen && (
+        <CustomerModal
+          isOpen={stateProps?.isModalOpen}
+          onClose={() => stateProps?.setIsModalOpen(false)}
+          onSave={stateProps?.onSaveCustomer}
+          initialData={stateProps?.editingCustomer}
+        />
+      )}
     </div>
   );
 }
