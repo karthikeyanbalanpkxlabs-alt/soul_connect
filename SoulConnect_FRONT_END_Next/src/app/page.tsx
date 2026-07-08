@@ -31,8 +31,6 @@ export default function Home() {
   useEffect(() => {
     if (localStorage.getItem("logged_in") === "true") {
       window.location.href = "/portal";
-    } else {
-      window.location.href = "/";
     }
   }, []);
 

@@ -8,7 +8,7 @@ export default function LayoutKit({ children }: { children: React.ReactNode }) {
   const { roles, authenticated } = useKeycloak();
 
   if (!authenticated) {
-    return <div>Loading...</div>;
+    return <div>Authenticating...</div>;
   }
 
   const role =
