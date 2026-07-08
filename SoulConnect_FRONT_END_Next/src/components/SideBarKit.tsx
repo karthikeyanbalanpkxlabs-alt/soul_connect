@@ -143,12 +143,19 @@ export default function SideBarKit({ children }: SideBarKitProps) {
         <div className="mt-4 px-2">
           {menus.map((menu) => {
             const Icon = menu.icon;
-            const isActive = pathname === menu.router;
+            // The root '/portal' needs an exact match, while others can use startsWith
+            const isActive =
+              menu.router === "/portal"
+                ? pathname === menu.router || pathname === `${menu.router}/`
+                : pathname?.startsWith(menu.router);
 
             return (
               <div
                 key={menu.name}
-                onClick={() => router.push(menu.router)}
+                onClick={() => {
+                  router.push(menu.router);
+                  setMobileOpen(false); // close on mobile when clicked
+                }}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 cursor-pointer transition-all duration-200
                 ${
                   isActive
@@ -161,13 +168,13 @@ export default function SideBarKit({ children }: SideBarKitProps) {
                   style={{
                     margin: collapsed ? "auto" : undefined,
                   }}
-                  className={isActive ? "text-pink-500" : "text-violet-600"}
+                  className={isActive ? "text-[#c0436a]" : "text-violet-600"}
                 />
 
                 {!collapsed && (
                   <span
-                    className={`text-sm font-medium
-                    ${isActive ? "text-pink-500" : "text-violet-600"}`}
+                    className={`text-sm
+                    ${isActive ? "text-[#c0436a] font-bold" : "text-violet-600 font-medium"}`}
                   >
                     {menu.name}
                   </span>
