@@ -191,7 +191,23 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
         let dbKey = key;
         if (key === "firstName") dbKey = "first_name";
         if (key === "lastName") dbKey = "last_name";
-        filter[dbKey] = { $regex: val, $options: "i" };
+        if (key === "approvalStatus" || key === "public_verify") {
+          const lowerVal = String(val).toLowerCase();
+          if ("approved".includes(lowerVal) || lowerVal === "true") {
+            filter.public_verify = true;
+          } else if (
+            "wait for approval".includes(lowerVal) ||
+            lowerVal === "false" ||
+            lowerVal === "rejected"
+          ) {
+            filter.public_verify = false;
+          } else {
+            // Unmatchable condition if user types something random
+            filter.public_verify = null;
+          }
+        } else {
+          filter[dbKey] = { $regex: val, $options: "i" };
+        }
       }
     }
 

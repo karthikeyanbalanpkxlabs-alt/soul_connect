@@ -42,7 +42,7 @@ export default function KeycloakProvider({
   }, []);
 
   if (!ready) {
-    return <div>Loading...</div>;
+    return <div>Authenticating...</div>;
   }
 
   return (
