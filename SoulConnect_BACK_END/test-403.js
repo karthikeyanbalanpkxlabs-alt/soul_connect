@@ -2,7 +2,7 @@ const { KeycloakAdminClient } = require("@keycloak/keycloak-admin-client");
 
 async function test() {
   const kcAdminClient = new KeycloakAdminClient({
-    baseUrl: "http://localhost:4000",
+    baseUrl: "http://103.235.105.43:4000",
     realmName: "sashti",
   });
 
