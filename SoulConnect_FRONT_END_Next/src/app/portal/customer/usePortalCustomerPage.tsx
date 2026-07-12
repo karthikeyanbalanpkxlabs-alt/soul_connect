@@ -40,8 +40,8 @@ function usePortalCustomerPage() {
     const token = keycloak?.token;
     const isEdit = !!editingCustomer;
     const endpoint = isEdit
-      ? "http://localhost:3000/api/customer_edit"
-      : "http://localhost:3000/api/customer_create";
+      ? "http://103.235.105.43:3000/api/customer_edit"
+      : "http://103.235.105.43:3000/api/customer_create";
 
     if (!isEdit) {
       let dataGenerateId = generateId();
@@ -70,8 +70,9 @@ function usePortalCustomerPage() {
   };
 
   const onDeleteCustomer = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
-    
+    if (!window.confirm("Are you sure you want to delete this customer?"))
+      return;
+
     try {
       if (keycloak) {
         await keycloak.updateToken(30);
@@ -80,7 +81,7 @@ function usePortalCustomerPage() {
       console.error("Failed to refresh token before deleting:", error);
     }
     const token = keycloak?.token;
-    fetch("http://localhost:3000/api/customer_delete", {
+    fetch("http://103.235.105.43:3000/api/customer_delete", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -141,7 +142,7 @@ function usePortalCustomerPage() {
       public_verify: true,
       keycloakId: dataGenerateId,
     };
-    fetch("http://localhost:3000/api/customer_create", {
+    fetch("http://103.235.105.43:3000/api/customer_create", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -201,7 +202,7 @@ function usePortalCustomerPage() {
       public_verify: false,
       keycloakId: dataGenerateId,
     };
-    fetch("http://localhost:3000/api/customer_create", {
+    fetch("http://103.235.105.43:3000/api/customer_create", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -220,7 +221,7 @@ function usePortalCustomerPage() {
   const getSubscriptionListAPI = () => {
     if (keycloak.authenticated) {
       const token = keycloak?.token;
-      fetch("http://localhost:3000/api/subscriptions", {
+      fetch("http://103.235.105.43:3000/api/subscriptions", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -243,7 +244,7 @@ function usePortalCustomerPage() {
         (itm: any) => itm === "manager_admin" || itm === "customer_admin",
       );
       roles = roles.length > 0 ? roles[0] : "no_roles";
-      fetch("http://localhost:3000/api/customer_list", {
+      fetch("http://103.235.105.43:3000/api/customer_list", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -294,7 +295,7 @@ function usePortalCustomerPage() {
       localStorage.setItem("roles", roles || "");
       localStorage.setItem("token", keycloak?.token || "");
       const token = keycloak?.token;
-      fetch("http://localhost:3000/api/send-email", {
+      fetch("http://103.235.105.43:3000/api/send-email", {
         // fetch("http://127.0.0.1:3000/api/send-email", {
         method: "POST",
         headers: {

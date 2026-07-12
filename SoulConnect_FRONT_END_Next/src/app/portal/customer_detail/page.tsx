@@ -34,7 +34,7 @@ function CustomerDetailContent() {
       try {
         const token = keycloak?.token;
         const res = await fetch(
-          `http://localhost:3000/api/customer_detail/${id}`,
+          `http://103.235.105.43:3000/api/customer_detail/${id}`,
           {
             method: "GET",
             headers: {
@@ -374,20 +374,25 @@ function CustomerDetailContent() {
             </div>
 
             {/* Profile Video */}
-            {customer.video && (customer.video.url || typeof customer.video === 'string') && (
-              <div className="mt-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                <h2 className="mb-4 text-xl font-bold text-slate-800">
-                  Profile Video
-                </h2>
-                <div className="overflow-hidden rounded-xl bg-black flex justify-center">
-                  <video 
-                    controls 
-                    className="max-h-96 w-full object-contain"
-                    src={typeof customer.video === 'string' ? customer.video : customer.video.url} 
-                  />
+            {customer.video &&
+              (customer.video.url || typeof customer.video === "string") && (
+                <div className="mt-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                  <h2 className="mb-4 text-xl font-bold text-slate-800">
+                    Profile Video
+                  </h2>
+                  <div className="overflow-hidden rounded-xl bg-black flex justify-center">
+                    <video
+                      controls
+                      className="max-h-96 w-full object-contain"
+                      src={
+                        typeof customer.video === "string"
+                          ? customer.video
+                          : customer.video.url
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </div>
       </div>
