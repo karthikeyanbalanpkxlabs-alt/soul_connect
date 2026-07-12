@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import keycloak from "../../../lib/keycloak";
-import { ArrowLeft, User, Phone, MapPin, Briefcase, Heart, FileText } from "lucide-react";
+import { ArrowLeft, User, Phone, MapPin, Briefcase, Heart, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 
 function CustomerDetailContent() {
   const searchParams = useSearchParams();
@@ -13,6 +13,7 @@ function CustomerDetailContent() {
   const [customer, setCustomer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -67,7 +68,16 @@ function CustomerDetailContent() {
     );
   }
 
-  const profileImage = customer.image && customer.image.length > 0 ? customer.image[0].url : "https://via.placeholder.com/400x500?text=No+Image";
+  const images = customer.image || [];
+  const hasMultipleImages = images.length > 1;
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-12">
@@ -83,14 +93,54 @@ function CustomerDetailContent() {
         <div className="h-48 w-full bg-gradient-to-r from-violet-500 to-fuchsia-600"></div>
 
         <div className="flex flex-col md:flex-row px-8 pb-12">
-          {/* Profile Image & Quick Info */}
+          {/* Profile Image Carousel & Quick Info */}
           <div className="-mt-24 mb-8 flex flex-col items-center md:mb-0 md:mr-10 md:w-1/3">
-            <div className="relative h-64 w-64 overflow-hidden rounded-full border-8 border-white bg-gray-200 shadow-lg">
-              <img 
-                src={profileImage} 
-                alt={`${customer.first_name || ""} ${customer.last_name || ""}`}
-                className="h-full w-full object-cover"
-              />
+            
+            {/* Image Slider */}
+            <div className="relative h-96 w-full max-w-xs overflow-hidden rounded-2xl border-4 border-white bg-gray-200 shadow-xl">
+              {images.length > 0 ? (
+                <img 
+                  src={images[currentImageIndex].url} 
+                  alt={`${customer.first_name || ""} ${customer.last_name || ""}`}
+                  className="h-full w-full object-cover transition-all duration-300"
+                />
+              ) : (
+                <img 
+                  src="https://via.placeholder.com/400x500?text=No+Image"
+                  alt="Placeholder"
+                  className="h-full w-full object-cover"
+                />
+              )}
+              
+              {hasMultipleImages && (
+                <>
+                  <button 
+                    onClick={prevImage}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-gray-800 shadow hover:bg-white hover:text-violet-600 transition"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button 
+                    onClick={nextImage}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 text-gray-800 shadow hover:bg-white hover:text-violet-600 transition"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                  
+                  {/* Dots */}
+                  <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+                    {images.map((_: any, idx: number) => (
+                      <div 
+                        key={idx} 
+                        className={`h-2.5 w-2.5 rounded-full transition-all ${
+                          idx === currentImageIndex ? "w-6 bg-violet-600" : "bg-white/80 hover:bg-white cursor-pointer"
+                        }`}
+                        onClick={() => setCurrentImageIndex(idx)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
             
             <h1 className="mt-6 text-3xl font-bold text-slate-800 capitalize text-center">

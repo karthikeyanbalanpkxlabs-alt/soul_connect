@@ -34,7 +34,7 @@ const defaultFormData = {
   partner_preference: "",
   subscription_type: "",
   subscription_view_access: 0,
-  image: [{ url: "", default: false }],
+  image: [] as any[],
   video: "",
   transaction: [],
   public_verify: false,
@@ -74,16 +74,51 @@ export default function CustomerModal({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (formData.image && formData.image.filter((img: any) => img.url).length >= 5) {
+        alert("Maximum 5 images allowed.");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setFormData((prev) => ({
-          ...prev,
-          image: [{ url: base64String, default: true }],
-        }));
+        setFormData((prev) => {
+          const currentImages = Array.isArray(prev.image) ? prev.image : [];
+          const validImages = currentImages.filter((img: any) => img.url);
+          const isFirst = validImages.length === 0;
+          const newImages = [...validImages, { url: base64String, default: isFirst }];
+          return { ...prev, image: newImages };
+        });
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const setAsDefaultImage = (index: number) => {
+    setFormData((prev) => {
+      const currentImages = Array.isArray(prev.image) ? prev.image : [];
+      const validImages = currentImages.filter((img: any) => img.url);
+      const newImages = validImages.map((img: any, i: number) => ({
+        ...img,
+        default: i === index,
+      }));
+      return { ...prev, image: newImages };
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => {
+      const currentImages = Array.isArray(prev.image) ? prev.image : [];
+      const validImages = currentImages.filter((img: any) => img.url);
+      const newImages = [...validImages];
+      const removed = newImages.splice(index, 1)[0];
+      
+      // If we removed the default image, set the first available image as default
+      if (removed?.default && newImages.length > 0) {
+        newImages[0].default = true;
+      }
+      
+      return { ...prev, image: newImages };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -112,29 +147,52 @@ export default function CustomerModal({
           <form id="customer-form" onSubmit={handleSubmit} className="space-y-6">
             
             {/* Image Upload */}
-            <div className="flex flex-col items-center gap-4 mb-8">
-              <div className="w-32 h-32 rounded-full border-4 border-violet-100 overflow-hidden bg-gray-50 flex items-center justify-center relative group">
-                {formData.image?.[0]?.url ? (
-                  <img
-                    src={formData.image[0].url}
-                    alt="Customer"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Upload size={32} className="text-gray-400" />
+            <div className="mb-8">
+              <label className="text-sm font-medium text-gray-700 mb-3 block">Profile Pictures (Min 1, Max 5)</label>
+              <div className="flex flex-wrap gap-4">
+                {Array.isArray(formData.image) && formData.image.filter((img: any) => img.url).map((img: any, idx: number) => (
+                  <div key={idx} className={`relative w-32 h-32 rounded-xl border-4 overflow-hidden group ${img.default ? 'border-violet-500' : 'border-gray-200'}`}>
+                    <img src={img.url} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
+                    
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
+                      {!img.default && (
+                        <button 
+                          type="button" 
+                          onClick={() => setAsDefaultImage(idx)} 
+                          className="text-xs bg-violet-600 text-white px-2 py-1 rounded hover:bg-violet-700 transition-colors"
+                        >
+                          Set Default
+                        </button>
+                      )}
+                      <button 
+                        type="button" 
+                        onClick={() => removeImage(idx)} 
+                        className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    {img.default && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-violet-600 text-white text-[10px] font-bold text-center py-0.5">
+                        DEFAULT
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {(!Array.isArray(formData.image) || formData.image.filter((img: any) => img.url).length < 5) && (
+                  <label className="w-32 h-32 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
+                    <Upload size={24} className="mb-2" />
+                    <span className="text-xs font-medium">Add Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                  </label>
                 )}
-                <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                  <Upload size={20} className="mb-1" />
-                  <span className="text-xs">Upload</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                </label>
               </div>
-              <p className="text-sm text-gray-500">Profile Picture</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

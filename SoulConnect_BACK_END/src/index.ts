@@ -468,10 +468,10 @@ async function handleCustomerEdit(req: Request, res: Response) {
           .status(400)
           .json({ error: "Invalid image upload. Expected array." });
       }
-      if (imagesInput.length < 1 || imagesInput.length > 3) {
+      if (imagesInput.length < 1 || imagesInput.length > 5) {
         return res.status(400).json({
           error:
-            "Invalid image upload. Must upload minimum 1 and maximum 3 images.",
+            "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
         });
       }
       const processed = processUploadedImages(imagesInput, req);
@@ -564,11 +564,11 @@ async function handleCustomerCreate(req: Request, res: Response) {
       !imagesInput ||
       !Array.isArray(imagesInput) ||
       imagesInput.length < 1 ||
-      imagesInput.length > 3
+      imagesInput.length > 5
     ) {
       return res.status(400).json({
         error:
-          "Invalid image upload. Must upload minimum 1 and maximum 3 images.",
+          "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
       });
     }
 
