@@ -35,7 +35,7 @@ const defaultFormData = {
   subscription_type: "",
   subscription_view_access: 0,
   image: [] as any[],
-  video: "",
+  video: "" as any,
   transaction: [],
   public_verify: false,
 };
@@ -121,6 +121,29 @@ export default function CustomerModal({
     });
   };
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== "video/mp4") {
+        alert("Please upload only MP4 video files.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData((prev) => ({
+          ...prev,
+          video: { url: base64String },
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeVideo = () => {
+    setFormData((prev) => ({ ...prev, video: "" }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -189,6 +212,38 @@ export default function CustomerModal({
                       accept="image/*"
                       className="hidden"
                       onChange={handleImageUpload}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Video Upload */}
+            <div className="mb-8">
+              <label className="text-sm font-medium text-gray-700 mb-3 block">Profile Video (Max 1 MP4)</label>
+              <div className="flex flex-wrap gap-4">
+                {(formData.video && (typeof formData.video === 'string' ? formData.video : formData.video.url)) ? (
+                  <div className="relative w-48 h-32 rounded-xl border-4 border-violet-500 overflow-hidden group">
+                    <video src={typeof formData.video === 'string' ? formData.video : formData.video.url} className="w-full h-full object-cover" muted />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
+                      <button 
+                        type="button" 
+                        onClick={removeVideo} 
+                        className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="w-48 h-32 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
+                    <Upload size={24} className="mb-2" />
+                    <span className="text-xs font-medium">Add MP4</span>
+                    <input
+                      type="file"
+                      accept="video/mp4"
+                      className="hidden"
+                      onChange={handleVideoUpload}
                     />
                   </label>
                 )}

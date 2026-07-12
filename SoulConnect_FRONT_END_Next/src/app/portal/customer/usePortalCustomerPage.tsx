@@ -29,7 +29,14 @@ function usePortalCustomerPage() {
     setIsModalOpen(true);
   };
 
-  const onSaveCustomer = (formData: any) => {
+  const onSaveCustomer = async (formData: any) => {
+    try {
+      if (keycloak) {
+        await keycloak.updateToken(30);
+      }
+    } catch (error) {
+      console.error("Failed to refresh token before saving:", error);
+    }
     const token = keycloak?.token;
     const isEdit = !!editingCustomer;
     const endpoint = isEdit
@@ -62,9 +69,16 @@ function usePortalCustomerPage() {
       .catch((e) => console.error("Error saving customer:", e));
   };
 
-  const onDeleteCustomer = (id: string) => {
+  const onDeleteCustomer = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this customer?")) return;
     
+    try {
+      if (keycloak) {
+        await keycloak.updateToken(30);
+      }
+    } catch (error) {
+      console.error("Failed to refresh token before deleting:", error);
+    }
     const token = keycloak?.token;
     fetch("http://localhost:3000/api/customer_delete", {
       method: "POST",
