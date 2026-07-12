@@ -111,7 +111,7 @@ function CustomerDetailContent() {
           {/* Profile Image Carousel & Quick Info */}
           <div className="-mt-24 mb-8 flex flex-col items-center md:mb-0 md:mr-10 md:w-1/2">
             {/* Image Slider */}
-            <div className="relative h-96 w-full max-w-xs overflow-hidden rounded-2xl border-4 border-white bg-gray-200 shadow-xl">
+            <div className="relative w-full overflow-hidden rounded-2xl border-4 border-white bg-gray-200 shadow-xl">
               {images.length > 0 ? (
                 <img
                   src={images[currentImageIndex].url}
