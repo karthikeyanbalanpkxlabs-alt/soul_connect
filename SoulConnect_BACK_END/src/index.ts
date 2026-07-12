@@ -345,16 +345,18 @@ function processUploadedImages(
     }
 
     try {
-      const matches = imgStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
       let ext = "png";
       let data = imgStr;
 
-      if (matches && matches.length === 3) {
-        const mimeType = matches[1];
-        data = matches[2];
-        const parts = mimeType.split("/");
-        if (parts.length === 2) {
-          ext = parts[1];
+      if (imgStr.startsWith("data:")) {
+        const commaIdx = imgStr.indexOf(",");
+        if (commaIdx !== -1) {
+          data = imgStr.substring(commaIdx + 1);
+          const mimeStr = imgStr.substring(5, commaIdx);
+          const mimeParts = mimeStr.split(";")[0].split("/");
+          if (mimeParts.length === 2) {
+            ext = mimeParts[1];
+          }
         }
       }
 
@@ -411,16 +413,18 @@ function processUploadedVideo(
   }
 
   try {
-    const matches = vidStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     let ext = "mp4";
     let data = vidStr;
 
-    if (matches && matches.length === 3) {
-      const mimeType = matches[1];
-      data = matches[2];
-      const parts = mimeType.split("/");
-      if (parts.length === 2) {
-        ext = parts[1];
+    if (vidStr.startsWith("data:")) {
+      const commaIdx = vidStr.indexOf(",");
+      if (commaIdx !== -1) {
+        data = vidStr.substring(commaIdx + 1);
+        const mimeStr = vidStr.substring(5, commaIdx);
+        const mimeParts = mimeStr.split(";")[0].split("/");
+        if (mimeParts.length === 2) {
+          ext = mimeParts[1];
+        }
       }
     }
 

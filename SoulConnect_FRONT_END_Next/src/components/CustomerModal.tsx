@@ -124,7 +124,8 @@ export default function CustomerModal({
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.type !== "video/mp4") {
+      const isMp4 = file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
+      if (!isMp4) {
         alert("Please upload only MP4 video files.");
         return;
       }
@@ -223,8 +224,8 @@ export default function CustomerModal({
               <label className="text-sm font-medium text-gray-700 mb-3 block">Profile Video (Max 1 MP4)</label>
               <div className="flex flex-wrap gap-4">
                 {(formData.video && (typeof formData.video === 'string' ? formData.video : formData.video.url)) ? (
-                  <div className="relative w-48 h-32 rounded-xl border-4 border-violet-500 overflow-hidden group">
-                    <video src={typeof formData.video === 'string' ? formData.video : formData.video.url} className="w-full h-full object-cover" muted />
+                  <div className="relative w-64 h-40 rounded-xl border-4 border-violet-500 overflow-hidden group bg-black">
+                    <video src={typeof formData.video === 'string' ? formData.video : formData.video.url} className="w-full h-full object-contain" controls />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
                       <button 
                         type="button" 
