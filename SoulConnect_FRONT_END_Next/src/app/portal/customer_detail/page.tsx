@@ -24,6 +24,8 @@ function CustomerDetailContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -94,6 +96,31 @@ function CustomerDetailContent() {
     setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
+  const minSwipeDistance = 50;
+
+  const onTouchStartEvent = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMoveEvent = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEndEvent = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && hasMultipleImages) {
+      nextImage();
+    }
+    if (isRightSwipe && hasMultipleImages) {
+      prevImage();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-12">
       <button
@@ -111,7 +138,12 @@ function CustomerDetailContent() {
           {/* Profile Image Carousel & Quick Info */}
           <div className="-mt-24 mb-8 flex flex-col items-center md:mb-0 md:mr-10 md:w-1/2">
             {/* Image Slider */}
-            <div className="relative w-full overflow-hidden rounded-2xl border-4 border-white bg-gray-200 shadow-xl">
+            <div
+              className="relative w-full overflow-hidden rounded-2xl border-4 border-white bg-gray-200 shadow-xl"
+              onTouchStart={onTouchStartEvent}
+              onTouchMove={onTouchMoveEvent}
+              onTouchEnd={onTouchEndEvent}
+            >
               {images.length > 0 ? (
                 <img
                   src={images[currentImageIndex].url}
