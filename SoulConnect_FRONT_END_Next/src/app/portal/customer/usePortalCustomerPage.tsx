@@ -333,7 +333,7 @@ function usePortalCustomerPage() {
             Edit
           </button>
           <button
-            onClick={() => router.push(`/portal/customer_detail/${row._id}`)}
+            onClick={() => router.push(`/portal/customer_detail?id=${row._id}`)}
             className="text-gray-500 hover:text-gray-800"
             title="View Details"
           >

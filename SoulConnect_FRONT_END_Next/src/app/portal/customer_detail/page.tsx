@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import keycloak from "../../../../lib/keycloak";
+import React, { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import keycloak from "../../../lib/keycloak";
 import { ArrowLeft, User, Phone, MapPin, Briefcase, Heart, FileText } from "lucide-react";
 
-export default function CustomerDetailPage() {
-  const params = useParams();
+function CustomerDetailContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const { id } = params;
+  const id = searchParams.get("id");
 
   const [customer, setCustomer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -195,5 +195,17 @@ export default function CustomerDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomerDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-violet-600 border-t-transparent"></div>
+      </div>
+    }>
+      <CustomerDetailContent />
+    </Suspense>
   );
 }
