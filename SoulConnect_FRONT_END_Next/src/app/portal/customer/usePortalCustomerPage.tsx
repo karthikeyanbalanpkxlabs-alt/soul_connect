@@ -1,6 +1,7 @@
 import keycloak from "../../../lib/keycloak";
 import React from "react";
-// import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import { Eye, Trash2 } from "lucide-react";
 const generateId = () => {
   return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
 };
@@ -16,7 +17,7 @@ function usePortalCustomerPage() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<any>(null);
 
-  // const navigate = useNavigate();
+  const router = useRouter();
 
   const onHandleClickCreateCustomer = () => {
     setEditingCustomer(null);
@@ -28,7 +29,14 @@ function usePortalCustomerPage() {
     setIsModalOpen(true);
   };
 
-  const onSaveCustomer = (formData: any) => {
+  const onSaveCustomer = async (formData: any) => {
+    try {
+      if (keycloak) {
+        await keycloak.updateToken(30);
+      }
+    } catch (error) {
+      console.error("Failed to refresh token before saving:", error);
+    }
     const token = keycloak?.token;
     const isEdit = !!editingCustomer;
     const endpoint = isEdit
@@ -59,6 +67,33 @@ function usePortalCustomerPage() {
         loadCustomers();
       })
       .catch((e) => console.error("Error saving customer:", e));
+  };
+
+  const onDeleteCustomer = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    
+    try {
+      if (keycloak) {
+        await keycloak.updateToken(30);
+      }
+    } catch (error) {
+      console.error("Failed to refresh token before deleting:", error);
+    }
+    const token = keycloak?.token;
+    fetch("http://localhost:3000/api/customer_delete", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("customer_delete response:", data);
+        loadCustomers();
+      })
+      .catch((e) => console.error("Error deleting customer:", e));
   };
 
   const onHandleClickCreateManager = () => {
@@ -323,12 +358,31 @@ function usePortalCustomerPage() {
       label: "Action",
       isFilterable: false,
       render: (row: any) => (
-        <button
-          onClick={() => onHandleEditCustomer(row)}
-          className="text-violet-600 hover:text-violet-800 font-medium"
-        >
-          Edit
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => onHandleEditCustomer(row)}
+            className="text-violet-600 hover:text-violet-800 font-medium"
+            title="Edit Customer"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => router.push(`/portal/customer_detail?id=${row._id}`)}
+            className="text-gray-500 hover:text-gray-800"
+            title="View Details"
+          >
+            <Eye size={20} />
+          </button>
+          {getRoles?.includes("manager") && (
+            <button
+              onClick={() => onDeleteCustomer(row._id)}
+              className="text-red-500 hover:text-red-700"
+              title="Delete Customer"
+            >
+              <Trash2 size={20} />
+            </button>
+          )}
+        </div>
       ),
     },
     // {

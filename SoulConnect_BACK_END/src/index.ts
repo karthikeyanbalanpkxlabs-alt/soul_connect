@@ -23,8 +23,8 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.json({ limit: "500mb" }));
+app.use(express.urlencoded({ limit: "500mb", extended: true }));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(
@@ -281,6 +281,26 @@ async function handleCustomerDetail(req: Request, res: Response) {
   }
 }
 
+async function handleCustomerDetailGet(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: "Missing identifier in request URL" });
+    }
+
+    const customer = await Customers.findById(id);
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+    res.json(customer);
+  } catch (err: any) {
+    console.error("customer_detail_get error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch customer detail" });
+  }
+}
+
 function processUploadedImages(
   imagesInput: any[],
   req: Request,
@@ -325,16 +345,18 @@ function processUploadedImages(
     }
 
     try {
-      const matches = imgStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
       let ext = "png";
       let data = imgStr;
 
-      if (matches && matches.length === 3) {
-        const mimeType = matches[1];
-        data = matches[2];
-        const parts = mimeType.split("/");
-        if (parts.length === 2) {
-          ext = parts[1];
+      if (imgStr.startsWith("data:")) {
+        const commaIdx = imgStr.indexOf(",");
+        if (commaIdx !== -1) {
+          data = imgStr.substring(commaIdx + 1);
+          const mimeStr = imgStr.substring(5, commaIdx);
+          const mimeParts = mimeStr.split(";")[0].split("/");
+          if (mimeParts.length === 2) {
+            ext = mimeParts[1];
+          }
         }
       }
 
@@ -391,16 +413,18 @@ function processUploadedVideo(
   }
 
   try {
-    const matches = vidStr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     let ext = "mp4";
     let data = vidStr;
 
-    if (matches && matches.length === 3) {
-      const mimeType = matches[1];
-      data = matches[2];
-      const parts = mimeType.split("/");
-      if (parts.length === 2) {
-        ext = parts[1];
+    if (vidStr.startsWith("data:")) {
+      const commaIdx = vidStr.indexOf(",");
+      if (commaIdx !== -1) {
+        data = vidStr.substring(commaIdx + 1);
+        const mimeStr = vidStr.substring(5, commaIdx);
+        const mimeParts = mimeStr.split(";")[0].split("/");
+        if (mimeParts.length === 2) {
+          ext = mimeParts[1];
+        }
       }
     }
 
@@ -448,10 +472,10 @@ async function handleCustomerEdit(req: Request, res: Response) {
           .status(400)
           .json({ error: "Invalid image upload. Expected array." });
       }
-      if (imagesInput.length < 1 || imagesInput.length > 3) {
+      if (imagesInput.length < 1 || imagesInput.length > 5) {
         return res.status(400).json({
           error:
-            "Invalid image upload. Must upload minimum 1 and maximum 3 images.",
+            "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
         });
       }
       const processed = processUploadedImages(imagesInput, req);
@@ -544,11 +568,11 @@ async function handleCustomerCreate(req: Request, res: Response) {
       !imagesInput ||
       !Array.isArray(imagesInput) ||
       imagesInput.length < 1 ||
-      imagesInput.length > 3
+      imagesInput.length > 5
     ) {
       return res.status(400).json({
         error:
-          "Invalid image upload. Must upload minimum 1 and maximum 3 images.",
+          "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
       });
     }
 
@@ -710,6 +734,7 @@ app.post(
   (req: Request, res: Response) => handleCustomerList(req, res, "protected"),
 );
 app.post("/api/customer_detail", keycloak.protect(), handleCustomerDetail);
+app.get("/api/customer_detail/:id", keycloak.protect(), handleCustomerDetailGet);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
@@ -721,6 +746,7 @@ app.post("/api/public/customer_list", (req: Request, res: Response) =>
   handleCustomerList(req, res, "public"),
 );
 app.post("/api/public/customer_detail", handleCustomerDetail);
+app.get("/api/public/customer_detail/:id", handleCustomerDetailGet);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);
