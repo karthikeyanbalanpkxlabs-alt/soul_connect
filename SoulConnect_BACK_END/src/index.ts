@@ -281,6 +281,26 @@ async function handleCustomerDetail(req: Request, res: Response) {
   }
 }
 
+async function handleCustomerDetailGet(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: "Missing identifier in request URL" });
+    }
+
+    const customer = await Customers.findById(id);
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+    res.json(customer);
+  } catch (err: any) {
+    console.error("customer_detail_get error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch customer detail" });
+  }
+}
+
 function processUploadedImages(
   imagesInput: any[],
   req: Request,
@@ -710,6 +730,7 @@ app.post(
   (req: Request, res: Response) => handleCustomerList(req, res, "protected"),
 );
 app.post("/api/customer_detail", keycloak.protect(), handleCustomerDetail);
+app.get("/api/customer_detail/:id", keycloak.protect(), handleCustomerDetailGet);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
@@ -721,6 +742,7 @@ app.post("/api/public/customer_list", (req: Request, res: Response) =>
   handleCustomerList(req, res, "public"),
 );
 app.post("/api/public/customer_detail", handleCustomerDetail);
+app.get("/api/public/customer_detail/:id", handleCustomerDetailGet);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);
