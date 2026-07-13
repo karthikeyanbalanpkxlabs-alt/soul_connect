@@ -480,6 +480,7 @@ function usePortalCustomerPage() {
     onHandleClickCreateCustomer,
     onHandleEditCustomer,
     onSaveCustomer,
+    onDeleteCustomer,
     onHandleClickCreateManager,
     getSubscriptionListAPI,
     getCustomerListAPI,
