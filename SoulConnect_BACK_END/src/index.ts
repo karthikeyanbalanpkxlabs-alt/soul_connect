@@ -99,6 +99,9 @@ const customerSchema = new mongoose.Schema(
     first_name: String,
     last_name: String,
     email: String,
+    createdAtTime: Date,
+    modifiedAtTime: Date,
+    modifiedByemail: String,
   },
   { collection: "customers", strict: false },
 );
@@ -514,6 +517,16 @@ async function handleCustomerEdit(req: Request, res: Response) {
       }
     }
 
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const loggedInEmail = tokenContent?.email;
+
+    updateFields.modifiedAtTime = new Date();
+    if (loggedInEmail) {
+      updateFields.modifiedByemail = loggedInEmail;
+    } else if (email) {
+      updateFields.modifiedByemail = email;
+    }
+
     const customer = await Customers.findOneAndUpdate(
       query,
       { $set: updateFields },
@@ -701,6 +714,9 @@ async function handleCustomerCreate(req: Request, res: Response) {
       });
     }
 
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const loggedInEmail = tokenContent?.email;
+
     const newCustomer = new Customers({
       customer_id,
       keycloakId,
@@ -712,6 +728,9 @@ async function handleCustomerCreate(req: Request, res: Response) {
       image: processed,
       video: processedVideo,
       role,
+      createdAtTime: new Date(),
+      modifiedAtTime: new Date(),
+      modifiedByemail: loggedInEmail || email || undefined,
       ...otherFields,
     });
 
