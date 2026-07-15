@@ -34,7 +34,7 @@ export default function Home() {
   useEffect(() => {
     if (
       typeof window !== "undefined" &&
-      window.location.origin.includes("soulconect.com")
+      window.location.origin.includes("//soulconect.com")
     ) {
       setIsComingSoon(true);
     }
