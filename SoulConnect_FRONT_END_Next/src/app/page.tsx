@@ -98,7 +98,7 @@ export default function Home() {
           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-border-soft shadow-sm backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-rose animate-pulse" />
             <span className="text-xs font-semibold tracking-widest text-plum uppercase font-display">
-              Soul Connect
+              Soul Conect
             </span>
           </div>
 
@@ -108,9 +108,9 @@ export default function Home() {
 
           {/* Lottie Animation Container */}
           <div className="w-full max-w-md md:max-w-lg my-2 px-4 transition-all duration-300 transform hover:scale-[1.01]">
-            <Lottie 
-              animationData={loadingAnimation} 
-              loop={true} 
+            <Lottie
+              animationData={loadingAnimation}
+              loop={true}
               style={{ width: "100%", height: "auto" }}
             />
           </div>
@@ -120,7 +120,8 @@ export default function Home() {
               We are launching soon!
             </h3>
             <p className="text-sm md:text-base text-ink-60 font-body leading-relaxed">
-              We are building a thoughtful matchmaking space. Check back shortly to connect with people who match your vibe.
+              We are building a thoughtful matchmaking space. Check back shortly
+              to connect with people who match your vibe.
             </p>
           </div>
 
