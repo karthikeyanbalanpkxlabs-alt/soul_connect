@@ -450,7 +450,7 @@ function usePortalCustomerPage() {
   React.useEffect(() => {
     getSubscriptionListAPI();
     getReadyRoleValue();
-    getSendMailAPI();
+    // getSendMailAPI();
   }, []);
 
   React.useEffect(() => {

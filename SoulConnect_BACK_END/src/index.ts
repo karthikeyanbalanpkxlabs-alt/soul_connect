@@ -10,7 +10,7 @@ import fs from "fs";
 import path from "path";
 dotenv.config();
 
-let EMAIL_TRIGGER_ENABLE_FLAG = true;
+let EMAIL_TRIGGER_ENABLE_FLAG = false;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
