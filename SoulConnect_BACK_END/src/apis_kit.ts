@@ -57,12 +57,12 @@ app.use(
 
 // --- KEYCLOAK ADMIN CLIENT SETUP ---
 const kcAdminClient = new KeycloakAdminClient({
-  baseUrl: process.env.KEYCLOAK_URL || "http://103.235.105.43:4000",
+  baseUrl: process.env.KEYCLOAK_URL || "https://auth.soulconect.com",
   realmName: process.env.KEYCLOAK_REALM || "sashti",
 });
 
 const connectAdminClient = async () => {
-  const baseUrl = process.env.KEYCLOAK_URL || "http://103.235.105.43:4000";
+  const baseUrl = process.env.KEYCLOAK_URL || "https://auth.soulconect.com";
   const realm = process.env.KEYCLOAK_REALM || "soul_connect";
   const clientId = process.env.KEYCLOAK_CLIENT_ID || "soul_connect_c";
   const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET;
