@@ -6,13 +6,11 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
 
-import { Resend } from "resend";
-
 import fs from "fs";
 import path from "path";
-
 dotenv.config();
 
+let EMAIL_TRIGGER_ENABLE_FLAG = true;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -101,6 +99,9 @@ const customerSchema = new mongoose.Schema(
     first_name: String,
     last_name: String,
     email: String,
+    createdAtTime: Date,
+    modifiedAtTime: Date,
+    modifiedByemail: String,
   },
   { collection: "customers", strict: false },
 );
@@ -179,6 +180,18 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
     const customer_type = req.body.customer_type || false;
     const limit = parseInt(req.body.limit) || 100;
     const skip = parseInt(req.body.skip) || 0;
+
+    // Exclude the logged-in user's own profile from the list if authenticated
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const loggedInKeycloakId = tokenContent?.sub;
+    const loggedInEmail = tokenContent?.email;
+    
+    if (loggedInKeycloakId) {
+      filter.keycloakId = { $ne: loggedInKeycloakId };
+    }
+    if (loggedInEmail) {
+      filter.email = { $ne: loggedInEmail };
+    }
 
     if (customer_type) {
       filter.public_verify = true;
@@ -285,7 +298,9 @@ async function handleCustomerDetailGet(req: Request, res: Response) {
   try {
     const { id } = req.params;
     if (!id) {
-      return res.status(400).json({ error: "Missing identifier in request URL" });
+      return res
+        .status(400)
+        .json({ error: "Missing identifier in request URL" });
     }
 
     const customer = await Customers.findById(id);
@@ -502,6 +517,16 @@ async function handleCustomerEdit(req: Request, res: Response) {
       }
     }
 
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const loggedInEmail = tokenContent?.email;
+
+    updateFields.modifiedAtTime = new Date();
+    if (loggedInEmail) {
+      updateFields.modifiedByemail = loggedInEmail;
+    } else if (email) {
+      updateFields.modifiedByemail = email;
+    }
+
     const customer = await Customers.findOneAndUpdate(
       query,
       { $set: updateFields },
@@ -689,6 +714,9 @@ async function handleCustomerCreate(req: Request, res: Response) {
       });
     }
 
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const loggedInEmail = tokenContent?.email;
+
     const newCustomer = new Customers({
       customer_id,
       keycloakId,
@@ -700,10 +728,337 @@ async function handleCustomerCreate(req: Request, res: Response) {
       image: processed,
       video: processedVideo,
       role,
+      createdAtTime: new Date(),
+      modifiedAtTime: new Date(),
+      modifiedByemail: loggedInEmail || email || undefined,
       ...otherFields,
     });
 
     await newCustomer.save();
+
+    // Trigger /api/send-email with the complete customer creation response details
+    if (EMAIL_TRIGGER_ENABLE_FLAG) {
+      try {
+        if (email) {
+          const protocol = req.secure ? "https" : "http";
+          const host = req.headers.host || `localhost:${PORT}`;
+
+          // Share complete customer response in the email body
+          const emailHtml = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Welcome to Soul Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100% !important;
+      background-color: #F6F6F9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    table {
+      border-collapse: collapse;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F6F6F9;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F6F6F9; padding: 20px 10px;">
+    <tr>
+      <td align="center">
+        <!-- Main Container Card -->
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+          
+          <!-- Header Area -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #F2688C 0%, #7C3AED 100%); padding: 32px 24px; text-align: left; vertical-align: middle;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <!-- Header Logo & Title -->
+                  <td style="vertical-align: middle;">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="color: #ffffff; padding-right: 12px; vertical-align: middle;">
+                          <svg width="40" height="40" viewBox="0 0 100 100" style="display: block;">
+                            <circle cx="36" cy="35" r="7" fill="#ffffff" />
+                            <circle cx="64" cy="35" r="7" fill="#ffffff" />
+                            <path d="M50 78 C35 68, 22 50, 22 39 C22 30, 29 25, 36 25 C42 25, 47 29, 50 33 C53 29, 58 25, 64 25 C71 25, 78 30, 78 39 C78 50, 65 68, 50 78 Z" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M36 50 C42 55, 48 55, 50 53 C52 55, 58 55, 64 50" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+                          </svg>
+                        </td>
+                        <td style="vertical-align: middle;">
+                          <span style="color: #ffffff; font-size: 24px; font-weight: 800; font-family: sans-serif; display: block; letter-spacing: 0.5px;">Soul Connect</span>
+                          <span style="color: #fce7f3; font-size: 11px; font-weight: 500; font-family: sans-serif; display: block; opacity: 0.9; margin-top: 2px;">Connecting Hearts, Building Relationships</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  
+                  <!-- Welcome Envelope Illustration -->
+                  <td width="150" align="right" style="vertical-align: middle;">
+                    <svg width="130" height="110" viewBox="0 0 150 130" fill="none" style="display: block;">
+                      <path d="M20 90 L130 90 L120 120 L30 120 Z" fill="#6d28d9" opacity="0.15" />
+                      <rect x="25" y="55" width="100" height="65" rx="6" fill="#a78bfa" />
+                      <rect x="35" y="25" width="80" height="60" rx="4" fill="#ffffff" stroke="#e9d5ff" stroke-width="2" />
+                      <path d="M75 48 C75 48 70 43 66 43 C62 43 59 46 59 50 C59 56 75 66 75 66 C75 66 91 56 91 50 C91 46 88 43 84 43 C80 43 75 48 75 48 Z" fill="#F2688C" />
+                      <text x="75" y="70" fill="#7C3AED" font-family="cursive, sans-serif" font-size="15" font-weight="bold" text-anchor="middle">Welcome!</text>
+                      <path d="M25 55 L75 90 L25 120 Z" fill="#8b5cf6" />
+                      <path d="M125 55 L75 90 L125 120 Z" fill="#8b5cf6" />
+                      <path d="M25 120 L75 85 L125 120 Z" fill="#7c3aed" />
+                      <path d="M25 55 L75 25 L125 55 Z" fill="#c084fc" opacity="0.8" />
+                      <path d="M130 35 L138 31" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" />
+                      <path d="M132 45 L142 45" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" />
+                      <path d="M128 25 L132 17" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content Area -->
+          <tr>
+            <td style="padding: 40px 32px 32px 32px; background-color: #ffffff;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                
+                <!-- Greeting Header -->
+                <tr>
+                  <td style="padding-bottom: 24px;">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <!-- Waving Hand Icon -->
+                        <td style="padding-right: 16px; vertical-align: middle;">
+                          <div style="background-color: #f3f0ff; width: 44px; height: 44px; border-radius: 50%; text-align: center; line-height: 44px; font-size: 22px;">👋</div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                          <h1 style="margin: 0; color: #0F0A1E; font-size: 24px; font-weight: 800; font-family: sans-serif;">
+                            Hello, <span style="color: #7C3AED;">${first || "User"}</span>!
+                          </h1>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                
+                <!-- Intro Paragraph -->
+                <tr>
+                  <td style="color: #4B4468; font-size: 15px; line-height: 1.6; padding-bottom: 28px; font-family: sans-serif;">
+                    Your Soul Connect account has been successfully created. We're excited to have you join our community!
+                  </td>
+                </tr>
+                
+                <!-- Account Details Card -->
+                <tr>
+                  <td style="background-color: #faf9ff; border: 1px solid #ede9fe; border-radius: 16px; padding: 24px; margin-bottom: 28px;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      
+                      <!-- Card Title -->
+                      <tr>
+                        <td style="padding-bottom: 20px;">
+                          <table border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="color: #7C3AED; padding-right: 8px; vertical-align: middle;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                  <circle cx="12" cy="7" r="4" />
+                                </svg>
+                              </td>
+                              <td style="vertical-align: middle;">
+                                <span style="color: #7C3AED; font-weight: 700; font-size: 16px; font-family: sans-serif;">Your Account Details</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      
+                      <!-- Username Row -->
+                      <tr>
+                        <td style="padding: 12px 0; border-top: 1px dashed #e8e3ff;">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td width="36" style="vertical-align: middle;">
+                                <div style="background-color: #ede9fe; width: 28px; height: 28px; border-radius: 8px; text-align: center; line-height: 28px; color: #7C3AED;">
+                                  👤
+                                </div>
+                              </td>
+                              <td width="150" style="color: #4B4468; font-weight: 600; font-size: 14px; font-family: sans-serif; vertical-align: middle;">Username</td>
+                              <td style="color: #0F0A1E; font-size: 14px; font-family: monospace; font-weight: bold; word-break: break-all; vertical-align: middle;">${first || email}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      
+                      <!-- Email Address Row -->
+                      <tr>
+                        <td style="padding: 12px 0; border-top: 1px dashed #e8e3ff;">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td width="36" style="vertical-align: middle;">
+                                <div style="background-color: #ede9fe; width: 28px; height: 28px; border-radius: 8px; text-align: center; line-height: 28px; color: #7C3AED;">
+                                  ✉️
+                                </div>
+                              </td>
+                              <td width="150" style="color: #4B4468; font-weight: 600; font-size: 14px; font-family: sans-serif; vertical-align: middle;">Email Address</td>
+                              <td style="color: #3b82f6; font-size: 14px; font-family: sans-serif; word-break: break-all; vertical-align: middle;">${email}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      
+                      <!-- Temporary Password Row -->
+                      <tr>
+                        <td style="padding: 12px 0; border-top: 1px dashed #e8e3ff; padding-bottom: 20px;">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td width="36" style="vertical-align: middle;">
+                                <div style="background-color: #ede9fe; width: 28px; height: 28px; border-radius: 8px; text-align: center; line-height: 28px; color: #7C3AED;">
+                                  🔑
+                                </div>
+                              </td>
+                              <td width="150" style="color: #4B4468; font-weight: 600; font-size: 14px; font-family: sans-serif; vertical-align: middle;">Temporary Password</td>
+                              <td style="color: #0F0A1E; font-size: 14px; font-family: monospace; font-weight: bold; vertical-align: middle;">password@123</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      
+                      <!-- Security Note Callout Box -->
+                      <tr>
+                        <td style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px 16px;">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td width="28" style="vertical-align: top; padding-top: 2px;">
+                                🛡️
+                              </td>
+                              <td style="color: #b45309; font-size: 13px; line-height: 1.5; font-family: sans-serif;">
+                                For your security, please change your password after your first login.
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      
+                    </table>
+                  </td>
+                </tr>
+                
+                <!-- Spacer -->
+                <tr>
+                  <td style="height: 32px;"></td>
+                </tr>
+                
+                <!-- CTA Button -->
+                <tr>
+                  <td align="center">
+                    <a href="http://localhost:5174" target="_blank" style="background-color: #7C3AED; color: #ffffff; padding: 16px 36px; border-radius: 100px; font-size: 16px; font-weight: bold; text-decoration: none; display: inline-block; box-shadow: 0 4px 12px rgba(124,58,237,0.25); font-family: sans-serif;">
+                      Login to Soul Connect &nbsp;→
+                    </a>
+                  </td>
+                </tr>
+                
+                <!-- Spacer -->
+                <tr>
+                  <td style="height: 32px;"></td>
+                </tr>
+                
+                <!-- Info text below button -->
+                <tr>
+                  <td align="center" style="color: #8B85A0; font-size: 13px; line-height: 1.5; font-family: sans-serif; padding: 0 10px;">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="vertical-align: top; padding-right: 8px;">✅</td>
+                        <td style="color: #8B85A0; text-align: left;">If you did not request this account, please ignore this email or contact our support team immediately.</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer Area -->
+          <tr>
+            <td style="background-color: #fbfbfa; padding: 36px 32px 32px 32px; border-top: 1px solid #f0f0f0; text-align: center;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                
+                <!-- Footer Logo -->
+                <tr>
+                  <td align="center" style="padding-bottom: 20px;">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="color: #7C3AED; padding-right: 8px; vertical-align: middle;">
+                          <svg width="32" height="32" viewBox="0 0 100 100" style="display: block;">
+                            <circle cx="36" cy="35" r="7" fill="#7C3AED" />
+                            <circle cx="64" cy="35" r="7" fill="#7C3AED" />
+                            <path d="M50 78 C35 68, 22 50, 22 39 C22 30, 29 25, 36 25 C42 25, 47 29, 50 33 C53 29, 58 25, 64 25 C71 25, 78 30, 78 39 C78 50, 65 68, 50 78 Z" fill="none" stroke="#7C3AED" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M36 50 C42 55, 48 55, 50 53 C52 55, 58 55, 64 50" fill="none" stroke="#7C3AED" stroke-width="5" stroke-linecap="round" />
+                          </svg>
+                        </td>
+                        <td style="vertical-align: middle; color: #0F0A1E; font-size: 18px; font-weight: 800; font-family: sans-serif;">
+                          Soul Connect
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                
+                <!-- Social Media Icons -->
+                <tr>
+                  <td align="center" style="padding-bottom: 20px;">
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding: 0 8px;"><a href="#" style="text-decoration: none; color: #7C3AED; font-weight: bold; font-size: 20px;">🔵</a></td>
+                        <td style="padding: 0 8px;"><a href="#" style="text-decoration: none; color: #7C3AED; font-weight: bold; font-size: 20px;">📸</a></td>
+                        <td style="padding: 0 8px;"><a href="#" style="text-decoration: none; color: #7C3AED; font-weight: bold; font-size: 20px;">🐦</a></td>
+                        <td style="padding: 0 8px;"><a href="#" style="text-decoration: none; color: #7C3AED; font-weight: bold; font-size: 20px;">💼</a></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                
+                <!-- Copyright & Support links -->
+                <tr>
+                  <td style="color: #8B85A0; font-size: 12px; font-family: sans-serif; line-height: 1.8;">
+                    © ${new Date().getFullYear()} Soul Connect. All rights reserved.<br/>
+                    <a href="mailto:support@soulconnect.com" style="color: #7C3AED; text-decoration: none; font-weight: 600;">support@soulconnect.com</a> &nbsp;|&nbsp; <a href="http://www.soulconnect.com" target="_blank" style="color: #7C3AED; text-decoration: none; font-weight: 600;">www.soulconnect.com</a>
+                  </td>
+                </tr>
+                
+              </table>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+          console.log(`Triggering /api/send-email for ${email}...`);
+
+          await fetch(`${protocol}://${host}/api/send-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: email,
+              subject: "Welcome to Soul Connect - Account Created",
+              message: emailHtml,
+            }),
+          });
+        }
+      } catch (emailErr: any) {
+        console.error(
+          "⚠️ Failed to trigger /api/send-email:",
+          emailErr.message || emailErr,
+        );
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: "Customer created successfully",
@@ -734,7 +1089,11 @@ app.post(
   (req: Request, res: Response) => handleCustomerList(req, res, "protected"),
 );
 app.post("/api/customer_detail", keycloak.protect(), handleCustomerDetail);
-app.get("/api/customer_detail/:id", keycloak.protect(), handleCustomerDetailGet);
+app.get(
+  "/api/customer_detail/:id",
+  keycloak.protect(),
+  handleCustomerDetailGet,
+);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
@@ -765,40 +1124,67 @@ app.get("/api/protected", keycloak.protect(), (req: Request, res: Response) => {
   });
 });
 
-const resend = new Resend(
-  process.env.RESEND_API_KEY || "re_BTQAxNCr_DnGTK7KM7SAY4rpVq6aGorD2",
-);
-app.post("/api/send-email", async (req, res) => {
+app.post("/api/send-email", async (req: Request, res: Response) => {
   const { to, subject, message } = req.body;
 
-  console.log("resend mail loaded!!! sending to:", to);
-
   try {
-    const { data, error } = await resend.emails.send({
-      // from: process.env.RESEND_FROM || "onboarding@resend.dev",
-      from: "karthikeyanbalan.pkxlabs@gmail.com",
-      to: to,
-      subject: subject || "Hello World",
-      html: message
-        ? `<h1>${message}</h1>`
-        : `<p>Congrats on sending your <strong>first email</strong>!</p>`,
+    // Because the demo domain "hello@demomailtrap.co" only allows sending to the Mailtrap account owner,
+    // we hardcode the recipient to "karthimailu@gmail.com" to prevent the API error.
+    const mailtrapTo = [{ email: "karthimailu@gmail.com" }];
+
+    const htmlContent = message
+      ? message.trim().startsWith("<")
+        ? message
+        : `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px; background-color: #ffffff;">
+              <div style="background: linear-gradient(135deg, #F2688C 0%, #7C3AED 100%); padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 22px;">Soul Connect</h2>
+              </div>
+              <div style="padding: 24px; font-size: 15px;">
+                ${message.replace(/\n/g, "<br/>")}
+              </div>
+              <div style="border-top: 1px solid #f0f0f0; padding-top: 16px; text-align: center; font-size: 12px; color: #888;">
+                This is an automated notification. Please do not reply directly.
+              </div>
+            </div>`
+      : `<p>Congrats on sending your <strong>first email</strong>!</p>`;
+    const textContent = message || "Congrats on sending your first email!";
+
+    const response = await fetch("https://send.api.mailtrap.io/api/send", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer 739e287dbd445574ac5faba34837649a",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: {
+          email: "hello@demomailtrap.co",
+          name: "Mailtrap Test",
+        },
+        to: mailtrapTo,
+        subject: subject || "You are awesome!",
+        html: htmlContent,
+        text: textContent,
+        category: "Integration Test",
+      }),
     });
 
-    if (error) {
-      console.error("Resend send error:", error);
-      return res.status(400).json({
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      console.error("Mailtrap send error response:", responseData);
+      return res.status(response.status).json({
         success: false,
-        error: error.message || error,
+        error: responseData,
       });
     }
 
     res.status(200).json({
       success: true,
       message: "Email sent successfully",
-      data,
+      data: responseData,
     });
   } catch (error: any) {
-    console.error("Resend exception:", error);
+    console.error("Mailtrap exception:", error);
     res.status(500).json({
       success: false,
       error: error?.message,

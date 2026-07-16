@@ -22,9 +22,72 @@ const notoTamil = Noto_Sans_Tamil({
 });
 
 export const metadata: Metadata = {
-  title: "Soul Connect – Tamil Nadu's Most Trusted Matrimony Platform",
+  title: "Soul Conect Tamil Nadu's Most Trusted Matrimony Platform",
   description:
     "Deep compatibility matching powered by psychology — not just horoscopes and biodata. Covering all 38 districts of Tamil Nadu, every community, and every dream.",
+  keywords: [
+    "Matrimony",
+    "Tamil Nadu Matrimony",
+    "Matchmaking",
+    "Marriage Bureau",
+    "Soul Conect",
+    "SoulConect",
+    "Tamil Matrimonial",
+    "Psychology Matchmaking",
+    "Compatibility Matching",
+    "Tamil Nadu Marriage",
+    "Trust Matrimony",
+  ],
+  authors: [{ name: "Soul Conect Team" }],
+  metadataBase: new URL("https://soulconect.com"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Soul Conect Tamil Nadu's Most Trusted Matrimony Platform",
+    description:
+      "Deep compatibility matching powered by psychology — not just horoscopes and biodata. Covering all 38 districts of Tamil Nadu, every community, and every dream.",
+    url: "https://soulconect.com",
+    siteName: "Soul Conect Matrimony",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 1200,
+        alt: "Soul Conect – Tamil Nadu's Most Trusted Matrimony Platform",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Soul Conect – Tamil Nadu's Most Trusted Matrimony Platform",
+    description:
+      "Deep compatibility matching powered by psychology. Covering all 38 districts of Tamil Nadu.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "ms6bIbQkc1EjcbwvT7Mtd0k8hBtQIcyx3IGJePL_hkQ",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
