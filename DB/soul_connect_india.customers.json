@@ -11,11 +11,11 @@
   "customer_id": "cid_19ee8eb283d98422350",
   "image": [
     {
-      "url": "http://localhost:3000/uploads/img_1782024185925_0_791.jpeg",
+      "url": "https://api.soulconect.com/uploads/img_1782024185925_0_791.jpeg",
       "default": true
     },
     {
-      "url": "http://localhost:3000/uploads/img_1782024185926_1_715.jpeg"
+      "url": "https://api.soulconect.com/uploads/img_1782024185926_1_715.jpeg"
     }
   ],
   "role": "customer_g",
