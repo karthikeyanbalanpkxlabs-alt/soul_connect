@@ -33,7 +33,7 @@ const payload = {
   video: "",
 };
 
-fetch("https://api.soulconect.com/api/public/customer_edit", {
+fetch("http://localhost:3000/api/public/customer_edit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(payload),

@@ -19,7 +19,7 @@ replacement = """  const onHandleClickCreateCustomer = () => {
   const onSaveCustomer = (formData: any) => {
     const token = keycloak?.token;
     const isEdit = !!editingCustomer;
-    const endpoint = isEdit ? "https://api.soulconect.com/api/customer_update" : "https://api.soulconect.com/api/customer_create";
+    const endpoint = isEdit ? "http://localhost:3000/api/customer_update" : "http://localhost:3000/api/customer_create";
     
     if (!isEdit) {
       let dataGenerateId = generateId();

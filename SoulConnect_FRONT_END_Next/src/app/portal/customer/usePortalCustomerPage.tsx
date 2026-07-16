@@ -40,8 +40,8 @@ function usePortalCustomerPage() {
     const token = keycloak?.token;
     const isEdit = !!editingCustomer;
     const endpoint = isEdit
-      ? "https://api.soulconect.com/api/customer_edit"
-      : "https://api.soulconect.com/api/customer_create";
+      ? "http://localhost:3000/api/customer_edit"
+      : "http://localhost:3000/api/customer_create";
 
     if (!isEdit) {
       let dataGenerateId = generateId();
@@ -81,7 +81,7 @@ function usePortalCustomerPage() {
       console.error("Failed to refresh token before deleting:", error);
     }
     const token = keycloak?.token;
-    fetch("https://api.soulconect.com/api/customer_delete", {
+    fetch("http://localhost:3000/api/customer_delete", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -142,7 +142,7 @@ function usePortalCustomerPage() {
       public_verify: true,
       keycloakId: dataGenerateId,
     };
-    fetch("https://api.soulconect.com/api/customer_create", {
+    fetch("http://localhost:3000/api/customer_create", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -202,7 +202,7 @@ function usePortalCustomerPage() {
       public_verify: false,
       keycloakId: dataGenerateId,
     };
-    fetch("https://api.soulconect.com/api/customer_create", {
+    fetch("http://localhost:3000/api/customer_create", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -221,7 +221,7 @@ function usePortalCustomerPage() {
   const getSubscriptionListAPI = () => {
     if (keycloak.authenticated) {
       const token = keycloak?.token;
-      fetch("https://api.soulconect.com/api/subscriptions", {
+      fetch("http://localhost:3000/api/subscriptions", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -244,7 +244,7 @@ function usePortalCustomerPage() {
         (itm: any) => itm === "manager_admin" || itm === "customer_admin",
       );
       roles = roles.length > 0 ? roles[0] : "no_roles";
-      fetch("https://api.soulconect.com/api/customer_list", {
+      fetch("http://localhost:3000/api/customer_list", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -294,8 +294,8 @@ function usePortalCustomerPage() {
       localStorage.setItem("roles", roles || "");
       localStorage.setItem("token", keycloak?.token || "");
       const token = keycloak?.token;
-      fetch("https://api.soulconect.com/api/send-email", {
-        // fetch("https://api.soulconect.com/api/send-email", {
+      fetch("http://localhost:3000/api/send-email", {
+        // fetch("http://localhost:3000/api/send-email", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

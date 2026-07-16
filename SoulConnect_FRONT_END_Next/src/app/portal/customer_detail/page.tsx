@@ -34,7 +34,7 @@ function CustomerDetailContent() {
       try {
         const token = keycloak?.token;
         const res = await fetch(
-          `https://api.soulconect.com/api/customer_detail/${id}`,
+          `http://localhost:3000/api/customer_detail/${id}`,
           {
             method: "GET",
             headers: {
