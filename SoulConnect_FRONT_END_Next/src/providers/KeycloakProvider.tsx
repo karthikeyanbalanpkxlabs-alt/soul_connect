@@ -15,6 +15,9 @@ const KeycloakContext = createContext<KeycloakContextType>({
 
 export const useKeycloak = () => useContext(KeycloakContext);
 
+// Keep track of the initialization promise to prevent multiple init calls.
+let initPromise: Promise<boolean> | null = null;
+
 export default function KeycloakProvider({
   children,
 }: {
@@ -25,20 +28,26 @@ export default function KeycloakProvider({
   const [roles, setRoles] = useState<string[]>([]);
 
   useEffect(() => {
-    keycloak
-      .init({
-        onLoad: "login-required",
-        pkceMethod: "S256",
-      })
-      .then((auth) => {
-        localStorage.setItem("logged_in", auth ? "true" : "false");
-        setAuthenticated(auth);
-        setRoles(keycloak.realmAccess?.roles || []);
-        setReady(true);
-      })
-      .catch(() => {
-        console.error();
-      });
+    if (typeof window !== "undefined") {
+      if (!initPromise) {
+        initPromise = keycloak.init({
+          onLoad: "login-required",
+          pkceMethod: "S256",
+          checkLoginIframe: false,
+        });
+      }
+
+      initPromise
+        .then((auth) => {
+          localStorage.setItem("logged_in", auth ? "true" : "false");
+          setAuthenticated(auth);
+          setRoles(keycloak.realmAccess?.roles || []);
+          setReady(true);
+        })
+        .catch((err) => {
+          console.error("Keycloak initialization failed", err);
+        });
+    }
   }, []);
 
   if (!ready) {

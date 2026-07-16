@@ -101,7 +101,7 @@ export default function Navbar(props: any) {
                 onClick={() => {
                   localStorage.clear();
                   keycloak.logout({
-                    redirectUri: "http://localhost:5174/",
+                    redirectUri: window.location.origin + "/",
                   });
                 }}
               >

@@ -10,8 +10,16 @@ import fs from "fs";
 import path from "path";
 dotenv.config();
 
+let GLOBAL_DETAILS = {
+  // username: "admin",
+  // password: "admin",
+  username: "admin_soulconnect",
+  password: "Welcome@123",
+};
+
 let EMAIL_TRIGGER_ENABLE_FLAG = false;
 const app = express();
+app.disable("etag");
 const PORT = process.env.PORT || 3000;
 
 app.use(
@@ -638,13 +646,12 @@ async function handleCustomerCreate(req: Request, res: Response) {
     let keycloakId = undefined;
     try {
       const kcAdmin = new KeycloakAdminClient({
-        baseUrl: "http://localhost:4000",
+        baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
         realmName: "master",
       });
 
       await kcAdmin.auth({
-        username: "admin",
-        password: "admin",
+        ...GLOBAL_DETAILS,
         grantType: "password",
         clientId: "admin-cli",
       });
@@ -714,6 +721,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
         "❌ Keycloak user creation failed:",
         kcErr.response?.data || kcErr.message,
       );
+      console.error("❌ Keycloak user creation failed:", JSON.stringify(kcErr));
       return res.status(400).json({
         error: `Failed to create Keycloak user: ${kcErr.response?.data?.errorMessage || kcErr.message}`,
       });
@@ -1078,7 +1086,16 @@ async function handleCustomerCreate(req: Request, res: Response) {
 async function handleSubscriptionGet(req: Request, res: Response) {
   try {
     const subscriptions = await Subscription.find({});
-    res.json(subscriptions);
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate",
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.status(200).json({
+      success: true,
+      data: subscriptions,
+    });
   } catch (err: any) {
     console.error("subscription get error:", err);
     res
@@ -1236,13 +1253,12 @@ app.post(
     console.log("🚀 Attempting to create user:", email);
     try {
       const kcAdminClient = new KeycloakAdminClient({
-        baseUrl: "http://localhost:4000",
+        baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
         realmName: "master", // Admin API auth usually goes through master
       });
 
       await kcAdminClient.auth({
-        username: "admin",
-        password: "admin",
+        ...GLOBAL_DETAILS,
         grantType: "password",
         clientId: "admin-cli",
       });
@@ -1330,13 +1346,12 @@ app.put(
 
       // 2. Initialize Keycloak Admin Client
       const kcAdminClient = new KeycloakAdminClient({
-        baseUrl: "http://127.0.0.1:4000",
+        baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
         realmName: "master",
       });
 
       await kcAdminClient.auth({
-        username: "admin",
-        password: "admin",
+        ...GLOBAL_DETAILS,
         grantType: "password",
         clientId: "admin-cli",
       });
