@@ -16,7 +16,12 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"], // Frontend URL
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://dev.soulconect.com",
+      "https://soulconect.com",
+    ], // Frontend URL
     credentials: true,
   }),
 );
@@ -185,7 +190,7 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInKeycloakId = tokenContent?.sub;
     const loggedInEmail = tokenContent?.email;
-    
+
     if (loggedInKeycloakId) {
       filter.keycloakId = { $ne: loggedInKeycloakId };
     }
