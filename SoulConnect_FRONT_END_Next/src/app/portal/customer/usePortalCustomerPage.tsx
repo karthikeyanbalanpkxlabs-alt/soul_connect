@@ -166,7 +166,7 @@ function usePortalCustomerPage() {
       first_name: "karthikeyan" + dataGenerateId,
       last_name: "Jobalanhn" + dataGenerateId,
       email: `karthikeyanbalan.${dataGenerateId}@gmail.com`,
-      role: "manager_g",
+      role: "customer_g",
       dob: "02-12-1999",
       gender: "maile",
       phone_number: "8870688606",
