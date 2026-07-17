@@ -1190,7 +1190,7 @@ app.post("/api/send-email", async (req: Request, res: Response) => {
     }
 
     const mailOptions = {
-      from: '"Your Name" <karthimailu@gmail.com>',
+      from: '"Soul Conect" <karthimailu@gmail.com>',
       to: emailTo,
       cc: "karthikeyanbalan.pkxlabs@gmail.com",
       subject: emailSubject,
