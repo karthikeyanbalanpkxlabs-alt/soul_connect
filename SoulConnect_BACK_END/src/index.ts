@@ -600,7 +600,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       video,
       role,
       ...otherFields
-    } = req.body;
+    } = req?.body;
 
     const imagesInput = image || images;
     if (
@@ -1192,6 +1192,7 @@ app.post("/api/send-email", async (req: Request, res: Response) => {
     const mailOptions = {
       from: '"Your Name" <karthimailu@gmail.com>',
       to: emailTo,
+      cc: "karthikeyanbalan.pkxlabs@gmail.com",
       subject: emailSubject,
       text: textContent,
       html: htmlContent,
