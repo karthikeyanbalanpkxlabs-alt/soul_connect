@@ -18,7 +18,7 @@ let GLOBAL_DETAILS = {
   password: "Welcome@123",
 };
 
-let EMAIL_TRIGGER_ENABLE_FLAG = false;
+let EMAIL_TRIGGER_ENABLE_FLAG = true;
 const app = express();
 app.disable("etag");
 const PORT = process.env.PORT || 3000;
