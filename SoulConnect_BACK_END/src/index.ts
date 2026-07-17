@@ -60,7 +60,7 @@ const connectAdminClient = async () => {
   const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET;
 
   console.log(
-    `📡 Attempting Test Keycloak Admin Auth: [${baseUrl}] Realm: [${realm}] Client: [${clientId}]`,
+    `📡 Attempting Test 2 Keycloak Admin Auth: [${baseUrl}] Realm: [${realm}] Client: [${clientId}]`,
   );
 
   if (!clientSecret) {
