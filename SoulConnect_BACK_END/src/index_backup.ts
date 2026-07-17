@@ -8,7 +8,6 @@ import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
 
 import fs from "fs";
 import path from "path";
-import nodemailer from "nodemailer";
 dotenv.config();
 
 let GLOBAL_DETAILS = {
@@ -1151,28 +1150,14 @@ app.post("/api/send-email", async (req: Request, res: Response) => {
   const { to, subject, message } = req.body;
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // TLS (STARTTLS)
-      auth: {
-        user: "karthimailu@gmail.com",
-        pass: "zizbzdtzjubexmbx",
-      },
-    });
+    // Because the demo domain "hello@demomailtrap.co" only allows sending to the Mailtrap account owner,
+    // we hardcode the recipient to "karthimailu@gmail.com" to prevent the API error.
+    const mailtrapTo = [{ email: "karthimailu@gmail.com" }];
 
-    const emailTo = to || "karthikeyanbalan.pkxlabs@gmail.com";
-    const emailSubject = subject || "Test Email from Gmail SMTP";
-
-    let htmlContent: string | undefined = undefined;
-    let textContent: string = "";
-
-    if (message) {
-      textContent = message;
-      if (message.trim().startsWith("<")) {
-        htmlContent = message;
-      } else {
-        htmlContent = `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px; background-color: #ffffff;">
+    const htmlContent = message
+      ? message.trim().startsWith("<")
+        ? message
+        : `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px; background-color: #ffffff;">
               <div style="background: linear-gradient(135deg, #F2688C 0%, #7C3AED 100%); padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
                 <h2 style="color: #ffffff; margin: 0; font-size: 22px;">Soul Connect</h2>
               </div>
@@ -1182,30 +1167,46 @@ app.post("/api/send-email", async (req: Request, res: Response) => {
               <div style="border-top: 1px solid #f0f0f0; padding-top: 16px; text-align: center; font-size: 12px; color: #888;">
                 This is an automated notification. Please do not reply directly.
               </div>
-            </div>`;
-      }
-    } else {
-      textContent =
-        "Hello,\nThis is a test email sent using curl without a mail.txt file.";
+            </div>`
+      : `<p>Congrats on sending your <strong>first email</strong>!</p>`;
+    const textContent = message || "Congrats on sending your first email!";
+
+    const response = await fetch("https://send.api.mailtrap.io/api/send", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer 739e287dbd445574ac5faba34837649a",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: {
+          email: "hello@demomailtrap.co",
+          name: "Mailtrap Test",
+        },
+        to: mailtrapTo,
+        subject: subject || "You are awesome!",
+        html: htmlContent,
+        text: textContent,
+        category: "Integration Test",
+      }),
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      console.error("Mailtrap send error response:", responseData);
+      return res.status(response.status).json({
+        success: false,
+        error: responseData,
+      });
     }
-
-    const mailOptions = {
-      from: '"Your Name" <karthimailu@gmail.com>',
-      to: emailTo,
-      subject: emailSubject,
-      text: textContent,
-      html: htmlContent,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
 
     res.status(200).json({
       success: true,
       message: "Email sent successfully",
-      data: info,
+      data: responseData,
     });
   } catch (error: any) {
-    console.error("Gmail SMTP exception:", error);
+    console.error("Mailtrap exception:", error);
     res.status(500).json({
       success: false,
       error: error?.message,

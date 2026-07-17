@@ -9,6 +9,7 @@ lerna-debug.log*
 
 SoulConnect_FRONT_END/node_modules
 SoulConnect_BACK_END/node_modules
+SoulConnect_BACK_END/node_modules/*.
 dist
 dist-ssr
 *.local
