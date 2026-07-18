@@ -53,7 +53,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
 
   let roles =
     tokenParsed?.realm_access?.roles?.filter(
-      (role: string) => role === "manager_admin" || role === "customer_admin",
+      (role: string) => role === "manager_g" || role === "customer_g",
     ) || [];
 
   const role = roles.length > 0 ? roles[0] : "no_roles";
@@ -190,7 +190,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
                 {keycloak?.tokenParsed?.preferred_username}
               </div>
 
-              <div className="capitalize">{role.replaceAll("_admin", "")}</div>
+              <div className="capitalize">{role.replaceAll("_g", "")}</div>
             </div>
 
             <div

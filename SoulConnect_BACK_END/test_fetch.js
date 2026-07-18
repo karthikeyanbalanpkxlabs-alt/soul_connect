@@ -14,7 +14,7 @@ const main = async () => {
 
   try {
     await kcAdmin.auth({
-      username: "admin",
+      username: "admin_soulconnect",
       password: "Welcome@123",
       grantType: "password",
       clientId: "admin-cli",
