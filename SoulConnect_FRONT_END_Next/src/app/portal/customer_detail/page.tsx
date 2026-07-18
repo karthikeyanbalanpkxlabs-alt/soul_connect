@@ -14,7 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-
+import configUrls from "../../../../configUrls";
 function CustomerDetailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -34,7 +34,7 @@ function CustomerDetailContent() {
       try {
         const token = keycloak?.token;
         const res = await fetch(
-          `https://api.soulconect.com/api/customer_detail/${id}`,
+          `${configUrls?.apiUrl}/api/customer_detail/${id}`,
           {
             method: "GET",
             headers: {
