@@ -10,7 +10,7 @@ export default function Navbar(props: any) {
   const tokenParsed: any = keycloak?.tokenParsed;
   let roles: any = tokenParsed?.realm_access?.roles || [];
   roles = roles?.filter(
-    (itm: any) => itm === "manager_admin" || itm === "customer_admin",
+    (itm: any) => itm === "manager_g" || itm === "customer_g",
   );
   roles = roles?.length > 0 ? roles[0] : "no_roles";
 
