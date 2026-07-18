@@ -113,6 +113,7 @@ const customerSchema = new mongoose.Schema(
     first_name: String,
     last_name: String,
     email: String,
+    identity_proff: mongoose.Schema.Types.Mixed, // optional object containing { url: string }
     createdAtTime: Date,
     modifiedAtTime: Date,
     modifiedByemail: String,
@@ -470,6 +471,67 @@ function processUploadedVideo(
   }
 }
 
+function processUploadedIdentityProof(
+  identityProofInput: any,
+  req: Request,
+): { url: string } | string {
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let fileStr = "";
+
+  if (typeof identityProofInput === "string") {
+    fileStr = identityProofInput;
+  } else if (
+    identityProofInput &&
+    typeof identityProofInput === "object" &&
+    typeof identityProofInput.url === "string"
+  ) {
+    fileStr = identityProofInput.url;
+  } else {
+    return "Invalid identity proof structure. Expected string or object with url property.";
+  }
+
+  // If it's already a hosted URL (does not start with data:), just preserve it
+  if (
+    fileStr.startsWith("http://") ||
+    fileStr.startsWith("https://") ||
+    (!fileStr.startsWith("data:") && fileStr.length < 200)
+  ) {
+    return { url: fileStr };
+  }
+
+  try {
+    let ext = "png";
+    let data = fileStr;
+
+    if (fileStr.startsWith("data:")) {
+      const commaIdx = fileStr.indexOf(",");
+      if (commaIdx !== -1) {
+        data = fileStr.substring(commaIdx + 1);
+        const mimeStr = fileStr.substring(5, commaIdx);
+        const mimeParts = mimeStr.split(";")[0].split("/");
+        if (mimeParts.length === 2) {
+          ext = mimeParts[1];
+        }
+      }
+    }
+
+    const buffer = Buffer.from(data, "base64");
+    const filename = `id_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+    fs.writeFileSync(filepath, buffer);
+
+    const host = req.get("host");
+    const fileUrl = `${req.protocol}://${host}/uploads/${filename}`;
+    return { url: fileUrl };
+  } catch (err: any) {
+    return `Failed to process identity proof: ${err.message}`;
+  }
+}
+
 async function handleCustomerEdit(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
@@ -528,6 +590,20 @@ async function handleCustomerEdit(req: Request, res: Response) {
           return res.status(400).json({ error: processed });
         }
         updateFields.video = processed;
+      }
+    }
+
+    // Check if identity proof is being updated
+    const identityProofInput = updateFields.identity_proff;
+    if (identityProofInput !== undefined) {
+      if (identityProofInput === null || identityProofInput === "") {
+        updateFields.identity_proff = null;
+      } else {
+        const processed = processUploadedIdentityProof(identityProofInput, req);
+        if (typeof processed === "string") {
+          return res.status(400).json({ error: processed });
+        }
+        updateFields.identity_proff = processed;
       }
     }
 
@@ -599,6 +675,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       images,
       video,
       role,
+      identity_proff,
       ...otherFields
     } = req?.body;
 
@@ -627,6 +704,15 @@ async function handleCustomerCreate(req: Request, res: Response) {
         return res.status(400).json({ error: processedVid });
       }
       processedVideo = processedVid;
+    }
+
+    let processedIdentityProof = undefined;
+    if (identity_proff !== undefined && identity_proff !== null && identity_proff !== "") {
+      const processedId = processUploadedIdentityProof(identity_proff, req);
+      if (typeof processedId === "string") {
+        return res.status(400).json({ error: processedId });
+      }
+      processedIdentityProof = processedId;
     }
 
     if (email) {
@@ -741,6 +827,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       email,
       image: processed,
       video: processedVideo,
+      identity_proff: processedIdentityProof,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),
