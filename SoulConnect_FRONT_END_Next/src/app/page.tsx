@@ -136,10 +136,10 @@ export default function Home() {
     <>
       <Navbar />
       <Hero />
-      <Districts
+      {/* <Districts
         selectedDistrict={selectedDistrict}
         onSelectDistrict={handleSelectDistrict}
-      />
+      /> */}
       <HowItWorks />
       <Registration
         selectedDistrict={selectedDistrict}

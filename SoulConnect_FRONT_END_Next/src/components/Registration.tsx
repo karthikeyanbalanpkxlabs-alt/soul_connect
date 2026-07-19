@@ -183,12 +183,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
         >
           ✍️ Manual Registration
         </button>
-        <button
+        {/* <button
           className={`reg-tab ${activeTab === "auto" ? "active" : ""}`}
           onClick={() => setActiveTab("auto")}
         >
           ⚡ AI-Assisted
-        </button>
+        </button> */}
       </div>
 
       {/* MANUAL PANEL */}

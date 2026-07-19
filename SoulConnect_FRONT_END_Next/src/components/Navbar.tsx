@@ -38,9 +38,9 @@ export default function Navbar(props: any) {
         </a>
 
         <div className={`nav-links ${isOpen ? "open" : ""}`} id="navLinks">
-          <a href="#districts" onClick={handleLinkClick}>
+          {/* <a href="#districts" onClick={handleLinkClick}>
             Districts
-          </a>
+          </a> */}
           <a href="#how" onClick={handleLinkClick}>
             How it works
           </a>
@@ -50,12 +50,12 @@ export default function Navbar(props: any) {
           <a href="#pricing" onClick={handleLinkClick}>
             Plans
           </a>
-          <a href="#verify" onClick={handleLinkClick}>
+          {/* <a href="#verify" onClick={handleLinkClick}>
             Verification
-          </a>
-          <a href="#app" onClick={handleLinkClick}>
+          </a> */}
+          {/* <a href="#app" onClick={handleLinkClick}>
             App
-          </a>
+          </a> */}
           <a href="#register" className="nav-tamil" onClick={handleLinkClick}>
             பதிவு செய்யுங்கள்
           </a>
