@@ -227,7 +227,12 @@ export default function Registration({
         selectedPlanData.features
       );
     } else {
-      showToast("Registration completed successfully on the Free tier!", "success");
+      showToast("Registration completed successfully on the Free tier! Redirecting to login...", "success");
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          window.location.href = window.location.origin + "/portal";
+        }
+      }, 2000);
     }
   };
 

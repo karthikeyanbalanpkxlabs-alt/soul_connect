@@ -141,6 +141,7 @@ export default function Home() {
         onSelectDistrict={handleSelectDistrict}
       /> */}
       <HowItWorks />
+      <Pricing onOpenPayment={handleOpenPayment} />
       <Registration
         selectedDistrict={selectedDistrict}
         onRegisterSuccess={() =>
@@ -152,10 +153,9 @@ export default function Home() {
         onOpenPayment={handleOpenPayment}
         showToast={showToast}
       />
-      <Pricing onOpenPayment={handleOpenPayment} />
-      <Verification showToast={showToast} />
-      <VibeMatch showToast={showToast} />
-      <AppDownload />
+      {/* <Verification showToast={showToast} /> */}
+      {/* <VibeMatch showToast={showToast} /> */}
+      {/* <AppDownload /> */}
       <CTA />
       <Footer />
 
