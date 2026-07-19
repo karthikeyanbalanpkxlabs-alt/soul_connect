@@ -833,7 +833,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div
                   key={plan.id}
                   onClick={() => setSelectedPlan(plan.name)}
-                  className={`plan-step-card ${plan.id === "premium" ? "premium" : ""} ${
+                  className={`plan-step-card ${
                     isSelected ? "selected" : ""
                   }`}
                 >
@@ -852,11 +852,21 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   <ul className="plan-features">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="feature-item">
-                        <Check className={`h-4 w-4 ${plan.id === "premium" ? "text-white" : "text-emerald-500"}`} />
+                        <Check className={`h-4 w-4 ${isSelected ? "text-white" : "text-emerald-500"}`} />
                         <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
+
+                  <button
+                    className={`plan-select-btn ${isSelected ? "selected" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPlan(plan.name);
+                    }}
+                  >
+                    {isSelected ? "Selected ✓" : "Select Plan"}
+                  </button>
                 </div>
               );
             })}

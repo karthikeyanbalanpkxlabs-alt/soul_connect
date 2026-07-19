@@ -749,14 +749,32 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
 }
 
 .plan-step-card.selected {
-  border-color: var(--plum);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  background: linear-gradient(135deg, var(--plum) 0%, var(--rose-dark) 60%, var(--rose) 100%) !important;
+  color: white !important;
+  border-color: var(--plum) !important;
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.25) !important;
 }
 
-.plan-step-card.premium {
-  background: linear-gradient(135deg, var(--plum) 0%, var(--rose-dark) 60%, var(--rose) 100%);
-  color: white;
-  border-color: var(--plum);
+.plan-step-card.selected .plan-price,
+.plan-step-card.selected .plan-title {
+  color: white !important;
+}
+
+.plan-step-card.selected .plan-desc {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.plan-step-card.selected .feature-item {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.plan-step-card.selected .feature-item svg {
+  color: white !important;
+}
+
+.plan-step-card.selected .plan-badge {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
 }
 
 .plan-popular-badge {
@@ -794,8 +812,8 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
 }
 
 .plan-badge.premium {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: var(--plum-light);
+  color: var(--plum-dark);
 }
 
 .plan-badge.elite {
@@ -817,19 +835,11 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
   margin-bottom: 8px;
 }
 
-.plan-step-card.premium .plan-price {
-  color: white;
-}
-
 .plan-step-card .plan-desc {
   font-size: 0.82rem;
   color: var(--ink-60);
   margin-bottom: 24px;
   line-height: 1.4;
-}
-
-.plan-step-card.premium .plan-desc {
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .plan-step-card .plan-title {
@@ -838,10 +848,6 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 20px;
-}
-
-.plan-step-card.premium .plan-title {
-  color: white;
 }
 
 .plan-step-card .plan-features {
@@ -861,15 +867,39 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
   line-height: 1.4;
 }
 
-.plan-step-card.premium .feature-item {
-  color: rgba(255, 255, 255, 0.95);
-}
-
 .plan-step-card .feature-item svg {
   flex-shrink: 0;
   margin-top: 3px;
   width: 15px;
   height: 15px;
+}
+
+.plan-select-btn {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--plum);
+  background: transparent;
+  color: var(--plum);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 24px;
+  text-align: center;
+  font-family: var(--font-body);
+  outline: none;
+}
+
+.plan-select-btn:hover {
+  background: var(--plum-light);
+}
+
+.plan-step-card.selected .plan-select-btn {
+  background: white !important;
+  color: var(--plum-dark) !important;
+  border-color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* ID VERIFICATION CARD */
