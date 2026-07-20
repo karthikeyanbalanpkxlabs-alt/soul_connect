@@ -331,6 +331,68 @@ async function handleCustomerDetailGet(req: Request, res: Response) {
   }
 }
 
+async function handleProfileDetail(req: Request, res: Response) {
+  try {
+    const { email } = {
+      ...req.query,
+      ...req.body,
+    };
+
+    const targetEmail =
+      (email as string) ||
+      (req as any).kauth?.grant?.access_token?.content?.email;
+
+    if (!targetEmail) {
+      return res.status(400).json({
+        error: "Missing email parameter in request",
+      });
+    }
+
+    const profile = await Customers.findOne({ email: targetEmail });
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json(profile);
+  } catch (err: any) {
+    console.error("profile_detail error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch profile detail" });
+  }
+}
+
+async function handleProfileDetailGet(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Missing identifier in request URL" });
+    }
+
+    let profile;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      profile = await Customers.findOne({
+        $or: [{ _id: id }, { customer_id: id }, { keycloakId: id }],
+      });
+    } else {
+      profile = await Customers.findOne({
+        $or: [{ customer_id: id }, { keycloakId: id }, { email: id }],
+      });
+    }
+
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json(profile);
+  } catch (err: any) {
+    console.error("profile_detail_get error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch profile detail" });
+  }
+}
+
 function processUploadedImages(
   imagesInput: any[],
   req: Request,
@@ -707,7 +769,11 @@ async function handleCustomerCreate(req: Request, res: Response) {
     }
 
     let processedIdentityProof = undefined;
-    if (identity_proff !== undefined && identity_proff !== null && identity_proff !== "") {
+    if (
+      identity_proff !== undefined &&
+      identity_proff !== null &&
+      identity_proff !== ""
+    ) {
       const processedId = processUploadedIdentityProof(identity_proff, req);
       if (typeof processedId === "string") {
         return res.status(400).json({ error: processedId });
@@ -1204,6 +1270,9 @@ app.get(
   keycloak.protect(),
   handleCustomerDetailGet,
 );
+app.post("/api/profile_detail", keycloak.protect(), handleProfileDetail);
+app.get("/api/profile_detail", keycloak.protect(), handleProfileDetail);
+app.get("/api/profile_detail/:id", keycloak.protect(), handleProfileDetailGet);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
@@ -1216,6 +1285,9 @@ app.post("/api/public/customer_list", (req: Request, res: Response) =>
 );
 app.post("/api/public/customer_detail", handleCustomerDetail);
 app.get("/api/public/customer_detail/:id", handleCustomerDetailGet);
+app.post("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail/:id", handleProfileDetailGet);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);

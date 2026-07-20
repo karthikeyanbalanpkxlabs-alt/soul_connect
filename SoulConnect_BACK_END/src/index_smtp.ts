@@ -330,6 +330,90 @@ async function handleCustomerDetailGet(req: Request, res: Response) {
   }
 }
 
+async function handleProfileDetail(req: Request, res: Response) {
+  try {
+    const { id, profile_id, customer_id, email, keycloakId } = {
+      ...req.query,
+      ...req.body,
+    };
+    let query: any = {};
+    const targetId = (id || profile_id || customer_id) as string;
+    if (targetId) {
+      if (mongoose.Types.ObjectId.isValid(targetId)) {
+        query.$or = [{ _id: targetId }, { customer_id: targetId }];
+      } else {
+        query.customer_id = targetId;
+      }
+    } else if (keycloakId && email) {
+      query.$or = [{ keycloakId }, { email }];
+    } else if (keycloakId) {
+      query.keycloakId = keycloakId;
+    } else if (email) {
+      query.email = email;
+    } else {
+      const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+      if (tokenContent?.sub && tokenContent?.email) {
+        query.$or = [
+          { keycloakId: tokenContent.sub },
+          { email: tokenContent.email },
+        ];
+      } else if (tokenContent?.sub) {
+        query.keycloakId = tokenContent.sub;
+      } else if (tokenContent?.email) {
+        query.email = tokenContent.email;
+      } else {
+        return res.status(400).json({
+          error:
+            "Missing identifier (id, profile_id, customer_id, email, or keycloakId) in request",
+        });
+      }
+    }
+
+    const profile = await Customers.findOne(query);
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json(profile);
+  } catch (err: any) {
+    console.error("profile_detail error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch profile detail" });
+  }
+}
+
+async function handleProfileDetailGet(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Missing identifier in request URL" });
+    }
+
+    let profile;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      profile = await Customers.findOne({
+        $or: [{ _id: id }, { customer_id: id }, { keycloakId: id }],
+      });
+    } else {
+      profile = await Customers.findOne({
+        $or: [{ customer_id: id }, { keycloakId: id }, { email: id }],
+      });
+    }
+
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json(profile);
+  } catch (err: any) {
+    console.error("profile_detail_get error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch profile detail" });
+  }
+}
+
 function processUploadedImages(
   imagesInput: any[],
   req: Request,
@@ -1113,6 +1197,13 @@ app.get(
   keycloak.protect(),
   handleCustomerDetailGet,
 );
+app.post("/api/profile_detail", keycloak.protect(), handleProfileDetail);
+app.get("/api/profile_detail", keycloak.protect(), handleProfileDetail);
+app.get(
+  "/api/profile_detail/:id",
+  keycloak.protect(),
+  handleProfileDetailGet,
+);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
@@ -1125,6 +1216,9 @@ app.post("/api/public/customer_list", (req: Request, res: Response) =>
 );
 app.post("/api/public/customer_detail", handleCustomerDetail);
 app.get("/api/public/customer_detail/:id", handleCustomerDetailGet);
+app.post("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail/:id", handleProfileDetailGet);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);

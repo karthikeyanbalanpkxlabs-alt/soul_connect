@@ -1,6 +1,7 @@
 "use client";
 
 import keycloak from "../lib/keycloak";
+import { useKeycloak } from "@/providers/KeycloakProvider";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -8,6 +9,7 @@ import { useRouter } from "next/navigation";
 export default function Navbar(props: any) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const { profile } = useKeycloak();
 
   const tokenParsed: any = keycloak?.tokenParsed;
   let roles: any = tokenParsed?.realm_access?.roles || [];
@@ -16,7 +18,7 @@ export default function Navbar(props: any) {
   );
   roles = roles?.length > 0 ? roles[0] : "no_roles";
 
-  let name = keycloak.tokenParsed?.preferred_username;
+  let name = profile?.first_name || profile?.firstName || keycloak.tokenParsed?.preferred_username;
 
   const toggleNav = () => {
     setIsOpen(!isOpen);
@@ -157,7 +159,7 @@ export default function Navbar(props: any) {
     );
   };
 
-  let logoObj = {
+  let logoObj: any = {
     href: "#",
   };
 

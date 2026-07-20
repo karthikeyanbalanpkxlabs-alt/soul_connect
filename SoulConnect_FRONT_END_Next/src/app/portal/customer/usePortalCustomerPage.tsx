@@ -3,11 +3,24 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Trash2 } from "lucide-react";
 import configUrls from "../../../../configUrls";
+import { useKeycloak } from "@/providers/KeycloakProvider";
 const generateId = () => {
   return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
 };
 
 function usePortalCustomerPage() {
+  const { profile, loadingProfile, profileError, refreshProfile } =
+    useKeycloak();
+
+  let getIsCustomer = profile?.role === "customer_g";
+  let global_gender =
+    profile?.gender === "" ||
+    profile?.gender === "male" ||
+    profile?.gender === "maile"
+      ? profile?.gender
+      : "female";
+  console.log("profile", profile);
+
   const [getRoles, setRoles] = React.useState<any>("");
   const [loading, setLoading] = React.useState(true);
   const [rows, setRows] = React.useState<any[]>([]);
@@ -17,6 +30,24 @@ function usePortalCustomerPage() {
   const [filters, setFilters] = React.useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (profile) {
+      const isCustomer = profile?.role === "customer_g";
+      const genderVal =
+        profile?.gender === "" ||
+        profile?.gender === "male" ||
+        profile?.gender === "maile"
+          ? profile?.gender
+          : "female";
+      if (isCustomer) {
+        setFilters((prev) => ({
+          gender: genderVal + "",
+          ...prev,
+        }));
+      }
+    }
+  }, [profile]);
 
   const router = useRouter();
 
