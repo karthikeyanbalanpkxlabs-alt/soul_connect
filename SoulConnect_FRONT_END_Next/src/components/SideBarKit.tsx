@@ -35,7 +35,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
 
   const menus = [
     {
-      name: "Landing",
+      name: "Dashboard",
       icon: Home,
       router: "/portal",
     },
@@ -198,7 +198,9 @@ export default function SideBarKit({ children }: SideBarKitProps) {
                   {profile.email}
                 </div>
               )}
-              <div className="capitalize text-xs text-pink-600 font-medium">{role.replaceAll("_g", "")}</div>
+              <div className="capitalize text-xs text-pink-600 font-medium">
+                {role.replaceAll("_g", "")}
+              </div>
             </div>
 
             <div

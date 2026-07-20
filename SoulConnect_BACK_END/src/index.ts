@@ -1258,6 +1258,86 @@ async function handleSubscriptionGet(req: Request, res: Response) {
   }
 }
 
+async function handleDashboardAnalytics(req: Request, res: Response) {
+  try {
+    const totalCustomers = await Customers.countDocuments();
+    const approvedCustomers = await Customers.countDocuments({ public_verify: true });
+    const pendingCustomers = await Customers.countDocuments({
+      $or: [
+        { public_verify: false },
+        { public_verify: { $exists: false } },
+        { public_verify: null },
+      ],
+    });
+
+    const maleCount = await Customers.countDocuments({
+      gender: { $regex: /^male/i },
+    });
+    const femaleCount = await Customers.countDocuments({
+      gender: { $regex: /^female/i },
+    });
+
+    const managerCount = await Customers.countDocuments({ role: "manager_g" });
+    const customerRoleCount = await Customers.countDocuments({
+      role: "customer_g",
+    });
+
+    const totalSubscriptions = await Subscription.countDocuments();
+
+    const recentCustomers = await Customers.find()
+      .sort({ _id: -1 })
+      .limit(6);
+
+    const subscriptionBreakdown = await Customers.aggregate([
+      {
+        $group: {
+          _id: { $ifNull: ["$subscription_type", "Guest"] },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const districtBreakdown = await Customers.aggregate([
+      { $match: { district: { $exists: true, $ne: "" } } },
+      { $group: { _id: "$district", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ]);
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate",
+    );
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalCustomers,
+        approvedCustomers,
+        pendingCustomers,
+        maleCount,
+        femaleCount,
+        managerCount,
+        customerRoleCount,
+        totalSubscriptions,
+      },
+      subscriptionBreakdown: subscriptionBreakdown.map((item) => ({
+        type: String(item._id || "Guest"),
+        count: item.count,
+      })),
+      topDistricts: districtBreakdown.map((item) => ({
+        district: String(item._id),
+        count: item.count,
+      })),
+      recentCustomers,
+    });
+  } catch (err: any) {
+    console.error("dashboard_analytics error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch dashboard analytics" });
+  }
+}
+
 // --- CUSTOMER APIs (With Keycloak Access / Protected) ---
 app.post(
   "/api/customer_list",
@@ -1278,6 +1358,8 @@ app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
 app.get("/api/subscription", keycloak.protect(), handleSubscriptionGet);
 app.get("/api/subscriptions", keycloak.protect(), handleSubscriptionGet);
+app.get("/api/dashboard_analytics", keycloak.protect(), handleDashboardAnalytics);
+app.post("/api/dashboard_analytics", keycloak.protect(), handleDashboardAnalytics);
 
 // --- CUSTOMER APIs (Without Keycloak Access / Public) ---
 app.post("/api/public/customer_list", (req: Request, res: Response) =>
@@ -1293,6 +1375,8 @@ app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);
 app.get("/api/public/subscription", handleSubscriptionGet);
 app.get("/api/public/subscriptions", handleSubscriptionGet);
+app.get("/api/public/dashboard_analytics", handleDashboardAnalytics);
+app.post("/api/public/dashboard_analytics", handleDashboardAnalytics);
 app.get("/api/public", (req: Request, res: Response) => {
   res.json({
     message: "This is a public endpoint. No authentication required.",
