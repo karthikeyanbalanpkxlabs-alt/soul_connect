@@ -3,8 +3,10 @@
 import keycloak from "../lib/keycloak";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar(props: any) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
   const tokenParsed: any = keycloak?.tokenParsed;
@@ -29,87 +31,36 @@ export default function Navbar(props: any) {
   if (roles?.includes("manager")) {
     return <></>;
   }
-  return (
-    <>
-      <nav>
-        <a href="#" className="nav-logo">
-          Soul<span>Connect</span>
-          <div className="logo-dot"></div>
-        </a>
 
-        <div className={`nav-links ${isOpen ? "open" : ""}`} id="navLinks">
-          <a href="#districts" onClick={handleLinkClick}>
-            Districts
-          </a>
-          <a href="#how" onClick={handleLinkClick}>
-            How it works
-          </a>
-          <a href="#register" onClick={handleLinkClick}>
-            Register
-          </a>
-          <a href="#pricing" onClick={handleLinkClick}>
-            Plans
-          </a>
-          <a href="#verify" onClick={handleLinkClick}>
-            Verification
-          </a>
-          <a href="#app" onClick={handleLinkClick}>
-            App
-          </a>
-          <a href="#register" className="nav-tamil" onClick={handleLinkClick}>
-            பதிவு செய்யுங்கள்
-          </a>
-
-          {name?.length > 0 ? (
-            <div style={{ display: "flex" }}>
-              <p
-                style={{
-                  display: "flex",
-                  marginRight: 10,
-                  textTransform: "capitalize",
-                }}
+  const renderUserInfoUI = () => {
+    return (
+      <>
+        {name?.length > 0 ? (
+          <div style={{ display: "flex" }}>
+            <p
+              style={{
+                display: "flex",
+                marginRight: 10,
+                textTransform: "capitalize",
+              }}
+            >
+              <svg
+                width={"15px"}
+                height={"15px"}
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{ marginRight: 5 }}
               >
-                <svg
-                  width={"15px"}
-                  height={"15px"}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  style={{ marginRight: 5 }}
-                >
-                  <path
-                    d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-                    stroke="#000000"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span>{name + " |"}</span>
-              </p>
-              <div
-                style={{
-                  cursor: "pointer",
-                  color: "var(--ink-60)",
-                  fontSize: ".875rem",
-                  fontWeight: 400,
-                  textDecoration: "none",
-                  transition: "color .2s",
-                  display: "flex",
-                  marginRight: 10,
-                  alignItems: "center",
-                }}
-                onClick={() => {
-                  localStorage.clear();
-                  keycloak.logout({
-                    redirectUri: window.location.origin + "/",
-                  });
-                }}
-              >
-                <LogOut size={16} />
-                <span style={{ marginLeft: 8 }}>Logout</span>
-              </div>
-            </div>
-          ) : (
+                <path
+                  d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                  stroke="#000000"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span>{name + " |"}</span>
+            </p>
             <div
               style={{
                 cursor: "pointer",
@@ -118,14 +69,117 @@ export default function Navbar(props: any) {
                 fontWeight: 400,
                 textDecoration: "none",
                 transition: "color .2s",
+                display: "flex",
+                marginRight: 10,
+                alignItems: "center",
               }}
               onClick={() => {
-                window.location.href = window.location.origin + "/portal";
+                localStorage.clear();
+                keycloak.logout({
+                  redirectUri: window.location.origin + "/",
+                });
               }}
             >
-              Login
+              <LogOut size={16} />
+              <span style={{ marginLeft: 8 }}>Logout</span>
             </div>
-          )}
+          </div>
+        ) : (
+          <div
+            style={{
+              cursor: "pointer",
+              color: "var(--ink-60)",
+              fontSize: ".875rem",
+              fontWeight: 400,
+              textDecoration: "none",
+              transition: "color .2s",
+            }}
+            onClick={() => {
+              window.location.href = window.location.origin + "/portal";
+            }}
+          >
+            Login
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const renderLandingLinks = () => {
+    return (
+      <>
+        <a href="#districts" onClick={handleLinkClick}>
+          Districts
+        </a>
+        <a href="#how" onClick={handleLinkClick}>
+          How it works
+        </a>
+        <a href="#register" onClick={handleLinkClick}>
+          Register
+        </a>
+        <a href="#pricing" onClick={handleLinkClick}>
+          Plans
+        </a>
+        <a href="#verify" onClick={handleLinkClick}>
+          Verification
+        </a>
+        <a href="#app" onClick={handleLinkClick}>
+          App
+        </a>
+        <a href="#register" className="nav-tamil" onClick={handleLinkClick}>
+          பதிவு செய்யுங்கள்
+        </a>
+      </>
+    );
+  };
+  const renderLandingAuthCustomerLinks = () => {
+    return (
+      <>
+        <a
+          style={{ cursor: "pointer" }}
+          onClick={() => {
+            router.push(`/portal/profile`);
+          }}
+        >
+          {`Account`}
+        </a>
+      </>
+    );
+  };
+
+  const renderLink = () => {
+    return (
+      <>
+        {"customer_g" === roles
+          ? renderLandingAuthCustomerLinks()
+          : renderLandingLinks()}
+      </>
+    );
+  };
+
+  let logoObj = {
+    href: "#",
+  };
+
+  if ("customer_g" === roles) {
+    logoObj = {
+      onClick: () => {
+        router.push(`/portal`);
+      },
+    };
+  }
+
+  return (
+    <>
+      <nav>
+        <a {...logoObj} className="nav-logo">
+          Soul<span>Conect</span>
+          <div className="logo-dot"></div>
+        </a>
+
+        <div className={`nav-links ${isOpen ? "open" : ""}`} id="navLinks">
+          {renderLink()}
+          {renderUserInfoUI()}
           <a href="#register" className="btn-nav" onClick={handleLinkClick}>
             Begin Journey ✦
           </a>

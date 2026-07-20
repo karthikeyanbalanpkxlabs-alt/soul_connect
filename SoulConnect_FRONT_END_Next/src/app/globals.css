@@ -61,6 +61,7 @@ nav {
   display: flex; align-items: center; justify-content: space-between;
 }
 .nav-logo {
+  cursor: pointer;
   font-family: var(--font-display); font-weight: 800; font-size: 1.25rem;
   color: var(--plum); text-decoration: none;
   display: flex; align-items: center; gap: 8px;

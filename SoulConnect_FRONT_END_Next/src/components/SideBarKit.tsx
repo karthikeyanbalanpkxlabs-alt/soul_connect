@@ -74,7 +74,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           className="nav-logo"
           style={{ textDecoration: "none" }}
         >
-          Soul<span>Connect</span>
+          Soul<span>Conect</span>
           <div className="logo-dot"></div>
         </Link>
         <button
@@ -116,7 +116,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           <div className="flex items-center overflow-hidden pr-10">
             {!collapsed ? (
               <Link href="/" className="nav-logo">
-                Soul<span>Connect</span>
+                Soul<span>Conect</span>
                 <div className="logo-dot"></div>
               </Link>
             ) : (
