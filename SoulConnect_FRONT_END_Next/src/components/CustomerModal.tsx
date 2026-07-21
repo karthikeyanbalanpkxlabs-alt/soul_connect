@@ -603,8 +603,7 @@ export default function CustomerModal({
                 <label className="text-sm font-medium text-gray-700">
                   Marital Status <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   name="maritial_status"
                   value={
                     [
@@ -877,8 +876,7 @@ export default function CustomerModal({
                 <label className="text-sm font-medium text-gray-700">
                   About Self <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <textarea
                   name="about_self"
                   rows={3}
                   value={formik.values.about_self}
@@ -893,8 +891,7 @@ export default function CustomerModal({
                 <label className="text-sm font-medium text-gray-700">
                   Partner Preference <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <textarea
                   name="partner_preference"
                   rows={3}
                   value={formik.values.partner_preference}
