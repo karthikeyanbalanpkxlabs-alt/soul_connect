@@ -40,7 +40,7 @@ const defaultFormData = {
   video: "" as any,
   identity_proff: "" as any,
   transaction: [],
-  public_verify: false,
+  public_verify: true,
 };
 
 export default function CustomerModal({
@@ -51,7 +51,9 @@ export default function CustomerModal({
   subscriptionList,
 }: CustomerModalProps) {
   const [formData, setFormData] = useState(defaultFormData);
-  const [subscriptions, setSubscriptions] = useState<any[]>(subscriptionList || []);
+  const [subscriptions, setSubscriptions] = useState<any[]>(
+    subscriptionList || [],
+  );
 
   useEffect(() => {
     if (subscriptionList && subscriptionList.length > 0) {
@@ -64,7 +66,9 @@ export default function CustomerModal({
           const list = Array.isArray(data) ? data : data?.data || [];
           setSubscriptions(list);
         })
-        .catch((err) => console.error("Error fetching subscription list:", err));
+        .catch((err) =>
+          console.error("Error fetching subscription list:", err),
+        );
     }
   }, [isOpen, subscriptionList]);
 
@@ -83,7 +87,9 @@ export default function CustomerModal({
   if (!isOpen) return null;
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value, type } = e.target;
 
@@ -556,13 +562,67 @@ export default function CustomerModal({
                 <label className="text-sm font-medium text-gray-700">
                   Marital Status
                 </label>
-                <input
-                  type="text"
+                <select
                   name="maritial_status"
-                  value={formData.maritial_status}
+                  value={
+                    [
+                      "Single",
+                      "Married",
+                      "Divorced",
+                      "Widowed",
+                      "Separated",
+                      "Engaged",
+                      "In a Domestic Partnership",
+                      "Civil Union",
+                      "Prefer Not to Say",
+                    ].find(
+                      (opt) =>
+                        opt.toLowerCase() ===
+                        formData.maritial_status?.toLowerCase(),
+                    ) ||
+                    formData.maritial_status ||
+                    ""
+                  }
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
-                />
+                >
+                  <option value="">Select Marital Status</option>
+                  {[
+                    "Single",
+                    "Married",
+                    "Divorced",
+                    "Widowed",
+                    "Separated",
+                    "Engaged",
+                    "In a Domestic Partnership",
+                    "Civil Union",
+                    "Prefer Not to Say",
+                  ].map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                  {formData.maritial_status &&
+                    ![
+                      "Single",
+                      "Married",
+                      "Divorced",
+                      "Widowed",
+                      "Separated",
+                      "Engaged",
+                      "In a Domestic Partnership",
+                      "Civil Union",
+                      "Prefer Not to Say",
+                    ].some(
+                      (opt) =>
+                        opt.toLowerCase() ===
+                        formData.maritial_status?.toLowerCase(),
+                    ) && (
+                      <option value={formData.maritial_status}>
+                        {formData.maritial_status}
+                      </option>
+                    )}
+                </select>
               </div>
 
               {/* Location */}
@@ -724,17 +784,23 @@ export default function CustomerModal({
                   {subscriptions.map((sub: any, index: number) => {
                     const subName = sub.name || sub.type || "";
                     return (
-                      <option key={sub._id?.toString?.() || sub._id || index} value={subName}>
+                      <option
+                        key={sub._id?.toString?.() || sub._id || index}
+                        value={subName}
+                      >
                         {subName}
                       </option>
                     );
                   })}
-                  {!subscriptions.some((s: any) => (s.name || s.type) === "guest") && (
-                    <option value="guest">guest</option>
-                  )}
+                  {!subscriptions.some(
+                    (s: any) => (s.name || s.type) === "guest",
+                  ) && <option value="guest">guest</option>}
                   {formData.subscription_type &&
                     formData.subscription_type !== "guest" &&
-                    !subscriptions.some((s: any) => (s.name || s.type) === formData.subscription_type) && (
+                    !subscriptions.some(
+                      (s: any) =>
+                        (s.name || s.type) === formData.subscription_type,
+                    ) && (
                       <option value={formData.subscription_type}>
                         {formData.subscription_type}
                       </option>
@@ -746,9 +812,9 @@ export default function CustomerModal({
                 <label className="text-sm font-medium text-gray-700">
                   About Self
                 </label>
-                <input
-                  type="text"
+                <textarea
                   name="about_self"
+                  rows={3}
                   value={formData.about_self}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
@@ -759,9 +825,9 @@ export default function CustomerModal({
                 <label className="text-sm font-medium text-gray-700">
                   Partner Preference
                 </label>
-                <input
-                  type="text"
+                <textarea
                   name="partner_preference"
+                  rows={3}
                   value={formData.partner_preference}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
