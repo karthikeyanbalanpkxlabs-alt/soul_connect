@@ -36,6 +36,7 @@ const defaultFormData = {
   subscription_view_access: 0,
   image: [] as any[],
   video: "" as any,
+  identity_proff: "" as any,
   transaction: [],
   public_verify: false,
 };
@@ -145,6 +146,36 @@ export default function CustomerModal({
     setFormData((prev) => ({ ...prev, video: "" }));
   };
 
+  const handleIdentityProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const isAllowed =
+        file.type === "application/pdf" ||
+        file.type.startsWith("image/") ||
+        file.name.toLowerCase().endsWith(".pdf") ||
+        /\.(jpg|jpeg|png|gif)$/i.test(file.name);
+      
+      if (!isAllowed) {
+        alert("Please upload only Image or PDF files.");
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData((prev) => ({
+          ...prev,
+          identity_proff: { url: base64String, name: file.name, type: file.type },
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeIdentityProof = () => {
+    setFormData((prev) => ({ ...prev, identity_proff: "" }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -245,6 +276,65 @@ export default function CustomerModal({
                       accept="video/mp4"
                       className="hidden"
                       onChange={handleVideoUpload}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Identity Proof Upload */}
+            <div className="mb-8">
+              <label className="text-sm font-medium text-gray-700 mb-3 block">Identity Proof (Max 1 Image or PDF - Optional)</label>
+              <div className="flex flex-wrap gap-4">
+                {(formData.identity_proff && (typeof formData.identity_proff === 'string' ? formData.identity_proff : formData.identity_proff.url)) ? (
+                  (() => {
+                    const url = typeof formData.identity_proff === 'string' ? formData.identity_proff : formData.identity_proff.url;
+                    const isPdf = url.startsWith("data:application/pdf") || url.toLowerCase().endsWith(".pdf") || url.includes("id_") && url.toLowerCase().endsWith(".pdf");
+                    const displayName = typeof formData.identity_proff === 'object' ? (formData.identity_proff.name || "Document.pdf") : "Document.pdf";
+                    
+                    return (
+                      <div className="relative w-64 h-40 rounded-xl border-4 border-violet-500 overflow-hidden group bg-gray-50 flex items-center justify-center">
+                        {isPdf ? (
+                          <div className="flex flex-col items-center justify-center p-4">
+                            <span className="text-red-500 text-5xl font-bold mb-2">PDF</span>
+                            <span className="text-xs text-gray-600 text-center truncate max-w-[200px]" title={displayName}>
+                              {displayName}
+                            </span>
+                          </div>
+                        ) : (
+                          <img src={url} alt="Identity Proof" className="w-full h-full object-contain" />
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
+                          {url.startsWith("http") && (
+                            <a 
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs bg-violet-600 text-white px-2 py-1 rounded hover:bg-violet-700 transition-colors text-center"
+                            >
+                              View Document
+                            </a>
+                          )}
+                          <button 
+                            type="button" 
+                            onClick={removeIdentityProof} 
+                            className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <label className="w-48 h-32 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
+                    <Upload size={24} className="mb-2" />
+                    <span className="text-xs font-medium">Add Image or PDF</span>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      onChange={handleIdentityProofUpload}
                     />
                   </label>
                 )}

@@ -49,9 +49,9 @@ function CardPage() {
 
       <div className="flex flex-col lg:flex-row items-start">
         {/* Left Sidebar */}
-        <FilterSidebar 
-          filters={stateProps?.filters} 
-          onFilterChange={stateProps?.handleFilterChange} 
+        <FilterSidebar
+          filters={stateProps?.filters}
+          onFilterChange={stateProps?.handleFilterChange}
         />
 
         {/* Right Content */}
@@ -59,17 +59,28 @@ function CardPage() {
           {/* Breadcrumbs & Title */}
           <div className="mb-6">
             <div className="text-sm text-gray-500 mb-2">
-              <span className="hover:text-gray-800 cursor-pointer transition-colors">Home</span> |{" "}
-              <span className="text-gray-800 font-medium cursor-pointer">Latest</span> |{" "}
-              <span className="hover:text-gray-800 cursor-pointer transition-colors">Popular</span>
+              <span className="hover:text-gray-800 cursor-pointer transition-colors">
+                Home
+              </span>{" "}
+              |{" "}
+              <span className="text-gray-800 font-medium cursor-pointer">
+                Latest
+              </span>{" "}
+              |{" "}
+              <span className="hover:text-gray-800 cursor-pointer transition-colors">
+                Popular
+              </span>
             </div>
-            <p className="text-gray-600 text-sm">
-              <strong className="text-gray-800 font-medium">Sed Dignissim Lacinia Nunc</strong> (Fusce tellus sed augue semper porta)
-            </p>
+            {/* <p className="text-gray-600 text-sm">
+              <strong className="text-gray-800 font-medium">
+                Sed Dignissim Lacinia Nunc
+              </strong>{" "}
+              (Fusce tellus sed augue semper porta)
+            </p> */}
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-gray-100 rounded overflow-hidden mb-8 w-fit border border-gray-200">
+          {/* <div className="flex bg-gray-100 rounded overflow-hidden mb-8 w-fit border border-gray-200">
             {tabs.map((tab) => (
               <button
                 key={tab}
@@ -83,17 +94,19 @@ function CardPage() {
                 {tab}
               </button>
             ))}
-          </div>
+          </div> */}
 
           {/* Cards List */}
           <div className="flex flex-col gap-6">
             {stateProps?.loading ? (
-              <div className="py-12 text-center text-gray-500">Loading profiles...</div>
+              <div className="py-12 text-center text-gray-500">
+                Loading profiles...
+              </div>
             ) : stateProps?.rows && stateProps.rows.length > 0 ? (
               stateProps.rows.map((row: any) => (
-                <ProfileCard 
-                  key={row.customer_id || row.id} 
-                  customer={row} 
+                <ProfileCard
+                  key={row.customer_id || row.id}
+                  customer={row}
                   onEdit={stateProps?.onHandleEditCustomer}
                   onDelete={stateProps?.onDeleteCustomer}
                   onView={handleView}
@@ -101,29 +114,46 @@ function CardPage() {
                 />
               ))
             ) : (
-              <div className="py-12 text-center text-gray-500">No profiles found.</div>
+              <div className="py-12 text-center text-gray-500">
+                No profiles found.
+              </div>
             )}
           </div>
 
           {/* Pagination & Per Page */}
-          {!stateProps?.loading && stateProps?.total > 0 && (
+          {!stateProps?.loading &&
+            stateProps?.total > 0 &&
             (() => {
-              const totalPages = Math.max(1, Math.ceil((stateProps?.total || 0) / (stateProps?.limit || 10)));
-              const currentPage = Math.floor((stateProps?.skip || 0) / (stateProps?.limit || 10)) + 1;
+              const totalPages = Math.max(
+                1,
+                Math.ceil((stateProps?.total || 0) / (stateProps?.limit || 10)),
+              );
+              const currentPage =
+                Math.floor(
+                  (stateProps?.skip || 0) / (stateProps?.limit || 10),
+                ) + 1;
               return (
                 <div className="mt-12 flex flex-col sm:flex-row justify-between items-center gap-4 border-t pt-6 border-gray-100">
                   <div className="text-sm text-gray-500">
-                    Showing <span className="font-semibold">{stateProps.skip + 1}</span> to{" "}
+                    Showing{" "}
+                    <span className="font-semibold">{stateProps.skip + 1}</span>{" "}
+                    to{" "}
                     <span className="font-semibold">
-                      {Math.min(stateProps.skip + stateProps.limit, stateProps.total)}
+                      {Math.min(
+                        stateProps.skip + stateProps.limit,
+                        stateProps.total,
+                      )}
                     </span>{" "}
-                    of <span className="font-semibold">{stateProps.total}</span> entries
+                    of <span className="font-semibold">{stateProps.total}</span>{" "}
+                    entries
                   </div>
 
                   <div className="flex items-center gap-6">
                     {/* Per Page Select */}
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Rows per page:</span>
+                      <span className="text-sm text-gray-600">
+                        Rows per page:
+                      </span>
                       <select
                         value={stateProps?.limit}
                         onChange={(e) => {
@@ -144,29 +174,47 @@ function CardPage() {
                     <div className="flex items-center gap-2">
                       <button
                         disabled={currentPage === 1}
-                        onClick={() => stateProps?.setSkip(Math.max(0, (stateProps?.skip || 0) - (stateProps?.limit || 10)))}
+                        onClick={() =>
+                          stateProps?.setSkip(
+                            Math.max(
+                              0,
+                              (stateProps?.skip || 0) -
+                                (stateProps?.limit || 10),
+                            ),
+                          )
+                        }
                         className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </button>
 
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => stateProps?.setSkip((page - 1) * (stateProps?.limit || 10))}
-                          className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors ${
-                            page === currentPage
-                              ? "bg-[#c28b70] text-white border border-[#c28b70]"
-                              : "border border-gray-200 text-gray-600 hover:bg-gray-50"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => (
+                          <button
+                            key={page}
+                            onClick={() =>
+                              stateProps?.setSkip(
+                                (page - 1) * (stateProps?.limit || 10),
+                              )
+                            }
+                            className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors ${
+                              page === currentPage
+                                ? "bg-[#c28b70] text-white border border-[#c28b70]"
+                                : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ),
+                      )}
 
                       <button
                         disabled={currentPage >= totalPages}
-                        onClick={() => stateProps?.setSkip((stateProps?.skip || 0) + (stateProps?.limit || 10))}
+                        onClick={() =>
+                          stateProps?.setSkip(
+                            (stateProps?.skip || 0) + (stateProps?.limit || 10),
+                          )
+                        }
                         className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronRight className="w-4 h-4" />
@@ -175,8 +223,7 @@ function CardPage() {
                   </div>
                 </div>
               );
-            })()
-          )}
+            })()}
         </div>
       </div>
 
