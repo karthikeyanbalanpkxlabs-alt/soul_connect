@@ -22,7 +22,9 @@ function CardPage() {
     <div className="p-6 md:p-10 max-w-[1600px] mx-auto bg-white min-h-screen">
       {/* Top action buttons */}
       <div className="mb-8 flex items-center justify-between border-b pb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
+        <h1 className="font-serif text-3xl  text-gray-800">
+          Your Match Profiles
+        </h1>
         {stateProps?.getRoles?.includes("manager") && (
           <div className="flex gap-4">
             <button

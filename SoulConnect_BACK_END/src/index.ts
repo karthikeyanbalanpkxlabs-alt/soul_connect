@@ -212,10 +212,23 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
       filter.public_verify = true;
     }
 
+    let minAgeVal: number | undefined = undefined;
+    let maxAgeVal: number | undefined = undefined;
+
     const reqFilters = req.body.filters || {};
     for (const key of Object.keys(reqFilters)) {
       const val = reqFilters[key];
       if (val !== undefined && val !== null && val !== "") {
+        if (key === "min_age" || key === "minAge") {
+          const parsed = Number(val);
+          if (!isNaN(parsed)) minAgeVal = parsed;
+          continue;
+        }
+        if (key === "max_age" || key === "maxAge") {
+          const parsed = Number(val);
+          if (!isNaN(parsed)) maxAgeVal = parsed;
+          continue;
+        }
         let dbKey = key;
         if (key === "firstName") dbKey = "first_name";
         if (key === "lastName") dbKey = "last_name";
@@ -261,11 +274,65 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
       }
     }
 
-    const total = await Customers.countDocuments(filter);
-    const list = await Customers.find(filter)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit);
+    const calculateAgeFromDob = (dobStr?: string): number | null => {
+      if (!dobStr) return null;
+      let year = 0, month = 0, day = 0;
+      if (dobStr.includes("-")) {
+        const parts = dobStr.split("-");
+        if (parts[0].length === 4) {
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10) - 1;
+          day = parseInt(parts[2], 10);
+        } else {
+          day = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10) - 1;
+          year = parseInt(parts[2], 10);
+        }
+      } else if (dobStr.includes("/")) {
+        const parts = dobStr.split("/");
+        if (parts[0].length === 4) {
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10) - 1;
+          day = parseInt(parts[2], 10);
+        } else {
+          day = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10) - 1;
+          year = parseInt(parts[2], 10);
+        }
+      } else return null;
+
+      if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+      const birthDate = new Date(year, month, day);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    };
+
+    let total = 0;
+    let list: any[] = [];
+
+    if (minAgeVal !== undefined || maxAgeVal !== undefined) {
+      const allMatching = await Customers.find(filter).sort(sortOption);
+      const filteredByAge = allMatching.filter((cust: any) => {
+        const age = typeof cust.age === "number" ? cust.age : calculateAgeFromDob(cust.dob);
+        if (age === null) return false;
+        if (minAgeVal !== undefined && age < minAgeVal) return false;
+        if (maxAgeVal !== undefined && age > maxAgeVal) return false;
+        return true;
+      });
+      total = filteredByAge.length;
+      list = filteredByAge.slice(skip, skip + limit);
+    } else {
+      total = await Customers.countDocuments(filter);
+      list = await Customers.find(filter)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit);
+    }
 
     res.json({
       total,

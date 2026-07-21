@@ -125,7 +125,7 @@ function CustomerDetailContent() {
     <div className="min-h-screen bg-slate-50 p-6 mt-16 md:p-12">
       <button
         onClick={() => router.back()}
-        className="mb-6 flex items-center gap-2 text-slate-500 hover:text-violet-700 transition"
+        className="cursor-pointer mb-6 flex items-center gap-2 text-slate-500 hover:text-violet-700 transition"
       >
         <ArrowLeft size={20} /> Back to Customers
       </button>

@@ -22,7 +22,44 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     "https://via.placeholder.com/250x300?text=No+Image";
   const name =
     `${customer?.first_name || "Unknown"} ${customer?.last_name || ""}`.trim();
-  const age = "27 Yrs"; // Mocking age as we only have dob string like "02-12-1999"
+  const calculateAge = (dobStr?: string) => {
+    if (!dobStr) return "N/A";
+    let day = 0, month = 0, year = 0;
+    if (dobStr.includes("-")) {
+      const parts = dobStr.split("-");
+      if (parts[0].length === 4) {
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        day = parseInt(parts[2], 10);
+      } else {
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = parseInt(parts[2], 10);
+      }
+    } else if (dobStr.includes("/")) {
+      const parts = dobStr.split("/");
+      if (parts[0].length === 4) {
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        day = parseInt(parts[2], 10);
+      } else {
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = parseInt(parts[2], 10);
+      }
+    } else return "N/A";
+
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return "N/A";
+    const birthDate = new Date(year, month, day);
+    const today = new Date();
+    let ageVal = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      ageVal--;
+    }
+    return ageVal > 0 ? `${ageVal} Yrs` : "N/A";
+  };
+  const age = calculateAge(customer?.dob);
   const height = customer?.height ? `${customer.height} Ft` : "5 Ft 4 In";
   const religion = customer?.religion || "N/A";
   const caste = customer?.caste || "N/A";
