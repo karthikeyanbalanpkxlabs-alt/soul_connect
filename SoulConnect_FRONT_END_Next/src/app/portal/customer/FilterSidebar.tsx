@@ -6,20 +6,37 @@ interface FilterSidebarProps {
   onFilterChange: (key: string, value: string) => void;
 }
 
-const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterChange }) => {
-  const [openAccordion, setOpenAccordion] = useState<string>("country");
+const FilterSidebar: React.FC<FilterSidebarProps> = ({
+  filters = {},
+  onFilterChange,
+}) => {
+  const [openAccordion, setOpenAccordion] = useState<string>("district");
+
+  const minAgeLimit = 18;
+  const maxAgeLimit = 100;
+  const minVal = parseInt(filters["min_age"] || "18", 10);
+  const maxVal = parseInt(filters["max_age"] || "80", 10);
+
+  const minPercent =
+    ((minVal - minAgeLimit) / (maxAgeLimit - minAgeLimit)) * 100;
+  const maxPercent =
+    ((maxVal - minAgeLimit) / (maxAgeLimit - minAgeLimit)) * 100;
 
   const toggleAccordion = (name: string) => {
     setOpenAccordion((prev: string) => (prev === name ? "" : name));
   };
 
-  const countries = [
-    "India Matrimony",
-    "China Matrimony",
-    "Nepali Matrimony",
-    "Germany Matrimony",
-    "Pakistan Matrimony",
-    "Bangladesh Matrimony",
+  const districts = [
+    "Chennai",
+    "Coimbatore",
+    "Madurai",
+    "Salem",
+    "Trichy",
+    "Tiruppur",
+    "Erode",
+    "Vellore",
+    "Thanjavur",
+    "Tirunelveli",
   ];
 
   const horoscopes = [
@@ -62,12 +79,14 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
     <div className="w-full lg:w-72 flex-shrink-0 mr-8 flex flex-col gap-8 text-[#555]">
       {/* Search Filters Section */}
       <div className="bg-gray-50 p-4 border border-gray-200 rounded-md shadow-sm">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 pb-1 border-b border-gray-200">
+        <h3 className="font-serif text-2xl text-gray-800 mb-4 pb-1 border-b border-gray-200">
           Search Filters
         </h3>
         <div className="flex flex-col gap-3">
           <div>
-            <label className="text-xs text-gray-500 font-semibold block mb-1">First Name</label>
+            <label className="text-xs text-gray-500 font-semibold block mb-1">
+              First Name
+            </label>
             <input
               type="text"
               value={filters["first_name"] || ""}
@@ -77,7 +96,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 font-semibold block mb-1">Last Name</label>
+            <label className="text-xs text-gray-500 font-semibold block mb-1">
+              Last Name
+            </label>
             <input
               type="text"
               value={filters["last_name"] || ""}
@@ -87,7 +108,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 font-semibold block mb-1">Email</label>
+            <label className="text-xs text-gray-500 font-semibold block mb-1">
+              Email
+            </label>
             <input
               type="text"
               value={filters["email"] || ""}
@@ -97,14 +120,134 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 font-semibold block mb-1">Subscription Type</label>
+            <label className="text-xs text-gray-500 font-semibold block mb-1">
+              Subscription Type
+            </label>
             <input
               type="text"
               value={filters["subscription_type"] || ""}
               placeholder="Search Subscription Type"
               className="w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#c28b70] transition-colors"
-              onChange={(e) => onFilterChange("subscription_type", e.target.value)}
+              onChange={(e) =>
+                onFilterChange("subscription_type", e.target.value)
+              }
             />
+          </div>
+          <div>
+            <style>{`
+              .dual-slider-container {
+                position: relative;
+                width: 100%;
+                height: 24px;
+                display: flex;
+                align-items: center;
+              }
+              .dual-slider-track {
+                position: absolute;
+                width: 100%;
+                height: 6px;
+                background-color: #e5e7eb;
+                border-radius: 3px;
+                z-index: 1;
+              }
+              .dual-slider-range {
+                position: absolute;
+                height: 6px;
+                background-color: #00a82d; /* Vibrant Green */
+                border-radius: 3px;
+                z-index: 2;
+              }
+              input[type="range"].dual-slider-input {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 100%;
+                height: 6px;
+                background: transparent;
+                position: absolute;
+                pointer-events: none;
+                outline: none;
+                margin: 0;
+                z-index: 3;
+              }
+              input[type="range"].dual-slider-input::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                background-color: #4b5563; /* Dark gray */
+                border: 2px solid #00a82d; /* Green accent border */
+                cursor: pointer;
+                pointer-events: auto;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+                transition: transform 0.1s ease;
+              }
+              input[type="range"].dual-slider-input::-webkit-slider-thumb:hover {
+                transform: scale(1.1);
+              }
+              input[type="range"].dual-slider-input::-moz-range-thumb {
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                background-color: #4b5563;
+                border: 2px solid #00a82d;
+                cursor: pointer;
+                pointer-events: auto;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+                transition: transform 0.1s ease;
+              }
+              input[type="range"].dual-slider-input::-moz-range-thumb:hover {
+                transform: scale(1.1);
+              }
+            `}</style>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs text-gray-500 font-semibold block">
+                Age Range
+              </label>
+              <span className="text-xs text-[#c28b70] font-bold">
+                {minVal} - {maxVal} Yrs
+              </span>
+            </div>
+            <div className="bg-white p-4 border border-gray-200 rounded-md">
+              <div className="dual-slider-container">
+                <div className="dual-slider-track" />
+                <div
+                  className="dual-slider-range"
+                  style={{
+                    left: `${minPercent}%`,
+                    width: `${maxPercent - minPercent}%`,
+                  }}
+                />
+                <input
+                  type="range"
+                  min={minAgeLimit}
+                  max={maxAgeLimit}
+                  value={minVal}
+                  className="dual-slider-input"
+                  onChange={(e) => {
+                    const val = Math.min(
+                      parseInt(e.target.value, 10),
+                      maxVal - 1,
+                    );
+                    onFilterChange("min_age", String(val));
+                  }}
+                />
+                <input
+                  type="range"
+                  min={minAgeLimit}
+                  max={maxAgeLimit}
+                  value={maxVal}
+                  className="dual-slider-input"
+                  onChange={(e) => {
+                    const val = Math.max(
+                      parseInt(e.target.value, 10),
+                      minVal + 1,
+                    );
+                    onFilterChange("max_age", String(val));
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -115,39 +258,61 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
           Filter Profiles
         </h2>
 
-        {/* Country Accordion */}
+        {/* District Accordion */}
         <div className="mb-2">
           <button
-            onClick={() => toggleAccordion("country")}
+            onClick={() => toggleAccordion("district")}
             className={`w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
-              openAccordion === "country"
+              openAccordion === "district"
                 ? "bg-[#c28b70] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4" />
-              <span>Country</span>
+              <span>District</span>
             </div>
-            {openAccordion === "country" ? (
+            {openAccordion === "district" ? (
               <Minus className="w-4 h-4" />
             ) : (
               <Plus className="w-4 h-4" />
             )}
           </button>
-          {openAccordion === "country" && (
+          {openAccordion === "district" && (
             <div className="p-4 bg-white border border-gray-100 border-t-0">
-              <ul className="space-y-3">
-                {countries.map((country, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm">
-                    <ChevronRight className="w-4 h-4 text-pink-500" />
-                    <span>{country}</span>
-                  </li>
-                ))}
+              <ul className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {districts.map((district, idx) => {
+                  const isSelected =
+                    filters["district"]?.toLowerCase() ===
+                    district.toLowerCase();
+                  return (
+                    <li
+                      key={idx}
+                      onClick={() =>
+                        onFilterChange("district", isSelected ? "" : district)
+                      }
+                      className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors text-sm ${
+                        isSelected
+                          ? "bg-[#c28b70]/10 text-[#c28b70] font-semibold"
+                          : "hover:bg-gray-50 text-gray-700"
+                      }`}
+                    >
+                      <Check
+                        className={`w-4 h-4 ${isSelected ? "text-[#c28b70] opacity-100" : "opacity-20 text-gray-300"}`}
+                      />
+                      <span>{district}</span>
+                    </li>
+                  );
+                })}
               </ul>
-              <button className="mt-4 bg-[#c28b70] text-white px-4 py-2 rounded text-sm w-full md:w-auto flex items-center justify-center gap-2 transition-colors hover:bg-[#b07d64]">
-                More Countries <ChevronRight className="w-4 h-4" />
-              </button>
+              {filters["district"] && (
+                <button
+                  onClick={() => onFilterChange("district", "")}
+                  className="mt-4 bg-gray-100 text-gray-600 px-4 py-2 rounded text-sm w-full flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+                >
+                  Clear Selection
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -155,8 +320,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
         {/* Marital Status Accordion */}
         <div className="mb-2">
           <button
+            disabled
             onClick={() => toggleAccordion("marital")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
+            className={`opacity-60 w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
               openAccordion === "marital"
                 ? "bg-[#c28b70] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -177,8 +343,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
         {/* Religion Accordion */}
         <div className="mb-2">
           <button
+            disabled
             onClick={() => toggleAccordion("religion")}
-            className={`w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
+            className={`opacity-60 w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
               openAccordion === "religion"
                 ? "bg-[#c28b70] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -198,7 +365,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
       </div>
 
       {/* Horoscope Section */}
-      <div>
+      {/* <div>
         <h2 className="text-3xl font-serif italic text-gray-800 mb-4 pb-2 border-b border-gray-200">
           Horoscope
         </h2>
@@ -215,10 +382,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
             ))}
           </ul>
         </div>
-      </div>
+      </div> */}
 
       {/* Our Services Section */}
-      <div>
+      {/* <div>
         <h2 className="text-3xl font-serif italic text-gray-800 mb-4 pb-2 border-b border-gray-200">
           Our Services
         </h2>
@@ -237,7 +404,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters = {}, onFilterCha
             </li>
           ))}
         </ul>
-      </div>
+      </div> */}
 
       {/* Tags Section */}
       <div>

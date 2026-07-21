@@ -122,10 +122,10 @@ function CustomerDetailContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-12">
+    <div className="min-h-screen bg-slate-50 p-6 mt-16 md:p-12">
       <button
         onClick={() => router.back()}
-        className="mb-6 flex items-center gap-2 text-slate-500 hover:text-violet-700 transition"
+        className="cursor-pointer mb-6 flex items-center gap-2 text-slate-500 hover:text-violet-700 transition"
       >
         <ArrowLeft size={20} /> Back to Customers
       </button>
@@ -396,48 +396,57 @@ function CustomerDetailContent() {
 
             {/* Identity Proof Document */}
             {customer.identity_proff &&
-              (customer.identity_proff.url || typeof customer.identity_proff === "string") && (
-                (() => {
-                  const url =
-                    typeof customer.identity_proff === "string"
-                      ? customer.identity_proff
-                      : customer.identity_proff.url;
-                  const isPdf = url.startsWith("data:application/pdf") || url.toLowerCase().endsWith(".pdf") || url.includes("id_") && url.toLowerCase().endsWith(".pdf");
-                  
-                  return (
-                    <div className="mt-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                      <h2 className="mb-4 text-xl font-bold text-slate-800">
-                        Identity Proof
-                      </h2>
-                      <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                        {isPdf ? (
-                          <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-red-100 text-red-600 font-bold text-2xl">
-                            PDF
-                          </div>
-                        ) : (
-                          <div className="h-32 w-48 overflow-hidden rounded-lg bg-black border border-slate-200">
-                            <img src={url} alt="Identity Proof" className="h-full w-full object-contain" />
-                          </div>
-                        )}
-                        <div className="flex-1 text-center sm:text-left">
-                          <h4 className="font-semibold text-slate-800">Identity Document</h4>
-                          <p className="text-xs text-slate-400 mt-1">
-                            {isPdf ? "PDF Document File" : "Image File"}
-                          </p>
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-4 inline-block rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 transition"
-                          >
-                            View Document
-                          </a>
+              (customer.identity_proff.url ||
+                typeof customer.identity_proff === "string") &&
+              (() => {
+                const url =
+                  typeof customer.identity_proff === "string"
+                    ? customer.identity_proff
+                    : customer.identity_proff.url;
+                const isPdf =
+                  url.startsWith("data:application/pdf") ||
+                  url.toLowerCase().endsWith(".pdf") ||
+                  (url.includes("id_") && url.toLowerCase().endsWith(".pdf"));
+
+                return (
+                  <div className="mt-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                    <h2 className="mb-4 text-xl font-bold text-slate-800">
+                      Identity Proof
+                    </h2>
+                    <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      {isPdf ? (
+                        <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-red-100 text-red-600 font-bold text-2xl">
+                          PDF
                         </div>
+                      ) : (
+                        <div className="h-32 w-48 overflow-hidden rounded-lg bg-black border border-slate-200">
+                          <img
+                            src={url}
+                            alt="Identity Proof"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 text-center sm:text-left">
+                        <h4 className="font-semibold text-slate-800">
+                          Identity Document
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {isPdf ? "PDF Document File" : "Image File"}
+                        </p>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-4 inline-block rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 transition"
+                        >
+                          View Document
+                        </a>
                       </div>
                     </div>
-                  );
-                })()
-              )}
+                  </div>
+                );
+              })()}
           </div>
         </div>
       </div>
