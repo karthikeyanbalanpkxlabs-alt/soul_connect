@@ -252,7 +252,9 @@ function usePortalCustomerPage() {
   };
 
   const getSubscriptionListAPI = () => {
-    const endpoint = keycloak.authenticated ? "/api/subscriptions" : "/api/public/subscriptions";
+    const endpoint = keycloak.authenticated
+      ? "/api/subscriptions"
+      : "/api/public/subscriptions";
     const headers: any = { "Content-Type": "application/json" };
     if (keycloak.authenticated && keycloak?.token) {
       headers.Authorization = `Bearer ${keycloak.token}`;
@@ -371,6 +373,11 @@ function usePortalCustomerPage() {
     {
       key: "last_name",
       label: "Last Name",
+      isFilterable: true,
+    },
+    {
+      key: "gender",
+      label: "Gender",
       isFilterable: true,
     },
     {
