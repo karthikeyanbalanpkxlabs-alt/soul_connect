@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Upload } from "lucide-react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import configUrls from "../../configUrls";
 
 interface CustomerModalProps {
@@ -43,6 +45,41 @@ const defaultFormData = {
   public_verify: false,
 };
 
+const customerValidationSchema = Yup.object().shape({
+  first_name: Yup.string().trim().required("First name is required"),
+  last_name: Yup.string().trim().required("Last name is required"),
+  email: Yup.string()
+    .trim()
+    .email("Invalid email address")
+    .required("Email is required"),
+  phone_code: Yup.string().trim().required("Phone code is required"),
+  phone_number: Yup.string()
+    .trim()
+    .required("Phone number is required")
+    .matches(/^[0-9+\s-]{7,15}$/, "Invalid phone number format"),
+  dob: Yup.string().required("Date of birth is required"),
+  gender: Yup.string().required("Gender is required"),
+  maritial_status: Yup.string().required("Marital status is required"),
+  district: Yup.string().trim().required("District is required"),
+  taluk_town: Yup.string().trim().required("Taluk/Town is required"),
+  state: Yup.string().trim().required("State is required"),
+  zipcode: Yup.string().trim().required("Zipcode is required"),
+  religion: Yup.string().trim().required("Religion is required"),
+  caste: Yup.string().trim().required("Caste is required"),
+  mother_tongue: Yup.string().trim().required("Mother tongue is required"),
+  education: Yup.string().trim().required("Education is required"),
+  profession: Yup.string().trim().required("Profession is required"),
+  annual_income: Yup.string().trim().required("Annual income is required"),
+  height: Yup.string().trim().required("Height is required"),
+  subscription_type: Yup.string().required("Subscription type is required"),
+  about_self: Yup.string().trim().required("About self is required"),
+  partner_preference: Yup.string().trim().required("Partner preference is required"),
+  image: Yup.array()
+    .of(Yup.object())
+    .min(1, "At least 1 profile image is required")
+    .max(5, "Maximum 5 profile images allowed"),
+});
+
 export default function CustomerModal({
   isOpen,
   onClose,
@@ -50,8 +87,9 @@ export default function CustomerModal({
   initialData,
   subscriptionList,
 }: CustomerModalProps) {
-  const [formData, setFormData] = useState(defaultFormData);
-  const [subscriptions, setSubscriptions] = useState<any[]>(subscriptionList || []);
+  const [subscriptions, setSubscriptions] = useState<any[]>(
+    subscriptionList || [],
+  );
 
   useEffect(() => {
     if (subscriptionList && subscriptionList.length > 0) {
@@ -68,87 +106,108 @@ export default function CustomerModal({
     }
   }, [isOpen, subscriptionList]);
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        ...defaultFormData,
-        ...initialData,
-        role: initialData.role || "customer_g",
+  const formik = useFormik({
+    initialValues: initialData
+      ? {
+          ...defaultFormData,
+          ...initialData,
+          role: initialData.role || "customer_g",
+        }
+      : defaultFormData,
+    enableReinitialize: true,
+    validationSchema: customerValidationSchema,
+    onSubmit: (values) => {
+      onSave({
+        ...values,
+        role: values.role || "customer_g",
       });
-    } else {
-      setFormData(defaultFormData);
-    }
-  }, [initialData, isOpen]);
+    },
+  });
 
   if (!isOpen) return null;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value, type } = e.target;
+  const getInputClassName = (fieldName: keyof typeof defaultFormData) => {
+    const isInvalid =
+      formik.touched[fieldName] && Boolean(formik.errors[fieldName]);
+    return `w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white ${
+      isInvalid
+        ? "border-red-500 focus:border-red-500"
+        : "border-gray-300 focus:border-violet-500"
+    }`;
+  };
 
-    if (type === "checkbox") {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+  const renderFieldError = (fieldName: keyof typeof defaultFormData) => {
+    if (formik.touched[fieldName] && formik.errors[fieldName]) {
+      return (
+        <p className="text-red-500 text-xs mt-1">
+          {formik.errors[fieldName] as string}
+        </p>
+      );
     }
+    return null;
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (
-        formData.image &&
-        formData.image.filter((img: any) => img.url).length >= 5
-      ) {
+      const currentImages = Array.isArray(formik.values.image)
+        ? formik.values.image
+        : [];
+      const validImages = currentImages.filter((img: any) => img.url);
+      if (validImages.length >= 5) {
         alert("Maximum 5 images allowed.");
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload valid image files (JPEG, PNG, WebP).");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should not exceed 5MB.");
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setFormData((prev) => {
-          const currentImages = Array.isArray(prev.image) ? prev.image : [];
-          const validImages = currentImages.filter((img: any) => img.url);
-          const isFirst = validImages.length === 0;
-          const newImages = [
-            ...validImages,
-            { url: base64String, default: isFirst },
-          ];
-          return { ...prev, image: newImages };
-        });
+        const isFirst = validImages.length === 0;
+        const newImages = [
+          ...validImages,
+          { url: base64String, default: isFirst },
+        ];
+        formik.setFieldValue("image", newImages);
+        formik.setFieldTouched("image", true, true);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const setAsDefaultImage = (index: number) => {
-    setFormData((prev) => {
-      const currentImages = Array.isArray(prev.image) ? prev.image : [];
-      const validImages = currentImages.filter((img: any) => img.url);
-      const newImages = validImages.map((img: any, i: number) => ({
-        ...img,
-        default: i === index,
-      }));
-      return { ...prev, image: newImages };
-    });
+    const currentImages = Array.isArray(formik.values.image)
+      ? formik.values.image
+      : [];
+    const validImages = currentImages.filter((img: any) => img.url);
+    const newImages = validImages.map((img: any, i: number) => ({
+      ...img,
+      default: i === index,
+    }));
+    formik.setFieldValue("image", newImages);
+    formik.setFieldTouched("image", true, true);
   };
 
   const removeImage = (index: number) => {
-    setFormData((prev) => {
-      const currentImages = Array.isArray(prev.image) ? prev.image : [];
-      const validImages = currentImages.filter((img: any) => img.url);
-      const newImages = [...validImages];
-      const removed = newImages.splice(index, 1)[0];
+    const currentImages = Array.isArray(formik.values.image)
+      ? formik.values.image
+      : [];
+    const validImages = currentImages.filter((img: any) => img.url);
+    const newImages = [...validImages];
+    const removed = newImages.splice(index, 1)[0];
 
-      // If we removed the default image, set the first available image as default
-      if (removed?.default && newImages.length > 0) {
-        newImages[0].default = true;
-      }
+    if (removed?.default && newImages.length > 0) {
+      newImages[0].default = true;
+    }
 
-      return { ...prev, image: newImages };
-    });
+    formik.setFieldValue("image", newImages);
+    formik.setFieldTouched("image", true, true);
   };
 
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,17 +222,14 @@ export default function CustomerModal({
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setFormData((prev) => ({
-          ...prev,
-          video: { url: base64String },
-        }));
+        formik.setFieldValue("video", { url: base64String });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const removeVideo = () => {
-    setFormData((prev) => ({ ...prev, video: "" }));
+    formik.setFieldValue("video", "");
   };
 
   const handleIdentityProofUpload = (
@@ -195,27 +251,22 @@ export default function CustomerModal({
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setFormData((prev) => ({
-          ...prev,
-          identity_proff: {
-            url: base64String,
-            name: file.name,
-            type: file.type,
-          },
-        }));
+        formik.setFieldValue("identity_proff", {
+          url: base64String,
+          name: file.name,
+          type: file.type,
+        });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const removeIdentityProof = () => {
-    setFormData((prev) => ({ ...prev, identity_proff: "" }));
+    formik.setFieldValue("identity_proff", "");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({ ...formData, role: formData.role || "customer_g" });
-  };
+  const images = Array.isArray(formik.values.image) ? formik.values.image : [];
+  const validImages = images.filter((img: any) => img.url);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -237,60 +288,54 @@ export default function CustomerModal({
         <div className="flex-1 overflow-y-auto p-6">
           <form
             id="customer-form"
-            onSubmit={handleSubmit}
+            onSubmit={formik.handleSubmit}
             className="space-y-6"
           >
             {/* Image Upload */}
             <div className="mb-8">
               <label className="text-sm font-medium text-gray-700 mb-3 block">
-                Profile Pictures (Min 1, Max 5)
+                Profile Images (Max 5, Click star to set default) <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-4">
-                {Array.isArray(formData.image) &&
-                  formData.image
-                    .filter((img: any) => img.url)
-                    .map((img: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className={`relative w-32 h-32 rounded-xl border-4 overflow-hidden group ${img.default ? "border-violet-500" : "border-gray-200"}`}
+                {validImages.map((img: any, index: number) => (
+                  <div
+                    key={index}
+                    className={`relative w-28 h-28 rounded-xl border-4 overflow-hidden group bg-gray-100 ${
+                      img.default ? "border-amber-400" : "border-gray-200"
+                    }`}
+                  >
+                    <img
+                      src={img.url}
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => setAsDefaultImage(index)}
+                        className={`text-xs px-2 py-1 rounded text-white font-medium transition-colors ${
+                          img.default
+                            ? "bg-amber-500"
+                            : "bg-gray-700 hover:bg-amber-500"
+                        }`}
                       >
-                        <img
-                          src={img.url}
-                          alt={`Upload ${idx}`}
-                          className="w-full h-full object-cover"
-                        />
+                        {img.default ? "★ Default" : "Set Default"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
 
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
-                          {!img.default && (
-                            <button
-                              type="button"
-                              onClick={() => setAsDefaultImage(idx)}
-                              className="text-xs bg-violet-600 text-white px-2 py-1 rounded hover:bg-violet-700 transition-colors"
-                            >
-                              Set Default
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removeImage(idx)}
-                            className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        {img.default && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-violet-600 text-white text-[10px] font-bold text-center py-0.5">
-                            DEFAULT
-                          </div>
-                        )}
-                      </div>
-                    ))}
-
-                {(!Array.isArray(formData.image) ||
-                  formData.image.filter((img: any) => img.url).length < 5) && (
-                  <label className="w-32 h-32 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
-                    <Upload size={24} className="mb-2" />
-                    <span className="text-xs font-medium">Add Photo</span>
+                {validImages.length < 5 && (
+                  <label className="w-28 h-28 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
+                    <Upload size={24} className="mb-1" />
+                    <span className="text-xs font-medium">Add Image</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -300,6 +345,7 @@ export default function CustomerModal({
                   </label>
                 )}
               </div>
+              {renderFieldError("image")}
             </div>
 
             {/* Video Upload */}
@@ -308,16 +354,16 @@ export default function CustomerModal({
                 Profile Video (Max 1 MP4)
               </label>
               <div className="flex flex-wrap gap-4">
-                {formData.video &&
-                (typeof formData.video === "string"
-                  ? formData.video
-                  : formData.video.url) ? (
+                {formik.values.video &&
+                (typeof formik.values.video === "string"
+                  ? formik.values.video
+                  : formik.values.video.url) ? (
                   <div className="relative w-64 h-40 rounded-xl border-4 border-violet-500 overflow-hidden group bg-black">
                     <video
                       src={
-                        typeof formData.video === "string"
-                          ? formData.video
-                          : formData.video.url
+                        typeof formik.values.video === "string"
+                          ? formik.values.video
+                          : formik.values.video.url
                       }
                       className="w-full h-full object-contain"
                       controls
@@ -328,14 +374,14 @@ export default function CustomerModal({
                         onClick={removeVideo}
                         className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors"
                       >
-                        Remove
+                        Remove Video
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <label className="w-48 h-32 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
-                    <Upload size={24} className="mb-2" />
-                    <span className="text-xs font-medium">Add MP4</span>
+                  <label className="w-64 h-40 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
+                    <Upload size={28} className="mb-2" />
+                    <span className="text-sm font-medium">Upload MP4 Video</span>
                     <input
                       type="file"
                       accept="video/mp4"
@@ -350,47 +396,33 @@ export default function CustomerModal({
             {/* Identity Proof Upload */}
             <div className="mb-8">
               <label className="text-sm font-medium text-gray-700 mb-3 block">
-                Identity Proof (Max 1 Image or PDF - Optional)
+                Identity Proof (Image or PDF)
               </label>
               <div className="flex flex-wrap gap-4">
-                {formData.identity_proff &&
-                (typeof formData.identity_proff === "string"
-                  ? formData.identity_proff
-                  : formData.identity_proff.url) ? (
+                {formik.values.identity_proff &&
+                (typeof formik.values.identity_proff === "string"
+                  ? formik.values.identity_proff
+                  : formik.values.identity_proff.url) ? (
                   (() => {
-                    const url =
-                      typeof formData.identity_proff === "string"
-                        ? formData.identity_proff
-                        : formData.identity_proff.url;
-                    const isPdf =
-                      url.startsWith("data:application/pdf") ||
-                      url.toLowerCase().endsWith(".pdf") ||
-                      (url.includes("id_") &&
-                        url.toLowerCase().endsWith(".pdf"));
-                    const displayName =
-                      typeof formData.identity_proff === "object"
-                        ? formData.identity_proff.name || "Document.pdf"
-                        : "Document.pdf";
+                    const proof = formik.values.identity_proff;
+                    const url = typeof proof === "string" ? proof : proof.url;
+                    const name = typeof proof === "string" ? "Identity Proof" : proof.name || "Identity Proof";
+                    const isPdf = url?.includes("application/pdf") || url?.endsWith(".pdf") || proof.type === "application/pdf";
 
                     return (
-                      <div className="relative w-64 h-40 rounded-xl border-4 border-violet-500 overflow-hidden group bg-gray-50 flex items-center justify-center">
+                      <div className="relative w-48 h-32 rounded-xl border-4 border-violet-500 overflow-hidden group bg-gray-100 flex flex-col items-center justify-center p-2">
                         {isPdf ? (
-                          <div className="flex flex-col items-center justify-center p-4">
-                            <span className="text-red-500 text-5xl font-bold mb-2">
-                              PDF
-                            </span>
-                            <span
-                              className="text-xs text-gray-600 text-center truncate max-w-[200px]"
-                              title={displayName}
-                            >
-                              {displayName}
+                          <div className="flex flex-col items-center text-gray-600">
+                            <span className="text-3xl mb-1">📄</span>
+                            <span className="text-xs font-semibold text-center truncate max-w-full">
+                              {name}
                             </span>
                           </div>
                         ) : (
                           <img
                             src={url}
                             alt="Identity Proof"
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover"
                           />
                         )}
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
@@ -436,289 +468,384 @@ export default function CustomerModal({
               {/* Basic Details */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  First Name
+                  First Name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  required
                   type="text"
                   name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.first_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("first_name")}
                 />
+                {renderFieldError("first_name")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Last Name
+                  Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  required
                   type="text"
                   name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.last_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("last_name")}
                 />
+                {renderFieldError("last_name")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Email
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
-                  required
                   type="email"
                   name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("email")}
                 />
+                {renderFieldError("email")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Phone Code
+                  Phone Code <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="phone_code"
-                  value={formData.phone_code}
-                  onChange={handleChange}
+                  value={formik.values.phone_code}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   placeholder="+91"
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  className={getInputClassName("phone_code")}
                 />
+                {renderFieldError("phone_code")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Phone Number
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
-                  required
                   type="text"
                   name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.phone_number}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("phone_number")}
                 />
+                {renderFieldError("phone_number")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Date of Birth
+                  Date of Birth <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   name="dob"
                   max={new Date().toISOString().split("T")[0]}
                   value={
-                    formData.dob && /^\d{2}-\d{2}-\d{4}$/.test(formData.dob)
-                      ? `${formData.dob.split("-")[2]}-${formData.dob.split("-")[1]}-${formData.dob.split("-")[0]}`
-                      : formData.dob || ""
+                    formik.values.dob &&
+                    /^\d{2}-\d{2}-\d{4}$/.test(formik.values.dob)
+                      ? `${formik.values.dob.split("-")[2]}-${formik.values.dob.split("-")[1]}-${formik.values.dob.split("-")[0]}`
+                      : formik.values.dob || ""
                   }
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("dob")}
                 />
+                {renderFieldError("dob")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Gender
+                  Gender <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="gender"
                   value={
-                    formData.gender
+                    formik.values.gender
                       ? ["Male", "Female", "Other"].find(
                           (g) =>
-                            g.toLowerCase() === formData.gender.toLowerCase(),
-                        ) || formData.gender
+                            g.toLowerCase() ===
+                            formik.values.gender.toLowerCase(),
+                        ) || formik.values.gender
                       : ""
                   }
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("gender")}
                 >
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                  {formData.gender &&
+                  {formik.values.gender &&
                     !["Male", "Female", "Other"].some(
-                      (g) => g.toLowerCase() === formData.gender.toLowerCase(),
+                      (g) =>
+                        g.toLowerCase() === formik.values.gender.toLowerCase(),
                     ) && (
-                      <option value={formData.gender}>{formData.gender}</option>
+                      <option value={formik.values.gender}>
+                        {formik.values.gender}
+                      </option>
                     )}
                 </select>
+                {renderFieldError("gender")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Marital Status
+                  Marital Status <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="maritial_status"
-                  value={formData.maritial_status}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
-                />
+                  value={
+                    [
+                      "Single",
+                      "Married",
+                      "Divorced",
+                      "Widowed",
+                      "Separated",
+                      "Engaged",
+                      "In a Domestic Partnership",
+                      "Civil Union",
+                      "Prefer Not to Say",
+                    ].find(
+                      (opt) =>
+                        opt.toLowerCase() ===
+                        formik.values.maritial_status?.toLowerCase(),
+                    ) ||
+                    formik.values.maritial_status ||
+                    ""
+                  }
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("maritial_status")}
+                >
+                  <option value="">Select Marital Status</option>
+                  {[
+                    "Single",
+                    "Married",
+                    "Divorced",
+                    "Widowed",
+                    "Separated",
+                    "Engaged",
+                    "In a Domestic Partnership",
+                    "Civil Union",
+                    "Prefer Not to Say",
+                  ].map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                  {formik.values.maritial_status &&
+                    ![
+                      "Single",
+                      "Married",
+                      "Divorced",
+                      "Widowed",
+                      "Separated",
+                      "Engaged",
+                      "In a Domestic Partnership",
+                      "Civil Union",
+                      "Prefer Not to Say",
+                    ].some(
+                      (opt) =>
+                        opt.toLowerCase() ===
+                        formik.values.maritial_status?.toLowerCase(),
+                    ) && (
+                      <option value={formik.values.maritial_status}>
+                        {formik.values.maritial_status}
+                      </option>
+                    )}
+                </select>
+                {renderFieldError("maritial_status")}
               </div>
 
               {/* Location */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  District
+                  District <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="district"
-                  value={formData.district}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.district}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("district")}
                 />
+                {renderFieldError("district")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Taluk/Town
+                  Taluk/Town <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="taluk_town"
-                  value={formData.taluk_town}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.taluk_town}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("taluk_town")}
                 />
+                {renderFieldError("taluk_town")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  State
+                  State <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.state}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("state")}
                 />
+                {renderFieldError("state")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Zipcode
+                  Zipcode <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="zipcode"
-                  value={formData.zipcode}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.zipcode}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("zipcode")}
                 />
+                {renderFieldError("zipcode")}
               </div>
 
               {/* Personal Details */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Religion
+                  Religion <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="religion"
-                  value={formData.religion}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.religion}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("religion")}
                 />
+                {renderFieldError("religion")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Caste
+                  Caste <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="caste"
-                  value={formData.caste}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.caste}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("caste")}
                 />
+                {renderFieldError("caste")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Mother Tongue
+                  Mother Tongue <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="mother_tongue"
-                  value={formData.mother_tongue}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.mother_tongue}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("mother_tongue")}
                 />
+                {renderFieldError("mother_tongue")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Education
+                  Education <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="education"
-                  value={formData.education}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.education}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("education")}
                 />
+                {renderFieldError("education")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Profession
+                  Profession <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="profession"
-                  value={formData.profession}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.profession}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("profession")}
                 />
+                {renderFieldError("profession")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Annual Income
+                  Annual Income <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="annual_income"
-                  value={formData.annual_income}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.annual_income}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("annual_income")}
                 />
+                {renderFieldError("annual_income")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Height
+                  Height <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="height"
-                  value={formData.height}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.height}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("height")}
                 />
+                {renderFieldError("height")}
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Subscription Type
+                  Subscription Type <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="subscription_type"
-                  value={formData.subscription_type}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  value={formik.values.subscription_type}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("subscription_type")}
                 >
                   <option value="">Select Subscription Type</option>
                   {subscriptions.map((sub: any, index: number) => {
@@ -729,43 +856,53 @@ export default function CustomerModal({
                       </option>
                     );
                   })}
-                  {!subscriptions.some((s: any) => (s.name || s.type) === "guest") && (
-                    <option value="guest">guest</option>
-                  )}
-                  {formData.subscription_type &&
-                    formData.subscription_type !== "guest" &&
-                    !subscriptions.some((s: any) => (s.name || s.type) === formData.subscription_type) && (
-                      <option value={formData.subscription_type}>
-                        {formData.subscription_type}
+                  {!subscriptions.some(
+                    (s: any) => (s.name || s.type) === "guest",
+                  ) && <option value="guest">guest</option>}
+                  {formik.values.subscription_type &&
+                    formik.values.subscription_type !== "guest" &&
+                    !subscriptions.some(
+                      (s: any) =>
+                        (s.name || s.type) === formik.values.subscription_type,
+                    ) && (
+                      <option value={formik.values.subscription_type}>
+                        {formik.values.subscription_type}
                       </option>
                     )}
                 </select>
+                {renderFieldError("subscription_type")}
               </div>
 
               <div className="space-y-1 md:col-span-2 lg:col-span-3">
                 <label className="text-sm font-medium text-gray-700">
-                  About Self
+                  About Self <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="about_self"
-                  value={formData.about_self}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  rows={3}
+                  value={formik.values.about_self}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("about_self")}
                 />
+                {renderFieldError("about_self")}
               </div>
 
               <div className="space-y-1 md:col-span-2 lg:col-span-3">
                 <label className="text-sm font-medium text-gray-700">
-                  Partner Preference
+                  Partner Preference <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="partner_preference"
-                  value={formData.partner_preference}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-sm outline-none focus:border-violet-500 bg-gray-50 focus:bg-white transition-colors"
+                  rows={3}
+                  value={formik.values.partner_preference}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("partner_preference")}
                 />
+                {renderFieldError("partner_preference")}
               </div>
 
               {/* Booleans/Misc */}
@@ -774,8 +911,9 @@ export default function CustomerModal({
                   <input
                     type="checkbox"
                     name="public_verify"
-                    checked={formData.public_verify}
-                    onChange={handleChange}
+                    checked={formik.values.public_verify}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     className="w-5 h-5 accent-violet-500 rounded"
                   />
                   <span className="text-sm font-medium text-gray-700">
