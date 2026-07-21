@@ -110,27 +110,27 @@ export default function Navbar(props: any) {
   const renderLandingLinks = () => {
     return (
       <>
-        <a href="#districts" onClick={handleLinkClick}>
+        {/* <a href="#districts" onClick={handleLinkClick}>
           Districts
-        </a>
+        </a> */}
         <a href="#how" onClick={handleLinkClick}>
           How it works
-        </a>
-        <a href="#register" onClick={handleLinkClick}>
-          Register
         </a>
         <a href="#pricing" onClick={handleLinkClick}>
           Plans
         </a>
-        <a href="#verify" onClick={handleLinkClick}>
+        <a href="#register" onClick={handleLinkClick}>
+          Register
+        </a>
+        {/* <a href="#verify" onClick={handleLinkClick}>
           Verification
-        </a>
-        <a href="#app" onClick={handleLinkClick}>
+        </a> */}
+        {/* <a href="#app" onClick={handleLinkClick}>
           App
-        </a>
-        <a href="#register" className="nav-tamil" onClick={handleLinkClick}>
+        </a> */}
+        {/* <a href="#register" className="nav-tamil" onClick={handleLinkClick}>
           பதிவு செய்யுங்கள்
-        </a>
+        </a> */}
       </>
     );
   };
