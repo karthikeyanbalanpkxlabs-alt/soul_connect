@@ -93,13 +93,15 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             <User className="w-4 h-4" /> View Full Profile
           </button>
 
-          <button
-            onClick={() => onEdit?.(customer)}
-            className="border border-violet-200 text-violet-600 hover:bg-violet-50 px-4 py-2.5 rounded text-sm font-medium transition-colors flex items-center gap-2"
-            title="Edit Customer"
-          >
-            <Pencil className="w-4 h-4" /> Edit
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => onEdit?.(customer)}
+              className="border border-violet-200 text-violet-600 hover:bg-violet-50 px-4 py-2.5 rounded text-sm font-medium transition-colors flex items-center gap-2"
+              title="Edit Customer"
+            >
+              <Pencil className="w-4 h-4" /> Edit
+            </button>
+          )}
 
           {canDelete && (
             <button

@@ -113,6 +113,7 @@ const customerSchema = new mongoose.Schema(
     first_name: String,
     last_name: String,
     email: String,
+    identity_proff: mongoose.Schema.Types.Mixed, // optional object containing { url: string }
     createdAtTime: Date,
     modifiedAtTime: Date,
     modifiedByemail: String,
@@ -330,6 +331,68 @@ async function handleCustomerDetailGet(req: Request, res: Response) {
   }
 }
 
+async function handleProfileDetail(req: Request, res: Response) {
+  try {
+    const { email } = {
+      ...req.query,
+      ...req.body,
+    };
+
+    const targetEmail =
+      (email as string) ||
+      (req as any).kauth?.grant?.access_token?.content?.email;
+
+    if (!targetEmail) {
+      return res.status(400).json({
+        error: "Missing email parameter in request",
+      });
+    }
+
+    const profile = await Customers.findOne({ email: targetEmail });
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json(profile);
+  } catch (err: any) {
+    console.error("profile_detail error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch profile detail" });
+  }
+}
+
+async function handleProfileDetailGet(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Missing identifier in request URL" });
+    }
+
+    let profile;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      profile = await Customers.findOne({
+        $or: [{ _id: id }, { customer_id: id }, { keycloakId: id }],
+      });
+    } else {
+      profile = await Customers.findOne({
+        $or: [{ customer_id: id }, { keycloakId: id }, { email: id }],
+      });
+    }
+
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json(profile);
+  } catch (err: any) {
+    console.error("profile_detail_get error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch profile detail" });
+  }
+}
+
 function processUploadedImages(
   imagesInput: any[],
   req: Request,
@@ -470,6 +533,67 @@ function processUploadedVideo(
   }
 }
 
+function processUploadedIdentityProof(
+  identityProofInput: any,
+  req: Request,
+): { url: string } | string {
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let fileStr = "";
+
+  if (typeof identityProofInput === "string") {
+    fileStr = identityProofInput;
+  } else if (
+    identityProofInput &&
+    typeof identityProofInput === "object" &&
+    typeof identityProofInput.url === "string"
+  ) {
+    fileStr = identityProofInput.url;
+  } else {
+    return "Invalid identity proof structure. Expected string or object with url property.";
+  }
+
+  // If it's already a hosted URL (does not start with data:), just preserve it
+  if (
+    fileStr.startsWith("http://") ||
+    fileStr.startsWith("https://") ||
+    (!fileStr.startsWith("data:") && fileStr.length < 200)
+  ) {
+    return { url: fileStr };
+  }
+
+  try {
+    let ext = "png";
+    let data = fileStr;
+
+    if (fileStr.startsWith("data:")) {
+      const commaIdx = fileStr.indexOf(",");
+      if (commaIdx !== -1) {
+        data = fileStr.substring(commaIdx + 1);
+        const mimeStr = fileStr.substring(5, commaIdx);
+        const mimeParts = mimeStr.split(";")[0].split("/");
+        if (mimeParts.length === 2) {
+          ext = mimeParts[1];
+        }
+      }
+    }
+
+    const buffer = Buffer.from(data, "base64");
+    const filename = `id_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+    fs.writeFileSync(filepath, buffer);
+
+    const host = req.get("host");
+    const fileUrl = `${req.protocol}://${host}/uploads/${filename}`;
+    return { url: fileUrl };
+  } catch (err: any) {
+    return `Failed to process identity proof: ${err.message}`;
+  }
+}
+
 async function handleCustomerEdit(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
@@ -528,6 +652,20 @@ async function handleCustomerEdit(req: Request, res: Response) {
           return res.status(400).json({ error: processed });
         }
         updateFields.video = processed;
+      }
+    }
+
+    // Check if identity proof is being updated
+    const identityProofInput = updateFields.identity_proff;
+    if (identityProofInput !== undefined) {
+      if (identityProofInput === null || identityProofInput === "") {
+        updateFields.identity_proff = null;
+      } else {
+        const processed = processUploadedIdentityProof(identityProofInput, req);
+        if (typeof processed === "string") {
+          return res.status(400).json({ error: processed });
+        }
+        updateFields.identity_proff = processed;
       }
     }
 
@@ -599,6 +737,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       images,
       video,
       role,
+      identity_proff,
       ...otherFields
     } = req?.body;
 
@@ -627,6 +766,19 @@ async function handleCustomerCreate(req: Request, res: Response) {
         return res.status(400).json({ error: processedVid });
       }
       processedVideo = processedVid;
+    }
+
+    let processedIdentityProof = undefined;
+    if (
+      identity_proff !== undefined &&
+      identity_proff !== null &&
+      identity_proff !== ""
+    ) {
+      const processedId = processUploadedIdentityProof(identity_proff, req);
+      if (typeof processedId === "string") {
+        return res.status(400).json({ error: processedId });
+      }
+      processedIdentityProof = processedId;
     }
 
     if (email) {
@@ -741,6 +893,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
       email,
       image: processed,
       video: processedVideo,
+      identity_proff: processedIdentityProof,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),
@@ -1105,6 +1258,86 @@ async function handleSubscriptionGet(req: Request, res: Response) {
   }
 }
 
+async function handleDashboardAnalytics(req: Request, res: Response) {
+  try {
+    const totalCustomers = await Customers.countDocuments();
+    const approvedCustomers = await Customers.countDocuments({ public_verify: true });
+    const pendingCustomers = await Customers.countDocuments({
+      $or: [
+        { public_verify: false },
+        { public_verify: { $exists: false } },
+        { public_verify: null },
+      ],
+    });
+
+    const maleCount = await Customers.countDocuments({
+      gender: { $regex: /^male/i },
+    });
+    const femaleCount = await Customers.countDocuments({
+      gender: { $regex: /^female/i },
+    });
+
+    const managerCount = await Customers.countDocuments({ role: "manager_g" });
+    const customerRoleCount = await Customers.countDocuments({
+      role: "customer_g",
+    });
+
+    const totalSubscriptions = await Subscription.countDocuments();
+
+    const recentCustomers = await Customers.find()
+      .sort({ _id: -1 })
+      .limit(6);
+
+    const subscriptionBreakdown = await Customers.aggregate([
+      {
+        $group: {
+          _id: { $ifNull: ["$subscription_type", "Guest"] },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const districtBreakdown = await Customers.aggregate([
+      { $match: { district: { $exists: true, $ne: "" } } },
+      { $group: { _id: "$district", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ]);
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate",
+    );
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalCustomers,
+        approvedCustomers,
+        pendingCustomers,
+        maleCount,
+        femaleCount,
+        managerCount,
+        customerRoleCount,
+        totalSubscriptions,
+      },
+      subscriptionBreakdown: subscriptionBreakdown.map((item) => ({
+        type: String(item._id || "Guest"),
+        count: item.count,
+      })),
+      topDistricts: districtBreakdown.map((item) => ({
+        district: String(item._id),
+        count: item.count,
+      })),
+      recentCustomers,
+    });
+  } catch (err: any) {
+    console.error("dashboard_analytics error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch dashboard analytics" });
+  }
+}
+
 // --- CUSTOMER APIs (With Keycloak Access / Protected) ---
 app.post(
   "/api/customer_list",
@@ -1117,11 +1350,16 @@ app.get(
   keycloak.protect(),
   handleCustomerDetailGet,
 );
+app.post("/api/profile_detail", keycloak.protect(), handleProfileDetail);
+app.get("/api/profile_detail", keycloak.protect(), handleProfileDetail);
+app.get("/api/profile_detail/:id", keycloak.protect(), handleProfileDetailGet);
 app.post("/api/customer_edit", keycloak.protect(), handleCustomerEdit);
 app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
 app.get("/api/subscription", keycloak.protect(), handleSubscriptionGet);
 app.get("/api/subscriptions", keycloak.protect(), handleSubscriptionGet);
+app.get("/api/dashboard_analytics", keycloak.protect(), handleDashboardAnalytics);
+app.post("/api/dashboard_analytics", keycloak.protect(), handleDashboardAnalytics);
 
 // --- CUSTOMER APIs (Without Keycloak Access / Public) ---
 app.post("/api/public/customer_list", (req: Request, res: Response) =>
@@ -1129,11 +1367,16 @@ app.post("/api/public/customer_list", (req: Request, res: Response) =>
 );
 app.post("/api/public/customer_detail", handleCustomerDetail);
 app.get("/api/public/customer_detail/:id", handleCustomerDetailGet);
+app.post("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail/:id", handleProfileDetailGet);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);
 app.get("/api/public/subscription", handleSubscriptionGet);
 app.get("/api/public/subscriptions", handleSubscriptionGet);
+app.get("/api/public/dashboard_analytics", handleDashboardAnalytics);
+app.post("/api/public/dashboard_analytics", handleDashboardAnalytics);
 app.get("/api/public", (req: Request, res: Response) => {
   res.json({
     message: "This is a public endpoint. No authentication required.",

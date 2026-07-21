@@ -1,9 +1,7 @@
 "use strict";
-var __importDefault =
-  (this && this.__importDefault) ||
-  function (mod) {
-    return mod && mod.__esModule ? mod : { default: mod };
-  };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
@@ -11,79 +9,73 @@ const cors_1 = __importDefault(require("cors"));
 const keycloak_config_1 = require("./keycloak-config");
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
-const keycloak_admin_client_1 = __importDefault(
-  require("@keycloak/keycloak-admin-client"),
-);
+const keycloak_admin_client_1 = __importDefault(require("@keycloak/keycloak-admin-client"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const nodemailer_1 = __importDefault(require("nodemailer"));
 dotenv_1.default.config();
-let EMAIL_TRIGGER_ENABLE_FLAG = true;
 let GLOBAL_DETAILS = {
-  username: "admin_soulconnect",
-  password: "Welcome@123",
+    // username: "admin",
+    // password: "admin",
+    username: "admin_soulconnect",
+    password: "Welcome@123",
 };
+let EMAIL_TRIGGER_ENABLE_FLAG = true;
 const app = (0, express_1.default)();
+app.disable("etag");
 const PORT = process.env.PORT || 3000;
-app.use(
-  (0, cors_1.default)({
-    origin: ["http://localhost:5173", "http://localhost:5174"], // Frontend URL
+app.use((0, cors_1.default)({
+    origin: [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://dev.soulconect.com",
+        "https://soulconect.com",
+    ], // Frontend URL
     credentials: true,
-  }),
-);
+}));
 app.use(express_1.default.json({ limit: "500mb" }));
 app.use(express_1.default.urlencoded({ limit: "500mb", extended: true }));
-app.use(
-  "/uploads",
-  express_1.default.static(path_1.default.join(process.cwd(), "uploads")),
-);
-app.use(
-  (0, express_session_1.default)({
+app.use("/uploads", express_1.default.static(path_1.default.join(process.cwd(), "uploads")));
+app.use((0, express_session_1.default)({
     secret: process.env.SESSION_SECRET || "my-super-secret-session-key",
     resave: false,
     saveUninitialized: true,
     store: keycloak_config_1.sessionStore,
-  }),
-);
+}));
 // --- KEYCLOAK ADMIN CLIENT SETUP ---
 const kcAdminClient = new keycloak_admin_client_1.default({
-  baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
-  realmName: process.env.KEYCLOAK_REALM || "soul_connect",
+    baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
+    realmName: process.env.KEYCLOAK_REALM || "soul_connect",
 });
 const connectAdminClient = async () => {
-  const baseUrl = process.env.KEYCLOAK_URL || "http://localhost:4000";
-  const realm = process.env.KEYCLOAK_REALM || "soul_connect";
-  const clientId = process.env.KEYCLOAK_CLIENT_ID || "soul_connect_c";
-  const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET;
-  console.log(
-    `📡 Attempting Keycloak Admin Auth: [${baseUrl}] Realm: [${realm}] Client: [${clientId}]`,
-  );
-  if (!clientSecret) {
-    console.error("❌ KEYCLOAK_CLIENT_SECRET is missing in .env!");
-    return;
-  }
-  try {
-    await kcAdminClient.auth({
-      grantType: "client_credentials",
-      clientId,
-      clientSecret,
-    });
-    console.log("✅ Keycloak Admin Client Authenticated Successfully!");
-  } catch (error) {
-    console.error("❌ Keycloak Admin Client Authentication Failed:");
-    if (error.response) {
-      console.error("   Status:", error.response.status);
-      console.error(
-        "   Error:",
-        error.response.data?.error || error.response.statusText,
-      );
-      console.error(
-        "   Description:",
-        error.response.data?.error_description || "No description provided",
-      );
-    } else {
-      console.error("   Error Message:", error.message);
+    const baseUrl = process.env.KEYCLOAK_URL || "http://localhost:4000";
+    const realm = process.env.KEYCLOAK_REALM || "soul_connect";
+    const clientId = process.env.KEYCLOAK_CLIENT_ID || "soul_connect_c";
+    const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET;
+    console.log(`📡 Attempting Test 2 Keycloak Admin Auth: [${baseUrl}] Realm: [${realm}] Client: [${clientId}]`);
+    if (!clientSecret) {
+        console.error("❌ KEYCLOAK_CLIENT_SECRET is missing in .env!");
+        return;
     }
-  }
+    try {
+        await kcAdminClient.auth({
+            grantType: "client_credentials",
+            clientId,
+            clientSecret,
+        });
+        console.log("✅ Keycloak Admin Client Authenticated Successfully!");
+    }
+    catch (error) {
+        console.error("❌ Keycloak Admin Client Authentication Failed:");
+        if (error.response) {
+            console.error("   Status:", error.response.status);
+            console.error("   Error:", error.response.data?.error || error.response.statusText);
+            console.error("   Description:", error.response.data?.error_description || "No description provided");
+        }
+        else {
+            console.error("   Error Message:", error.message);
+        }
+    }
 };
 // Re-authenticate every 50 seconds to keep the admin session alive
 setInterval(connectAdminClient, 50000);
@@ -91,579 +83,730 @@ connectAdminClient();
 // ------------------------------------
 app.use(keycloak_config_1.keycloak.middleware());
 // --- MONGODB CLUSTER INTEGRATION ---
-const MONGODB_URL =
-  "mongodb+srv://karthimailu_db_user:Rma1zgLmDktUJ3yD@soulconnectcluster.uszzhth.mongodb.net/soul_connect_india";
-const customerSchema = new mongoose_1.default.Schema(
-  {
+const MONGODB_URL = "mongodb+srv://karthimailu_db_user:Rma1zgLmDktUJ3yD@soulconnectcluster.uszzhth.mongodb.net/soul_connect_india";
+const customerSchema = new mongoose_1.default.Schema({
     keycloakId: { type: String, unique: true, sparse: true },
     firstName: String,
     lastName: String,
     first_name: String,
     last_name: String,
     email: String,
-  },
-  { collection: "customers", strict: false },
-);
+    identity_proff: mongoose_1.default.Schema.Types.Mixed, // optional object containing { url: string }
+    createdAtTime: Date,
+    modifiedAtTime: Date,
+    modifiedByemail: String,
+}, { collection: "customers", strict: false });
 const Customers = mongoose_1.default.model("Customers", customerSchema);
-const subscriptionSchema = new mongoose_1.default.Schema(
-  {},
-  { collection: "subscription", strict: false },
-);
-const Subscription = mongoose_1.default.model(
-  "Subscription",
-  subscriptionSchema,
-);
+const subscriptionSchema = new mongoose_1.default.Schema({}, { collection: "subscription", strict: false });
+const Subscription = mongoose_1.default.model("Subscription", subscriptionSchema);
 // Seeding function from sample_customer.json if database is empty
 const seedCustomers = async () => {
-  try {
-    const count = await Customers.countDocuments();
-    if (count === 0) {
-      console.log(
-        "🌱 Customers collection is empty. Seeding from sample_customer.json...",
-      );
-      const pathsToTry = [
-        path_1.default.join(__dirname, "sample_customer.json"),
-        path_1.default.join(__dirname, "../src/sample_customer.json"),
-        path_1.default.join(__dirname, "../sample_customer.json"),
-        path_1.default.join(process.cwd(), "src/sample_customer.json"),
-        path_1.default.join(process.cwd(), "sample_customer.json"),
-      ];
-      let filePath = "";
-      for (const p of pathsToTry) {
-        if (fs_1.default.existsSync(p)) {
-          filePath = p;
-          break;
+    try {
+        const count = await Customers.countDocuments();
+        if (count === 0) {
+            console.log("🌱 Customers collection is empty. Seeding from sample_customer.json...");
+            const pathsToTry = [
+                path_1.default.join(__dirname, "sample_customer.json"),
+                path_1.default.join(__dirname, "../src/sample_customer.json"),
+                path_1.default.join(__dirname, "../sample_customer.json"),
+                path_1.default.join(process.cwd(), "src/sample_customer.json"),
+                path_1.default.join(process.cwd(), "sample_customer.json"),
+            ];
+            let filePath = "";
+            for (const p of pathsToTry) {
+                if (fs_1.default.existsSync(p)) {
+                    filePath = p;
+                    break;
+                }
+            }
+            if (filePath) {
+                const rawData = fs_1.default.readFileSync(filePath, "utf-8");
+                const sampleData = JSON.parse(rawData);
+                const processedData = sampleData.map((cust) => {
+                    if (cust._id && cust._id.$oid) {
+                        cust._id = new mongoose_1.default.Types.ObjectId(cust._id.$oid);
+                    }
+                    return cust;
+                });
+                await Customers.insertMany(processedData);
+                console.log(`✅ Successfully seeded ${processedData.length} customers!`);
+            }
+            else {
+                console.warn("⚠️ Seed file sample_customer.json not found in search paths.");
+            }
         }
-      }
-      if (filePath) {
-        const rawData = fs_1.default.readFileSync(filePath, "utf-8");
-        const sampleData = JSON.parse(rawData);
-        const processedData = sampleData.map((cust) => {
-          if (cust._id && cust._id.$oid) {
-            cust._id = new mongoose_1.default.Types.ObjectId(cust._id.$oid);
-          }
-          return cust;
-        });
-        await Customers.insertMany(processedData);
-        console.log(
-          `✅ Successfully seeded ${processedData.length} customers!`,
-        );
-      } else {
-        console.warn(
-          "⚠️ Seed file sample_customer.json not found in search paths.",
-        );
-      }
     }
-  } catch (err) {
-    console.error("❌ Failed to seed customers:", err);
-  }
+    catch (err) {
+        console.error("❌ Failed to seed customers:", err);
+    }
 };
 mongoose_1.default
-  .connect(MONGODB_URL, { dbName: "soul_connect_india" })
-  .then(() => {
-    console.log(
-      "✅ Successfully connected to MongoDB Atlas (soul_connect_india)",
-    );
+    .connect(MONGODB_URL, { dbName: "soul_connect_india" })
+    .then(() => {
+    console.log("✅ Successfully connected to MongoDB Atlas (soul_connect_india)");
     seedCustomers();
-  })
-  .catch((error) => console.error("❌ MongoDB connection error:", error));
+})
+    .catch((error) => console.error("❌ MongoDB connection error:", error));
 // -----------------------------------
 // Helper handlers to be reused for both Keycloak-protected and public endpoints
 async function handleCustomerList(req, res, type) {
-  try {
-    const filter = req.body.filter || {};
-    const customer_type = req.body.customer_type || false;
-    const limit = parseInt(req.body.limit) || 100;
-    const skip = parseInt(req.body.skip) || 0;
-    // Exclude the logged-in user's own profile from the list if authenticated
-    const tokenContent = req.kauth?.grant?.access_token?.content;
-    const loggedInKeycloakId = tokenContent?.sub;
-    const loggedInEmail = tokenContent?.email;
-    if (loggedInKeycloakId) {
-      filter.keycloakId = { $ne: loggedInKeycloakId };
-    }
-    if (loggedInEmail) {
-      filter.email = { $ne: loggedInEmail };
-    }
-    if (customer_type) {
-      filter.public_verify = true;
-    }
-    const reqFilters = req.body.filters || {};
-    for (const key of Object.keys(reqFilters)) {
-      const val = reqFilters[key];
-      if (val !== undefined && val !== null && val !== "") {
-        let dbKey = key;
-        if (key === "firstName") dbKey = "first_name";
-        if (key === "lastName") dbKey = "last_name";
-        if (key === "approvalStatus" || key === "public_verify") {
-          const lowerVal = String(val).toLowerCase();
-          if ("approved".includes(lowerVal) || lowerVal === "true") {
+    try {
+        const filter = req.body.filter || {};
+        const customer_type = req.body.customer_type || false;
+        const limit = parseInt(req.body.limit) || 100;
+        const skip = parseInt(req.body.skip) || 0;
+        // Exclude the logged-in user's own profile from the list if authenticated
+        const tokenContent = req.kauth?.grant?.access_token?.content;
+        const loggedInKeycloakId = tokenContent?.sub;
+        const loggedInEmail = tokenContent?.email;
+        if (loggedInKeycloakId) {
+            filter.keycloakId = { $ne: loggedInKeycloakId };
+        }
+        if (loggedInEmail) {
+            filter.email = { $ne: loggedInEmail };
+        }
+        if (customer_type) {
             filter.public_verify = true;
-          } else if (
-            "wait for approval".includes(lowerVal) ||
-            lowerVal === "false" ||
-            lowerVal === "rejected"
-          ) {
-            filter.public_verify = false;
-          } else {
-            // Unmatchable condition if user types something random
-            filter.public_verify = null;
-          }
-        } else {
-          filter[dbKey] = { $regex: val, $options: "i" };
         }
-      }
-    }
-    let sortOption = { _id: -1 };
-    if (req.body.sort) {
-      if (typeof req.body.sort === "object") {
-        sortOption = req.body.sort;
-      } else if (typeof req.body.sort === "string") {
-        if (req.body.sort.toLowerCase() === "asc") {
-          sortOption = { _id: 1 };
-        } else if (req.body.sort.toLowerCase() === "desc") {
-          sortOption = { _id: -1 };
-        } else {
-          const direction = req.body.order === "asc" ? 1 : -1;
-          sortOption = { [req.body.sort]: direction };
+        const reqFilters = req.body.filters || {};
+        for (const key of Object.keys(reqFilters)) {
+            const val = reqFilters[key];
+            if (val !== undefined && val !== null && val !== "") {
+                let dbKey = key;
+                if (key === "firstName")
+                    dbKey = "first_name";
+                if (key === "lastName")
+                    dbKey = "last_name";
+                if (key === "approvalStatus" || key === "public_verify") {
+                    const lowerVal = String(val).toLowerCase();
+                    if ("approved".includes(lowerVal) || lowerVal === "true") {
+                        filter.public_verify = true;
+                    }
+                    else if ("wait for approval".includes(lowerVal) ||
+                        lowerVal === "false" ||
+                        lowerVal === "rejected") {
+                        filter.public_verify = false;
+                    }
+                    else {
+                        // Unmatchable condition if user types something random
+                        filter.public_verify = null;
+                    }
+                }
+                else {
+                    filter[dbKey] = { $regex: val, $options: "i" };
+                }
+            }
         }
-      }
-    } else if (req.body.order) {
-      if (req.body.order.toLowerCase() === "asc") {
-        sortOption = { _id: 1 };
-      } else {
-        sortOption = { _id: -1 };
-      }
+        let sortOption = { _id: -1 };
+        if (req.body.sort) {
+            if (typeof req.body.sort === "object") {
+                sortOption = req.body.sort;
+            }
+            else if (typeof req.body.sort === "string") {
+                if (req.body.sort.toLowerCase() === "asc") {
+                    sortOption = { _id: 1 };
+                }
+                else if (req.body.sort.toLowerCase() === "desc") {
+                    sortOption = { _id: -1 };
+                }
+                else {
+                    const direction = req.body.order === "asc" ? 1 : -1;
+                    sortOption = { [req.body.sort]: direction };
+                }
+            }
+        }
+        else if (req.body.order) {
+            if (req.body.order.toLowerCase() === "asc") {
+                sortOption = { _id: 1 };
+            }
+            else {
+                sortOption = { _id: -1 };
+            }
+        }
+        const total = await Customers.countDocuments(filter);
+        const list = await Customers.find(filter)
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limit);
+        res.json({
+            total,
+            limit,
+            skip,
+            data: list,
+        });
     }
-    const total = await Customers.countDocuments(filter);
-    const list = await Customers.find(filter)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit);
-    res.json({
-      total,
-      limit,
-      skip,
-      data: list,
-    });
-  } catch (err) {
-    console.error("customer_list error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch customer list" });
-  }
+    catch (err) {
+        console.error("customer_list error:", err);
+        res
+            .status(500)
+            .json({ error: err.message || "Failed to fetch customer list" });
+    }
 }
 async function handleCustomerDetail(req, res) {
-  try {
-    const { id, customer_id, email, keycloakId } = req.body;
-    let query = {};
-    if (id) query._id = id;
-    else if (customer_id) query.customer_id = customer_id;
-    else if (email) query.email = email;
-    else if (keycloakId) query.keycloakId = keycloakId;
-    else {
-      return res.status(400).json({
-        error:
-          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
-      });
+    try {
+        const { id, customer_id, email, keycloakId } = req.body;
+        let query = {};
+        if (id)
+            query._id = id;
+        else if (customer_id)
+            query.customer_id = customer_id;
+        else if (email)
+            query.email = email;
+        else if (keycloakId)
+            query.keycloakId = keycloakId;
+        else {
+            return res.status(400).json({
+                error: "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+            });
+        }
+        const customer = await Customers.findOne(query);
+        if (!customer) {
+            return res.status(404).json({ error: "Customer not found" });
+        }
+        res.json(customer);
     }
-    const customer = await Customers.findOne(query);
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
+    catch (err) {
+        console.error("customer_detail error:", err);
+        res
+            .status(500)
+            .json({ error: err.message || "Failed to fetch customer detail" });
     }
-    res.json(customer);
-  } catch (err) {
-    console.error("customer_detail error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch customer detail" });
-  }
 }
 async function handleCustomerDetailGet(req, res) {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      return res
-        .status(400)
-        .json({ error: "Missing identifier in request URL" });
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res
+                .status(400)
+                .json({ error: "Missing identifier in request URL" });
+        }
+        const customer = await Customers.findById(id);
+        if (!customer) {
+            return res.status(404).json({ error: "Customer not found" });
+        }
+        res.json(customer);
     }
-    const customer = await Customers.findById(id);
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
+    catch (err) {
+        console.error("customer_detail_get error:", err);
+        res
+            .status(500)
+            .json({ error: err.message || "Failed to fetch customer detail" });
     }
-    res.json(customer);
-  } catch (err) {
-    console.error("customer_detail_get error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch customer detail" });
-  }
+}
+async function handleProfileDetail(req, res) {
+    try {
+        const { id, profile_id, customer_id, email, keycloakId } = {
+            ...req.query,
+            ...req.body,
+        };
+        let query = {};
+        const targetId = (id || profile_id || customer_id);
+        if (targetId) {
+            if (mongoose_1.default.Types.ObjectId.isValid(targetId)) {
+                query.$or = [{ _id: targetId }, { customer_id: targetId }];
+            }
+            else {
+                query.customer_id = targetId;
+            }
+        }
+        else if (email) {
+            query.email = email;
+        }
+        else if (keycloakId) {
+            query.keycloakId = keycloakId;
+        }
+        else {
+            const tokenContent = req.kauth?.grant?.access_token?.content;
+            if (tokenContent?.sub) {
+                query.keycloakId = tokenContent.sub;
+            }
+            else if (tokenContent?.email) {
+                query.email = tokenContent.email;
+            }
+            else {
+                return res.status(400).json({
+                    error: "Missing identifier (id, profile_id, customer_id, email, or keycloakId) in request",
+                });
+            }
+        }
+        const profile = await Customers.findOne(query);
+        if (!profile) {
+            return res.status(404).json({ error: "Profile not found" });
+        }
+        res.json(profile);
+    }
+    catch (err) {
+        console.error("profile_detail error:", err);
+        res
+            .status(500)
+            .json({ error: err.message || "Failed to fetch profile detail" });
+    }
+}
+async function handleProfileDetailGet(req, res) {
+    try {
+        const id = req.params.id;
+        if (!id) {
+            return res
+                .status(400)
+                .json({ error: "Missing identifier in request URL" });
+        }
+        let profile;
+        if (mongoose_1.default.Types.ObjectId.isValid(id)) {
+            profile = await Customers.findOne({
+                $or: [{ _id: id }, { customer_id: id }, { keycloakId: id }],
+            });
+        }
+        else {
+            profile = await Customers.findOne({
+                $or: [{ customer_id: id }, { keycloakId: id }, { email: id }],
+            });
+        }
+        if (!profile) {
+            return res.status(404).json({ error: "Profile not found" });
+        }
+        res.json(profile);
+    }
+    catch (err) {
+        console.error("profile_detail_get error:", err);
+        res
+            .status(500)
+            .json({ error: err.message || "Failed to fetch profile detail" });
+    }
 }
 function processUploadedImages(imagesInput, req) {
-  const savedImages = [];
-  const uploadDir = path_1.default.join(process.cwd(), "uploads");
-  if (!fs_1.default.existsSync(uploadDir)) {
-    fs_1.default.mkdirSync(uploadDir, { recursive: true });
-  }
-  for (let i = 0; i < imagesInput.length; i++) {
-    const item = imagesInput[i];
-    let imgStr = "";
-    if (typeof item === "string") {
-      imgStr = item;
-    } else if (
-      item &&
-      typeof item === "object" &&
-      typeof item.url === "string"
-    ) {
-      imgStr = item.url;
-    } else {
-      return `Invalid image item structure at index ${i}. Expected string or object with url property.`;
+    const savedImages = [];
+    const uploadDir = path_1.default.join(process.cwd(), "uploads");
+    if (!fs_1.default.existsSync(uploadDir)) {
+        fs_1.default.mkdirSync(uploadDir, { recursive: true });
     }
-    const isDefault =
-      item && typeof item === "object" ? item.default === true : i === 0;
-    // If it's already a hosted URL (does not start with data:), just preserve it
-    if (
-      imgStr.startsWith("http://") ||
-      imgStr.startsWith("https://") ||
-      (!imgStr.startsWith("data:") && imgStr.length < 200)
-    ) {
-      const imgObj = { url: imgStr };
-      if (isDefault) {
-        imgObj.default = true;
-      }
-      savedImages.push(imgObj);
-      continue;
-    }
-    try {
-      let ext = "png";
-      let data = imgStr;
-      if (imgStr.startsWith("data:")) {
-        const commaIdx = imgStr.indexOf(",");
-        if (commaIdx !== -1) {
-          data = imgStr.substring(commaIdx + 1);
-          const mimeStr = imgStr.substring(5, commaIdx);
-          const mimeParts = mimeStr.split(";")[0].split("/");
-          if (mimeParts.length === 2) {
-            ext = mimeParts[1];
-          }
+    for (let i = 0; i < imagesInput.length; i++) {
+        const item = imagesInput[i];
+        let imgStr = "";
+        if (typeof item === "string") {
+            imgStr = item;
         }
-      }
-      const buffer = Buffer.from(data, "base64");
-      const filename = `img_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.${ext}`;
-      const filepath = path_1.default.join(uploadDir, filename);
-      fs_1.default.writeFileSync(filepath, buffer);
-      const host = req.get("host");
-      const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
-      const imgObj = { url: imageUrl };
-      if (isDefault) {
-        imgObj.default = true;
-      }
-      savedImages.push(imgObj);
-    } catch (err) {
-      return `Failed to process image ${i + 1}: ${err.message}`;
+        else if (item &&
+            typeof item === "object" &&
+            typeof item.url === "string") {
+            imgStr = item.url;
+        }
+        else {
+            return `Invalid image item structure at index ${i}. Expected string or object with url property.`;
+        }
+        const isDefault = item && typeof item === "object" ? item.default === true : i === 0;
+        // If it's already a hosted URL (does not start with data:), just preserve it
+        if (imgStr.startsWith("http://") ||
+            imgStr.startsWith("https://") ||
+            (!imgStr.startsWith("data:") && imgStr.length < 200)) {
+            const imgObj = { url: imgStr };
+            if (isDefault) {
+                imgObj.default = true;
+            }
+            savedImages.push(imgObj);
+            continue;
+        }
+        try {
+            let ext = "png";
+            let data = imgStr;
+            if (imgStr.startsWith("data:")) {
+                const commaIdx = imgStr.indexOf(",");
+                if (commaIdx !== -1) {
+                    data = imgStr.substring(commaIdx + 1);
+                    const mimeStr = imgStr.substring(5, commaIdx);
+                    const mimeParts = mimeStr.split(";")[0].split("/");
+                    if (mimeParts.length === 2) {
+                        ext = mimeParts[1];
+                    }
+                }
+            }
+            const buffer = Buffer.from(data, "base64");
+            const filename = `img_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.${ext}`;
+            const filepath = path_1.default.join(uploadDir, filename);
+            fs_1.default.writeFileSync(filepath, buffer);
+            const host = req.get("host");
+            const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
+            const imgObj = { url: imageUrl };
+            if (isDefault) {
+                imgObj.default = true;
+            }
+            savedImages.push(imgObj);
+        }
+        catch (err) {
+            return `Failed to process image ${i + 1}: ${err.message}`;
+        }
     }
-  }
-  return savedImages;
+    return savedImages;
 }
 function processUploadedVideo(videoInput, req) {
-  const uploadDir = path_1.default.join(process.cwd(), "uploads");
-  if (!fs_1.default.existsSync(uploadDir)) {
-    fs_1.default.mkdirSync(uploadDir, { recursive: true });
-  }
-  let vidStr = "";
-  if (typeof videoInput === "string") {
-    vidStr = videoInput;
-  } else if (
-    videoInput &&
-    typeof videoInput === "object" &&
-    typeof videoInput.url === "string"
-  ) {
-    vidStr = videoInput.url;
-  } else {
-    return "Invalid video item structure. Expected string or object with url property.";
-  }
-  // If it's already a hosted URL (does not start with data:), just preserve it
-  if (
-    vidStr.startsWith("http://") ||
-    vidStr.startsWith("https://") ||
-    (!vidStr.startsWith("data:") && vidStr.length < 200)
-  ) {
-    return { url: vidStr };
-  }
-  try {
-    let ext = "mp4";
-    let data = vidStr;
-    if (vidStr.startsWith("data:")) {
-      const commaIdx = vidStr.indexOf(",");
-      if (commaIdx !== -1) {
-        data = vidStr.substring(commaIdx + 1);
-        const mimeStr = vidStr.substring(5, commaIdx);
-        const mimeParts = mimeStr.split(";")[0].split("/");
-        if (mimeParts.length === 2) {
-          ext = mimeParts[1];
-        }
-      }
+    const uploadDir = path_1.default.join(process.cwd(), "uploads");
+    if (!fs_1.default.existsSync(uploadDir)) {
+        fs_1.default.mkdirSync(uploadDir, { recursive: true });
     }
-    const buffer = Buffer.from(data, "base64");
-    const filename = `vid_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
-    const filepath = path_1.default.join(uploadDir, filename);
-    fs_1.default.writeFileSync(filepath, buffer);
-    const host = req.get("host");
-    const videoUrl = `${req.protocol}://${host}/uploads/${filename}`;
-    return { url: videoUrl };
-  } catch (err) {
-    return `Failed to process video: ${err.message}`;
-  }
+    let vidStr = "";
+    if (typeof videoInput === "string") {
+        vidStr = videoInput;
+    }
+    else if (videoInput &&
+        typeof videoInput === "object" &&
+        typeof videoInput.url === "string") {
+        vidStr = videoInput.url;
+    }
+    else {
+        return "Invalid video item structure. Expected string or object with url property.";
+    }
+    // If it's already a hosted URL (does not start with data:), just preserve it
+    if (vidStr.startsWith("http://") ||
+        vidStr.startsWith("https://") ||
+        (!vidStr.startsWith("data:") && vidStr.length < 200)) {
+        return { url: vidStr };
+    }
+    try {
+        let ext = "mp4";
+        let data = vidStr;
+        if (vidStr.startsWith("data:")) {
+            const commaIdx = vidStr.indexOf(",");
+            if (commaIdx !== -1) {
+                data = vidStr.substring(commaIdx + 1);
+                const mimeStr = vidStr.substring(5, commaIdx);
+                const mimeParts = mimeStr.split(";")[0].split("/");
+                if (mimeParts.length === 2) {
+                    ext = mimeParts[1];
+                }
+            }
+        }
+        const buffer = Buffer.from(data, "base64");
+        const filename = `vid_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+        const filepath = path_1.default.join(uploadDir, filename);
+        fs_1.default.writeFileSync(filepath, buffer);
+        const host = req.get("host");
+        const videoUrl = `${req.protocol}://${host}/uploads/${filename}`;
+        return { url: videoUrl };
+    }
+    catch (err) {
+        return `Failed to process video: ${err.message}`;
+    }
+}
+function processUploadedIdentityProof(identityProofInput, req) {
+    const uploadDir = path_1.default.join(process.cwd(), "uploads");
+    if (!fs_1.default.existsSync(uploadDir)) {
+        fs_1.default.mkdirSync(uploadDir, { recursive: true });
+    }
+    let fileStr = "";
+    if (typeof identityProofInput === "string") {
+        fileStr = identityProofInput;
+    }
+    else if (identityProofInput &&
+        typeof identityProofInput === "object" &&
+        typeof identityProofInput.url === "string") {
+        fileStr = identityProofInput.url;
+    }
+    else {
+        return "Invalid identity proof structure. Expected string or object with url property.";
+    }
+    // If it's already a hosted URL (does not start with data:), just preserve it
+    if (fileStr.startsWith("http://") ||
+        fileStr.startsWith("https://") ||
+        (!fileStr.startsWith("data:") && fileStr.length < 200)) {
+        return { url: fileStr };
+    }
+    try {
+        let ext = "png";
+        let data = fileStr;
+        if (fileStr.startsWith("data:")) {
+            const commaIdx = fileStr.indexOf(",");
+            if (commaIdx !== -1) {
+                data = fileStr.substring(commaIdx + 1);
+                const mimeStr = fileStr.substring(5, commaIdx);
+                const mimeParts = mimeStr.split(";")[0].split("/");
+                if (mimeParts.length === 2) {
+                    ext = mimeParts[1];
+                }
+            }
+        }
+        const buffer = Buffer.from(data, "base64");
+        const filename = `id_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+        const filepath = path_1.default.join(uploadDir, filename);
+        fs_1.default.writeFileSync(filepath, buffer);
+        const host = req.get("host");
+        const fileUrl = `${req.protocol}://${host}/uploads/${filename}`;
+        return { url: fileUrl };
+    }
+    catch (err) {
+        return `Failed to process identity proof: ${err.message}`;
+    }
 }
 async function handleCustomerEdit(req, res) {
-  try {
-    const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
-    let query = {};
-    if (id) query._id = id;
-    else if (customer_id) query.customer_id = customer_id;
-    else if (email) query.email = email;
-    else if (keycloakId) query.keycloakId = keycloakId;
-    else {
-      return res.status(400).json({
-        error:
-          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
-      });
-    }
-    // Map camelCase fields to snake_case if present to align with database naming
-    if (updateFields.firstName && !updateFields.first_name) {
-      updateFields.first_name = updateFields.firstName;
-    }
-    if (updateFields.lastName && !updateFields.last_name) {
-      updateFields.last_name = updateFields.lastName;
-    }
-    // Check if images are being updated
-    const imagesInput = updateFields.image || updateFields.images;
-    if (imagesInput !== undefined) {
-      if (!Array.isArray(imagesInput)) {
-        return res
-          .status(400)
-          .json({ error: "Invalid image upload. Expected array." });
-      }
-      if (imagesInput.length < 1 || imagesInput.length > 5) {
-        return res.status(400).json({
-          error:
-            "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
-        });
-      }
-      const processed = processUploadedImages(imagesInput, req);
-      if (typeof processed === "string") {
-        return res.status(400).json({ error: processed });
-      }
-      updateFields.image = processed;
-      if (updateFields.images) {
-        delete updateFields.images;
-      }
-    }
-    // Check if video is being updated
-    const videoInput = updateFields.video;
-    if (videoInput !== undefined) {
-      if (videoInput === null || videoInput === "") {
-        updateFields.video = null;
-      } else {
-        const processed = processUploadedVideo(videoInput, req);
-        if (typeof processed === "string") {
-          return res.status(400).json({ error: processed });
+    try {
+        const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
+        let query = {};
+        if (id)
+            query._id = id;
+        else if (customer_id)
+            query.customer_id = customer_id;
+        else if (email)
+            query.email = email;
+        else if (keycloakId)
+            query.keycloakId = keycloakId;
+        else {
+            return res.status(400).json({
+                error: "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+            });
         }
-        updateFields.video = processed;
-      }
+        // Map camelCase fields to snake_case if present to align with database naming
+        if (updateFields.firstName && !updateFields.first_name) {
+            updateFields.first_name = updateFields.firstName;
+        }
+        if (updateFields.lastName && !updateFields.last_name) {
+            updateFields.last_name = updateFields.lastName;
+        }
+        // Check if images are being updated
+        const imagesInput = updateFields.image || updateFields.images;
+        if (imagesInput !== undefined) {
+            if (!Array.isArray(imagesInput)) {
+                return res
+                    .status(400)
+                    .json({ error: "Invalid image upload. Expected array." });
+            }
+            if (imagesInput.length < 1 || imagesInput.length > 5) {
+                return res.status(400).json({
+                    error: "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
+                });
+            }
+            const processed = processUploadedImages(imagesInput, req);
+            if (typeof processed === "string") {
+                return res.status(400).json({ error: processed });
+            }
+            updateFields.image = processed;
+            if (updateFields.images) {
+                delete updateFields.images;
+            }
+        }
+        // Check if video is being updated
+        const videoInput = updateFields.video;
+        if (videoInput !== undefined) {
+            if (videoInput === null || videoInput === "") {
+                updateFields.video = null;
+            }
+            else {
+                const processed = processUploadedVideo(videoInput, req);
+                if (typeof processed === "string") {
+                    return res.status(400).json({ error: processed });
+                }
+                updateFields.video = processed;
+            }
+        }
+        // Check if identity proof is being updated
+        const identityProofInput = updateFields.identity_proff;
+        if (identityProofInput !== undefined) {
+            if (identityProofInput === null || identityProofInput === "") {
+                updateFields.identity_proff = null;
+            }
+            else {
+                const processed = processUploadedIdentityProof(identityProofInput, req);
+                if (typeof processed === "string") {
+                    return res.status(400).json({ error: processed });
+                }
+                updateFields.identity_proff = processed;
+            }
+        }
+        const tokenContent = req.kauth?.grant?.access_token?.content;
+        const loggedInEmail = tokenContent?.email;
+        updateFields.modifiedAtTime = new Date();
+        if (loggedInEmail) {
+            updateFields.modifiedByemail = loggedInEmail;
+        }
+        else if (email) {
+            updateFields.modifiedByemail = email;
+        }
+        const customer = await Customers.findOneAndUpdate(query, { $set: updateFields }, { new: true, runValidators: true });
+        if (!customer) {
+            return res.status(404).json({ error: "Customer not found" });
+        }
+        res.json({
+            success: true,
+            message: "Customer updated successfully",
+            customer,
+        });
     }
-    const customer = await Customers.findOneAndUpdate(
-      query,
-      { $set: updateFields },
-      { new: true, runValidators: true },
-    );
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
+    catch (err) {
+        console.error("customer_edit error:", err);
+        res.status(500).json({ error: err.message || "Failed to update customer" });
     }
-    res.json({
-      success: true,
-      message: "Customer updated successfully",
-      customer,
-    });
-  } catch (err) {
-    console.error("customer_edit error:", err);
-    res.status(500).json({ error: err.message || "Failed to update customer" });
-  }
 }
 async function handleCustomerDelete(req, res) {
-  try {
-    const { id, customer_id, email, keycloakId } = req.body;
-    let query = {};
-    if (id) query._id = id;
-    else if (customer_id) query.customer_id = customer_id;
-    else if (email) query.email = email;
-    else if (keycloakId) query.keycloakId = keycloakId;
-    else {
-      return res.status(400).json({
-        error:
-          "Missing identifier (id, customer_id, email, or keycloakId) in request body",
-      });
+    try {
+        const { id, customer_id, email, keycloakId } = req.body;
+        let query = {};
+        if (id)
+            query._id = id;
+        else if (customer_id)
+            query.customer_id = customer_id;
+        else if (email)
+            query.email = email;
+        else if (keycloakId)
+            query.keycloakId = keycloakId;
+        else {
+            return res.status(400).json({
+                error: "Missing identifier (id, customer_id, email, or keycloakId) in request body",
+            });
+        }
+        const customer = await Customers.findOneAndDelete(query);
+        if (!customer) {
+            return res.status(404).json({ error: "Customer not found" });
+        }
+        res.json({ success: true, message: "Customer deleted successfully" });
     }
-    const customer = await Customers.findOneAndDelete(query);
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
+    catch (err) {
+        console.error("customer_delete error:", err);
+        res.status(500).json({ error: err.message || "Failed to delete customer" });
     }
-    res.json({ success: true, message: "Customer deleted successfully" });
-  } catch (err) {
-    console.error("customer_delete error:", err);
-    res.status(500).json({ error: err.message || "Failed to delete customer" });
-  }
 }
 async function handleCustomerCreate(req, res) {
-  try {
-    const {
-      firstName,
-      lastName,
-      first_name,
-      last_name,
-      email,
-      image,
-      images,
-      video,
-      role,
-      ...otherFields
-    } = req.body;
-    const imagesInput = image || images;
-    if (
-      !imagesInput ||
-      !Array.isArray(imagesInput) ||
-      imagesInput.length < 1 ||
-      imagesInput.length > 5
-    ) {
-      return res.status(400).json({
-        error:
-          "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
-      });
-    }
-    const processed = processUploadedImages(imagesInput, req);
-    if (typeof processed === "string") {
-      return res.status(400).json({ error: processed });
-    }
-    let processedVideo = undefined;
-    if (video !== undefined && video !== null && video !== "") {
-      const processedVid = processUploadedVideo(video, req);
-      if (typeof processedVid === "string") {
-        return res.status(400).json({ error: processedVid });
-      }
-      processedVideo = processedVid;
-    }
-    if (email) {
-      const existing = await Customers.findOne({ email });
-      if (existing) {
-        return res
-          .status(400)
-          .json({ error: "Customer with this email already exists" });
-      }
-    }
-    const first = firstName || first_name;
-    const last = lastName || last_name;
-    const customer_id =
-      req.body.customer_id || `cid_${new mongoose_1.default.Types.ObjectId()}`;
-    // Create Keycloak user
-    let keycloakId = undefined;
     try {
-      const kcAdmin = new keycloak_admin_client_1.default({
-        baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
-        realmName: "master",
-      });
-      await kcAdmin.auth({
-        ...GLOBAL_DETAILS,
-        grantType: "password",
-        clientId: "admin-cli",
-      });
-      kcAdmin.setConfig({
-        realmName: process.env.KEYCLOAK_REALM || "soul_connect",
-      });
-      const kcUser = await kcAdmin.users.create({
-        username: first || email,
-        email,
-        firstName: first,
-        lastName: last,
-        enabled: true,
-        emailVerified: true,
-        credentials: [
-          {
-            type: "password",
-            value: "password@123",
-            temporary: true,
-          },
-        ],
-      });
-      keycloakId = kcUser.id;
-      console.log("✅ Inner Keycloak User created with ID:", keycloakId);
-      if (role) {
-        try {
-          const groups = await kcAdmin.groups.find({ search: role });
-          const targetGroup = groups.find((g) => g.name === role);
-          if (targetGroup && targetGroup.id) {
-            await kcAdmin.users.addToGroup({
-              id: keycloakId,
-              groupId: targetGroup.id,
+        const { firstName, lastName, first_name, last_name, email, image, images, video, role, identity_proff, ...otherFields } = req?.body;
+        const imagesInput = image || images;
+        if (!imagesInput ||
+            !Array.isArray(imagesInput) ||
+            imagesInput.length < 1 ||
+            imagesInput.length > 5) {
+            return res.status(400).json({
+                error: "Invalid image upload. Must upload minimum 1 and maximum 5 images.",
             });
-            console.log(`✅ Added Keycloak user to group: ${role}`);
-          } else {
-            console.log(`⚠️ Keycloak group not found: ${role}`);
-          }
-        } catch (groupErr) {
-          console.error(
-            `❌ Failed to assign group ${role} in Keycloak:`,
-            groupErr.message || groupErr,
-          );
         }
-        try {
-          const realmRole = await kcAdmin.roles.findOneByName({ name: role });
-          if (realmRole && realmRole.id && realmRole.name) {
-            await kcAdmin.users.addRealmRoleMappings({
-              id: keycloakId,
-              roles: [{ id: realmRole.id, name: realmRole.name }],
-            });
-            console.log(`✅ Assigned Keycloak realm role: ${role}`);
-          } else {
-            console.log(`⚠️ Keycloak realm role not found: ${role}`);
-          }
-        } catch (roleErr) {
-          console.error(
-            `❌ Failed to assign realm role ${role} in Keycloak:`,
-            roleErr.message || roleErr,
-          );
+        const processed = processUploadedImages(imagesInput, req);
+        if (typeof processed === "string") {
+            return res.status(400).json({ error: processed });
         }
-      }
-    } catch (kcErr) {
-      console.error(
-        "❌ Keycloak user creation failed:",
-        kcErr.response?.data || kcErr.message,
-      );
-      return res.status(400).json({
-        error: `Failed to create Keycloak user: ${kcErr.response?.data?.errorMessage || kcErr.message}`,
-      });
-    }
-    const newCustomer = new Customers({
-      customer_id,
-      keycloakId,
-      firstName: first,
-      lastName: last,
-      first_name: first,
-      last_name: last,
-      email,
-      image: processed,
-      video: processedVideo,
-      role,
-      ...otherFields,
-    });
-    await newCustomer.save();
-    // Trigger /api/send-email with the complete customer creation response details
-    if (EMAIL_TRIGGER_ENABLE_FLAG) {
-      try {
+        let processedVideo = undefined;
+        if (video !== undefined && video !== null && video !== "") {
+            const processedVid = processUploadedVideo(video, req);
+            if (typeof processedVid === "string") {
+                return res.status(400).json({ error: processedVid });
+            }
+            processedVideo = processedVid;
+        }
+        let processedIdentityProof = undefined;
+        if (identity_proff !== undefined && identity_proff !== null && identity_proff !== "") {
+            const processedId = processUploadedIdentityProof(identity_proff, req);
+            if (typeof processedId === "string") {
+                return res.status(400).json({ error: processedId });
+            }
+            processedIdentityProof = processedId;
+        }
         if (email) {
-          const protocol = req.secure ? "https" : "http";
-          const host = req.headers.host || `localhost:${PORT}`;
-          // Share complete customer response in the email body
-          const emailHtml = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+            const existing = await Customers.findOne({ email });
+            if (existing) {
+                return res
+                    .status(400)
+                    .json({ error: "Customer with this email already exists" });
+            }
+        }
+        const first = firstName || first_name;
+        const last = lastName || last_name;
+        const customer_id = req.body.customer_id || `cid_${new mongoose_1.default.Types.ObjectId()}`;
+        // Create Keycloak user
+        let keycloakId = undefined;
+        try {
+            const kcAdmin = new keycloak_admin_client_1.default({
+                baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
+                realmName: "master",
+            });
+            await kcAdmin.auth({
+                ...GLOBAL_DETAILS,
+                grantType: "password",
+                clientId: "admin-cli",
+            });
+            kcAdmin.setConfig({
+                realmName: process.env.KEYCLOAK_REALM || "soul_connect",
+            });
+            const kcUser = await kcAdmin.users.create({
+                username: first || email,
+                email,
+                firstName: first,
+                lastName: last,
+                enabled: true,
+                emailVerified: true,
+                credentials: [
+                    {
+                        type: "password",
+                        value: "password@123",
+                        temporary: true,
+                    },
+                ],
+            });
+            keycloakId = kcUser.id;
+            console.log("✅ Inner Keycloak User created with ID:", keycloakId);
+            if (role) {
+                try {
+                    const groups = await kcAdmin.groups.find({ search: role });
+                    const targetGroup = groups.find((g) => g.name === role);
+                    if (targetGroup && targetGroup.id) {
+                        await kcAdmin.users.addToGroup({
+                            id: keycloakId,
+                            groupId: targetGroup.id,
+                        });
+                        console.log(`✅ Added Keycloak user to group: ${role}`);
+                    }
+                    else {
+                        console.log(`⚠️ Keycloak group not found: ${role}`);
+                    }
+                }
+                catch (groupErr) {
+                    console.error(`❌ Failed to assign group ${role} in Keycloak:`, groupErr.message || groupErr);
+                }
+                try {
+                    const realmRole = await kcAdmin.roles.findOneByName({ name: role });
+                    if (realmRole && realmRole.id && realmRole.name) {
+                        await kcAdmin.users.addRealmRoleMappings({
+                            id: keycloakId,
+                            roles: [{ id: realmRole.id, name: realmRole.name }],
+                        });
+                        console.log(`✅ Assigned Keycloak realm role: ${role}`);
+                    }
+                    else {
+                        console.log(`⚠️ Keycloak realm role not found: ${role}`);
+                    }
+                }
+                catch (roleErr) {
+                    console.error(`❌ Failed to assign realm role ${role} in Keycloak:`, roleErr.message || roleErr);
+                }
+            }
+        }
+        catch (kcErr) {
+            console.error("❌ Keycloak user creation failed:", kcErr.response?.data || kcErr.message);
+            console.error("❌ Keycloak user creation failed:", JSON.stringify(kcErr));
+            return res.status(400).json({
+                error: `Failed to create Keycloak user: ${kcErr.response?.data?.errorMessage || kcErr.message}`,
+            });
+        }
+        const tokenContent = req.kauth?.grant?.access_token?.content;
+        const loggedInEmail = tokenContent?.email;
+        const newCustomer = new Customers({
+            customer_id,
+            keycloakId,
+            firstName: first,
+            lastName: last,
+            first_name: first,
+            last_name: last,
+            email,
+            image: processed,
+            video: processedVideo,
+            identity_proff: processedIdentityProof,
+            role,
+            createdAtTime: new Date(),
+            modifiedAtTime: new Date(),
+            modifiedByemail: loggedInEmail || email || undefined,
+            ...otherFields,
+        });
+        await newCustomer.save();
+        // Trigger /api/send-email with the complete customer creation response details
+        if (EMAIL_TRIGGER_ENABLE_FLAG) {
+            try {
+                if (email) {
+                    const protocol = req.secure ? "https" : "http";
+                    const host = req.headers.host || `localhost:${PORT}`;
+                    // Share complete customer response in the email body
+                    const emailHtml = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -955,334 +1098,420 @@ async function handleCustomerCreate(req, res) {
   </table>
 </body>
 </html>`;
-          console.log(`Triggering /api/send-email for ${email}...`);
-          await fetch(`${protocol}://${host}/api/send-email`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              to: email,
-              subject: "Welcome to Soul Connect - Account Created",
-              message: emailHtml,
-            }),
-          });
+                    console.log(`Triggering /api/send-email for ${email}...`);
+                    await fetch(`${protocol}://${host}/api/send-email`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            to: email,
+                            subject: "Welcome to Soul Connect - Account Created",
+                            message: emailHtml,
+                        }),
+                    });
+                }
+            }
+            catch (emailErr) {
+                console.error("⚠️ Failed to trigger /api/send-email:", emailErr.message || emailErr);
+            }
         }
-      } catch (emailErr) {
-        console.error(
-          "⚠️ Failed to trigger /api/send-email:",
-          emailErr.message || emailErr,
-        );
-      }
+        res.status(201).json({
+            success: true,
+            message: "Customer created successfully",
+            customer: newCustomer,
+        });
     }
-    res.status(201).json({
-      success: true,
-      message: "Customer created successfully",
-      customer: newCustomer,
-    });
-  } catch (err) {
-    console.error("customer_create error:", err);
-    res.status(500).json({ error: err.message || "Failed to create customer" });
-  }
+    catch (err) {
+        console.error("customer_create error:", err);
+        res.status(500).json({ error: err.message || "Failed to create customer" });
+    }
 }
 async function handleSubscriptionGet(req, res) {
-  try {
-    const subscriptions = await Subscription.find({});
-    res.json(subscriptions);
-  } catch (err) {
-    console.error("subscription get error:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Failed to fetch subscriptions" });
-  }
+    try {
+        const subscriptions = await Subscription.find({});
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
+        res.status(200).json({
+            success: true,
+            data: subscriptions,
+        });
+    }
+    catch (err) {
+        console.error("subscription get error:", err);
+        res
+            .status(500)
+            .json({ error: err.message || "Failed to fetch subscriptions" });
+    }
 }
 // --- CUSTOMER APIs (With Keycloak Access / Protected) ---
-app.post(
-  "/api/customer_list",
-  keycloak_config_1.keycloak.protect(),
-  (req, res) => handleCustomerList(req, res, "protected"),
-);
-app.post(
-  "/api/customer_detail",
-  keycloak_config_1.keycloak.protect(),
-  handleCustomerDetail,
-);
-app.get(
-  "/api/customer_detail/:id",
-  keycloak_config_1.keycloak.protect(),
-  handleCustomerDetailGet,
-);
-app.post(
-  "/api/customer_edit",
-  keycloak_config_1.keycloak.protect(),
-  handleCustomerEdit,
-);
-app.post(
-  "/api/customer_delete",
-  keycloak_config_1.keycloak.protect(),
-  handleCustomerDelete,
-);
-app.post(
-  "/api/customer_create",
-  keycloak_config_1.keycloak.protect(),
-  handleCustomerCreate,
-);
-app.get(
-  "/api/subscription",
-  keycloak_config_1.keycloak.protect(),
-  handleSubscriptionGet,
-);
-app.get(
-  "/api/subscriptions",
-  keycloak_config_1.keycloak.protect(),
-  handleSubscriptionGet,
-);
+app.post("/api/customer_list", keycloak_config_1.keycloak.protect(), (req, res) => handleCustomerList(req, res, "protected"));
+app.post("/api/customer_detail", keycloak_config_1.keycloak.protect(), handleCustomerDetail);
+app.get("/api/customer_detail/:id", keycloak_config_1.keycloak.protect(), handleCustomerDetailGet);
+app.post("/api/profile_detail", keycloak_config_1.keycloak.protect(), handleProfileDetail);
+app.get("/api/profile_detail", keycloak_config_1.keycloak.protect(), handleProfileDetail);
+app.get("/api/profile_detail/:id", keycloak_config_1.keycloak.protect(), handleProfileDetailGet);
+app.post("/api/customer_edit", keycloak_config_1.keycloak.protect(), handleCustomerEdit);
+app.post("/api/customer_delete", keycloak_config_1.keycloak.protect(), handleCustomerDelete);
+app.post("/api/customer_create", keycloak_config_1.keycloak.protect(), handleCustomerCreate);
+app.get("/api/subscription", keycloak_config_1.keycloak.protect(), handleSubscriptionGet);
+app.get("/api/subscriptions", keycloak_config_1.keycloak.protect(), handleSubscriptionGet);
 // --- CUSTOMER APIs (Without Keycloak Access / Public) ---
-app.post("/api/public/customer_list", (req, res) =>
-  handleCustomerList(req, res, "public"),
-);
+app.post("/api/public/customer_list", (req, res) => handleCustomerList(req, res, "public"));
 app.post("/api/public/customer_detail", handleCustomerDetail);
 app.get("/api/public/customer_detail/:id", handleCustomerDetailGet);
+app.post("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail", handleProfileDetail);
+app.get("/api/public/profile_detail/:id", handleProfileDetailGet);
 app.post("/api/public/customer_edit", handleCustomerEdit);
 app.post("/api/public/customer_delete", handleCustomerDelete);
 app.post("/api/public/customer_create", handleCustomerCreate);
 app.get("/api/public/subscription", handleSubscriptionGet);
 app.get("/api/public/subscriptions", handleSubscriptionGet);
 app.get("/api/public", (req, res) => {
-  res.json({
-    message: "This is a public endpoint. No authentication required.",
-  });
+    res.json({
+        message: "This is a public endpoint. No authentication required.",
+    });
 });
 app.get("/api/protected", keycloak_config_1.keycloak.protect(), (req, res) => {
-  res.json({
-    message: "This is a protected endpoint. You are authenticated!",
-    user: req.kauth?.grant?.access_token?.content,
-  });
+    res.json({
+        message: "This is a protected endpoint. You are authenticated!",
+        user: req.kauth?.grant?.access_token?.content,
+    });
 });
 app.post("/api/send-email", async (req, res) => {
-  const { to, subject, message } = req.body;
-  try {
-    // Because the demo domain "hello@demomailtrap.co" only allows sending to the Mailtrap account owner,
-    // we hardcode the recipient to "karthimailu@gmail.com" to prevent the API error.
-    const mailtrapTo = [{ email: "karthimailu@gmail.com" }];
-    const htmlContent = message
-      ? message.trim().startsWith("<")
-        ? message
-        : `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px; background-color: #ffffff;">
-              <div style="background: linear-gradient(135deg, #F2688C 0%, #7C3AED 100%); padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
-                <h2 style="color: #ffffff; margin: 0; font-size: 22px;">Soul Connect</h2>
-              </div>
-              <div style="padding: 24px; font-size: 15px;">
-                ${message.replace(/\n/g, "<br/>")}
-              </div>
-              <div style="border-top: 1px solid #f0f0f0; padding-top: 16px; text-align: center; font-size: 12px; color: #888;">
-                This is an automated notification. Please do not reply directly.
-              </div>
-            </div>`
-      : `<p>Congrats on sending your <strong>first email</strong>!</p>`;
-    const textContent = message || "Congrats on sending your first email!";
-    const response = await fetch("https://send.api.mailtrap.io/api/send", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer 739e287dbd445574ac5faba34837649a",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: {
-          email: "hello@demomailtrap.co",
-          name: "Mailtrap Test",
-        },
-        to: mailtrapTo,
-        subject: subject || "You are awesome!",
-        html: htmlContent,
-        text: textContent,
-        category: "Integration Test",
-      }),
-    });
-    const responseData = await response.json();
-    if (!response.ok) {
-      console.error("Mailtrap send error response:", responseData);
-      return res.status(response.status).json({
-        success: false,
-        error: responseData,
-      });
+    const { to, subject, message } = req.body;
+    try {
+        const transporter = nodemailer_1.default.createTransport({
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false, // STARTTLS
+            requireTLS: true,
+            auth: {
+                user: process.env.SMTP_USER || "karthimailu@gmail.com",
+                pass: process.env.SMTP_PASS || "zizbzdtzjubexmbx",
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+            logger: true,
+            debug: true,
+        });
+        // Verify SMTP Connection
+        await transporter.verify();
+        console.log("✅ SMTP Connected Successfully");
+        const emailTo = to || "karthikeyanbalan.pkxlabs@gmail.com";
+        const emailSubject = subject || "Test Email from Gmail SMTP";
+        let htmlContent = "";
+        let textContent = "";
+        if (message) {
+            textContent = message;
+            if (message.trim().startsWith("<")) {
+                htmlContent = message;
+            }
+            else {
+                htmlContent = `
+        <div style="font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+                    line-height:1.6;
+                    color:#333;
+                    max-width:600px;
+                    margin:0 auto;
+                    padding:20px;
+                    border:1px solid #f0f0f0;
+                    border-radius:8px;
+                    background:#ffffff;">
+
+          <div style="background:linear-gradient(135deg,#F2688C,#7C3AED);
+                      padding:20px;
+                      text-align:center;
+                      border-radius:6px 6px 0 0;">
+            <h2 style="margin:0;color:#fff;">
+              Soul Connect
+            </h2>
+          </div>
+
+          <div style="padding:24px;font-size:15px;">
+            ${message.replace(/\n/g, "<br/>")}
+          </div>
+
+          <div style="border-top:1px solid #eee;
+                      margin-top:20px;
+                      padding-top:15px;
+                      text-align:center;
+                      font-size:12px;
+                      color:#888;">
+            This is an automated notification.<br/>
+            Please do not reply directly.
+          </div>
+
+        </div>
+        `;
+            }
+        }
+        else {
+            textContent = "Hello,\nThis is a test email sent from Gmail SMTP.";
+            htmlContent = `
+        <h2>Hello</h2>
+        <p>This is a test email sent from Gmail SMTP.</p>
+      `;
+        }
+        const mailOptions = {
+            from: '"Soul Connect" <karthimailu@gmail.com>',
+            to: emailTo,
+            cc: "karthikeyanbalan.pkxlabs@gmail.com",
+            subject: emailSubject,
+            text: textContent,
+            html: htmlContent,
+        };
+        console.log("====================================");
+        console.log("📨 Sending Email");
+        console.log(mailOptions);
+        console.log("====================================");
+        const info = await transporter.sendMail(mailOptions);
+        console.log("====================================");
+        console.log("✅ Email Sent Successfully");
+        console.log("Accepted :", info.accepted);
+        console.log("Rejected :", info.rejected);
+        console.log("MessageID:", info.messageId);
+        console.log("Response :", info.response);
+        console.log("Envelope :", info.envelope);
+        console.log("====================================");
+        return res.status(200).json({
+            success: true,
+            message: "Email sent successfully",
+            accepted: info.accepted,
+            rejected: info.rejected,
+            response: info.response,
+            messageId: info.messageId,
+            envelope: info.envelope,
+        });
     }
-    res.status(200).json({
-      success: true,
-      message: "Email sent successfully",
-      data: responseData,
-    });
-  } catch (error) {
-    console.error("Mailtrap exception:", error);
-    res.status(500).json({
-      success: false,
-      error: error?.message,
-    });
-  }
+    catch (error) {
+        console.error("====================================");
+        console.error("❌ Gmail SMTP Exception");
+        console.error("Message      :", error.message);
+        console.error("Code         :", error.code);
+        console.error("Command      :", error.command);
+        console.error("ResponseCode :", error.responseCode);
+        console.error("Response     :", error.response);
+        console.error("Stack        :", error.stack);
+        console.error("====================================");
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+            code: error.code,
+            command: error.command,
+            responseCode: error.responseCode,
+            response: error.response,
+        });
+    }
 });
+// app.post("/api/send-email", async (req: Request, res: Response) => {
+//   const { to, subject, message } = req.body;
+//   try {
+//     const transporter = nodemailer.createTransport({
+//       host: "smtp.gmail.com",
+//       port: 587,
+//       secure: false, // TLS (STARTTLS)
+//       auth: {
+//         user: "karthimailu@gmail.com",
+//         pass: "zizbzdtzjubexmbx",
+//       },
+//       logger: true,
+//       debug: true,
+//     });
+//     const emailTo = to || "karthikeyanbalan.pkxlabs@gmail.com";
+//     const emailSubject = subject || "Test Email from Gmail SMTP";
+//     let htmlContent: string | undefined = undefined;
+//     let textContent: string = "";
+//     if (message) {
+//       textContent = message;
+//       if (message.trim().startsWith("<")) {
+//         htmlContent = message;
+//       } else {
+//         htmlContent = `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px; background-color: #ffffff;">
+//               <div style="background: linear-gradient(135deg, #F2688C 0%, #7C3AED 100%); padding: 20px; border-radius: 6px 6px 0 0; text-align: center;">
+//                 <h2 style="color: #ffffff; margin: 0; font-size: 22px;">Soul Connect</h2>
+//               </div>
+//               <div style="padding: 24px; font-size: 15px;">
+//                 ${message.replace(/\n/g, "<br/>")}
+//               </div>
+//               <div style="border-top: 1px solid #f0f0f0; padding-top: 16px; text-align: center; font-size: 12px; color: #888;">
+//                 This is an automated notification. Please do not reply directly.
+//               </div>
+//             </div>`;
+//       }
+//     } else {
+//       textContent =
+//         "Hello,\nThis is a test email sent using curl without a mail.txt file.";
+//     }
+//     const mailOptions = {
+//       from: '"Soul Conect" <karthimailu@gmail.com>',
+//       to: emailTo,
+//       cc: "karthikeyanbalan.pkxlabs@gmail.com",
+//       subject: emailSubject,
+//       text: textContent,
+//       html: htmlContent,
+//     };
+//     const info = await transporter.sendMail(mailOptions);
+//     res.status(200).json({
+//       success: true,
+//       message: "Email sent successfully",
+//       data: info,
+//     });
+//   } catch (error: any) {
+//     console.error("Gmail SMTP exception:", error);
+//     res.status(500).json({
+//       success: false,
+//       error: error?.message,
+//     });
+//   }
+// });
 /* USER MODULE */
 // --- USER INFO CRUD API ---
-const userInfoSchema = new mongoose_1.default.Schema(
-  {
+const userInfoSchema = new mongoose_1.default.Schema({
     keycloakId: { type: String, unique: true }, // Linking to Keycloak ID
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     role: { type: String, default: "User" },
     status: { type: String, default: "Active" },
-  },
-  { collection: "user_info", timestamps: true },
-);
+}, { collection: "user_info", timestamps: true });
 const UserInfo = mongoose_1.default.model("UserInfo", userInfoSchema);
-app.get(
-  "/api/users",
-  keycloak_config_1.keycloak.protect(),
-  async (req, res) => {
+app.get("/api/users", keycloak_config_1.keycloak.protect(), async (req, res) => {
     try {
-      const users = await UserInfo.find({}).sort({ createdAt: -1 });
-      res.json(users);
-    } catch (err) {
-      console.error("Fetch Users Error:", err);
-      res.status(500).json({ error: "Failed to fetch users" });
+        const users = await UserInfo.find({}).sort({ createdAt: -1 });
+        res.json(users);
     }
-  },
-);
-app.post(
-  "/api/users",
-  keycloak_config_1.keycloak.protect(),
-  async (req, res) => {
+    catch (err) {
+        console.error("Fetch Users Error:", err);
+        res.status(500).json({ error: "Failed to fetch users" });
+    }
+});
+app.post("/api/users", keycloak_config_1.keycloak.protect(), async (req, res) => {
     const { firstName, lastName, email, role, status } = req.body;
     console.log("🚀 Attempting to create user:", email);
     try {
-      const kcAdminClient = new keycloak_admin_client_1.default({
-        baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
-        realmName: "master", // Admin API auth usually goes through master
-      });
-      await kcAdminClient.auth({
-        ...GLOBAL_DETAILS,
-        grantType: "password",
-        clientId: "admin-cli",
-      });
-      kcAdminClient.setConfig({
-        realmName: process.env.KEYCLOAK_REALM || "soul_connect", // Switch context to our specific realm
-      });
-      // 1. Create User in Keycloak
-      const kcUser = await kcAdminClient.users.create({
-        username: firstName,
-        email,
-        firstName,
-        lastName,
-        enabled: true,
-        emailVerified: true,
-        credentials: [
-          {
-            type: "password",
-            value: "password@123",
-            temporary: false,
-          },
-        ],
-      });
-      // const kcUser = await kcAdminClient.users.create({
-      //   username: email,
-      //   email,
-      //   firstName,
-      //   lastName,
-      //   enabled: status === "Active",
-      //   emailVerified: true,
-      // });
-      const keycloakId = kcUser.id;
-      console.log("✅ User created in Keycloak, ID:", keycloakId);
-      // 2. Map role in Keycloak (Optional, can be expanded to Keycloak roles)
-      // 3. Save User in MongoDB linked by Keycloak ID
-      const newUser = new UserInfo({
-        keycloakId,
-        firstName,
-        lastName,
-        email,
-        role,
-        status,
-      });
-      await newUser.save();
-      console.log("✅ User saved in MongoDB");
-      res.json(newUser);
-    } catch (err) {
-      console.error("❌ Create User Error Detaiils:");
-      if (err.response) {
-        console.error("Keycloak Status Code:", err.response.status);
-        console.error("Keycloak Error Message:", err.response.data);
-      } else {
-        console.error("Error Message:", err.message);
-        console.error("Stack Trace:", err.stack);
-      }
-      const message =
-        err.response?.data?.errorMessage ||
-        err.message ||
-        "Failed to create user";
-      res.status(500).json({ error: message });
+        const kcAdminClient = new keycloak_admin_client_1.default({
+            baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
+            realmName: "master", // Admin API auth usually goes through master
+        });
+        await kcAdminClient.auth({
+            ...GLOBAL_DETAILS,
+            grantType: "password",
+            clientId: "admin-cli",
+        });
+        kcAdminClient.setConfig({
+            realmName: process.env.KEYCLOAK_REALM || "soul_connect", // Switch context to our specific realm
+        });
+        // 1. Create User in Keycloak
+        const kcUser = await kcAdminClient.users.create({
+            username: firstName,
+            email,
+            firstName,
+            lastName,
+            enabled: true,
+            emailVerified: true,
+            credentials: [
+                {
+                    type: "password",
+                    value: "password@123",
+                    temporary: false,
+                },
+            ],
+        });
+        // const kcUser = await kcAdminClient.users.create({
+        //   username: email,
+        //   email,
+        //   firstName,
+        //   lastName,
+        //   enabled: status === "Active",
+        //   emailVerified: true,
+        // });
+        const keycloakId = kcUser.id;
+        console.log("✅ User created in Keycloak, ID:", keycloakId);
+        // 2. Map role in Keycloak (Optional, can be expanded to Keycloak roles)
+        // 3. Save User in MongoDB linked by Keycloak ID
+        const newUser = new UserInfo({
+            keycloakId,
+            firstName,
+            lastName,
+            email,
+            role,
+            status,
+        });
+        await newUser.save();
+        console.log("✅ User saved in MongoDB");
+        res.json(newUser);
     }
-  },
-);
-app.put(
-  "/api/users/:id",
-  keycloak_config_1.keycloak.protect(),
-  async (req, res) => {
+    catch (err) {
+        console.error("❌ Create User Error Detaiils:");
+        if (err.response) {
+            console.error("Keycloak Status Code:", err.response.status);
+            console.error("Keycloak Error Message:", err.response.data);
+        }
+        else {
+            console.error("Error Message:", err.message);
+            console.error("Stack Trace:", err.stack);
+        }
+        const message = err.response?.data?.errorMessage ||
+            err.message ||
+            "Failed to create user";
+        res.status(500).json({ error: message });
+    }
+});
+app.put("/api/users/:id", keycloak_config_1.keycloak.protect(), async (req, res) => {
     const { firstName, lastName, email, role, status } = req.body;
     try {
-      // 1. Get user from MongoDB
-      const user = await UserInfo.findById(req.params.id);
-      if (!user) {
-        return res.status(404).json({ error: "User not found in DB" });
-      }
-      // 2. Initialize Keycloak Admin Client
-      const kcAdminClient = new keycloak_admin_client_1.default({
-        baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
-        realmName: "master",
-      });
-      await kcAdminClient.auth({
-        ...GLOBAL_DETAILS,
-        grantType: "password",
-        clientId: "admin-cli",
-      });
-      kcAdminClient.setConfig({
-        realmName: process.env.KEYCLOAK_REALM || "soul_connect",
-      });
-      // 3. Ensure we have Keycloak ID
-      let keycloakId = user.keycloakId;
-      if (!keycloakId) {
-        const kcUsers = await kcAdminClient.users.find({ email });
-        if (!kcUsers.length) {
-          return res.status(404).json({ error: "User not found in Keycloak" });
+        // 1. Get user from MongoDB
+        const user = await UserInfo.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found in DB" });
         }
-        keycloakId = kcUsers[0].id;
-        // Save it for future use
-        user.keycloakId = keycloakId;
-        await user.save();
-      }
-      // 4. Update user in Keycloak
-      await kcAdminClient.users.update(
-        { id: keycloakId },
-        {
-          firstName,
-          lastName,
-          email,
-          enabled: status === "Active",
-        },
-      );
-      // 5. Update user in MongoDB
-      const updatedUser = await UserInfo.findByIdAndUpdate(
-        req.params.id,
-        { firstName, lastName, email, role, status },
-        { new: true },
-      );
-      return res.json(updatedUser);
-    } catch (err) {
-      console.error("Update User Error:", err.response?.data || err.message);
-      return res.status(err.response?.status || 500).json({
-        error: err.response?.data || "Failed to update user",
-      });
+        // 2. Initialize Keycloak Admin Client
+        const kcAdminClient = new keycloak_admin_client_1.default({
+            baseUrl: process.env.KEYCLOAK_URL || "http://localhost:4000",
+            realmName: "master",
+        });
+        await kcAdminClient.auth({
+            ...GLOBAL_DETAILS,
+            grantType: "password",
+            clientId: "admin-cli",
+        });
+        kcAdminClient.setConfig({
+            realmName: process.env.KEYCLOAK_REALM || "soul_connect",
+        });
+        // 3. Ensure we have Keycloak ID
+        let keycloakId = user.keycloakId;
+        if (!keycloakId) {
+            const kcUsers = await kcAdminClient.users.find({ email });
+            if (!kcUsers.length) {
+                return res.status(404).json({ error: "User not found in Keycloak" });
+            }
+            keycloakId = kcUsers[0].id;
+            // Save it for future use
+            user.keycloakId = keycloakId;
+            await user.save();
+        }
+        // 4. Update user in Keycloak
+        await kcAdminClient.users.update({ id: keycloakId }, {
+            firstName,
+            lastName,
+            email,
+            enabled: status === "Active",
+        });
+        // 5. Update user in MongoDB
+        const updatedUser = await UserInfo.findByIdAndUpdate(req.params.id, { firstName, lastName, email, role, status }, { new: true });
+        return res.json(updatedUser);
     }
-  },
-);
+    catch (err) {
+        console.error("Update User Error:", err.response?.data || err.message);
+        return res.status(err.response?.status || 500).json({
+            error: err.response?.data || "Failed to update user",
+        });
+    }
+});
 app.listen(PORT, () => {
-  console.log(`Backend is running on http://localhost:${PORT}`);
+    console.log(`Backend is running on http://localhost:${PORT}`);
 });

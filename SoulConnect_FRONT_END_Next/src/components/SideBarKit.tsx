@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import keycloak from "../lib/keycloak";
+import { useKeycloak } from "@/providers/KeycloakProvider";
 
 interface SideBarKitProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ interface SideBarKitProps {
 export default function SideBarKit({ children }: SideBarKitProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { profile } = useKeycloak();
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -33,7 +35,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
 
   const menus = [
     {
-      name: "Landing",
+      name: "Dashboard",
       icon: Home,
       router: "/portal",
     },
@@ -74,7 +76,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           className="nav-logo"
           style={{ textDecoration: "none" }}
         >
-          Soul<span>Connect</span>
+          Soul<span>Conect</span>
           <div className="logo-dot"></div>
         </Link>
         <button
@@ -116,7 +118,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           <div className="flex items-center overflow-hidden pr-10">
             {!collapsed ? (
               <Link href="/" className="nav-logo">
-                Soul<span>Connect</span>
+                Soul<span>Conect</span>
                 <div className="logo-dot"></div>
               </Link>
             ) : (
@@ -186,11 +188,19 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           {/* User Info & Logout */}
           <div className="absolute bottom-0 w-[calc(100%-20px)]">
             <div className="flex flex-col gap-1 px-4 py-2 rounded-lg text-left">
-              <div className="overflow-hidden capitalize">
-                {keycloak?.tokenParsed?.preferred_username}
+              <div className="overflow-hidden font-semibold capitalize text-gray-800">
+                {profile?.first_name ||
+                  profile?.firstName ||
+                  keycloak?.tokenParsed?.preferred_username}
               </div>
-
-              <div className="capitalize">{role.replaceAll("_g", "")}</div>
+              {profile?.email && (
+                <div className="text-xs text-gray-500 truncate">
+                  {profile.email}
+                </div>
+              )}
+              <div className="capitalize text-xs text-pink-600 font-medium">
+                {role.replaceAll("_g", "")}
+              </div>
             </div>
 
             <div
