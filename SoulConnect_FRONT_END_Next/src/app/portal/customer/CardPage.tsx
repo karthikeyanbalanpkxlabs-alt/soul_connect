@@ -23,28 +23,30 @@ function CardPage() {
       {/* Top action buttons */}
       <div className="mb-8 flex items-center justify-between border-b pb-4">
         <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
-        <div className="flex gap-4">
-          <button
-            className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
-            onClick={stateProps?.onHandleClickCreateCustomer}
-          >
-            + Create
-          </button>
-          <button
-            className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
-            onClick={stateProps?.onHandleClickCreateClient}
-          >
-            + Create Client
-          </button>
-          {stateProps?.getRoles?.includes("manager") && (
+        {stateProps?.getRoles?.includes("manager") && (
+          <div className="flex gap-4">
             <button
               className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
-              onClick={stateProps?.onHandleClickCreateManager}
+              onClick={stateProps?.onHandleClickCreateCustomer}
             >
-              + Create Manager
+              + Create
             </button>
-          )}
-        </div>
+            <button
+              className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
+              onClick={stateProps?.onHandleClickCreateClient}
+            >
+              + Create Client
+            </button>
+            {stateProps?.getRoles?.includes("manager") && (
+              <button
+                className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
+                onClick={stateProps?.onHandleClickCreateManager}
+              >
+                + Create Manager
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col lg:flex-row items-start">
@@ -233,6 +235,7 @@ function CardPage() {
           onClose={() => stateProps?.setIsModalOpen(false)}
           onSave={stateProps?.onSaveCustomer}
           initialData={stateProps?.editingCustomer}
+          subscriptionList={stateProps?.subscriptions}
         />
       )}
     </div>
