@@ -226,6 +226,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <label>Date of Birth</label>
                 <input
                   type="date"
+                  max={new Date().toISOString().split("T")[0]}
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
                 />

@@ -233,6 +233,7 @@ function CardPage() {
           onClose={() => stateProps?.setIsModalOpen(false)}
           onSave={stateProps?.onSaveCustomer}
           initialData={stateProps?.editingCustomer}
+          subscriptionList={stateProps?.subscriptions}
         />
       )}
     </div>
