@@ -269,8 +269,8 @@ export default function CustomerModal({
   const validImages = images.filter((img: any) => img.url);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4 md:p-6">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[95vw] xl:max-w-[92vw] 2xl:max-w-[85vw] max-h-[92vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-800">
@@ -464,7 +464,7 @@ export default function CustomerModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
               {/* Basic Details */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">
@@ -872,7 +872,7 @@ export default function CustomerModal({
                 {renderFieldError("subscription_type")}
               </div>
 
-              <div className="space-y-1 md:col-span-2 lg:col-span-3">
+              <div className="space-y-1 sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5">
                 <label className="text-sm font-medium text-gray-700">
                   About Self <span className="text-red-500">*</span>
                 </label>
@@ -887,7 +887,7 @@ export default function CustomerModal({
                 {renderFieldError("about_self")}
               </div>
 
-              <div className="space-y-1 md:col-span-2 lg:col-span-3">
+              <div className="space-y-1 sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5">
                 <label className="text-sm font-medium text-gray-700">
                   Partner Preference <span className="text-red-500">*</span>
                 </label>
