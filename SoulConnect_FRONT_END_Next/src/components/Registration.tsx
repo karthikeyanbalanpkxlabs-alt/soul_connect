@@ -262,6 +262,7 @@ export default function Registration({
         },
       ],
       video: "",
+      identity_proff: "",
       transaction: [],
       public_verify: false,
       keycloakId: '',

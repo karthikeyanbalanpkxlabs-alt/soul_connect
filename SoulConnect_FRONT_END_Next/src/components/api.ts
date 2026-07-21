@@ -6,11 +6,10 @@ import configUrls from "../../configUrls";
  * @param Data 
  */
 export const onSaveCustomer = async (data: any) => {
-    let endpoint = configUrls?.apiUrl + "/api/customer_create";
+    let endpoint = configUrls?.apiUrl + "/api/public/customer_create";
     fetch(endpoint, {
       method: "POST",
       headers: {
-        Authorization: ``,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
