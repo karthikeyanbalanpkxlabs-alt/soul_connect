@@ -18,7 +18,10 @@ export default function Navbar(props: any) {
   );
   roles = roles?.length > 0 ? roles[0] : "no_roles";
 
-  let name = profile?.first_name || profile?.firstName || keycloak.tokenParsed?.preferred_username;
+  let name =
+    profile?.first_name ||
+    profile?.firstName ||
+    keycloak.tokenParsed?.preferred_username;
 
   const toggleNav = () => {
     setIsOpen(!isOpen);
@@ -61,7 +64,17 @@ export default function Navbar(props: any) {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span>{name + " |"}</span>
+              <span
+                style={{
+                  width: 90,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {name}
+              </span>
+              {/* <span>{" |"}</span> */}
             </p>
             <div
               style={{
@@ -182,9 +195,13 @@ export default function Navbar(props: any) {
         <div className={`nav-links ${isOpen ? "open" : ""}`} id="navLinks">
           {renderLink()}
           {renderUserInfoUI()}
-          <a href="#register" className="btn-nav" onClick={handleLinkClick}>
-            Begin Journey ✦
-          </a>
+          {"customer_g" === roles ? (
+            <></>
+          ) : (
+            <a href="#register" className="btn-nav" onClick={handleLinkClick}>
+              Begin Journey ✦
+            </a>
+          )}
         </div>
 
         <div className="hamburger" id="hamburger" onClick={toggleNav}>
