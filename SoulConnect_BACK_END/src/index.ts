@@ -276,7 +276,9 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
 
     const calculateAgeFromDob = (dobStr?: string): number | null => {
       if (!dobStr) return null;
-      let year = 0, month = 0, day = 0;
+      let year = 0,
+        month = 0,
+        day = 0;
       if (dobStr.includes("-")) {
         const parts = dobStr.split("-");
         if (parts[0].length === 4) {
@@ -318,7 +320,10 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
     if (minAgeVal !== undefined || maxAgeVal !== undefined) {
       const allMatching = await Customers.find(filter).sort(sortOption);
       const filteredByAge = allMatching.filter((cust: any) => {
-        const age = typeof cust.age === "number" ? cust.age : calculateAgeFromDob(cust.dob);
+        const age =
+          typeof cust.age === "number"
+            ? cust.age
+            : calculateAgeFromDob(cust.dob);
         if (age === null) return false;
         if (minAgeVal !== undefined && age < minAgeVal) return false;
         if (maxAgeVal !== undefined && age > maxAgeVal) return false;
@@ -1185,7 +1190,7 @@ async function handleCustomerCreate(req: Request, res: Response) {
                 <!-- CTA Button -->
                 <tr>
                   <td align="center">
-                    <a href="http://localhost:5174" target="_blank" style="background-color: #7C3AED; color: #ffffff; padding: 16px 36px; border-radius: 100px; font-size: 16px; font-weight: bold; text-decoration: none; display: inline-block; box-shadow: 0 4px 12px rgba(124,58,237,0.25); font-family: sans-serif;">
+                    <a href="https://dev.soulconect.com" target="_blank" style="background-color: #7C3AED; color: #ffffff; padding: 16px 36px; border-radius: 100px; font-size: 16px; font-weight: bold; text-decoration: none; display: inline-block; box-shadow: 0 4px 12px rgba(124,58,237,0.25); font-family: sans-serif;">
                       Login to Soul Connect &nbsp;→
                     </a>
                   </td>
@@ -1328,7 +1333,9 @@ async function handleSubscriptionGet(req: Request, res: Response) {
 async function handleDashboardAnalytics(req: Request, res: Response) {
   try {
     const totalCustomers = await Customers.countDocuments();
-    const approvedCustomers = await Customers.countDocuments({ public_verify: true });
+    const approvedCustomers = await Customers.countDocuments({
+      public_verify: true,
+    });
     const pendingCustomers = await Customers.countDocuments({
       $or: [
         { public_verify: false },
@@ -1351,9 +1358,7 @@ async function handleDashboardAnalytics(req: Request, res: Response) {
 
     const totalSubscriptions = await Subscription.countDocuments();
 
-    const recentCustomers = await Customers.find()
-      .sort({ _id: -1 })
-      .limit(6);
+    const recentCustomers = await Customers.find().sort({ _id: -1 }).limit(6);
 
     const subscriptionBreakdown = await Customers.aggregate([
       {
@@ -1425,8 +1430,16 @@ app.post("/api/customer_delete", keycloak.protect(), handleCustomerDelete);
 app.post("/api/customer_create", keycloak.protect(), handleCustomerCreate);
 app.get("/api/subscription", keycloak.protect(), handleSubscriptionGet);
 app.get("/api/subscriptions", keycloak.protect(), handleSubscriptionGet);
-app.get("/api/dashboard_analytics", keycloak.protect(), handleDashboardAnalytics);
-app.post("/api/dashboard_analytics", keycloak.protect(), handleDashboardAnalytics);
+app.get(
+  "/api/dashboard_analytics",
+  keycloak.protect(),
+  handleDashboardAnalytics,
+);
+app.post(
+  "/api/dashboard_analytics",
+  keycloak.protect(),
+  handleDashboardAnalytics,
+);
 
 // --- CUSTOMER APIs (Without Keycloak Access / Public) ---
 app.post("/api/public/customer_list", (req: Request, res: Response) =>
