@@ -74,6 +74,7 @@ export default function Registration({
   
   // File Upload State
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [identityProof, setIdentityProof] = useState<any>("");
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -315,7 +316,7 @@ export default function Registration({
       subscription_view_access: 4,
       image: images,
       video: "",
-      identity_proff: "",
+      identity_proff: identityProof,
       transaction: [],
       public_verify: false,
       keycloakId: '',
@@ -431,17 +432,34 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
   };
 
   const handleFile = (file: File) => {
-    const validTypes = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
-    if (!validTypes.includes(file.type)) {
-      showToast("Invalid file format. Please upload PNG, JPG, or PDF.", "error");
+    console.log("file------>", file);
+    const isAllowed =
+      file.type === "application/pdf" ||
+      file.type.startsWith("image/") ||
+      file.name.toLowerCase().endsWith(".pdf") ||
+      /\.(jpg|jpeg|png|gif)$/i.test(file.name);
+
+    if (!isAllowed) {
+      showToast("Please upload only Image or PDF files.", "error");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       showToast("File is too large. Max limit is 5MB.", "error");
       return;
     }
-    setUploadedFile(file);
-    showToast(`${docType} document uploaded successfully!`, "success");
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setIdentityProof({
+        url: base64String,
+        name: file.name,
+        type: file.type,
+      });
+      setUploadedFile(file);
+      showToast(`${docType} document uploaded successfully!`, "success");
+    };
+    reader.readAsDataURL(file);
   };
 
   const triggerDocUpload = () => {
@@ -1115,6 +1133,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   onClick={(e) => {
                     e.stopPropagation();
                     setUploadedFile(null);
+                    setIdentityProof("");
                   }}
                 >
                   <X className="h-4 w-4" />
