@@ -22,6 +22,10 @@ import {
   Upload
 } from "lucide-react";
 import { onSaveCustomer } from './api'
+import { useKeycloak } from "@/providers/KeycloakProvider";
+const generateId = () => {
+  return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
+};
 
 interface RegistrationProps {
   selectedDistrict: string;
@@ -319,7 +323,7 @@ export default function Registration({
       identity_proff: identityProof,
       transaction: [],
       public_verify: false,
-      keycloakId: '',
+      keycloakId: dataGenerateId,
     };
 
     const customerResp = await onSaveCustomer(createFixture);
