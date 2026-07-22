@@ -35,12 +35,14 @@ function usePortalCustomerPage() {
   React.useEffect(() => {
     if (profile) {
       const isCustomer = profile?.role === "customer_g";
-      const genderVal =
-        profile?.gender === "" ||
-        profile?.gender === "male" ||
-        profile?.gender === "maile"
-          ? profile?.gender
-          : "female";
+      let genderVal = profile?.gender?.toLocaleLowerCase();
+
+      genderVal =
+        genderVal === "" || genderVal === "male" || genderVal === "maile"
+          ? "female"
+          : "male";
+
+      console.log("genderVal", genderVal);
       if (isCustomer) {
         setFilters((prev) => ({
           gender: genderVal + "",
@@ -555,7 +557,13 @@ function usePortalCustomerPage() {
   }, []);
 
   React.useEffect(() => {
-    loadCustomers();
+    if (getIsCustomer) {
+      if (filters?.gender?.length > 0) {
+        loadCustomers();
+      }
+    } else {
+      loadCustomers();
+    }
   }, [skip, limit, filters]);
 
   return {
