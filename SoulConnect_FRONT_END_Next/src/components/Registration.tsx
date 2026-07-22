@@ -305,7 +305,7 @@ export default function Registration({
       district: district,
       taluk_town: taluk,
       state: "tamilnadu",
-      zipcode: "641001",
+      zipcode: "641035",
       religion: religion,
       caste: caste,
       mother_tongue: motherTongue,
@@ -335,18 +335,18 @@ export default function Registration({
        /**
        * @Payment_Related_POPUP
        */
-      // onOpenPayment(
-      //   selectedPlanData.name,
-      //   selectedPlanData.price,
-      //   selectedPlanData.features
-      // );
+      onOpenPayment(
+        selectedPlanData.name,
+        selectedPlanData.price,
+        selectedPlanData.features
+      );
     } else {
       showToast("Registration completed successfully on the Free tier! Redirecting to login...", "success");
-      // setTimeout(() => {
-      //   if (typeof window !== "undefined") {
-      //     window.location.href = window.location.origin + "/portal";
-      //   }
-      // }, 2000);
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          window.location.href = window.location.origin + "/portal";
+        }
+      }, 2000);
     }
   };
 
