@@ -332,6 +332,7 @@ export default function Registration({
     // Trigger membership payment checkout modal if a paid plan is selected
     if (selectedPlanData && selectedPlanData.price !== "₹0") {
       console.log("selectedPlanData",selectedPlanData)
+      showToast(`Registration completed successfully on the ${selectedPlanData?.id} tier! Redirecting to login...`, "success");
        /**
        * @Payment_Related_POPUP
        */
