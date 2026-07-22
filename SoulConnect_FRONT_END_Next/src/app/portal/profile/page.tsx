@@ -23,12 +23,19 @@ import {
   Sparkles,
   Info,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
+
+import { useKeycloak } from "@/providers/KeycloakProvider";
 
 export default function ProfilePage() {
   const router = useRouter();
-  
+  const { profile, loadingProfile, profileError, refreshProfile } =
+    useKeycloak();
+
+  const nameKit = `${profile?.firstName} ${profile?.lastName}` as any;
+  console.log(profile);
+
   // Page load anim trigger
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
@@ -51,7 +58,10 @@ export default function ProfilePage() {
     type: "success" | "info" | "error";
   } | null>(null);
 
-  const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: "success" | "info" | "error" = "success",
+  ) => {
     setToast({ message, type });
   };
 
@@ -60,11 +70,12 @@ export default function ProfilePage() {
   const [voiceNoteRecorded, setVoiceNoteRecorded] = useState(false);
   const [casualPhotos, setCasualPhotos] = useState<string[]>([]);
   const [horoscopeFileName, setHoroscopeFileName] = useState("");
-  
+
   // Calculations
-  const completeness = 78 + 
-    (horoscopeUploaded ? 10 : 0) + 
-    (casualPhotos.length > 0 ? 6 : 0) + 
+  const completeness =
+    78 +
+    (horoscopeUploaded ? 10 : 0) +
+    (casualPhotos.length > 0 ? 6 : 0) +
     (voiceNoteRecorded ? 6 : 0);
 
   // References for inputs
@@ -78,29 +89,38 @@ export default function ProfilePage() {
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Employment Verification Mock
-  const [employmentStatus, setEmploymentStatus] = useState<"pending" | "submitted" | "verified">("pending");
+  const [employmentStatus, setEmploymentStatus] = useState<
+    "pending" | "submitted" | "verified"
+  >("pending");
 
   // Interaction handlers
   const handleLike = () => {
     setIsLiked(!isLiked);
     showToast(
-      isLiked ? "Removed profile from your liked list" : "Added profile to your liked list! ♥",
-      isLiked ? "info" : "success"
+      isLiked
+        ? "Removed profile from your liked list"
+        : "Added profile to your liked list! ♥",
+      isLiked ? "info" : "success",
     );
   };
 
   const handleShortlist = () => {
     setIsShortlisted(!isShortlisted);
     showToast(
-      isShortlisted ? "Removed profile from shortlist" : "Profile shortlisted! ★",
-      isShortlisted ? "info" : "success"
+      isShortlisted
+        ? "Removed profile from shortlist"
+        : "Profile shortlisted! ★",
+      isShortlisted ? "info" : "success",
     );
   };
 
   const handleSendInterest = () => {
     if (interestSent) return;
     setInterestSent(true);
-    showToast("Connection interest sent successfully! Priya will be notified.", "success");
+    showToast(
+      "Connection interest sent successfully! Priya will be notified.",
+      "success",
+    );
   };
 
   const handleSendMessage = () => {
@@ -185,7 +205,10 @@ export default function ProfilePage() {
   // Modal actions
   const handleVerifyEmployment = () => {
     setEmploymentStatus("submitted");
-    showToast("Verification documents submitted. Approval pending within 24 hours.", "info");
+    showToast(
+      "Verification documents submitted. Approval pending within 24 hours.",
+      "info",
+    );
   };
 
   return (
@@ -198,13 +221,34 @@ export default function ProfilePage() {
           ← Browse Profiles
         </button>
         <div className="profile-hero-actions">
-          <button className="hero-action-btn" title="Share" onClick={() => showToast("Profile link copied to clipboard!", "info")}>
+          <button
+            className="hero-action-btn"
+            title="Share"
+            onClick={() =>
+              showToast("Profile link copied to clipboard!", "info")
+            }
+          >
             <Share2 className="h-4 w-4" />
           </button>
-          <button className="hero-action-btn" title="Report" onClick={() => showToast("Feedback request sent. Our safety team will review.", "info")}>
+          <button
+            className="hero-action-btn"
+            title="Report"
+            onClick={() =>
+              showToast(
+                "Feedback request sent. Our safety team will review.",
+                "info",
+              )
+            }
+          >
             <Flag className="h-4 w-4" />
           </button>
-          <button className="hero-action-btn" title="More" onClick={() => showToast("Additional action menu triggered.", "info")}>
+          <button
+            className="hero-action-btn"
+            title="More"
+            onClick={() =>
+              showToast("Additional action menu triggered.", "info")
+            }
+          >
             <MoreHorizontal className="h-4 w-4" />
           </button>
         </div>
@@ -219,10 +263,11 @@ export default function ProfilePage() {
               <div className="profile-avatar">
                 P<div className="avatar-verified">✓</div>
               </div>
-              <div className="profile-name">Priya Krishnamurthy</div>
+              <div className="profile-name">{nameKit}</div>
               <div className="profile-name-tamil">பிரியா கிருஷ்ணமூர்த்தி</div>
               <div className="profile-tagline">
-                A curious mind with roots in tradition. Looking for a partner equally at home at a temple and on a trek.
+                A curious mind with roots in tradition. Looking for a partner
+                equally at home at a temple and on a trek.
               </div>
               <div className="profile-location">📍 Chennai, Tamil Nadu</div>
               <div className="profile-id">SC-TN-2024-08142</div>
@@ -233,7 +278,7 @@ export default function ProfilePage() {
               <div
                 className="match-score-ring"
                 style={{
-                  background: `conic-gradient(var(--rose) 0% 88%, var(--plum-light) 88% 100%)`
+                  background: `conic-gradient(var(--rose) 0% 88%, var(--plum-light) 88% 100%)`,
                 }}
               >
                 <div className="match-score-inner">
@@ -254,7 +299,9 @@ export default function ProfilePage() {
                 className="btn-primary"
                 onClick={handleSendInterest}
                 style={{
-                  background: interestSent ? "linear-gradient(135deg, var(--sage), var(--teal))" : ""
+                  background: interestSent
+                    ? "linear-gradient(135deg, var(--sage), var(--teal))"
+                    : "",
                 }}
               >
                 {interestSent ? "✓ Interest Sent" : "💬 Send Interest"}
@@ -269,7 +316,7 @@ export default function ProfilePage() {
                   style={{
                     backgroundColor: isLiked ? "var(--rose-light)" : "white",
                     borderColor: isLiked ? "var(--rose)" : "",
-                    fontWeight: isLiked ? "700" : "500"
+                    fontWeight: isLiked ? "700" : "500",
                   }}
                 >
                   {isLiked ? "♥ Liked" : "♡ Like"}
@@ -278,9 +325,11 @@ export default function ProfilePage() {
                   className="btn-shortlist"
                   onClick={handleShortlist}
                   style={{
-                    backgroundColor: isShortlisted ? "var(--amber-light)" : "white",
+                    backgroundColor: isShortlisted
+                      ? "var(--amber-light)"
+                      : "white",
                     borderColor: isShortlisted ? "var(--amber)" : "",
-                    fontWeight: isShortlisted ? "700" : "500"
+                    fontWeight: isShortlisted ? "700" : "500",
                   }}
                 >
                   {isShortlisted ? "★ Shortlisted" : "★ Shortlist"}
@@ -342,26 +391,36 @@ export default function ProfilePage() {
           </div>
 
           {/* Profile Completeness Card */}
-          <div className={`completeness-bar reveal ${isLoaded ? "visible" : ""}`} style={{ transitionDelay: ".1s" }}>
+          <div
+            className={`completeness-bar reveal ${isLoaded ? "visible" : ""}`}
+            style={{ transitionDelay: ".1s" }}
+          >
             <div className="completeness-header">
               <span>Profile Completeness</span>
               <span className="completeness-pct">{completeness}%</span>
             </div>
             <div className="c-track">
-              <div className="c-fill" style={{ width: `${completeness}%` }}></div>
+              <div
+                className="c-fill"
+                style={{ width: `${completeness}%` }}
+              ></div>
             </div>
             <div className="completeness-tips">
               <div
                 className={`c-tip ${horoscopeUploaded ? "completed" : ""}`}
                 onClick={handleHoroUploadTip}
               >
-                {horoscopeUploaded ? "Horoscope chart added" : "Add horoscope chart (jathagam)"}
+                {horoscopeUploaded
+                  ? "Horoscope chart added"
+                  : "Add horoscope chart (jathagam)"}
               </div>
               <div
                 className={`c-tip ${casualPhotos.length > 0 ? "completed" : ""}`}
                 onClick={handlePhotoUploadTip}
               >
-                {casualPhotos.length > 0 ? "Photos uploaded" : "Upload 2 more photos to attract matches"}
+                {casualPhotos.length > 0
+                  ? "Photos uploaded"
+                  : "Upload 2 more photos to attract matches"}
               </div>
               <div
                 className={`c-tip ${voiceNoteRecorded ? "completed" : ""}`}
@@ -371,7 +430,9 @@ export default function ProfilePage() {
                   }
                 }}
               >
-                {voiceNoteRecorded ? "Voice note introduction saved" : "Record a voice note introduction"}
+                {voiceNoteRecorded
+                  ? "Voice note introduction saved"
+                  : "Record a voice note introduction"}
               </div>
             </div>
           </div>
@@ -380,23 +441,43 @@ export default function ProfilePage() {
         {/* RIGHT COLUMN */}
         <div className="profile-right">
           {/* Tab Bar */}
-          <div className={`profile-tabs-bar reveal ${isLoaded ? "visible" : ""}`}>
-            <button className={`ptab ${activeTab === "about" ? "active" : ""}`} onClick={() => handleTabClick("about")}>
+          <div
+            className={`profile-tabs-bar reveal ${isLoaded ? "visible" : ""}`}
+          >
+            <button
+              className={`ptab ${activeTab === "about" ? "active" : ""}`}
+              onClick={() => handleTabClick("about")}
+            >
               About
             </button>
-            <button className={`ptab ${activeTab === "details" ? "active" : ""}`} onClick={() => handleTabClick("details")}>
+            <button
+              className={`ptab ${activeTab === "details" ? "active" : ""}`}
+              onClick={() => handleTabClick("details")}
+            >
               Details
             </button>
-            <button className={`ptab ${activeTab === "family" ? "active" : ""}`} onClick={() => handleTabClick("family")}>
+            <button
+              className={`ptab ${activeTab === "family" ? "active" : ""}`}
+              onClick={() => handleTabClick("family")}
+            >
               Family
             </button>
-            <button className={`ptab ${activeTab === "partner" ? "active" : ""}`} onClick={() => handleTabClick("partner")}>
+            <button
+              className={`ptab ${activeTab === "partner" ? "active" : ""}`}
+              onClick={() => handleTabClick("partner")}
+            >
               Partner Prefs
             </button>
-            <button className={`ptab ${activeTab === "photos" ? "active" : ""}`} onClick={() => handleTabClick("photos")}>
+            <button
+              className={`ptab ${activeTab === "photos" ? "active" : ""}`}
+              onClick={() => handleTabClick("photos")}
+            >
               Photos
             </button>
-            <button className={`ptab ${activeTab === "horoscope" ? "active" : ""}`} onClick={() => handleTabClick("horoscope")}>
+            <button
+              className={`ptab ${activeTab === "horoscope" ? "active" : ""}`}
+              onClick={() => handleTabClick("horoscope")}
+            >
               Horoscope
             </button>
           </div>
@@ -408,17 +489,29 @@ export default function ProfilePage() {
                 <div className="ctitle-icon">✍</div>About Me
               </div>
               <p className="about-text">
-                I'm a UX Designer at a fintech startup in Chennai, passionate about crafting experiences that feel intuitive and human. I grew up in a close-knit Iyer family in Mylapore, and while my career is modern, my values are deeply rooted in family, gratitude, and simplicity.
+                I'm a UX Designer at a fintech startup in Chennai, passionate
+                about crafting experiences that feel intuitive and human. I grew
+                up in a close-knit Iyer family in Mylapore, and while my career
+                is modern, my values are deeply rooted in family, gratitude, and
+                simplicity.
               </p>
               <p className="about-text">
-                On weekends you'll find me sketching at Marina Beach, cooking Chettinad recipes with my mother, or getting lost in historical fiction. I'm vegetarian, don't smoke or drink, and believe in building a life that's meaningful — not just successful.
+                On weekends you'll find me sketching at Marina Beach, cooking
+                Chettinad recipes with my mother, or getting lost in historical
+                fiction. I'm vegetarian, don't smoke or drink, and believe in
+                building a life that's meaningful — not just successful.
               </p>
               <p className="about-text-tamil">
-                நான் சென்னையில் UX Designer ஆக பணிபுரிகிறேன். என் குடும்பம் மற்றும் கலாச்சாரம் என் வாழ்வின் அடிப்படை. ஒரு நேர்மையான மற்றும் அன்பான துணையை எதிர்நோக்குகிறேன்.
+                நான் சென்னையில் UX Designer ஆக பணிபுரிகிறேன். என் குடும்பம்
+                மற்றும் கலாச்சாரம் என் வாழ்வின் அடிப்படை. ஒரு நேர்மையான மற்றும்
+                அன்பான துணையை எதிர்நோக்குகிறேன்.
               </p>
             </div>
 
-            <div className={`content-card reveal ${isLoaded ? "visible" : ""}`} style={{ transitionDelay: ".1s" }}>
+            <div
+              className={`content-card reveal ${isLoaded ? "visible" : ""}`}
+              style={{ transitionDelay: ".1s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">✦</div>Interests & Hobbies
               </div>
@@ -436,7 +529,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className={`content-card reveal ${isLoaded ? "visible" : ""}`} style={{ transitionDelay: ".2s" }}>
+            <div
+              className={`content-card reveal ${isLoaded ? "visible" : ""}`}
+              style={{ transitionDelay: ".2s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">💫</div>Personality Vibe
               </div>
@@ -487,7 +583,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className={`content-card reveal ${isLoaded ? "visible" : ""}`} style={{ transitionDelay: ".3s" }}>
+            <div
+              className={`content-card reveal ${isLoaded ? "visible" : ""}`}
+              style={{ transitionDelay: ".3s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">🛡</div>Verification Status
               </div>
@@ -518,7 +617,10 @@ export default function ProfilePage() {
                     <div className="vbadge-icon">💼</div>
                     <div className="vbadge-text">
                       <strong>Employment</strong>
-                      <small className="cursor-pointer hover:underline text-amber" onClick={handleVerifyEmployment}>
+                      <small
+                        className="cursor-pointer hover:underline text-amber"
+                        onClick={handleVerifyEmployment}
+                      >
                         ⏳ Pending - Click to verify
                       </small>
                     </div>
@@ -529,7 +631,9 @@ export default function ProfilePage() {
                     <div className="vbadge-icon">💼</div>
                     <div className="vbadge-text">
                       <strong>Employment</strong>
-                      <small className="text-amber">⏳ Documents Submitted</small>
+                      <small className="text-amber">
+                        ⏳ Documents Submitted
+                      </small>
                     </div>
                   </div>
                 )}
@@ -545,29 +649,62 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className={`content-card reveal ${isLoaded ? "visible" : ""}`} style={{ transitionDelay: ".4s" }}>
+            <div
+              className={`content-card reveal ${isLoaded ? "visible" : ""}`}
+              style={{ transitionDelay: ".4s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">💞</div>Profiles You May Like
               </div>
               <div className="similar-grid">
-                <div className="sim-card" onClick={() => showToast("Opening Ananya's profile...", "info")}>
-                  <div className="sim-av" style={{ background: "linear-gradient(135deg,#F2688C,#7C3AED)" }}>
+                <div
+                  className="sim-card"
+                  onClick={() =>
+                    showToast("Opening Ananya's profile...", "info")
+                  }
+                >
+                  <div
+                    className="sim-av"
+                    style={{
+                      background: "linear-gradient(135deg,#F2688C,#7C3AED)",
+                    }}
+                  >
                     A
                   </div>
                   <div className="sim-name">Ananya, 26</div>
                   <div className="sim-info">Chennai · Software Eng.</div>
                   <div className="sim-match">✓ 94% match</div>
                 </div>
-                <div className="sim-card" onClick={() => showToast("Opening Deepika's profile...", "info")}>
-                  <div className="sim-av" style={{ background: "linear-gradient(135deg,#059669,#0D9488)" }}>
+                <div
+                  className="sim-card"
+                  onClick={() =>
+                    showToast("Opening Deepika's profile...", "info")
+                  }
+                >
+                  <div
+                    className="sim-av"
+                    style={{
+                      background: "linear-gradient(135deg,#059669,#0D9488)",
+                    }}
+                  >
                     D
                   </div>
                   <div className="sim-name">Deepika, 28</div>
                   <div className="sim-info">Coimbatore · Doctor</div>
                   <div className="sim-match">✓ 90% match</div>
                 </div>
-                <div className="sim-card" onClick={() => showToast("Opening Ranjani's profile...", "info")}>
-                  <div className="sim-av" style={{ background: "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                <div
+                  className="sim-card"
+                  onClick={() =>
+                    showToast("Opening Ranjani's profile...", "info")
+                  }
+                >
+                  <div
+                    className="sim-av"
+                    style={{
+                      background: "linear-gradient(135deg,#F59E0B,#D97706)",
+                    }}
+                  >
                     R
                   </div>
                   <div className="sim-name">Ranjani, 25</div>
@@ -579,7 +716,9 @@ export default function ProfilePage() {
           </div>
 
           {/* DETAILS TAB PANEL */}
-          <div className={`tab-panel ${activeTab === "details" ? "active" : ""}`}>
+          <div
+            className={`tab-panel ${activeTab === "details" ? "active" : ""}`}
+          >
             <div className="content-card reveal visible">
               <div className="content-card-title">
                 <div className="ctitle-icon">👤</div>Personal Details
@@ -587,7 +726,7 @@ export default function ProfilePage() {
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Full Name</div>
-                  <div className="detail-value">Priya Krishnamurthy</div>
+                  <div className="detail-value">{nameKit}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Date of Birth</div>
@@ -628,7 +767,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="content-card reveal visible" style={{ transitionDelay: ".1s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".1s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">🎓</div>Education & Career
               </div>
@@ -660,7 +802,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="content-card reveal visible" style={{ transitionDelay: ".2s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".2s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">🛕</div>Religious & Community
               </div>
@@ -692,7 +837,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="content-card reveal visible" style={{ transitionDelay: ".3s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".3s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">🌿</div>Lifestyle
               </div>
@@ -726,7 +874,9 @@ export default function ProfilePage() {
           </div>
 
           {/* FAMILY TAB PANEL */}
-          <div className={`tab-panel ${activeTab === "family" ? "active" : ""}`}>
+          <div
+            className={`tab-panel ${activeTab === "family" ? "active" : ""}`}
+          >
             <div className="content-card reveal visible">
               <div className="content-card-title">
                 <div className="ctitle-icon">🏠</div>Family Background
@@ -736,7 +886,9 @@ export default function ProfilePage() {
                   <div className="family-item-icon">👨</div>
                   <div className="family-item-label">Father</div>
                   <div className="family-item-value">Dr. R. Krishnamurthy</div>
-                  <div className="family-item-sub">Retired · IIT Madras Professor</div>
+                  <div className="family-item-sub">
+                    Retired · IIT Madras Professor
+                  </div>
                 </div>
                 <div className="family-item">
                   <div className="family-item-icon">👩</div>
@@ -748,30 +900,41 @@ export default function ProfilePage() {
                   <div className="family-item-icon">👦</div>
                   <div className="family-item-label">Siblings</div>
                   <div className="family-item-value">1 Elder Brother</div>
-                  <div className="family-item-sub">Married · Software Engineer, Bengaluru</div>
+                  <div className="family-item-sub">
+                    Married · Software Engineer, Bengaluru
+                  </div>
                 </div>
                 <div className="family-item">
                   <div className="family-item-icon">🏡</div>
                   <div className="family-item-label">Family Type</div>
                   <div className="family-item-value">Nuclear Family</div>
-                  <div className="family-item-sub">Extended family in Mylapore</div>
+                  <div className="family-item-sub">
+                    Extended family in Mylapore
+                  </div>
                 </div>
                 <div className="family-item">
                   <div className="family-item-icon">💎</div>
                   <div className="family-item-label">Family Status</div>
                   <div className="family-item-value">Upper Middle Class</div>
-                  <div className="family-item-sub">Own house in Mylapore, Chennai</div>
+                  <div className="family-item-sub">
+                    Own house in Mylapore, Chennai
+                  </div>
                 </div>
                 <div className="family-item">
                   <div className="family-item-icon">🙏</div>
                   <div className="family-item-label">Family Values</div>
                   <div className="family-item-value">Traditional</div>
-                  <div className="family-item-sub">Conservative with modern outlook</div>
+                  <div className="family-item-sub">
+                    Conservative with modern outlook
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="content-card reveal visible" style={{ transitionDelay: ".1s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".1s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">📍</div>Location & Native
               </div>
@@ -786,7 +949,10 @@ export default function ProfilePage() {
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Native (Tamil)</div>
-                  <div className="detail-value" style={{ fontFamily: "var(--font-tamil)" }}>
+                  <div
+                    className="detail-value"
+                    style={{ fontFamily: "var(--font-tamil)" }}
+                  >
                     கும்பகோணம், தஞ்சாவூர்
                   </div>
                 </div>
@@ -797,21 +963,33 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="content-card reveal visible" style={{ transitionDelay: ".2s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".2s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">💌</div>About the Family
               </div>
               <p className="about-text">
-                We are a close-knit Tamil Brahmin family from Kumbakonam, now settled in Mylapore, Chennai. My father was a professor at IIT Madras; my brother is an engineer in Bengaluru. We believe in education, simplicity, and respect — both for each other and for our traditions. The family actively participates in community and temple events.
+                We are a close-knit Tamil Brahmin family from Kumbakonam, now
+                settled in Mylapore, Chennai. My father was a professor at IIT
+                Madras; my brother is an engineer in Bengaluru. We believe in
+                education, simplicity, and respect — both for each other and for
+                our traditions. The family actively participates in community
+                and temple events.
               </p>
               <p className="about-text-tamil">
-                எங்கள் குடும்பம் தஞ்சாவூர் மாவட்டத்தை சார்ந்தது. தற்போது சென்னை மயிலாப்பூரில் குடியிருக்கிறோம். கல்வி மற்றும் ஆன்மீகம் எங்கள் குடும்பத்தின் முக்கிய மதிப்புகள்.
+                எங்கள் குடும்பம் தஞ்சாவூர் மாவட்டத்தை சார்ந்தது. தற்போது சென்னை
+                மயிலாப்பூரில் குடியிருக்கிறோம். கல்வி மற்றும் ஆன்மீகம் எங்கள்
+                குடும்பத்தின் முக்கிய மதிப்புகள்.
               </p>
             </div>
           </div>
 
           {/* PARTNER PREFS TAB PANEL */}
-          <div className={`tab-panel ${activeTab === "partner" ? "active" : ""}`}>
+          <div
+            className={`tab-panel ${activeTab === "partner" ? "active" : ""}`}
+          >
             <div className="content-card reveal visible">
               <div className="content-card-title">
                 <div className="ctitle-icon">💞</div>Partner Preferences
@@ -851,7 +1029,8 @@ export default function ProfilePage() {
                 <div className="pref-icon">🍷</div>
                 <div className="pref-label">Drinking</div>
                 <div className="pref-value">
-                  Non-Drinker preferred <span className="pref-flex">flexible</span>
+                  Non-Drinker preferred{" "}
+                  <span className="pref-flex">flexible</span>
                 </div>
               </div>
 
@@ -884,48 +1063,67 @@ export default function ProfilePage() {
                 <div className="pref-icon">🌐</div>
                 <div className="pref-label">Caste</div>
                 <div className="pref-value">
-                  Tamil Brahmin preferred <span className="pref-flex">open</span>
+                  Tamil Brahmin preferred{" "}
+                  <span className="pref-flex">open</span>
                 </div>
               </div>
               <div className="pref-row">
                 <div className="pref-icon">🌍</div>
                 <div className="pref-label">Location</div>
-                <div className="pref-value">Tamil Nadu or willing to relocate</div>
+                <div className="pref-value">
+                  Tamil Nadu or willing to relocate
+                </div>
               </div>
 
               <div className="pref-section-label">Personality & Lifestyle</div>
               <div className="pref-row">
                 <div className="pref-icon">🏠</div>
                 <div className="pref-label">Living Setup</div>
-                <div className="pref-value">Open to joint or nuclear family</div>
+                <div className="pref-value">
+                  Open to joint or nuclear family
+                </div>
               </div>
               <div className="pref-row">
                 <div className="pref-icon">💡</div>
                 <div className="pref-label">Values</div>
-                <div className="pref-value">Family-oriented, respectful, grounded</div>
+                <div className="pref-value">
+                  Family-oriented, respectful, grounded
+                </div>
               </div>
               <div className="pref-row">
                 <div className="pref-icon">✨</div>
                 <div className="pref-label">Personality</div>
-                <div className="pref-value">Honest, emotionally mature, ambitious</div>
+                <div className="pref-value">
+                  Honest, emotionally mature, ambitious
+                </div>
               </div>
             </div>
 
-            <div className="content-card reveal visible" style={{ transitionDelay: ".1s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".1s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">💬</div>In Her Own Words
               </div>
               <p className="about-text">
-                "I'm looking for someone equally proud of their roots as they are excited about the future — a partner who enjoys a slow morning with filter coffee as much as a spontaneous road trip. Kindness, honesty, and a good sense of humour matter more to me than titles."
+                "I'm looking for someone equally proud of their roots as they
+                are excited about the future — a partner who enjoys a slow
+                morning with filter coffee as much as a spontaneous road trip.
+                Kindness, honesty, and a good sense of humour matter more to me
+                than titles."
               </p>
               <p className="about-text-tamil">
-                "நேர்மையான, குடும்பத்தை நேசிக்கும் ஒரு நல்ல மனிதனை எதிர்பார்க்கிறேன்."
+                "நேர்மையான, குடும்பத்தை நேசிக்கும் ஒரு நல்ல மனிதனை
+                எதிர்பார்க்கிறேன்."
               </p>
             </div>
           </div>
 
           {/* PHOTOS TAB PANEL */}
-          <div className={`tab-panel ${activeTab === "photos" ? "active" : ""}`}>
+          <div
+            className={`tab-panel ${activeTab === "photos" ? "active" : ""}`}
+          >
             <div className="content-card reveal visible">
               <div className="content-card-title">
                 <div className="ctitle-icon">📷</div>Profile Photos
@@ -955,7 +1153,7 @@ export default function ProfilePage() {
                       interestSent
                         ? "Interest sent. Private photos will unlock once accepted!"
                         : "Private photos. Send an interest to request unlock.",
-                      "info"
+                      "info",
                     )
                   }
                 >
@@ -973,7 +1171,7 @@ export default function ProfilePage() {
                       interestSent
                         ? "Interest sent. Private photos will unlock once accepted!"
                         : "Private photos. Send an interest to request unlock.",
-                      "info"
+                      "info",
                     )
                   }
                 >
@@ -993,12 +1191,18 @@ export default function ProfilePage() {
                 {/* Dynamic Uploads */}
                 {casualPhotos.map((url, idx) => (
                   <div key={idx} className="photo-slot relative group">
-                    <img src={url} alt={`Uploaded casual ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img
+                      src={url}
+                      alt={`Uploaded casual ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
                     <button
                       className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setCasualPhotos((prev) => prev.filter((_, i) => i !== idx));
+                        setCasualPhotos((prev) =>
+                          prev.filter((_, i) => i !== idx),
+                        );
                         showToast("Photo deleted", "info");
                       }}
                     >
@@ -1009,7 +1213,10 @@ export default function ProfilePage() {
 
                 {/* Add Photo Button Slot */}
                 {casualPhotos.length < 2 && (
-                  <div className="photo-slot photo-slot-add" onClick={triggerPhotoUpload}>
+                  <div
+                    className="photo-slot photo-slot-add"
+                    onClick={triggerPhotoUpload}
+                  >
                     <div className="photo-av">＋</div>
                     <div className="photo-label">Add Photo</div>
                   </div>
@@ -1019,33 +1226,59 @@ export default function ProfilePage() {
               <div className="photos-note">
                 <div className="photos-note-icon">💡</div>
                 <p>
-                  Profiles with 5+ photos get 3× more connection requests. Private photos are only visible after interest is accepted.
+                  Profiles with 5+ photos get 3× more connection requests.
+                  Private photos are only visible after interest is accepted.
                 </p>
               </div>
             </div>
 
             {/* Video Intro Card */}
-            <div className="content-card reveal visible" style={{ transitionDelay: ".1s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".1s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">🎥</div>Video Introduction
               </div>
               <div
                 style={{
-                  background: "linear-gradient(135deg,var(--plum-light),var(--rose-light))",
+                  background:
+                    "linear-gradient(135deg,var(--plum-light),var(--rose-light))",
                   borderRadius: "var(--radius-sm)",
                   padding: "40px 24px",
                   textAlign: "center",
-                  border: "2px dashed rgba(124,58,237,.2)"
+                  border: "2px dashed rgba(124,58,237,.2)",
                 }}
               >
-                <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>🎬</div>
-                <div style={{ fontSize: ".9rem", fontWeight: 600, color: "var(--plum-dark)", marginBottom: "6px" }}>
+                <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>
+                  🎬
+                </div>
+                <div
+                  style={{
+                    fontSize: ".9rem",
+                    fontWeight: 600,
+                    color: "var(--plum-dark)",
+                    marginBottom: "6px",
+                  }}
+                >
                   Add a 60-second Video Introduction
                 </div>
-                <div style={{ fontSize: ".78rem", color: "var(--plum)", marginBottom: "16px" }}>
+                <div
+                  style={{
+                    fontSize: ".78rem",
+                    color: "var(--plum)",
+                    marginBottom: "16px",
+                  }}
+                >
                   Profiles with a video get 5× more views
                 </div>
-                <button className="btn-secondary" style={{ display: "inline-flex", margin: "0 auto" }} onClick={() => showToast("Video recorder interface loading...", "info")}>
+                <button
+                  className="btn-secondary"
+                  style={{ display: "inline-flex", margin: "0 auto" }}
+                  onClick={() =>
+                    showToast("Video recorder interface loading...", "info")
+                  }
+                >
                   ▶ Record Now
                 </button>
               </div>
@@ -1053,7 +1286,9 @@ export default function ProfilePage() {
           </div>
 
           {/* HOROSCOPE TAB PANEL */}
-          <div className={`tab-panel ${activeTab === "horoscope" ? "active" : ""}`}>
+          <div
+            className={`tab-panel ${activeTab === "horoscope" ? "active" : ""}`}
+          >
             <div className="content-card reveal visible">
               <div className="content-card-title">
                 <div className="ctitle-icon">⭐</div>Horoscope Details
@@ -1098,26 +1333,44 @@ export default function ProfilePage() {
                   <div className="horo-value" style={{ color: "var(--sage)" }}>
                     No Dosham
                   </div>
-                  <div className="horo-value-tamil" style={{ color: "var(--sage)" }}>
+                  <div
+                    className="horo-value-tamil"
+                    style={{ color: "var(--sage)" }}
+                  >
                     தோஷமில்லை
                   </div>
                 </div>
               </div>
               <div className="horo-badge-wrap">
                 <div className="horo-badge">
-                  <div className="hb-dot" style={{ background: "var(--sage)" }}></div>Manglik: No
+                  <div
+                    className="hb-dot"
+                    style={{ background: "var(--sage)" }}
+                  ></div>
+                  Manglik: No
                 </div>
                 <div className="horo-badge">
-                  <div className="hb-dot" style={{ background: "var(--plum)" }}></div>Chevvai Dosham: No
+                  <div
+                    className="hb-dot"
+                    style={{ background: "var(--plum)" }}
+                  ></div>
+                  Chevvai Dosham: No
                 </div>
                 <div className="horo-badge">
-                  <div className="hb-dot" style={{ background: "var(--rose)" }}></div>Rahu-Ketu: Neutral
+                  <div
+                    className="hb-dot"
+                    style={{ background: "var(--rose)" }}
+                  ></div>
+                  Rahu-Ketu: Neutral
                 </div>
               </div>
             </div>
 
             {/* JATHAGAM (BIRTH CHART) CARD */}
-            <div className="content-card reveal visible" style={{ transitionDelay: ".1s" }}>
+            <div
+              className="content-card reveal visible"
+              style={{ transitionDelay: ".1s" }}
+            >
               <div className="content-card-title">
                 <div className="ctitle-icon">📄</div>Jathagam (Birth Chart)
               </div>
@@ -1133,29 +1386,57 @@ export default function ProfilePage() {
               {!horoscopeUploaded ? (
                 <div
                   style={{
-                    background: "linear-gradient(135deg,var(--saffron-light),var(--amber-light))",
+                    background:
+                      "linear-gradient(135deg,var(--saffron-light),var(--amber-light))",
                     borderRadius: "var(--radius-sm)",
                     padding: "32px 24px",
                     textAlign: "center",
-                    border: "1px solid rgba(245,158,11,.2)"
+                    border: "1px solid rgba(245,158,11,.2)",
                   }}
                 >
-                  <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📜</div>
-                  <div style={{ fontSize: ".9rem", fontWeight: 600, color: "var(--amber)", marginBottom: "6px" }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "8px" }}>
+                    📜
+                  </div>
+                  <div
+                    style={{
+                      fontSize: ".9rem",
+                      fontWeight: 600,
+                      color: "var(--amber)",
+                      marginBottom: "6px",
+                    }}
+                  >
                     Jathagam / Birth Chart Not Uploaded
                   </div>
-                  <p style={{ fontSize: ".78rem", color: "var(--ink-60)", marginBottom: "18px", maxWidth: "400px", margin: "0 auto 18px" }}>
-                    Add your horoscope chart to calculate detailed planetary compatibility percentages with matching profiles.
+                  <p
+                    style={{
+                      fontSize: ".78rem",
+                      color: "var(--ink-60)",
+                      marginBottom: "18px",
+                      maxWidth: "400px",
+                      margin: "0 auto 18px",
+                    }}
+                  >
+                    Add your horoscope chart to calculate detailed planetary
+                    compatibility percentages with matching profiles.
                   </p>
-                  <button className="btn-secondary" style={{ display: "inline-flex", borderColor: "var(--amber)", color: "var(--amber)" }} onClick={triggerHoroUpload}>
-                    <Upload className="h-4 w-4 mr-2" /> Upload Jathagam (PDF / Image)
+                  <button
+                    className="btn-secondary"
+                    style={{
+                      display: "inline-flex",
+                      borderColor: "var(--amber)",
+                      color: "var(--amber)",
+                    }}
+                    onClick={triggerHoroUpload}
+                  >
+                    <Upload className="h-4 w-4 mr-2" /> Upload Jathagam (PDF /
+                    Image)
                   </button>
                 </div>
               ) : (
                 <div
                   className="p-6 rounded-2xl border border-emerald-100"
                   style={{
-                    background: "linear-gradient(135deg, #ECFDF5, #D1FAE5)"
+                    background: "linear-gradient(135deg, #ECFDF5, #D1FAE5)",
                   }}
                 >
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1164,7 +1445,9 @@ export default function ProfilePage() {
                         <Check className="h-6 w-6" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-slate-800 text-sm">Birth Chart (Jathagam) Verified</h4>
+                        <h4 className="font-bold text-slate-800 text-sm">
+                          Birth Chart (Jathagam) Verified
+                        </h4>
                         <p className="text-xs text-slate-500 mt-0.5 font-medium flex items-center gap-1.5">
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                           File: {horoscopeFileName || "jathagam_priya.pdf"}
@@ -1174,7 +1457,9 @@ export default function ProfilePage() {
                     <div className="flex gap-2">
                       <button
                         className="text-xs bg-white text-slate-700 font-medium px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition"
-                        onClick={() => showToast("Viewing chart PDF preview...", "info")}
+                        onClick={() =>
+                          showToast("Viewing chart PDF preview...", "info")
+                        }
                       >
                         Preview Chart
                       </button>
@@ -1203,9 +1488,12 @@ export default function ProfilePage() {
       {showVoiceModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-in scale-in duration-200">
-            <h3 className="font-display text-lg font-bold text-slate-800 mb-2">Record Voice Note</h3>
+            <h3 className="font-display text-lg font-bold text-slate-800 mb-2">
+              Record Voice Note
+            </h3>
             <p className="text-xs text-slate-500 mb-6">
-              Introduce yourself, talk about your interests, and what values you look for in a partner.
+              Introduce yourself, talk about your interests, and what values you
+              look for in a partner.
             </p>
 
             <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
@@ -1229,8 +1517,12 @@ export default function ProfilePage() {
                   <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 mb-4">
                     <Mic className="h-5 w-5" />
                   </div>
-                  <span className="text-xl font-bold font-display text-slate-400">0:00</span>
-                  <span className="text-xs text-slate-400 font-medium mt-1">Ready to Record</span>
+                  <span className="text-xl font-bold font-display text-slate-400">
+                    0:00
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium mt-1">
+                    Ready to Record
+                  </span>
                 </>
               )}
             </div>
@@ -1240,7 +1532,8 @@ export default function ProfilePage() {
                 className="flex-1 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl transition"
                 onClick={() => {
                   if (isRecording) {
-                    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+                    if (recordingTimerRef.current)
+                      clearInterval(recordingTimerRef.current);
                   }
                   setShowVoiceModal(false);
                 }}
