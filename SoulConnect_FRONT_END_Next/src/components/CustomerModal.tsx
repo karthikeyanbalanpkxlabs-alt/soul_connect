@@ -42,7 +42,7 @@ const defaultFormData = {
   video: "" as any,
   identity_proff: "" as any,
   transaction: [],
-  public_verify: false,
+  public_verify: true,
 };
 
 const customerValidationSchema = Yup.object().shape({
@@ -73,7 +73,9 @@ const customerValidationSchema = Yup.object().shape({
   height: Yup.string().trim().required("Height is required"),
   subscription_type: Yup.string().required("Subscription type is required"),
   about_self: Yup.string().trim().required("About self is required"),
-  partner_preference: Yup.string().trim().required("Partner preference is required"),
+  partner_preference: Yup.string()
+    .trim()
+    .required("Partner preference is required"),
   image: Yup.array()
     .of(Yup.object())
     .min(1, "At least 1 profile image is required")
@@ -102,7 +104,9 @@ export default function CustomerModal({
           const list = Array.isArray(data) ? data : data?.data || [];
           setSubscriptions(list);
         })
-        .catch((err) => console.error("Error fetching subscription list:", err));
+        .catch((err) =>
+          console.error("Error fetching subscription list:", err),
+        );
     }
   }, [isOpen, subscriptionList]);
 
@@ -294,7 +298,8 @@ export default function CustomerModal({
             {/* Image Upload */}
             <div className="mb-8">
               <label className="text-sm font-medium text-gray-700 mb-3 block">
-                Profile Images (Max 5, Click star to set default) <span className="text-red-500">*</span>
+                Profile Images (Max 5, Click star to set default){" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-4">
                 {validImages.map((img: any, index: number) => (
@@ -381,7 +386,9 @@ export default function CustomerModal({
                 ) : (
                   <label className="w-64 h-40 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
                     <Upload size={28} className="mb-2" />
-                    <span className="text-sm font-medium">Upload MP4 Video</span>
+                    <span className="text-sm font-medium">
+                      Upload MP4 Video
+                    </span>
                     <input
                       type="file"
                       accept="video/mp4"
@@ -406,8 +413,14 @@ export default function CustomerModal({
                   (() => {
                     const proof = formik.values.identity_proff;
                     const url = typeof proof === "string" ? proof : proof.url;
-                    const name = typeof proof === "string" ? "Identity Proof" : proof.name || "Identity Proof";
-                    const isPdf = url?.includes("application/pdf") || url?.endsWith(".pdf") || proof.type === "application/pdf";
+                    const name =
+                      typeof proof === "string"
+                        ? "Identity Proof"
+                        : proof.name || "Identity Proof";
+                    const isPdf =
+                      url?.includes("application/pdf") ||
+                      url?.endsWith(".pdf") ||
+                      proof.type === "application/pdf";
 
                     return (
                       <div className="relative w-48 h-32 rounded-xl border-4 border-violet-500 overflow-hidden group bg-gray-100 flex flex-col items-center justify-center p-2">
@@ -850,7 +863,10 @@ export default function CustomerModal({
                   {subscriptions.map((sub: any, index: number) => {
                     const subName = sub.name || sub.type || "";
                     return (
-                      <option key={sub._id?.toString?.() || sub._id || index} value={subName}>
+                      <option
+                        key={sub._id?.toString?.() || sub._id || index}
+                        value={subName}
+                      >
                         {subName}
                       </option>
                     );

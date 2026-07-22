@@ -114,12 +114,12 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
               ))}
             </div>
 
-            <button
+            {/* <button
               onClick={() => onOpenPayment(plan.name, plan.price, plan.features)}
               className={`btn-plan ${plan.btnClass}`}
             >
               {plan.btnText}
-            </button>
+            </button> */}
           </div>
         ))}
       </div>
