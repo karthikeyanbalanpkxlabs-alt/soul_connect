@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, CreditCard, Send, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { X, CreditCard, Send, Sparkles, ArrowRight } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface PaymentModalProps {
   features: string[];
   onClose: () => void;
   showToast: (msg: string, type: "success" | "info" | "error") => void;
+  onSkip?: () => void;
 }
 
 export default function PaymentModal({
@@ -19,7 +21,9 @@ export default function PaymentModal({
   features,
   onClose,
   showToast,
+  onSkip,
 }: PaymentModalProps) {
+  const router = useRouter();
   const [method, setMethod] = useState<"upi" | "card">("upi");
   const [upiId, setUpiId] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -31,6 +35,18 @@ export default function PaymentModal({
   const [txId, setTxId] = useState("");
 
   if (!isOpen) return null;
+
+  const handleSkip = () => {
+    if (onSkip) {
+      onSkip();
+    } else {
+      if (typeof window !== "undefined") {
+        window.location.href = window.location.origin + "/portal";
+      } else {
+        router.push("/portal");
+      }
+    }
+  };
 
   const handlePay = (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,6 +224,15 @@ export default function PaymentModal({
                     <Sparkles className="h-4 w-4" />
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSkip}
+                className="w-full mt-3 py-2.5 px-4 text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer group"
+              >
+                <span>Skip to Login</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             </form>
           </>
