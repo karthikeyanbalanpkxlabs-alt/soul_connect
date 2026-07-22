@@ -246,6 +246,8 @@ async function handleCustomerList(req: Request, res: Response, type: any) {
             // Unmatchable condition if user types something random
             filter.public_verify = null;
           }
+        } else if (key === "gender") {
+          filter[dbKey] = { $regex: `^${val}$`, $options: "i" };
         } else {
           filter[dbKey] = { $regex: val, $options: "i" };
         }
