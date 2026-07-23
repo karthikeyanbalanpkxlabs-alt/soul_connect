@@ -33,8 +33,36 @@ export default function ProfilePage() {
   const { profile, loadingProfile, profileError, refreshProfile } =
     useKeycloak();
 
-  const nameKit = `${profile?.firstName} ${profile?.lastName}` as any;
-  console.log(profile);
+  const firstName = profile?.first_name || profile?.firstName || "";
+  const lastName = profile?.last_name || profile?.lastName || "";
+  const nameKit = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : "Profile";
+
+  const defaultImgObj = Array.isArray(profile?.image)
+    ? profile.image.find((img: any) => img.default) || profile.image[0]
+    : null;
+  const avatarUrl = defaultImgObj?.url;
+
+  const calculateAge = (dobString?: string) => {
+    if (!dobString) return null;
+    const dob = new Date(dobString);
+    if (isNaN(dob.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const calculatedAge = calculateAge(profile?.dob);
+  const ageDisplay = calculatedAge ? `${calculatedAge} years` : (profile?.dob || "N/A");
+
+  const locationParts = [profile?.taluk_town, profile?.district, profile?.state].filter(Boolean);
+  const locationStr = locationParts.length > 0 ? locationParts.join(", ") : "Tamil Nadu";
+
+  const customerId = profile?.customer_id || (profile?._id ? `cid_${profile._id}` : "SC-TN-CUSTOMER");
+  console.log('Profile----1,', profile);
 
   // Page load anim trigger
   const [isLoaded, setIsLoaded] = useState(false);
@@ -260,17 +288,35 @@ export default function ProfilePage() {
           {/* Main Card */}
           <div className={`profile-card reveal ${isLoaded ? "visible" : ""}`}>
             <div className="profile-avatar-wrap">
-              <div className="profile-avatar">
-                P<div className="avatar-verified">✓</div>
+              <div className="profile-avatar overflow-hidden relative flex items-center justify-center">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={nameKit}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <span>{firstName ? firstName[0].toUpperCase() : "P"}</span>
+                )}
+                {profile?.public_verify && <div className="avatar-verified">✓</div>}
               </div>
               <div className="profile-name">{nameKit}</div>
-              <div className="profile-name-tamil">பிரியா கிருஷ்ணமூர்த்தி</div>
+              {profile?.subscription_type && (
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                  {profile.subscription_type} Plan
+                </div>
+              )}
+              {profile?.approvalStatus && (
+                <div className="mt-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                  {profile.approvalStatus}
+                </div>
+              )}
               <div className="profile-tagline">
-                A curious mind with roots in tradition. Looking for a partner
-                equally at home at a temple and on a trek.
+                {profile?.about_self ||
+                  "Looking for a partner equally at home with traditional values and modern growth."}
               </div>
-              <div className="profile-location">📍 Chennai, Tamil Nadu</div>
-              <div className="profile-id">SC-TN-2024-08142</div>
+              <div className="profile-location">📍 {locationStr}</div>
+              <div className="profile-id">{customerId}</div>
             </div>
 
             {/* Compatibility Score */}
@@ -342,50 +388,46 @@ export default function ProfilePage() {
               <div className="quick-facts-title">Quick Snapshot</div>
               <div className="fact-row">
                 <div className="fact-icon">🎂</div>
-                <div className="fact-label">Age</div>
-                <div className="fact-value">27 years</div>
+                <div className="fact-label">Age / DOB</div>
+                <div className="fact-value">{ageDisplay}</div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">📏</div>
                 <div className="fact-label">Height</div>
-                <div className="fact-value">5'4" / 163 cm</div>
+                <div className="fact-value">{profile?.height || "N/A"}</div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🛕</div>
-                <div className="fact-label">Religion</div>
-                <div className="fact-value">Hindu</div>
-              </div>
-              <div className="fact-row">
-                <div className="fact-icon">⭐</div>
-                <div className="fact-label">Star / Rasi</div>
-                <div className="fact-value">Rohini / Rishabam</div>
+                <div className="fact-label">Religion / Caste</div>
+                <div className="fact-value">
+                  {profile?.religion || "N/A"}
+                  {profile?.caste ? ` (${profile.caste})` : ""}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">💼</div>
                 <div className="fact-label">Profession</div>
-                <div className="fact-value">UX Designer</div>
+                <div className="fact-value">{profile?.profession || "N/A"}</div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🎓</div>
                 <div className="fact-label">Education</div>
-                <div className="fact-value">B.Des – NID Ahmedabad</div>
+                <div className="fact-value">{profile?.education || "N/A"}</div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">💰</div>
                 <div className="fact-label">Income</div>
-                <div className="fact-value">₹10L – ₹15L / yr</div>
+                <div className="fact-value">{profile?.annual_income || "N/A"}</div>
               </div>
               <div className="fact-row">
-                <div className="fact-icon">🍃</div>
-                <div className="fact-label">Diet</div>
-                <div className="fact-value">
-                  Vegetarian <span className="fact-badge">Strict</span>
-                </div>
+                <div className="fact-icon">📍</div>
+                <div className="fact-label">District</div>
+                <div className="fact-value">{profile?.district || "N/A"}</div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🌐</div>
                 <div className="fact-label">Languages</div>
-                <div className="fact-value">Tamil, English, Hindi</div>
+                <div className="fact-value">{profile?.mother_tongue || "Tamil"}</div>
               </div>
             </div>
           </div>
@@ -489,23 +531,28 @@ export default function ProfilePage() {
                 <div className="ctitle-icon">✍</div>About Me
               </div>
               <p className="about-text">
-                I'm a UX Designer at a fintech startup in Chennai, passionate
-                about crafting experiences that feel intuitive and human. I grew
-                up in a close-knit Iyer family in Mylapore, and while my career
-                is modern, my values are deeply rooted in family, gratitude, and
-                simplicity.
+                {profile?.about_self ||
+                  "Welcome to my profile! I am looking for a partner with shared values and mutual respect to build a meaningful life together."}
               </p>
-              <p className="about-text">
-                On weekends you'll find me sketching at Marina Beach, cooking
-                Chettinad recipes with my mother, or getting lost in historical
-                fiction. I'm vegetarian, don't smoke or drink, and believe in
-                building a life that's meaningful — not just successful.
-              </p>
-              <p className="about-text-tamil">
-                நான் சென்னையில் UX Designer ஆக பணிபுரிகிறேன். என் குடும்பம்
-                மற்றும் கலாச்சாரம் என் வாழ்வின் அடிப்படை. ஒரு நேர்மையான மற்றும்
-                அன்பான துணையை எதிர்நோக்குகிறேன்.
-              </p>
+              {profile?.identity_proff?.url && (
+                <div className="mt-4 p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">📄</span>
+                    <div>
+                      <div className="font-semibold text-xs text-slate-800">Identity Proof Document</div>
+                      <div className="text-[11px] text-slate-500">Verified document uploaded</div>
+                    </div>
+                  </div>
+                  <a
+                    href={profile.identity_proff.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 underline"
+                  >
+                    View Document ↗
+                  </a>
+                </div>
+              )}
             </div>
 
             <div
@@ -730,39 +777,51 @@ export default function ProfilePage() {
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Date of Birth</div>
-                  <div className="detail-value">14 March 1997</div>
+                  <div className="detail-value">{profile?.dob || "N/A"}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Age</div>
-                  <div className="detail-value">27 years</div>
+                  <div className="detail-value">{ageDisplay}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Gender</div>
+                  <div className="detail-value">{profile?.gender || "N/A"}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Height</div>
-                  <div className="detail-value">5'4" / 163 cm</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Body Type</div>
-                  <div className="detail-value">Slim</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Complexion</div>
-                  <div className="detail-value">Fair</div>
+                  <div className="detail-value">{profile?.height || "N/A"}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Marital Status</div>
-                  <div className="detail-value">Never Married</div>
+                  <div className="detail-value">{profile?.maritial_status || "N/A"}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Mother Tongue</div>
-                  <div className="detail-value">Tamil</div>
+                  <div className="detail-value">{profile?.mother_tongue || "N/A"}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Languages Known</div>
-                  <div className="detail-value">Tamil, English, Hindi</div>
+                  <div className="detail-label">Email</div>
+                  <div className="detail-value">{profile?.email || "N/A"}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Blood Group</div>
-                  <div className="detail-value">B+</div>
+                  <div className="detail-label">Phone Number</div>
+                  <div className="detail-value">
+                    {profile?.phone_code || "+91"} {profile?.phone_number || "N/A"}
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">District</div>
+                  <div className="detail-value">{profile?.district || "N/A"}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Taluk / Town</div>
+                  <div className="detail-value">{profile?.taluk_town || "N/A"}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">State / Zipcode</div>
+                  <div className="detail-value">
+                    {profile?.state || "N/A"} {profile?.zipcode ? `(${profile.zipcode})` : ""}
+                  </div>
                 </div>
               </div>
             </div>
@@ -776,28 +835,20 @@ export default function ProfilePage() {
               </div>
               <div className="details-grid">
                 <div className="detail-item">
-                  <div className="detail-label">Highest Degree</div>
-                  <div className="detail-value">B.Des (Design)</div>
+                  <div className="detail-label">Highest Degree / Education</div>
+                  <div className="detail-value">{profile?.education || "N/A"}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">University</div>
-                  <div className="detail-value">NID Ahmedabad</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Occupation</div>
-                  <div className="detail-value">UX Designer</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Employer</div>
-                  <div className="detail-value">Fintech Startup</div>
+                  <div className="detail-label">Occupation / Profession</div>
+                  <div className="detail-value">{profile?.profession || "N/A"}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Annual Income</div>
-                  <div className="detail-value">₹10L – ₹15L</div>
+                  <div className="detail-value">{profile?.annual_income || "N/A"}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Work Location</div>
-                  <div className="detail-value">Chennai, Tamil Nadu</div>
+                  <div className="detail-value">{locationStr}</div>
                 </div>
               </div>
             </div>
@@ -812,27 +863,15 @@ export default function ProfilePage() {
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Religion</div>
-                  <div className="detail-value">Hindu</div>
+                  <div className="detail-value">{profile?.religion || "N/A"}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Caste</div>
-                  <div className="detail-value">Iyer (Brahmin)</div>
+                  <div className="detail-value">{profile?.caste || "N/A"}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Sub Caste</div>
-                  <div className="detail-value">Vadama</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Gothram</div>
-                  <div className="detail-value">Vatsa Gothram</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Religiousness</div>
-                  <div className="detail-value">Moderately Religious</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Caste No Bar</div>
-                  <div className="detail-value">Preferred, flexible</div>
+                  <div className="detail-label">Mother Tongue</div>
+                  <div className="detail-value">{profile?.mother_tongue || "N/A"}</div>
                 </div>
               </div>
             </div>
@@ -1104,18 +1143,11 @@ export default function ProfilePage() {
               style={{ transitionDelay: ".1s" }}
             >
               <div className="content-card-title">
-                <div className="ctitle-icon">💬</div>In Her Own Words
+                <div className="ctitle-icon">💬</div>Partner Preferences Overview
               </div>
               <p className="about-text">
-                "I'm looking for someone equally proud of their roots as they
-                are excited about the future — a partner who enjoys a slow
-                morning with filter coffee as much as a spontaneous road trip.
-                Kindness, honesty, and a good sense of humour matter more to me
-                than titles."
-              </p>
-              <p className="about-text-tamil">
-                "நேர்மையான, குடும்பத்தை நேசிக்கும் ஒரு நல்ல மனிதனை
-                எதிர்பார்க்கிறேன்."
+                "{profile?.partner_preference ||
+                  "Like we mentioned before, your values often inform your dating preferences."}"
               </p>
             </div>
           </div>
@@ -1139,54 +1171,22 @@ export default function ProfilePage() {
               />
 
               <div className="photos-grid">
-                {/* Main Photo */}
-                <div className="photo-slot photo-slot-main">
-                  <div className="photo-main-av">🌸</div>
-                  <div className="photo-label">Main Photo</div>
-                </div>
-
-                {/* Locked Private Photos */}
-                <div
-                  className="photo-slot"
-                  onClick={() =>
-                    showToast(
-                      interestSent
-                        ? "Interest sent. Private photos will unlock once accepted!"
-                        : "Private photos. Send an interest to request unlock.",
-                      "info",
-                    )
-                  }
-                >
-                  <div className="photo-lock">
-                    <Lock className="h-3 w-3 text-slate-700" />
-                  </div>
-                  <div className="photo-av">🖼</div>
-                  <div className="photo-label">Private</div>
-                </div>
-
-                <div
-                  className="photo-slot"
-                  onClick={() =>
-                    showToast(
-                      interestSent
-                        ? "Interest sent. Private photos will unlock once accepted!"
-                        : "Private photos. Send an interest to request unlock.",
-                      "info",
-                    )
-                  }
-                >
-                  <div className="photo-lock">
-                    <Lock className="h-3 w-3 text-slate-700" />
-                  </div>
-                  <div className="photo-av">🖼</div>
-                  <div className="photo-label">Private</div>
-                </div>
-
-                {/* Casual Photos */}
-                <div className="photo-slot">
-                  <div className="photo-av">🏞</div>
-                  <div className="photo-label">Casual</div>
-                </div>
+                {/* Profile Images from API */}
+                {Array.isArray(profile?.image) && profile.image.length > 0 &&
+                  profile.image.map((imgObj: any, idx: number) => (
+                    <div key={idx} className="photo-slot relative overflow-hidden group">
+                      <img
+                        src={imgObj.url}
+                        alt={`Profile image ${idx + 1}`}
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                      {imgObj.default && (
+                        <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
+                          ★ Default
+                        </span>
+                      )}
+                    </div>
+                  ))}
 
                 {/* Dynamic Uploads */}
                 {casualPhotos.map((url, idx) => (
