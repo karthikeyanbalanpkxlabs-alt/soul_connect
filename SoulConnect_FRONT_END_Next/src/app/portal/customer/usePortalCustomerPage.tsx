@@ -19,7 +19,7 @@ function usePortalCustomerPage() {
     profile?.gender === "maile"
       ? profile?.gender
       : "female";
-  console.log("profile", profile);
+  console.log("profile-1111", profile);
 
   const [getRoles, setRoles] = React.useState<any>("");
   const [loading, setLoading] = React.useState(true);
