@@ -45,6 +45,11 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       router: "/portal/customer",
     },
     {
+      name: "Subscriptions",
+      icon: Users,
+      router: "/portal/subscription",
+    },
+    {
       name: "Profile",
       icon: Settings,
       router: "/portal/profile",
