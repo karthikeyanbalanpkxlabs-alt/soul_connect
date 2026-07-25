@@ -1362,6 +1362,18 @@ async function handleSubscriptionCreate(req: Request, res: Response) {
       return res.status(400).json({ error: "Missing required fields (type, name, or price)" });
     }
 
+    // Check if subscription name already exists
+    const existingName = await Subscription.findOne({ name });
+    if (existingName) {
+      return res.status(400).json({ error: "Plan name already exists." });
+    }
+
+    // Check if subscription price already exists
+    const existingPrice = await Subscription.findOne({ price: price.toString() });
+    if (existingPrice) {
+      return res.status(400).json({ error: "Plan price already exists." });
+    }
+
     const newSub = new Subscription({
       type,
       name,
@@ -1386,6 +1398,22 @@ async function handleSubscriptionEdit(req: Request, res: Response) {
     const { id, type, name, price, currency_type, plan, feature, most_popluar, active } = req.body;
     if (!id) {
       return res.status(400).json({ error: "Missing subscription ID (id) in request body" });
+    }
+
+    // Check if name is duplicated by another subscription
+    if (name !== undefined) {
+      const existingName = await Subscription.findOne({ name, _id: { $ne: id } });
+      if (existingName) {
+        return res.status(400).json({ error: "Plan name already exists." });
+      }
+    }
+
+    // Check if price is duplicated by another subscription
+    if (price !== undefined) {
+      const existingPrice = await Subscription.findOne({ price: price.toString(), _id: { $ne: id } });
+      if (existingPrice) {
+        return res.status(400).json({ error: "Plan price already exists." });
+      }
     }
 
     const updateFields: any = {};
