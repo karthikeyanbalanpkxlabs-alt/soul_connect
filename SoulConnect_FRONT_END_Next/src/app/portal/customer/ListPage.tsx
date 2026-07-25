@@ -7,6 +7,7 @@ import React from "react";
 import DynamicTable from "../../../components/DynamicTable";
 import CustomerModal from "../../../components/CustomerModal";
 import usePortalPage from "./usePortalCustomerPage";
+import Toast from "../../../components/Toast";
 
 function ListPage() {
   const stateProps = usePortalPage();
@@ -65,6 +66,14 @@ function ListPage() {
           onSave={stateProps?.onSaveCustomer}
           initialData={stateProps?.editingCustomer}
           subscriptionList={stateProps?.subscriptions}
+        />
+      )}
+
+      {stateProps?.toast && (
+        <Toast
+          message={stateProps.toast.message}
+          type={stateProps.toast.type}
+          onClose={() => stateProps.setToast(null)}
         />
       )}
     </div>

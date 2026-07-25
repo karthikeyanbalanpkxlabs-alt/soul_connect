@@ -31,6 +31,17 @@ function usePortalCustomerPage() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<any>(null);
   const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
+  const [toast, setToast] = React.useState<{
+    message: string;
+    type: "success" | "info" | "error";
+  } | null>(null);
+
+  const showToast = (
+    message: string,
+    type: "success" | "info" | "error" = "success",
+  ) => {
+    setToast({ message, type });
+  };
 
   React.useEffect(() => {
     if (profile) {
@@ -98,10 +109,18 @@ function usePortalCustomerPage() {
           isEdit ? "customer_update response:" : "customer_create response:",
           data,
         );
-        setIsModalOpen(false);
-        loadCustomers();
+        if (data.error) {
+          showToast(data.error, "error");
+        } else {
+          showToast(isEdit ? "Customer updated successfully!" : "Customer created successfully!", "success");
+          setIsModalOpen(false);
+          loadCustomers();
+        }
       })
-      .catch((e) => console.error("Error saving customer:", e));
+      .catch((e) => {
+        console.error("Error saving customer:", e);
+        showToast(e.message || "Failed to save customer", "error");
+      });
   };
 
   const onDeleteCustomer = async (id: string) => {
@@ -127,9 +146,17 @@ function usePortalCustomerPage() {
       .then((r) => r.json())
       .then((data) => {
         console.log("customer_delete response:", data);
-        loadCustomers();
+        if (data.error) {
+          showToast(data.error, "error");
+        } else {
+          showToast("Customer deleted successfully!", "success");
+          loadCustomers();
+        }
       })
-      .catch((e) => console.error("Error deleting customer:", e));
+      .catch((e) => {
+        console.error("Error deleting customer:", e);
+        showToast(e.message || "Failed to delete customer", "error");
+      });
   };
 
   const onHandleClickCreateManager = () => {
@@ -188,23 +215,32 @@ function usePortalCustomerPage() {
       .then((r) => r.json())
       .then((data) => {
         console.log("customer_create response:", data);
-        loadCustomers();
+        if (data.error) {
+          showToast(data.error, "error");
+        } else {
+          showToast("Manager created successfully!", "success");
+          loadCustomers();
+        }
       })
-      .catch((e) => console.error("Error creating customer:", e));
+      .catch((e) => {
+        console.error("Error creating customer:", e);
+        showToast(e.message || "Failed to create manager", "error");
+      });
   };
   const onHandleClickCreateClient = () => {
     const token = keycloak?.token;
     let dataGenerateId = generateId();
 
+    //dataGenerateId
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
-      first_name: "karthikeyan" + dataGenerateId,
-      last_name: "Jobalanhn" + dataGenerateId,
-      email: `karthikeyanbalan.${dataGenerateId}@gmail.com`,
+      first_name: "Sujith",
+      last_name: "Baby",
+      email: `sujithbaby@gmail.com`,
       role: "customer_g",
       dob: "02-12-1999",
       gender: "male",
-      phone_number: "8870688606",
+      phone_number: "9970599605",
       phone_code: "+91",
       district: "coimbatore",
       taluk_town: "r.spuram",
@@ -248,9 +284,17 @@ function usePortalCustomerPage() {
       .then((r) => r.json())
       .then((data) => {
         console.log("customer_create response:", data);
-        loadCustomers();
+        if (data.error) {
+          showToast(data.error, "error");
+        } else {
+          showToast("Client created successfully!", "success");
+          loadCustomers();
+        }
       })
-      .catch((e) => console.error("Error creating customer:", e));
+      .catch((e) => {
+        console.error("Error creating customer:", e);
+        showToast(e.message || "Failed to create client", "error");
+      });
   };
   const onHandleClickCreateClientPublic = () => {
     const token = keycloak?.token;
@@ -307,9 +351,17 @@ function usePortalCustomerPage() {
       .then((r) => r.json())
       .then((data) => {
         console.log("customer_create response:", data);
-        loadCustomers();
+        if (data.error) {
+          showToast(data.error, "error");
+        } else {
+          showToast("Public client created successfully!", "success");
+          loadCustomers();
+        }
       })
-      .catch((e) => console.error("Error creating customer:", e));
+      .catch((e) => {
+        console.error("Error creating customer:", e);
+        showToast(e.message || "Failed to create client publicly", "error");
+      });
   };
 
   const getSubscriptionListAPI = () => {
@@ -601,6 +653,8 @@ function usePortalCustomerPage() {
     handleFilterChange,
     onHandleClickCreateClient,
     onHandleClickCreateClientPublic,
+    toast,
+    setToast,
   };
 }
 

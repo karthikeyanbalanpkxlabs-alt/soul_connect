@@ -683,6 +683,39 @@ async function handleCustomerEdit(req: Request, res: Response) {
       });
     }
 
+    const currentCustomer = await Customers.findOne(query);
+    if (!currentCustomer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    if (email && email.trim() !== "") {
+      if (email !== currentCustomer.email) {
+        const existingEmail = await Customers.findOne({ email });
+        if (existingEmail) {
+          return res
+            .status(400)
+            .json({ error: "Customer with this email already exists" });
+        }
+        updateFields.email = email;
+      }
+    }
+
+    const newPhoneNumber = updateFields.phone_number;
+    if (newPhoneNumber && newPhoneNumber.trim() !== "") {
+      if (newPhoneNumber !== currentCustomer.get("phone_number")) {
+        const existingPhone = await Customers.findOne({ phone_number: newPhoneNumber });
+        if (existingPhone) {
+          return res
+            .status(400)
+            .json({ error: "Customer with this phone number already exists" });
+        }
+      }
+    }
+
+    if (updateFields._id) {
+      delete updateFields._id;
+    }
+
     // Map camelCase fields to snake_case if present to align with database naming
     if (updateFields.firstName && !updateFields.first_name) {
       updateFields.first_name = updateFields.firstName;
@@ -855,12 +888,22 @@ async function handleCustomerCreate(req: Request, res: Response) {
       processedIdentityProof = processedId;
     }
 
-    if (email) {
+    if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
       if (existing) {
         return res
           .status(400)
           .json({ error: "Customer with this email already exists" });
+      }
+    }
+
+    const phone_number = req.body.phone_number;
+    if (phone_number && phone_number.trim() !== "") {
+      const existingPhone = await Customers.findOne({ phone_number });
+      if (existingPhone) {
+        return res
+          .status(400)
+          .json({ error: "Customer with this phone number already exists" });
       }
     }
 
