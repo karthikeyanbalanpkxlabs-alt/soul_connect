@@ -31,7 +31,7 @@ function TransactionDetailContent() {
       try {
         const token = keycloak?.token;
         const res = await fetch(
-          `${configUrls?.apiUrl}/api/customer_detail/${id}`,
+          `${configUrls?.apiUrl}/api/transactions_detail/${id}`,
           {
             method: "GET",
             headers: {

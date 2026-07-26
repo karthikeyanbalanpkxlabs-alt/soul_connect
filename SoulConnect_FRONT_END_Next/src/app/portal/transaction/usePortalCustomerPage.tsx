@@ -400,7 +400,7 @@ function usePortalCustomerPage() {
         (itm: any) => itm === "manager_g" || itm === "customer_g",
       );
       roles = roles.length > 0 ? roles[0] : "no_roles";
-      fetch(configUrls?.apiUrl + "/api/customer_list", {
+      fetch(configUrls?.apiUrl + "/api/transactions_list", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
