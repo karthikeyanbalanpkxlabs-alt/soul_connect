@@ -1,0 +1,93 @@
+[
+  {
+    "_id": {
+      "$oid": "6a6501db71f50451769f5f1e"
+    },
+    "keycloakId": "19f9a8f3d095772c5d7",
+    "firstName": "Sujith",
+    "lastName": "Baby",
+    "first_name": "Sujith",
+    "last_name": "Baby",
+    "email": "sujithbaby@gmail.com",
+    "createdAtTime": {
+      "$date": "2026-07-25T18:35:07.589Z"
+    },
+    "modifiedAtTime": {
+      "$date": "2026-07-25T18:35:07.589Z"
+    },
+    "modifiedByemail": "karthimailu@gmail.com",
+    "customer_id": "cid_19f9a8f3d095772c5d7",
+    "image": [
+      {
+        "url": "http://localhost:3000/uploads/img_1785004506383_0_641.jpeg",
+        "default": true
+      },
+      {
+        "url": "http://localhost:3000/uploads/img_1785004506385_1_661.jpeg"
+      }
+    ],
+    "role": "customer_g",
+    "dob": "02-12-1999",
+    "gender": "male",
+    "phone_number": "9970599605",
+    "phone_code": "+91",
+    "district": "coimbatore",
+    "taluk_town": "r.spuram",
+    "state": "tamilnadu",
+    "zipcode": "641001",
+    "religion": "hindhu",
+    "caste": "bc",
+    "mother_tongue": "tamil",
+    "maritial_status": "unmarried",
+    "education": "ba",
+    "profession": "employee",
+    "annual_income": "10000",
+    "height": "5.2",
+    "about_self": "NA",
+    "partner_preference": "NA",
+    "subscription_type": "premium",
+    "subscription_view_access": 10000,
+    "transaction": {
+      "history": [
+        {
+          "plan": "premium",
+          "purchase_date": "2026-07-26T14:23:49.641Z",
+          "expired_date": "2027-07-26T14:23:49.641Z",
+          "current_plan": true,
+          "summary": {
+            "order_id": "ORD202607260001",
+            "invoice_no": "INV202607260001",
+            "payment_id": "PAY202607260001",
+            "amount": 100,
+            "tax": 0,
+            "discount": 0,
+            "total_amount": 100,
+            "payment_status": "Success",
+            "payment_method": "Razorpay",
+            "transaction_date": "2026-07-26T14:23:49.641Z"
+          }
+        },
+        {
+          "plan": "gold",
+          "purchase_date": "2025-07-26T14:23:49.641Z",
+          "expired_date": "2026-07-25T14:23:49.641Z",
+          "current_plan": false,
+          "summary": {
+            "order_id": "ORD202507260001",
+            "invoice_no": "INV202507260001",
+            "payment_id": "PAY202507260001",
+            "amount": 100,
+            "tax": 0,
+            "discount": 0,
+            "total_amount": 100,
+            "payment_status": "Success",
+            "payment_method": "Razorpay",
+            "transaction_date": "2025-07-26T14:23:49.641Z"
+          }
+        }
+      ]
+    },
+    "public_verify": false,
+    "__v": 0
+  }
+]
