@@ -112,7 +112,12 @@ function usePortalCustomerPage() {
         if (data.error) {
           showToast(data.error, "error");
         } else {
-          showToast(isEdit ? "Customer updated successfully!" : "Customer created successfully!", "success");
+          showToast(
+            isEdit
+              ? "Customer updated successfully!"
+              : "Customer created successfully!",
+            "success",
+          );
           setIsModalOpen(false);
           loadCustomers();
         }
@@ -420,9 +425,17 @@ function usePortalCustomerPage() {
             const email = itm?.email || "";
             const subscription_type = itm?.subscription_type || "";
 
-            if (itm?.transaction?.history && Array.isArray(itm.transaction.history) && itm.transaction.history.length > 0) {
-              const activePlan = itm.transaction.history.find((tx: any) => tx.current_plan === true);
-              const activePlanName = activePlan ? (activePlan.plan || itm.subscription_type || "Yes") : "None";
+            if (
+              itm?.transaction?.history &&
+              Array.isArray(itm.transaction.history) &&
+              itm.transaction.history.length > 0
+            ) {
+              const activePlan = itm.transaction.history.find(
+                (tx: any) => tx.current_plan === true,
+              );
+              const activePlanName = activePlan
+                ? activePlan.plan || itm.subscription_type || "Yes"
+                : "None";
 
               transactionRows.push({
                 _id: itm._id,
@@ -494,16 +507,16 @@ function usePortalCustomerPage() {
   };
 
   const columns = [
-    {
-      key: "first_name",
-      label: "First Name",
-      isFilterable: true,
-    },
-    {
-      key: "last_name",
-      label: "Last Name",
-      isFilterable: true,
-    },
+    // {
+    //   key: "first_name",
+    //   label: "First Name",
+    //   isFilterable: true,
+    // },
+    // {
+    //   key: "last_name",
+    //   label: "Last Name",
+    //   isFilterable: true,
+    // },
     {
       key: "email",
       label: "Email",
@@ -542,9 +555,7 @@ function usePortalCustomerPage() {
       render: (row: any) => (
         <button
           onClick={() =>
-            router.push(
-              `/portal/transaction_detail?id=${row._id}`,
-            )
+            router.push(`/portal/transaction_detail?id=${row._id}`)
           }
           className="text-violet-600 hover:text-violet-900 transition flex items-center gap-1 font-medium cursor-pointer"
           title="View History"
