@@ -536,17 +536,20 @@ function usePortalCustomerPage() {
       key: "active_plan",
       label: "Active Plan",
       isFilterable: false,
-      render: (row: any) => (
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-            row.active_plan && row.active_plan !== "None"
-              ? "bg-green-100 text-green-700 font-semibold"
-              : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          {row.active_plan}
-        </span>
-      ),
+      render: (row: any) => {
+        const isActive = row.active_plan && row.active_plan !== "None";
+        return (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+              isActive
+                ? "bg-green-100 text-green-700 font-semibold"
+                : "bg-gray-100 text-gray-700"
+            }`}
+          >
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        );
+      },
     },
     {
       key: "action",

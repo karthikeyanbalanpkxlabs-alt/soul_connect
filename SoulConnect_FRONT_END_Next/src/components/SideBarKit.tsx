@@ -11,6 +11,8 @@ import {
   ChevronLeft,
   LogOut,
   X,
+  ReceiptText,
+  CircleDollarSign,
 } from "lucide-react";
 
 import keycloak from "../lib/keycloak";
@@ -46,12 +48,12 @@ export default function SideBarKit({ children }: SideBarKitProps) {
     },
     {
       name: "Transactions",
-      icon: Users,
+      icon: ReceiptText,
       router: "/portal/transaction",
     },
     {
       name: "Subscriptions",
-      icon: Users,
+      icon: CircleDollarSign,
       router: "/portal/subscription",
     },
     {
