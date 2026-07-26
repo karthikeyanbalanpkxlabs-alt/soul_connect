@@ -56,7 +56,7 @@ function CardPage() {
               Profile Verification Pending
             </h2>
             <p className="text-gray-600 max-w-md mx-auto text-sm leading-relaxed font-body">
-              Welcome to SoulConnect! To ensure a safe, secure, and authentic
+              Welcome to SoulConect! To ensure a safe, secure, and authentic
               matchmaking environment, we manually review and verify every
               profile before activation.
             </p>

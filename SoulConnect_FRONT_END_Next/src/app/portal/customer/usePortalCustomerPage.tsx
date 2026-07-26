@@ -112,7 +112,12 @@ function usePortalCustomerPage() {
         if (data.error) {
           showToast(data.error, "error");
         } else {
-          showToast(isEdit ? "Customer updated successfully!" : "Customer created successfully!", "success");
+          showToast(
+            isEdit
+              ? "Customer updated successfully!"
+              : "Customer created successfully!",
+            "success",
+          );
           setIsModalOpen(false);
           loadCustomers();
         }
@@ -454,7 +459,7 @@ function usePortalCustomerPage() {
         body: JSON.stringify({
           to: "karthimailu@gmail.com",
           subject: "Hello BK!",
-          message: "this email is sent from SoulConnect Portal",
+          message: "this email is sent from SoulConect Portal",
         }),
       })
         .then((r) => r.json())

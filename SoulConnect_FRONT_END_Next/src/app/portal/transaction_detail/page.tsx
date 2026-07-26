@@ -204,7 +204,7 @@ function TransactionDetailContent() {
                           <div className="flex justify-between text-sm font-semibold text-slate-700">
                             <div>
                               <span>
-                                SoulConnect {tx.plan || "Standard"} Subscription
+                                SoulConect {tx.plan || "Standard"} Subscription
                               </span>
                               <span className="block text-xs font-normal text-slate-400 mt-1">
                                 Validity:{" "}

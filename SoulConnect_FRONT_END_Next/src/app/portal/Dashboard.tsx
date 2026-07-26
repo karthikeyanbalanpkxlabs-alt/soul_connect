@@ -27,6 +27,8 @@ interface DashboardStats {
   managerCount: number;
   customerRoleCount: number;
   totalSubscriptions: number;
+  totalTransactions?: number;
+  totalRevenue?: number;
 }
 
 interface SubscriptionBreakdown {
@@ -47,6 +49,7 @@ const Dashboard = () => {
   const [subBreakdown, setSubBreakdown] = useState<SubscriptionBreakdown[]>([]);
   const [districts, setDistricts] = useState<TopDistrict[]>([]);
   const [recentCustomers, setRecentCustomers] = useState<any[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
@@ -76,6 +79,7 @@ const Dashboard = () => {
           setSubBreakdown(data.subscriptionBreakdown || []);
           setDistricts(data.topDistricts || []);
           setRecentCustomers(data.recentCustomers || []);
+          setRecentTransactions(data.recentTransactions || []);
         }
       }
     } catch (err) {
@@ -121,7 +125,7 @@ const Dashboard = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-medium text-rose-200 mb-3">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>SoulConnect Analytics Engine</span>
+              <span>SoulConect Analytics Engine</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Welcome back,{" "}
@@ -157,8 +161,8 @@ const Dashboard = () => {
 
       {/* Primary KPI Metrics */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
               className="h-32 rounded-2xl bg-white p-6 shadow-sm border border-slate-100 animate-pulse flex items-center justify-between"
@@ -172,7 +176,7 @@ const Dashboard = () => {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
           {/* Card 1: Total Profiles */}
           <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
@@ -260,6 +264,52 @@ const Dashboard = () => {
             </div>
             <p className="text-xs text-slate-500 mt-2">
               Portal management accounts
+            </p>
+          </div>
+
+          {/* Card 5: Total Transactions */}
+          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Total Transactions
+              </span>
+              <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform">
+                <CreditCard className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <span className="text-3xl font-black text-slate-900">
+                {stats?.totalTransactions ?? 0}
+              </span>
+              <span className="inline-flex items-center text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                Purchase Logs
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Completed plans purchase history
+            </p>
+          </div>
+
+          {/* Card 6: Revenue Earnings */}
+          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Revenue Earnings
+              </span>
+              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-6 h-6 font-bold" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <span className="text-3xl font-black text-emerald-600">
+                ₹{stats?.totalRevenue ?? 0}
+              </span>
+              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                Total Revenue
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Gross earnings from memberships
             </p>
           </div>
         </div>
@@ -423,128 +473,247 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Profile Registrations */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
+      {/* Tables Row */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Recent Profile Registrations */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col justify-between">
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900">
-              Recent Customer Registrations
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Latest profiles registered across the SoulConnect network
-            </p>
+            <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
+              <div>
+                <h2 className="text-lg font-extrabold text-slate-900">
+                  Recent Customer Registrations
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Latest profiles registered across the SoulConect network
+                </p>
+              </div>
+              <button
+                onClick={() => router.push("/portal/customer")}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors self-start sm:self-auto cursor-pointer"
+              >
+                <span>View All Profiles</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3.5 px-6">Customer</th>
+                    <th className="py-3.5 px-6">Email</th>
+                    <th className="py-3.5 px-6">Gender</th>
+                    <th className="py-3.5 px-6">Role</th>
+                    <th className="py-3.5 px-6">Location</th>
+                    <th className="py-3.5 px-6 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {recentCustomers.length > 0 ? (
+                    recentCustomers.map((cust, idx) => {
+                      const name = getFullName(cust);
+                      const isApproved = cust?.public_verify === true;
+                      return (
+                        <tr
+                          key={cust._id || idx}
+                          className="hover:bg-slate-50/80 transition-colors"
+                        >
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 font-extrabold flex items-center justify-center text-xs">
+                                {name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="font-bold text-slate-900 block">
+                                  {name}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  ID: {cust.customer_id || cust._id}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 text-slate-600">
+                            {cust.email || "N/A"}
+                          </td>
+                          <td className="py-4 px-6 capitalize">
+                            <span
+                              className={`inline-flex px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                String(cust.gender).toLowerCase() === "male"
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "bg-rose-50 text-rose-700"
+                              }`}
+                            >
+                              {cust.gender || "Unspecified"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 capitalize text-slate-600">
+                            {cust.role
+                              ? String(cust.role).replace("_g", "")
+                              : "Customer"}
+                          </td>
+                          <td className="py-4 px-6 capitalize text-slate-600">
+                            {cust.district || cust.state ? (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-slate-400" />
+                                {[cust.district, cust.state]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </span>
+                            ) : (
+                              "N/A"
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                                isApproved
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                                  : "bg-amber-50 text-amber-700 border border-amber-200/60"
+                              }`}
+                            >
+                              {isApproved ? (
+                                <>
+                                  <CheckCircle className="w-3 h-3" /> Approved
+                                </>
+                              ) : (
+                                <>
+                                  <Clock className="w-3 h-3" /> Wait for
+                                  approval
+                                </>
+                              )}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="py-8 text-center text-slate-400 italic"
+                      >
+                        No customer registrations available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <button
-            onClick={() => router.push("/portal/customer")}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors self-start sm:self-auto cursor-pointer"
-          >
-            <span>View All Profiles</span>
-            <ArrowUpRight className="w-4 h-4" />
-          </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
-              <tr>
-                <th className="py-3.5 px-6">Customer</th>
-                <th className="py-3.5 px-6">Email</th>
-                <th className="py-3.5 px-6">Gender</th>
-                <th className="py-3.5 px-6">Role</th>
-                <th className="py-3.5 px-6">Location</th>
-                <th className="py-3.5 px-6 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-              {recentCustomers.length > 0 ? (
-                recentCustomers.map((cust, idx) => {
-                  const name = getFullName(cust);
-                  const isApproved = cust?.public_verify === true;
-                  return (
-                    <tr
-                      key={cust._id || idx}
-                      className="hover:bg-slate-50/80 transition-colors"
-                    >
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 font-extrabold flex items-center justify-center text-xs">
-                            {name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
+        {/* Recent Transactions */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100">
+              <div>
+                <h2 className="text-lg font-extrabold text-slate-900">
+                  Recent Transactions
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Latest purchase logs processed across the network
+                </p>
+              </div>
+              <button
+                onClick={() => router.push("/portal/transaction")}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors self-start sm:self-auto cursor-pointer"
+              >
+                <span>View All Transactions</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3.5 px-6">Customer</th>
+                    <th className="py-3.5 px-6">Order ID</th>
+                    <th className="py-3.5 px-6">Plan Option</th>
+                    <th className="py-3.5 px-6">Date</th>
+                    <th className="py-3.5 px-6 text-right">Amount</th>
+                    <th className="py-3.5 px-6 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {recentTransactions.length > 0 ? (
+                    recentTransactions.map((txItem, idx) => {
+                      const name =
+                        `${txItem.first_name || ""} ${txItem.last_name || ""}`.trim() ||
+                        "Customer";
+                      const isSuccess =
+                        String(
+                          txItem.transaction?.summary?.payment_status || "",
+                        ).toLowerCase() === "success";
+                      return (
+                        <tr
+                          key={`${txItem._id || idx}-${txItem.transaction?.summary?.order_id || idx}-${idx}`}
+                          className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                          onClick={() =>
+                            router.push(
+                              `/portal/transaction_detail?id=${txItem._id}`,
+                            )
+                          }
+                        >
+                          <td className="py-4 px-6">
                             <span className="font-bold text-slate-900 block">
                               {name}
                             </span>
                             <span className="text-[10px] text-slate-400 font-mono">
-                              ID: {cust.customer_id || cust._id}
+                              {txItem.email}
                             </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-slate-600">
-                        {cust.email || "N/A"}
-                      </td>
-                      <td className="py-4 px-6 capitalize">
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded text-[11px] font-semibold ${
-                            String(cust.gender).toLowerCase() === "male"
-                              ? "bg-blue-50 text-blue-700"
-                              : "bg-rose-50 text-rose-700"
-                          }`}
-                        >
-                          {cust.gender || "Unspecified"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 capitalize text-slate-600">
-                        {cust.role
-                          ? String(cust.role).replace("_g", "")
-                          : "Customer"}
-                      </td>
-                      <td className="py-4 px-6 capitalize text-slate-600">
-                        {cust.district || cust.state ? (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-slate-400" />
-                            {[cust.district, cust.state]
-                              .filter(Boolean)
-                              .join(", ")}
-                          </span>
-                        ) : (
-                          "N/A"
-                        )}
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                            isApproved
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
-                              : "bg-amber-50 text-amber-700 border border-amber-200/60"
-                          }`}
-                        >
-                          {isApproved ? (
-                            <>
-                              <CheckCircle className="w-3 h-3" /> Approved
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="w-3 h-3" /> Wait for approval
-                            </>
-                          )}
-                        </span>
+                          </td>
+                          <td className="py-4 px-6 text-slate-600 font-mono">
+                            {txItem.transaction?.summary?.order_id || "N/A"}
+                          </td>
+                          <td className="py-4 px-6 capitalize">
+                            <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-violet-50 text-violet-700">
+                              {txItem.transaction?.plan || "N/A"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-slate-500">
+                            {txItem.transaction?.purchase_date
+                              ? new Date(
+                                  txItem.transaction.purchase_date,
+                                ).toLocaleDateString()
+                              : "N/A"}
+                          </td>
+                          <td className="py-4 px-6 text-right font-bold text-slate-900">
+                            ₹
+                            {txItem.transaction?.summary?.total_amount ||
+                              txItem.transaction?.summary?.amount ||
+                              0}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <span
+                              className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                isSuccess
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                                  : "bg-rose-50 text-rose-700 border border-rose-200/60"
+                              }`}
+                            >
+                              {txItem.transaction?.summary?.payment_status ||
+                                "Pending"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="py-8 text-center text-slate-400 italic"
+                      >
+                        No transactions recorded yet
                       </td>
                     </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-8 text-center text-slate-400 italic"
-                  >
-                    No customer registrations available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
