@@ -172,7 +172,7 @@ function TransactionDetailContent() {
                         className={`p-6 ${!tx.current_plan ? "opacity-75" : ""}`}
                       >
                         {/* Transaction Identifiers */}
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 border-b border-dashed border-slate-200 pb-4 text-xs">
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 border-b border-dashed border-slate-200 pb-4 text-xs">
                           <div>
                             <span className="text-slate-400 block uppercase font-medium">
                               Order ID
@@ -195,6 +195,14 @@ function TransactionDetailContent() {
                             </span>
                             <span className="font-semibold text-slate-800">
                               {tx.summary?.payment_method || "N/A"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block uppercase font-medium">
+                              Payment Type
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 uppercase mt-0.5">
+                              {tx.summary?.payment_type || "N/A"}
                             </span>
                           </div>
                         </div>
