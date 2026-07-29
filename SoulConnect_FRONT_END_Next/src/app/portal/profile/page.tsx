@@ -555,6 +555,19 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {/* Ambition */}
+            {profile?.ambition && (
+              <div
+                className={`content-card reveal ${isLoaded ? "visible" : ""}`}
+                style={{ transitionDelay: ".05s" }}
+              >
+                <div className="content-card-title">
+                  <div className="ctitle-icon">🎯</div>Ambition
+                </div>
+                <p className="about-text">{profile.ambition}</p>
+              </div>
+            )}
+
             <div
               className={`content-card reveal ${isLoaded ? "visible" : ""}`}
               style={{ transitionDelay: ".1s" }}

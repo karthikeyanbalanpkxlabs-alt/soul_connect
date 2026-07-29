@@ -373,6 +373,19 @@ function CustomerDetailContent() {
               </p>
             </div>
 
+            {/* Ambition */}
+            {customer.ambition && (
+              <div className="mt-6 rounded-2xl border border-slate-100 bg-emerald-50 p-6 shadow-sm">
+                <h2 className="mb-3 text-xl font-bold text-emerald-900">
+                  Ambition
+                </h2>
+                <p className="text-slate-700 leading-relaxed">
+                  {customer.ambition}
+                </p>
+              </div>
+            )}
+
+
             {/* Profile Video */}
             {customer.video &&
               (customer.video.url || typeof customer.video === "string") && (

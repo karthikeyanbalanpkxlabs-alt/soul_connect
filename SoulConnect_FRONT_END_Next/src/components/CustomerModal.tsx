@@ -36,6 +36,7 @@ const defaultFormData = {
   height: "",
   about_self: "",
   partner_preference: "",
+  ambition: "",
   subscription_type: "",
   subscription_view_access: 10000,
   image: [] as any[],
@@ -76,6 +77,7 @@ const customerValidationSchema = Yup.object().shape({
   partner_preference: Yup.string()
     .trim()
     .required("Partner preference is required"),
+  ambition: Yup.string().trim(),
   image: Yup.array()
     .of(Yup.object())
     .min(1, "At least 1 profile image is required")
@@ -475,6 +477,23 @@ export default function CustomerModal({
                   </label>
                 )}
               </div>
+            </div>
+
+            {/* Ambition */}
+            <div className="mb-8">
+              <label className="text-sm font-medium text-gray-700 mb-3 block">
+                Ambition
+              </label>
+              <textarea
+                name="ambition"
+                rows={3}
+                value={formik.values.ambition}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className={getInputClassName("ambition")}
+                placeholder="Enter ambition (Optional)"
+              />
+              {renderFieldError("ambition")}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">

@@ -9,6 +9,7 @@ const customerSchema = new mongoose.Schema(
     last_name: String,
     email: String,
     identity_proff: mongoose.Schema.Types.Mixed,
+    ambition: String,
     createdAtTime: Date,
     modifiedAtTime: Date,
     modifiedByemail: String,
