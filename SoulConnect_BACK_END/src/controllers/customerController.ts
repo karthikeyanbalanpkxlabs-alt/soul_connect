@@ -9,6 +9,46 @@ import { EMAIL_TRIGGER_ENABLE_FLAG } from "../config/email";
 
 const PORT = process.env.PORT || 3000;
 
+function calculateAgeFromDob(dobStr?: string): number | null {
+  if (!dobStr) return null;
+  let year = 0,
+    month = 0,
+    day = 0;
+  if (dobStr.includes("-")) {
+    const parts = dobStr.split("-");
+    if (parts[0].length === 4) {
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10) - 1;
+      day = parseInt(parts[2], 10);
+    } else {
+      day = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10) - 1;
+      year = parseInt(parts[2], 10);
+    }
+  } else if (dobStr.includes("/")) {
+    const parts = dobStr.split("/");
+    if (parts[0].length === 4) {
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10) - 1;
+      day = parseInt(parts[2], 10);
+    } else {
+      day = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10) - 1;
+      year = parseInt(parts[2], 10);
+    }
+  } else return null;
+
+  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+  const birthDate = new Date(year, month, day);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 export async function handleCustomerList(req: Request, res: Response, type?: any) {
   try {
     const filter = req.body.filter || {};
@@ -93,46 +133,6 @@ export async function handleCustomerList(req: Request, res: Response, type?: any
         sortOption = { _id: -1 };
       }
     }
-
-    const calculateAgeFromDob = (dobStr?: string): number | null => {
-      if (!dobStr) return null;
-      let year = 0,
-        month = 0,
-        day = 0;
-      if (dobStr.includes("-")) {
-        const parts = dobStr.split("-");
-        if (parts[0].length === 4) {
-          year = parseInt(parts[0], 10);
-          month = parseInt(parts[1], 10) - 1;
-          day = parseInt(parts[2], 10);
-        } else {
-          day = parseInt(parts[0], 10);
-          month = parseInt(parts[1], 10) - 1;
-          year = parseInt(parts[2], 10);
-        }
-      } else if (dobStr.includes("/")) {
-        const parts = dobStr.split("/");
-        if (parts[0].length === 4) {
-          year = parseInt(parts[0], 10);
-          month = parseInt(parts[1], 10) - 1;
-          day = parseInt(parts[2], 10);
-        } else {
-          day = parseInt(parts[0], 10);
-          month = parseInt(parts[1], 10) - 1;
-          year = parseInt(parts[2], 10);
-        }
-      } else return null;
-
-      if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-      const birthDate = new Date(year, month, day);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age;
-    };
 
     let total = 0;
     let list: any[] = [];
@@ -563,6 +563,26 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       return res.status(404).json({ error: "Customer not found" });
     }
 
+    const dob = updateFields.dob !== undefined ? updateFields.dob : currentCustomer.get("dob");
+    const gender = updateFields.gender !== undefined ? updateFields.gender : currentCustomer.get("gender");
+
+    if (dob && gender) {
+      const age = calculateAgeFromDob(dob);
+      if (age !== null) {
+        const lowerGender = String(gender).toLowerCase();
+        if (lowerGender === "male" && age < 21) {
+          return res.status(400).json({
+            error: "Minimum legal marriage age for males in India is 21 years.",
+          });
+        }
+        if (lowerGender === "female" && age < 18) {
+          return res.status(400).json({
+            error: "Minimum legal marriage age for females in India is 18 years.",
+          });
+        }
+      }
+    }
+
     if (email && email.trim() !== "") {
       if (email !== currentCustomer.email) {
         const existingEmail = await Customers.findOne({ email });
@@ -732,6 +752,26 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       health_report,
       ...otherFields
     } = req?.body;
+
+    const dob = req?.body?.dob;
+    const gender = req?.body?.gender;
+
+    if (dob && gender) {
+      const age = calculateAgeFromDob(dob);
+      if (age !== null) {
+        const lowerGender = String(gender).toLowerCase();
+        if (lowerGender === "male" && age < 21) {
+          return res.status(400).json({
+            error: "Minimum legal marriage age for males in India is 21 years.",
+          });
+        }
+        if (lowerGender === "female" && age < 18) {
+          return res.status(400).json({
+            error: "Minimum legal marriage age for females in India is 18 years.",
+          });
+        }
+      }
+    }
 
     const imagesInput = image || images;
     if (
