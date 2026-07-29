@@ -47,6 +47,7 @@ const defaultFormData = {
   identity_proff: "" as any,
   transaction: [],
   public_verify: true,
+  public_verify_command_helper: "",
 };
 
 const customerValidationSchema = Yup.object().shape({
@@ -87,6 +88,7 @@ const customerValidationSchema = Yup.object().shape({
     .of(Yup.object())
     .min(1, "At least 1 profile image is required")
     .max(5, "Maximum 5 profile images allowed"),
+  public_verify_command_helper: Yup.string().trim(),
 });
 
 export default function CustomerModal({
@@ -1092,7 +1094,7 @@ export default function CustomerModal({
               </div>
 
               {/* Booleans/Misc */}
-              <div className="space-y-1 flex flex-col justify-center mt-6">
+              <div className="space-y-4 flex flex-col mt-6 sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1106,6 +1108,22 @@ export default function CustomerModal({
                     Publicly Verified
                   </span>
                 </label>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    Publicly Verified Command Helper
+                  </label>
+                  <textarea
+                    name="public_verify_command_helper"
+                    rows={3}
+                    value={formik.values.public_verify_command_helper}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={getInputClassName("public_verify_command_helper")}
+                    placeholder="Enter command helper instructions for verification (Optional)"
+                  />
+                  {renderFieldError("public_verify_command_helper")}
+                </div>
               </div>
             </div>
           </form>

@@ -74,6 +74,11 @@ function CardPage() {
               matchmaking environment, we manually review and verify every
               profile before activation.
             </p>
+            {profile?.public_verify_command_helper && (
+              <p className="mt-4 text-gray-700 bg-amber-50/60 border border-amber-200/80 rounded-xl p-4 max-w-md mx-auto text-sm font-semibold leading-relaxed font-body text-amber-900">
+                {profile.public_verify_command_helper}
+              </p>
+            )}
           </div>
 
           {/* Verification Timeline/Steps */}
