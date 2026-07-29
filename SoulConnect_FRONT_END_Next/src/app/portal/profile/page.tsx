@@ -568,6 +568,60 @@ export default function ProfilePage() {
               </div>
             )}
 
+            {/* Health & Medical Report */}
+            {(profile?.health_report || profile?.blood_group || profile?.additional_report_info) && (
+              <div
+                className={`content-card reveal ${isLoaded ? "visible" : ""}`}
+                style={{ transitionDelay: ".07s" }}
+              >
+                <div className="content-card-title">
+                  <div className="ctitle-icon">🏥</div>Health & Medical Report
+                </div>
+                
+                <div className="space-y-4 text-sm mt-3">
+                  {profile.blood_group && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">Blood Group:</span>
+                      <span className="font-semibold bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full text-xs border border-rose-100">
+                        {profile.blood_group}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {profile.additional_report_info && (
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <h4 className="font-semibold text-slate-800 text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+                        Additional Report Info
+                      </h4>
+                      <p className="text-slate-600 leading-relaxed">
+                        {profile.additional_report_info}
+                      </p>
+                    </div>
+                  )}
+
+                  {profile.health_report?.url && (
+                    <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">📄</span>
+                        <div>
+                          <div className="font-semibold text-xs text-slate-800">Medical Report Document</div>
+                          <div className="text-[11px] text-slate-500">Verified document uploaded</div>
+                        </div>
+                      </div>
+                      <a
+                        href={profile.health_report.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-violet-600 hover:text-violet-800 underline"
+                      >
+                        View Document ↗
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div
               className={`content-card reveal ${isLoaded ? "visible" : ""}`}
               style={{ transitionDelay: ".1s" }}

@@ -37,6 +37,9 @@ const defaultFormData = {
   about_self: "",
   partner_preference: "",
   ambition: "",
+  health_report: "" as any,
+  blood_group: "",
+  additional_report_info: "",
   subscription_type: "",
   subscription_view_access: 10000,
   image: [] as any[],
@@ -78,6 +81,8 @@ const customerValidationSchema = Yup.object().shape({
     .trim()
     .required("Partner preference is required"),
   ambition: Yup.string().trim(),
+  blood_group: Yup.string().trim(),
+  additional_report_info: Yup.string().trim(),
   image: Yup.array()
     .of(Yup.object())
     .min(1, "At least 1 profile image is required")
@@ -269,6 +274,39 @@ export default function CustomerModal({
 
   const removeIdentityProof = () => {
     formik.setFieldValue("identity_proff", "");
+  };
+
+  const handleHealthReportUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const isAllowed =
+        file.type === "application/pdf" ||
+        file.type.startsWith("image/") ||
+        file.name.toLowerCase().endsWith(".pdf") ||
+        /\.(jpg|jpeg|png|gif)$/i.test(file.name);
+
+      if (!isAllowed) {
+        alert("Please upload only Image or PDF files.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        formik.setFieldValue("health_report", {
+          url: base64String,
+          name: file.name,
+          type: file.type,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeHealthReport = () => {
+    formik.setFieldValue("health_report", "");
   };
 
   const images = Array.isArray(formik.values.image) ? formik.values.image : [];
@@ -935,6 +973,122 @@ export default function CustomerModal({
                   className={getInputClassName("partner_preference")}
                 />
                 {renderFieldError("partner_preference")}
+              </div>
+
+              {/* Health Report Section */}
+              <div className="sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5 border-t pt-6 mt-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Health Report</h3>
+                <div className="space-y-6">
+                  {/* Blood Group Dropdown */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Blood Group</label>
+                    <select
+                      name="blood_group"
+                      value={formik.values.blood_group}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={getInputClassName("blood_group")}
+                    >
+                      <option value="">Select Blood Group</option>
+                      {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+                        <option key={bg} value={bg}>
+                          {bg}
+                        </option>
+                      ))}
+                    </select>
+                    {renderFieldError("blood_group")}
+                  </div>
+
+                  {/* Health Report File Upload */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Health Report (Image or PDF)
+                    </label>
+                    <div className="flex items-center gap-4">
+                      {formik.values.health_report &&
+                      (typeof formik.values.health_report === "string"
+                        ? formik.values.health_report
+                        : formik.values.health_report.url) ? (
+                        (() => {
+                          const report = formik.values.health_report;
+                          const url = typeof report === "string" ? report : report.url;
+                          const name =
+                            typeof report === "string"
+                              ? "Health Report"
+                              : report.name || "Health Report";
+                          const isPdf =
+                            url?.includes("application/pdf") ||
+                            url?.endsWith(".pdf") ||
+                            report.type === "application/pdf";
+
+                          return (
+                            <div className="relative w-48 h-24 rounded-lg border-2 border-violet-500 overflow-hidden group bg-gray-50 flex flex-col items-center justify-center p-2">
+                              {isPdf ? (
+                                <div className="flex flex-col items-center text-gray-600">
+                                  <span className="text-xl mb-1">📄</span>
+                                  <span className="text-[10px] font-semibold text-center truncate max-w-full">
+                                    {name}
+                                  </span>
+                                </div>
+                              ) : (
+                                <img
+                                  src={url}
+                                  alt="Health Report"
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-1 transition-opacity">
+                                {url.startsWith("http") && (
+                                  <a
+                                    href={url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[10px] bg-violet-600 text-white px-2 py-0.5 rounded hover:bg-violet-700 transition-colors"
+                                  >
+                                    View
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={removeHealthReport}
+                                  className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded hover:bg-red-700 transition-colors"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <label className="w-48 h-24 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
+                          <Upload size={18} className="mb-1 animate-pulse" />
+                          <span className="text-[10px] font-medium">Add Health Report (Image/PDF)</span>
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                            onChange={handleHealthReportUpload}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Additional Report Information Textarea */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Additional Report Information</label>
+                    <textarea
+                      name="additional_report_info"
+                      rows={3}
+                      value={formik.values.additional_report_info}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className={getInputClassName("additional_report_info")}
+                      placeholder="Enter any additional details about the health report (Optional)"
+                    />
+                    {renderFieldError("additional_report_info")}
+                  </div>
+                </div>
               </div>
 
               {/* Booleans/Misc */}

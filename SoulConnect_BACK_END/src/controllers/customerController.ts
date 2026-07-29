@@ -483,6 +483,66 @@ function processUploadedIdentityProof(
   }
 }
 
+function processUploadedHealthReport(
+  healthReportInput: any,
+  req: Request,
+): { url: string } | string {
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let fileStr = "";
+
+  if (typeof healthReportInput === "string") {
+    fileStr = healthReportInput;
+  } else if (
+    healthReportInput &&
+    typeof healthReportInput === "object" &&
+    typeof healthReportInput.url === "string"
+  ) {
+    fileStr = healthReportInput.url;
+  } else {
+    return "Invalid health report structure. Expected string or object with url property.";
+  }
+
+  if (
+    fileStr.startsWith("http://") ||
+    fileStr.startsWith("https://") ||
+    (!fileStr.startsWith("data:") && fileStr.length < 200)
+  ) {
+    return { url: fileStr };
+  }
+
+  try {
+    let ext = "png";
+    let data = fileStr;
+
+    if (fileStr.startsWith("data:")) {
+      const commaIdx = fileStr.indexOf(",");
+      if (commaIdx !== -1) {
+        data = fileStr.substring(commaIdx + 1);
+        const mimeStr = fileStr.substring(5, commaIdx);
+        const mimeParts = mimeStr.split(";")[0].split("/");
+        if (mimeParts.length === 2) {
+          ext = mimeParts[1];
+        }
+      }
+    }
+
+    const buffer = Buffer.from(data, "base64");
+    const filename = `health_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+    fs.writeFileSync(filepath, buffer);
+
+    const host = req.get("host");
+    const fileUrl = `${req.protocol}://${host}/uploads/${filename}`;
+    return { url: fileUrl };
+  } catch (err: any) {
+    return `Failed to process health report: ${err.message}`;
+  }
+}
+
 export async function handleCustomerEdit(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
@@ -587,6 +647,19 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       }
     }
 
+    const healthReportInput = updateFields.health_report;
+    if (healthReportInput !== undefined) {
+      if (healthReportInput === null || healthReportInput === "") {
+        updateFields.health_report = null;
+      } else {
+        const processed = processUploadedHealthReport(healthReportInput, req);
+        if (typeof processed === "string") {
+          return res.status(400).json({ error: processed });
+        }
+        updateFields.health_report = processed;
+      }
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -656,6 +729,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       video,
       role,
       identity_proff,
+      health_report,
       ...otherFields
     } = req?.body;
 
@@ -697,6 +771,19 @@ export async function handleCustomerCreate(req: Request, res: Response) {
         return res.status(400).json({ error: processedId });
       }
       processedIdentityProof = processedId;
+    }
+
+    let processedHealthReport = undefined;
+    if (
+      health_report !== undefined &&
+      health_report !== null &&
+      health_report !== ""
+    ) {
+      const processedHealth = processUploadedHealthReport(health_report, req);
+      if (typeof processedHealth === "string") {
+        return res.status(400).json({ error: processedHealth });
+      }
+      processedHealthReport = processedHealth;
     }
 
     if (email && email.trim() !== "") {
@@ -820,6 +907,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       image: processed,
       video: processedVideo,
       identity_proff: processedIdentityProof,
+      health_report: processedHealthReport,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

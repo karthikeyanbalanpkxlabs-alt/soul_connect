@@ -460,6 +460,85 @@ function CustomerDetailContent() {
                   </div>
                 );
               })()}
+
+            {/* Health & Medical Report Block */}
+            {(customer.health_report || customer.blood_group || customer.additional_report_info) && (
+              <div className="mt-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-bold text-slate-800">
+                  Health & Medical Report
+                </h2>
+                
+                <div className="space-y-4">
+                  {customer.blood_group && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 text-sm">Blood Group:</span>
+                      <span className="font-semibold bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full text-xs border border-rose-100">
+                        {customer.blood_group}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {customer.additional_report_info && (
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <h4 className="font-semibold text-slate-800 text-xs uppercase tracking-wider text-slate-400 mb-1">
+                        Additional Report Info
+                      </h4>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {customer.additional_report_info}
+                      </p>
+                    </div>
+                  )}
+
+                  {customer.health_report &&
+                    (customer.health_report.url ||
+                      typeof customer.health_report === "string") &&
+                    (() => {
+                      const url =
+                        typeof customer.health_report === "string"
+                          ? customer.health_report
+                          : customer.health_report.url;
+                      const isPdf =
+                        url.startsWith("data:application/pdf") ||
+                        url.toLowerCase().endsWith(".pdf") ||
+                        (url.includes("health_") && url.toLowerCase().endsWith(".pdf"));
+
+                      return (
+                        <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-violet-50 rounded-xl border border-violet-100">
+                          {isPdf ? (
+                            <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-red-100 text-red-600 font-bold text-2xl">
+                              PDF
+                            </div>
+                          ) : (
+                            <div className="h-32 w-48 overflow-hidden rounded-lg bg-black border border-slate-200">
+                              <img
+                                src={url}
+                                alt="Health Report"
+                                className="h-full w-full object-contain"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 text-center sm:text-left">
+                            <h4 className="font-semibold text-slate-800">
+                              Medical Report Document
+                            </h4>
+                            <p className="text-xs text-slate-400 mt-1">
+                              {isPdf ? "PDF Document File" : "Image File"}
+                            </p>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-4 inline-block rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 transition"
+                            >
+                              View Document
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
