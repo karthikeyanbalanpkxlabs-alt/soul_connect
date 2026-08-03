@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import Toast from "@/components/Toast";
+import CustomerModal from "@/components/CustomerModal";
+import keycloak from "@/lib/keycloak";
+import configUrls from "../../../../configUrls";
 import {
   ArrowLeft,
   Share2,
@@ -24,14 +27,63 @@ import {
   Info,
   CheckCircle2,
   AlertTriangle,
+  Pencil,
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { profile, loadingProfile, profileError, refreshProfile } =
+  const { profile, loadingProfile, profileError, refreshProfile, roles } =
     useKeycloak();
+
+  const tokenParsed: any = keycloak?.tokenParsed;
+  const userRoles: string[] = roles || tokenParsed?.realm_access?.roles || [];
+  const isCustomer = userRoles.includes("customer_g");
+  const isManager = userRoles.includes("manager_g");
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleSaveProfile = async (formData: any) => {
+    try {
+      if (keycloak) {
+        await keycloak.updateToken(30);
+      }
+      const token = keycloak?.token;
+      const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+
+      const payload = {
+        ...formData,
+        keycloakId:
+          profile?.keycloakId ||
+          formData.keycloakId ||
+          keycloak?.tokenParsed?.sub,
+        customer_id: profile?.customer_id || formData.customer_id,
+        _id: profile?._id || formData._id,
+      };
+
+      const res = await fetch(`${apiUrl}/api/customer_edit`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && !data.error) {
+        showToast("Profile updated successfully! ✨", "success");
+        setIsEditModalOpen(false);
+        refreshProfile();
+      } else {
+        showToast(data.error || "Failed to update profile", "error");
+      }
+    } catch (err: any) {
+      console.error("Failed to update profile:", err);
+      showToast(err.message || "Failed to update profile", "error");
+    }
+  };
 
   const firstName = profile?.first_name || profile?.firstName || "";
   const lastName = profile?.last_name || profile?.lastName || "";
@@ -263,6 +315,15 @@ export default function ProfilePage() {
           ← Browse Profiles
         </button>
         <div className="profile-hero-actions">
+          {isCustomer && (
+            <button
+              className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs hover:bg-white/30 transition-all shadow-sm"
+              title="Edit Profile"
+              onClick={() => setIsEditModalOpen(true)}
+            >
+              <Pencil className="h-3.5 w-3.5" /> Edit Profile
+            </button>
+          )}
           <button
             className="hero-action-btn"
             title="Share"
@@ -314,7 +375,18 @@ export default function ProfilePage() {
                 )}
                 {profile?.public_verify && <div className="avatar-verified">✓</div>}
               </div>
-              <div className="profile-name">{nameKit}</div>
+              <div className="flex items-center justify-center gap-2 mt-3.5">
+                <div className="profile-name !mt-0">{nameKit}</div>
+                {isCustomer && (
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="p-1.5 rounded-full hover:bg-purple-50 text-slate-400 hover:text-purple-600 transition-colors"
+                    title="Edit Profile"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
               {profile?.subscription_type && (
                 <div className="mt-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
                   {profile.subscription_type} Plan
@@ -355,46 +427,60 @@ export default function ProfilePage() {
 
             {/* Actions */}
             <div className="profile-actions">
-              <button
-                className="btn-primary"
-                onClick={handleSendInterest}
-                style={{
-                  background: interestSent
-                    ? "linear-gradient(135deg, var(--sage), var(--teal))"
-                    : "",
-                }}
-              >
-                {interestSent ? "✓ Interest Sent" : "💬 Send Interest"}
-              </button>
-              <button className="btn-secondary" onClick={handleSendMessage}>
-                ✉ Send Message
-              </button>
-              <div className="btn-row">
+              {isCustomer ? (
                 <button
-                  className="btn-like"
-                  onClick={handleLike}
+                  className="btn-primary"
+                  onClick={() => setIsEditModalOpen(true)}
                   style={{
-                    backgroundColor: isLiked ? "var(--rose-light)" : "white",
-                    borderColor: isLiked ? "var(--rose)" : "",
-                    fontWeight: isLiked ? "700" : "500",
+                    background: "linear-gradient(135deg, var(--rose), var(--plum))",
                   }}
                 >
-                  {isLiked ? "♥ Liked" : "♡ Like"}
+                  <Pencil className="h-4 w-4 mr-2" /> Edit Profile
                 </button>
-                <button
-                  className="btn-shortlist"
-                  onClick={handleShortlist}
-                  style={{
-                    backgroundColor: isShortlisted
-                      ? "var(--amber-light)"
-                      : "white",
-                    borderColor: isShortlisted ? "var(--amber)" : "",
-                    fontWeight: isShortlisted ? "700" : "500",
-                  }}
-                >
-                  {isShortlisted ? "★ Shortlisted" : "★ Shortlist"}
-                </button>
-              </div>
+              ) : (
+                <>
+                  <button
+                    className="btn-primary"
+                    onClick={handleSendInterest}
+                    style={{
+                      background: interestSent
+                        ? "linear-gradient(135deg, var(--sage), var(--teal))"
+                        : "",
+                    }}
+                  >
+                    {interestSent ? "✓ Interest Sent" : "💬 Send Interest"}
+                  </button>
+                  <button className="btn-secondary" onClick={handleSendMessage}>
+                    ✉ Send Message
+                  </button>
+                  <div className="btn-row">
+                    <button
+                      className="btn-like"
+                      onClick={handleLike}
+                      style={{
+                        backgroundColor: isLiked ? "var(--rose-light)" : "white",
+                        borderColor: isLiked ? "var(--rose)" : "",
+                        fontWeight: isLiked ? "700" : "500",
+                      }}
+                    >
+                      {isLiked ? "♥ Liked" : "♡ Like"}
+                    </button>
+                    <button
+                      className="btn-shortlist"
+                      onClick={handleShortlist}
+                      style={{
+                        backgroundColor: isShortlisted
+                          ? "var(--amber-light)"
+                          : "white",
+                        borderColor: isShortlisted ? "var(--amber)" : "",
+                        fontWeight: isShortlisted ? "700" : "500",
+                      }}
+                    >
+                      {isShortlisted ? "★ Shortlisted" : "★ Shortlist"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Quick Facts */}
@@ -1654,6 +1740,16 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* CUSTOMER EDIT PROFILE MODAL */}
+      {isCustomer && isEditModalOpen && (
+        <CustomerModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleSaveProfile}
+          initialData={profile || {}}
+        />
       )}
 
       {/* TOAST SYSTEM */}
