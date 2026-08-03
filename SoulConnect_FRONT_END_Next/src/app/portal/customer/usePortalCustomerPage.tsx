@@ -239,13 +239,13 @@ function usePortalCustomerPage() {
     //dataGenerateId
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
-      first_name: "Sujith",
-      last_name: "Baby",
-      email: `sujithbaby@gmail.com`,
+      first_name: "Ajith",
+      last_name: "Dattu",
+      email: `Ajithdattu@gmail.com`,
+      phone_number: "8879599605",
       role: "customer_g",
       dob: "02-12-1999",
       gender: "male",
-      phone_number: "9970599605",
       phone_code: "+91",
       district: "coimbatore",
       taluk_town: "r.spuram",

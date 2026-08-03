@@ -49,7 +49,11 @@ function calculateAgeFromDob(dobStr?: string): number | null {
   return age;
 }
 
-export async function handleCustomerList(req: Request, res: Response, type?: any) {
+export async function handleCustomerList(
+  req: Request,
+  res: Response,
+  type?: any,
+) {
   try {
     const filter = req.body.filter || {};
     const customer_type = req.body.customer_type || false;
@@ -563,8 +567,14 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       return res.status(404).json({ error: "Customer not found" });
     }
 
-    const dob = updateFields.dob !== undefined ? updateFields.dob : currentCustomer.get("dob");
-    const gender = updateFields.gender !== undefined ? updateFields.gender : currentCustomer.get("gender");
+    const dob =
+      updateFields.dob !== undefined
+        ? updateFields.dob
+        : currentCustomer.get("dob");
+    const gender =
+      updateFields.gender !== undefined
+        ? updateFields.gender
+        : currentCustomer.get("gender");
 
     if (dob && gender) {
       const age = calculateAgeFromDob(dob);
@@ -577,7 +587,8 @@ export async function handleCustomerEdit(req: Request, res: Response) {
         }
         if (lowerGender === "female" && age < 18) {
           return res.status(400).json({
-            error: "Minimum legal marriage age for females in India is 18 years.",
+            error:
+              "Minimum legal marriage age for females in India is 18 years.",
           });
         }
       }
@@ -598,7 +609,9 @@ export async function handleCustomerEdit(req: Request, res: Response) {
     const newPhoneNumber = updateFields.phone_number;
     if (newPhoneNumber && newPhoneNumber.trim() !== "") {
       if (newPhoneNumber !== currentCustomer.get("phone_number")) {
-        const existingPhone = await Customers.findOne({ phone_number: newPhoneNumber });
+        const existingPhone = await Customers.findOne({
+          phone_number: newPhoneNumber,
+        });
         if (existingPhone) {
           return res
             .status(400)
@@ -767,7 +780,8 @@ export async function handleCustomerCreate(req: Request, res: Response) {
         }
         if (lowerGender === "female" && age < 18) {
           return res.status(400).json({
-            error: "Minimum legal marriage age for females in India is 18 years.",
+            error:
+              "Minimum legal marriage age for females in India is 18 years.",
           });
         }
       }
@@ -968,18 +982,201 @@ export async function handleCustomerCreate(req: Request, res: Response) {
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>Welcome to Soul Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style type="text/css">
     body {
       margin: 0;
       padding: 0;
       width: 100% !important;
       background-color: #F6F6F9;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    img {
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+    table {
+      border-collapse: collapse !important;
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #F6F6F9;">
-  <p>Hello ${first || "User"}, your account is successfully created.</p>
+<body style="margin: 0; padding: 0; background-color: #F6F6F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F6F6F9; padding: 40px 10px;">
+    <tr>
+      <td align="center" valign="top">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+          
+          <!-- HEADER -->
+          <tr>
+            <td style="background: #7C3AED; background: linear-gradient(135deg, #F2688C 0%, #7C3AED 100%); padding: 35px 40px; text-align: left;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td>
+                    <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: -0.5px;">Soul Connect</h1>
+                    <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.85); font-size: 13px;">Connecting Hearts, Building Relationships</p>
+                  </td>
+                  <td align="right" valign="top" style="color: #ffffff; font-size: 14px; font-weight: 500; opacity: 0.9;">
+                    Welcome!
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding: 40px; background-color: #ffffff;">
+              <!-- GREETING -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px;">
+                <tr>
+                  <td width="48" valign="middle">
+                    <div style="background-color: #EEF2FF; width: 44px; height: 44px; border-radius: 50%; text-align: center; line-height: 44px; font-size: 22px;">
+                      👋
+                    </div>
+                  </td>
+                  <td style="padding-left: 16px;" valign="middle">
+                    <h2 style="margin: 0; color: #1F2937; font-size: 24px; font-weight: bold; line-height: 1.2;">
+                      Hello, <span style="color: #7C3AED;">${first || "User"}</span>!
+                    </h2>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- WELCOME MESSAGE -->
+              <p style="margin: 0 0 28px 0; color: #4B5563; font-size: 15px; line-height: 1.6;">
+                Your Soul Connect account has been successfully created. We're excited to have you join our community!
+              </p>
+
+              <!-- ACCOUNT DETAILS BOX -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F9F8FF; border: 1px solid #EEF2FF; border-radius: 12px; padding: 24px; margin-bottom: 28px;">
+                <tr>
+                  <td>
+                    <h3 style="margin: 0 0 20px 0; color: #7C3AED; font-size: 16px; font-weight: 700; letter-spacing: -0.2px;">Your Account Details</h3>
+                    
+                    <!-- Username -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; border-bottom: 1px dashed #E0DBFA; padding-bottom: 12px;">
+                      <tr>
+                        <td width="36" valign="middle">
+                          <div style="background-color: #EEF2FF; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-size: 13px;">
+                            👤
+                          </div>
+                        </td>
+                        <td style="color: #4B5563; font-size: 14px; font-weight: 600;" width="140" valign="middle">
+                          Username
+                        </td>
+                        <td style="color: #1F2937; font-size: 14px; font-weight: bold; font-family: monospace;" valign="middle">
+                          ${first || email}
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Email -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; border-bottom: 1px dashed #E0DBFA; padding-bottom: 12px;">
+                      <tr>
+                        <td width="36" valign="middle">
+                          <div style="background-color: #F3E8FF; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-size: 13px;">
+                            ✉️
+                          </div>
+                        </td>
+                        <td style="color: #4B5563; font-size: 14px; font-weight: 600;" width="140" valign="middle">
+                          Email Address
+                        </td>
+                        <td style="color: #1F2937; font-size: 14px;" valign="middle">
+                          <a href="mailto:${email}" style="color: #7C3AED; text-decoration: underline;">${email}</a>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Password -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px;">
+                      <tr>
+                        <td width="36" valign="middle">
+                          <div style="background-color: #FEF3C7; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-size: 13px;">
+                            🔑
+                          </div>
+                        </td>
+                        <td style="color: #4B5563; font-size: 14px; font-weight: 600;" width="140" valign="middle">
+                          Temporary Password
+                        </td>
+                        <td style="color: #1F2937; font-size: 14px; font-weight: bold; font-family: monospace;" valign="middle">
+                          password@123
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Security Alert -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFDF5; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px 16px;">
+                      <tr>
+                        <td width="24" valign="top" style="font-size: 14px;">
+                          🛡️
+                        </td>
+                        <td style="color: #B45309; font-size: 13px; line-height: 1.4; font-weight: 500;">
+                          For your security, please change your password after your first login.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- BUTTON -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 28px;">
+                <tr>
+                  <td align="center">
+                    <a href="https://soulconect.com/portal/" target="_blank" style="display: inline-block; background-color: #7C3AED; background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 14px 32px; border-radius: 30px; box-shadow: 0 4px 10px rgba(124,58,237,0.3); transition: all 0.2s;">
+                      Login to Soul Connect &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- NOTICE -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #F3F4F6; padding-top: 20px;">
+                <tr>
+                  <td width="24" valign="top" style="font-size: 14px;">
+                    ✅
+                  </td>
+                  <td style="color: #6B7280; font-size: 13px; line-height: 1.4; padding-left: 8px;">
+                    If you did not request this account, please ignore this email or contact our support team immediately.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background-color: #F9FAFB; border-top: 1px solid #F3F4F6; padding: 35px 40px; text-align: center;">
+              <h4 style="margin: 0 0 12px 0; color: #1F2937; font-size: 16px; font-weight: bold;">Soul Connect</h4>
+              
+              <!-- SOCIALS -->
+              <table border="0" cellpadding="0" cellspacing="0" align="center" style="margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 0 8px; font-size: 20px;">🔵</td>
+                  <td style="padding: 0 8px; font-size: 20px;">📸</td>
+                  <td style="padding: 0 8px; font-size: 20px;">🐦</td>
+                  <td style="padding: 0 8px; font-size: 20px;">💼</td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 8px 0; color: #9CA3AF; font-size: 12px;">
+                &copy; 2026 Soul Connect. All rights reserved.
+              </p>
+              <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
+                <a href="mailto:support@soulconnect.com" style="color: #7C3AED; text-decoration: none;">support@soulconnect.com</a>
+                <span style="color: #D1D5DB; padding: 0 8px;">|</span>
+                <a href="https://www.soulconnect.com" target="_blank" style="color: #7C3AED; text-decoration: none;">www.soulconnect.com</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 
