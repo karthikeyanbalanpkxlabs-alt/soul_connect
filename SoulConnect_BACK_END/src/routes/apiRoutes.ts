@@ -22,6 +22,10 @@ import {
   handleUpdateUser,
 } from "../controllers/userController";
 import { handleSendEmail } from "../controllers/emailController";
+import {
+  handleSendOTP,
+  handleVerifyOTP,
+} from "../controllers/verificationController";
 
 const router = Router();
 
@@ -100,5 +104,11 @@ router.get("/public", (req, res) => {
 });
 
 router.post("/send-email", handleSendEmail);
+
+// --- VERIFICATION ROUTES ---
+router.post("/verification/send-otp", keycloak.protect(), handleSendOTP);
+router.post("/verification/verify-otp", keycloak.protect(), handleVerifyOTP);
+router.post("/public/verification/send-otp", handleSendOTP);
+router.post("/public/verification/verify-otp", handleVerifyOTP);
 
 export default router;
