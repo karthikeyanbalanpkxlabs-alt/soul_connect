@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import Toast from "@/components/Toast";
-import CustomerModal from "@/components/CustomerModal";
 import keycloak from "@/lib/keycloak";
 import configUrls from "../../../../configUrls";
 import {
@@ -28,6 +27,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Pencil,
+  X,
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
@@ -42,9 +42,45 @@ export default function ProfilePage() {
   const isCustomer = userRoles.includes("customer_g");
   const isManager = userRoles.includes("manager_g");
 
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<any>({});
 
-  const handleSaveProfile = async (formData: any) => {
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        first_name: profile.first_name || profile.firstName || "",
+        last_name: profile.last_name || profile.lastName || "",
+        email: profile.email || "",
+        phone_code: profile.phone_code || "+91",
+        phone_number: profile.phone_number || profile.phone || "",
+        dob: profile.dob || "",
+        gender: profile.gender || "",
+        maritial_status: profile.maritial_status || profile.marital_status || "",
+        height: profile.height || "",
+        district: profile.district || "",
+        taluk_town: profile.taluk_town || "",
+        state: profile.state || "",
+        zipcode: profile.zipcode || "",
+        religion: profile.religion || "",
+        caste: profile.caste || "",
+        mother_tongue: profile.mother_tongue || "",
+        education: profile.education || "",
+        profession: profile.profession || profile.occupation || "",
+        annual_income: profile.annual_income || "",
+        about_self: profile.about_self || "",
+        partner_preference: profile.partner_preference || "",
+        ambition: profile.ambition || "",
+        blood_group: profile.blood_group || "",
+        additional_report_info: profile.additional_report_info || "",
+      });
+    }
+  }, [profile]);
+
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveInlineProfile = async () => {
     try {
       if (keycloak) {
         await keycloak.updateToken(30);
@@ -53,13 +89,11 @@ export default function ProfilePage() {
       const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
 
       const payload = {
+        ...profile,
         ...formData,
-        keycloakId:
-          profile?.keycloakId ||
-          formData.keycloakId ||
-          keycloak?.tokenParsed?.sub,
-        customer_id: profile?.customer_id || formData.customer_id,
-        _id: profile?._id || formData._id,
+        keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
+        customer_id: profile?.customer_id,
+        _id: profile?._id,
       };
 
       const res = await fetch(`${apiUrl}/api/customer_edit`, {
@@ -73,8 +107,8 @@ export default function ProfilePage() {
 
       const data = await res.json();
       if (res.ok && !data.error) {
-        showToast("Profile updated successfully! ✨", "success");
-        setIsEditModalOpen(false);
+        showToast("Profile changes saved successfully! ✨", "success");
+        setIsEditing(false);
         refreshProfile();
       } else {
         showToast(data.error || "Failed to update profile", "error");
@@ -316,13 +350,35 @@ export default function ProfilePage() {
         </button>
         <div className="profile-hero-actions">
           {isCustomer && (
-            <button
-              className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs hover:bg-white/30 transition-all shadow-sm"
-              title="Edit Profile"
-              onClick={() => setIsEditModalOpen(true)}
-            >
-              <Pencil className="h-3.5 w-3.5" /> Edit Profile
-            </button>
+            !isEditing ? (
+              <button
+                className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs hover:bg-white/30 transition-all shadow-sm"
+                title="Edit Profile"
+                onClick={() => setIsEditing(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit Profile
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-sm"
+                  title="Save Changes"
+                  onClick={handleSaveInlineProfile}
+                >
+                  <Check className="h-3.5 w-3.5" /> Save Changes
+                </button>
+                <button
+                  className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs bg-slate-800/80 text-white hover:bg-slate-900 transition-all shadow-sm"
+                  title="Cancel Editing"
+                  onClick={() => {
+                    setIsEditing(false);
+                    if (profile) setFormData({ ...profile });
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" /> Cancel
+                </button>
+              </div>
+            )
           )}
           <button
             className="hero-action-btn"
@@ -357,6 +413,42 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* INLINE EDIT MODE BANNER */}
+      {isCustomer && isEditing && (
+        <div className="max-w-[1100px] mx-auto px-6 mt-4 mb-2">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">✏️</span>
+              <div>
+                <h4 className="font-bold text-xs uppercase tracking-wider text-amber-900">
+                  Profile Editing Mode Active
+                </h4>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Update your details directly on the page below and click Save Changes when finished.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveInlineProfile}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition"
+              >
+                ✓ Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  if (profile) setFormData({ ...profile });
+                }}
+                className="px-3 py-2 bg-white text-slate-700 hover:bg-slate-100 font-semibold text-xs rounded-xl border border-slate-200 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="profile-layout">
         {/* LEFT COLUMN */}
         <div className="profile-left">
@@ -375,18 +467,42 @@ export default function ProfilePage() {
                 )}
                 {profile?.public_verify && <div className="avatar-verified">✓</div>}
               </div>
-              <div className="flex items-center justify-center gap-2 mt-3.5">
-                <div className="profile-name !mt-0">{nameKit}</div>
-                {isCustomer && (
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="p-1.5 rounded-full hover:bg-purple-50 text-slate-400 hover:text-purple-600 transition-colors"
-                    title="Edit Profile"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+              {!isEditing ? (
+                <div className="flex items-center justify-center gap-2 mt-3.5">
+                  <div className="profile-name !mt-0">{nameKit}</div>
+                  {isCustomer && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="p-1.5 rounded-full hover:bg-purple-50 text-slate-400 hover:text-purple-600 transition-colors"
+                      title="Edit Profile"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5 items-center mt-3.5 w-full max-w-[260px]">
+                  <div className="text-[10px] font-bold text-violet-600 uppercase tracking-wider">
+                    Editing Name
+                  </div>
+                  <div className="flex gap-2 w-full">
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={formData.first_name || ""}
+                      onChange={(e) => handleChange("first_name", e.target.value)}
+                      className="w-1/2 px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last Name"
+                      value={formData.last_name || ""}
+                      onChange={(e) => handleChange("last_name", e.target.value)}
+                      className="w-1/2 px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                    />
+                  </div>
+                </div>
+              )}
               {profile?.subscription_type && (
                 <div className="mt-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
                   {profile.subscription_type} Plan
@@ -397,10 +513,25 @@ export default function ProfilePage() {
                   {profile.approvalStatus}
                 </div>
               )}
-              <div className="profile-tagline">
-                {profile?.about_self ||
-                  "Looking for a partner equally at home with traditional values and modern growth."}
-              </div>
+              {!isEditing ? (
+                <div className="profile-tagline">
+                  {profile?.about_self ||
+                    "Looking for a partner equally at home with traditional values and modern growth."}
+                </div>
+              ) : (
+                <div className="w-full max-w-[260px] my-2 text-center">
+                  <div className="text-[10px] font-bold text-violet-600 uppercase tracking-wider mb-1">
+                    Headline / Summary
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="Short Headline / About self..."
+                    value={formData.about_self || ""}
+                    onChange={(e) => handleChange("about_self", e.target.value)}
+                    className="w-full p-2 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                  />
+                </div>
+              )}
               <div className="profile-location">📍 {locationStr}</div>
               <div className="profile-id">{customerId}</div>
             </div>
@@ -428,15 +559,38 @@ export default function ProfilePage() {
             {/* Actions */}
             <div className="profile-actions">
               {isCustomer ? (
-                <button
-                  className="btn-primary"
-                  onClick={() => setIsEditModalOpen(true)}
-                  style={{
-                    background: "linear-gradient(135deg, var(--rose), var(--plum))",
-                  }}
-                >
-                  <Pencil className="h-4 w-4 mr-2" /> Edit Profile
-                </button>
+                !isEditing ? (
+                  <button
+                    className="btn-primary"
+                    onClick={() => setIsEditing(true)}
+                    style={{
+                      background: "linear-gradient(135deg, var(--rose), var(--plum))",
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" /> Edit Profile
+                  </button>
+                ) : (
+                  <div className="flex flex-col gap-2 w-full">
+                    <button
+                      className="btn-primary"
+                      onClick={handleSaveInlineProfile}
+                      style={{
+                        background: "linear-gradient(135deg, #059669, #0D9488)",
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-1.5" /> Save Changes
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => {
+                        setIsEditing(false);
+                        if (profile) setFormData({ ...profile });
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )
               ) : (
                 <>
                   <button
@@ -489,45 +643,146 @@ export default function ProfilePage() {
               <div className="fact-row">
                 <div className="fact-icon">🎂</div>
                 <div className="fact-label">Age / DOB</div>
-                <div className="fact-value">{ageDisplay}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    ageDisplay
+                  ) : (
+                    <input
+                      type="date"
+                      value={formData.dob || ""}
+                      onChange={(e) => handleChange("dob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">📏</div>
                 <div className="fact-label">Height</div>
-                <div className="fact-value">{profile?.height || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.height || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Height (e.g. 5'8&quot;)"
+                      value={formData.height || ""}
+                      onChange={(e) => handleChange("height", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🛕</div>
                 <div className="fact-label">Religion / Caste</div>
                 <div className="fact-value">
-                  {profile?.religion || "N/A"}
-                  {profile?.caste ? ` (${profile.caste})` : ""}
+                  {!isEditing ? (
+                    `${profile?.religion || "N/A"}${profile?.caste ? ` (${profile.caste})` : ""}`
+                  ) : (
+                    <div className="flex gap-1 w-full">
+                      <input
+                        type="text"
+                        placeholder="Religion"
+                        value={formData.religion || ""}
+                        onChange={(e) => handleChange("religion", e.target.value)}
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Caste"
+                        value={formData.caste || ""}
+                        onChange={(e) => handleChange("caste", e.target.value)}
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">💼</div>
                 <div className="fact-label">Profession</div>
-                <div className="fact-value">{profile?.profession || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.profession || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Profession"
+                      value={formData.profession || ""}
+                      onChange={(e) => handleChange("profession", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🎓</div>
                 <div className="fact-label">Education</div>
-                <div className="fact-value">{profile?.education || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.education || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Education"
+                      value={formData.education || ""}
+                      onChange={(e) => handleChange("education", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">💰</div>
                 <div className="fact-label">Income</div>
-                <div className="fact-value">{profile?.annual_income || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.annual_income || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Annual Income"
+                      value={formData.annual_income || ""}
+                      onChange={(e) => handleChange("annual_income", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">📍</div>
                 <div className="fact-label">District</div>
-                <div className="fact-value">{profile?.district || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.district || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="District"
+                      value={formData.district || ""}
+                      onChange={(e) => handleChange("district", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🌐</div>
                 <div className="fact-label">Languages</div>
-                <div className="fact-value">{profile?.mother_tongue || "Tamil"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.mother_tongue || "Tamil"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Mother Tongue / Languages"
+                      value={formData.mother_tongue || ""}
+                      onChange={(e) => handleChange("mother_tongue", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -627,13 +882,38 @@ export default function ProfilePage() {
           {/* ABOUT TAB PANEL */}
           <div className={`tab-panel ${activeTab === "about" ? "active" : ""}`}>
             <div className={`content-card reveal ${isLoaded ? "visible" : ""}`}>
-              <div className="content-card-title">
-                <div className="ctitle-icon">✍</div>About Me
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">✍</div>About Me
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
-              <p className="about-text">
-                {profile?.about_self ||
-                  "Welcome to my profile! I am looking for a partner with shared values and mutual respect to build a meaningful life together."}
-              </p>
+              {!isEditing ? (
+                <p className="about-text">
+                  {profile?.about_self ||
+                    "Welcome to my profile! I am looking for a partner with shared values and mutual respect to build a meaningful life together."}
+                </p>
+              ) : (
+                <div className="mt-1">
+                  <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                    Edit About Yourself:
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.about_self || ""}
+                    onChange={(e) => handleChange("about_self", e.target.value)}
+                    className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                    placeholder="Write a warm description about your values, personality, and hobbies..."
+                  />
+                </div>
+              )}
               {profile?.identity_proff?.url && (
                 <div className="mt-4 p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -656,7 +936,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Ambition */}
-            {profile?.ambition && (
+            {(!isEditing ? profile?.ambition : true) && (
               <div
                 className={`content-card reveal ${isLoaded ? "visible" : ""}`}
                 style={{ transitionDelay: ".05s" }}
@@ -664,12 +944,27 @@ export default function ProfilePage() {
                 <div className="content-card-title">
                   <div className="ctitle-icon">🎯</div>Ambition
                 </div>
-                <p className="about-text">{profile.ambition}</p>
+                {!isEditing ? (
+                  <p className="about-text">{profile?.ambition}</p>
+                ) : (
+                  <div>
+                    <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                      Edit Ambition / Goals:
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.ambition || ""}
+                      onChange={(e) => handleChange("ambition", e.target.value)}
+                      className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                      placeholder="Describe your personal or career goals..."
+                    />
+                  </div>
+                )}
               </div>
             )}
 
             {/* Health & Medical Report */}
-            {(profile?.health_report || profile?.blood_group || profile?.additional_report_info) && (
+            {(!isEditing ? (profile?.health_report || profile?.blood_group || profile?.additional_report_info) : true) && (
               <div
                 className={`content-card reveal ${isLoaded ? "visible" : ""}`}
                 style={{ transitionDelay: ".07s" }}
@@ -679,27 +974,45 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="space-y-4 text-sm mt-3">
-                  {profile.blood_group && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500">Blood Group:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Blood Group:</span>
+                    {!isEditing ? (
                       <span className="font-semibold bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full text-xs border border-rose-100">
-                        {profile.blood_group}
+                        {profile?.blood_group || "N/A"}
                       </span>
-                    </div>
-                  )}
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="e.g. O+ve"
+                        value={formData.blood_group || ""}
+                        onChange={(e) => handleChange("blood_group", e.target.value)}
+                        className="px-2.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                      />
+                    )}
+                  </div>
                   
-                  {profile.additional_report_info && (
+                  {(!isEditing ? profile?.additional_report_info : true) && (
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                       <h4 className="font-semibold text-slate-800 text-[10px] uppercase tracking-wider text-slate-400 mb-1">
                         Additional Report Info
                       </h4>
-                      <p className="text-slate-600 leading-relaxed">
-                        {profile.additional_report_info}
-                      </p>
+                      {!isEditing ? (
+                        <p className="text-slate-600 leading-relaxed">
+                          {profile?.additional_report_info}
+                        </p>
+                      ) : (
+                        <textarea
+                          rows={2}
+                          value={formData.additional_report_info || ""}
+                          onChange={(e) => handleChange("additional_report_info", e.target.value)}
+                          className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          placeholder="Additional health details..."
+                        />
+                      )}
                     </div>
                   )}
 
-                  {profile.health_report?.url && (
+                  {profile?.health_report?.url && (
                     <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-xl">📄</span>
@@ -934,17 +1247,59 @@ export default function ProfilePage() {
             className={`tab-panel ${activeTab === "details" ? "active" : ""}`}
           >
             <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">👤</div>Personal Details
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">👤</div>Personal Details
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Full Name</div>
-                  <div className="detail-value">{nameKit}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      nameKit
+                    ) : (
+                      <div className="flex gap-1.5 w-full">
+                        <input
+                          type="text"
+                          placeholder="First Name"
+                          value={formData.first_name || ""}
+                          onChange={(e) => handleChange("first_name", e.target.value)}
+                          className="w-1/2 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Last Name"
+                          value={formData.last_name || ""}
+                          onChange={(e) => handleChange("last_name", e.target.value)}
+                          className="w-1/2 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Date of Birth</div>
-                  <div className="detail-value">{profile?.dob || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.dob || "N/A"
+                    ) : (
+                      <input
+                        type="date"
+                        value={formData.dob || ""}
+                        onChange={(e) => handleChange("dob", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Age</div>
@@ -952,42 +1307,163 @@ export default function ProfilePage() {
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Gender</div>
-                  <div className="detail-value">{profile?.gender || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.gender || "N/A"
+                    ) : (
+                      <select
+                        value={formData.gender || ""}
+                        onChange={(e) => handleChange("gender", e.target.value)}
+                        className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Height</div>
-                  <div className="detail-value">{profile?.height || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.height || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.height || ""}
+                        onChange={(e) => handleChange("height", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Marital Status</div>
-                  <div className="detail-value">{profile?.maritial_status || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.maritial_status || profile?.marital_status || "N/A"
+                    ) : (
+                      <select
+                        value={formData.maritial_status || ""}
+                        onChange={(e) => handleChange("maritial_status", e.target.value)}
+                        className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      >
+                        <option value="">Select Status</option>
+                        <option value="Never Married">Never Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Awaiting Divorce">Awaiting Divorce</option>
+                      </select>
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Mother Tongue</div>
-                  <div className="detail-value">{profile?.mother_tongue || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.mother_tongue || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.mother_tongue || ""}
+                        onChange={(e) => handleChange("mother_tongue", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Email</div>
-                  <div className="detail-value">{profile?.email || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.email || "N/A"
+                    ) : (
+                      <input
+                        type="email"
+                        value={formData.email || ""}
+                        onChange={(e) => handleChange("email", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Phone Number</div>
                   <div className="detail-value">
-                    {profile?.phone_code || "+91"} {profile?.phone_number || "N/A"}
+                    {!isEditing ? (
+                      `${profile?.phone_code || "+91"} ${profile?.phone_number || "N/A"}`
+                    ) : (
+                      <div className="flex gap-1 w-full">
+                        <input
+                          type="text"
+                          value={formData.phone_code || "+91"}
+                          onChange={(e) => handleChange("phone_code", e.target.value)}
+                          className="w-14 px-1 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={formData.phone_number || ""}
+                          onChange={(e) => handleChange("phone_number", e.target.value)}
+                          className="flex-1 px-2 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">District</div>
-                  <div className="detail-value">{profile?.district || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.district || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.district || ""}
+                        onChange={(e) => handleChange("district", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Taluk / Town</div>
-                  <div className="detail-value">{profile?.taluk_town || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.taluk_town || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.taluk_town || ""}
+                        onChange={(e) => handleChange("taluk_town", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">State / Zipcode</div>
                   <div className="detail-value">
-                    {profile?.state || "N/A"} {profile?.zipcode ? `(${profile.zipcode})` : ""}
+                    {!isEditing ? (
+                      `${profile?.state || "N/A"} ${profile?.zipcode ? `(${profile.zipcode})` : ""}`
+                    ) : (
+                      <div className="flex gap-1 w-full">
+                        <input
+                          type="text"
+                          placeholder="State"
+                          value={formData.state || ""}
+                          onChange={(e) => handleChange("state", e.target.value)}
+                          className="w-2/3 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Zipcode"
+                          value={formData.zipcode || ""}
+                          onChange={(e) => handleChange("zipcode", e.target.value)}
+                          className="w-1/3 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1003,15 +1479,48 @@ export default function ProfilePage() {
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Highest Degree / Education</div>
-                  <div className="detail-value">{profile?.education || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.education || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.education || ""}
+                        onChange={(e) => handleChange("education", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Occupation / Profession</div>
-                  <div className="detail-value">{profile?.profession || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.profession || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.profession || ""}
+                        onChange={(e) => handleChange("profession", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Annual Income</div>
-                  <div className="detail-value">{profile?.annual_income || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.annual_income || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.annual_income || ""}
+                        onChange={(e) => handleChange("annual_income", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Work Location</div>
@@ -1030,15 +1539,48 @@ export default function ProfilePage() {
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Religion</div>
-                  <div className="detail-value">{profile?.religion || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.religion || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.religion || ""}
+                        onChange={(e) => handleChange("religion", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Caste</div>
-                  <div className="detail-value">{profile?.caste || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.caste || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.caste || ""}
+                        onChange={(e) => handleChange("caste", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Mother Tongue</div>
-                  <div className="detail-value">{profile?.mother_tongue || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.mother_tongue || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.mother_tongue || ""}
+                        onChange={(e) => handleChange("mother_tongue", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1309,13 +1851,38 @@ export default function ProfilePage() {
               className="content-card reveal visible"
               style={{ transitionDelay: ".1s" }}
             >
-              <div className="content-card-title">
-                <div className="ctitle-icon">💬</div>Partner Preferences Overview
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">💬</div>Partner Preferences Overview
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
-              <p className="about-text">
-                "{profile?.partner_preference ||
-                  "Like we mentioned before, your values often inform your dating preferences."}"
-              </p>
+              {!isEditing ? (
+                <p className="about-text">
+                  "{profile?.partner_preference ||
+                    "Like we mentioned before, your values often inform your dating preferences."}"
+                </p>
+              ) : (
+                <div className="mt-1">
+                  <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                    Edit Partner Preferences Description:
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.partner_preference || ""}
+                    onChange={(e) => handleChange("partner_preference", e.target.value)}
+                    className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                    placeholder="Describe what qualities and expectations you have in a partner..."
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -1740,16 +2307,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* CUSTOMER EDIT PROFILE MODAL */}
-      {isCustomer && isEditModalOpen && (
-        <CustomerModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          onSave={handleSaveProfile}
-          initialData={profile || {}}
-        />
       )}
 
       {/* TOAST SYSTEM */}
