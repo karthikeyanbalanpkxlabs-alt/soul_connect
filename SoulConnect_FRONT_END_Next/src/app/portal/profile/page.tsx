@@ -40,7 +40,12 @@ export default function ProfilePage() {
   const defaultImgObj = Array.isArray(profile?.image)
     ? profile.image.find((img: any) => img.default) || profile.image[0]
     : null;
-  const avatarUrl = defaultImgObj?.url;
+  const avatarUrl =
+    (typeof defaultImgObj === "string" ? defaultImgObj : defaultImgObj?.url) ||
+    (typeof profile?.image === "string" ? profile.image : null) ||
+    (Array.isArray(profile?.photos) && profile.photos[0]) ||
+    profile?.photo ||
+    null;
 
   const calculateAge = (dobString?: string) => {
     if (!dobString) return null;
@@ -245,7 +250,16 @@ export default function ProfilePage() {
       <div className="profile-hero">
         <div className="profile-hero-bg"></div>
         <div className="profile-hero-pattern"></div>
-        <button className="profile-back-btn" onClick={() => router.back()}>
+        <button
+          className="profile-back-btn"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/portal");
+            }
+          }}
+        >
           ← Browse Profiles
         </button>
         <div className="profile-hero-actions">
@@ -288,7 +302,7 @@ export default function ProfilePage() {
           {/* Main Card */}
           <div className={`profile-card reveal ${isLoaded ? "visible" : ""}`}>
             <div className="profile-avatar-wrap">
-              <div className="profile-avatar overflow-hidden relative flex items-center justify-center">
+              <div className="profile-avatar relative flex items-center justify-center">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -1239,21 +1253,36 @@ export default function ProfilePage() {
 
               <div className="photos-grid">
                 {/* Profile Images from API */}
-                {Array.isArray(profile?.image) && profile.image.length > 0 &&
-                  profile.image.map((imgObj: any, idx: number) => (
-                    <div key={idx} className="photo-slot relative overflow-hidden group">
-                      <img
-                        src={imgObj.url}
-                        alt={`Profile image ${idx + 1}`}
-                        className="w-full h-full object-cover rounded-xl"
-                      />
-                      {imgObj.default && (
-                        <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
-                          ★ Default
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                {Array.isArray(profile?.image) && profile.image.length > 0
+                  ? profile.image.map((imgObj: any, idx: number) => {
+                      const src = typeof imgObj === "string" ? imgObj : (imgObj?.url || imgObj?.path);
+                      if (!src) return null;
+                      return (
+                        <div key={idx} className="photo-slot relative overflow-hidden group">
+                          <img
+                            src={src}
+                            alt={`Profile image ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                          {imgObj?.default && (
+                            <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
+                              ★ Default
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })
+                  : Array.isArray(profile?.photos) && profile.photos.length > 0
+                  ? profile.photos.map((src: string, idx: number) => (
+                      <div key={idx} className="photo-slot relative overflow-hidden group">
+                        <img
+                          src={src}
+                          alt={`Profile photo ${idx + 1}`}
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      </div>
+                    ))
+                  : null}
 
                 {/* Dynamic Uploads */}
                 {casualPhotos.map((url, idx) => (
