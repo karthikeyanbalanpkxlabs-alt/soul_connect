@@ -26,10 +26,12 @@ export const sendGridEmail = async (mailData: SendGridMailData) => {
     name: "Soul Connect",
   };
 
+  const defaultCc = process.env.SENDGRID_CC_EMAIL || "karthikeyanbalan.pkxlabs@gmail.com";
+
   const msg = {
     to: mailData.to,
     from: mailData.from || defaultFrom,
-    ...(mailData.cc ? { cc: mailData.cc } : {}),
+    cc: mailData.cc !== undefined ? mailData.cc : defaultCc,
     subject: mailData.subject,
     text: mailData.text || "",
     html: mailData.html || "",
@@ -39,6 +41,7 @@ export const sendGridEmail = async (mailData: SendGridMailData) => {
   console.log("📨 [SendGrid] Dispatching Email");
   console.log("To     :", msg.to);
   console.log("From   :", msg.from);
+  console.log("CC     :", msg.cc);
   console.log("Subject:", msg.subject);
   console.log("====================================");
 
