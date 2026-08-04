@@ -239,10 +239,11 @@ function usePortalCustomerPage() {
     //dataGenerateId
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
-      first_name: "Ajith",
-      last_name: "Dattu",
-      email: `Ajithdattu@gmail.com`,
-      phone_number: "8879599605",
+      first_name: "jilew94265",
+      last_name: "Test",
+      // email: `gisipi5319@davopa.com`,
+      email: `jilew94265@copawoke.com`,
+      phone_number: "9505899768",
       role: "customer_g",
       dob: "02-12-1999",
       gender: "male",

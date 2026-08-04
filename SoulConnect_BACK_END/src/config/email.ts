@@ -1,21 +1,67 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 
 export const EMAIL_TRIGGER_ENABLE_FLAG = true;
 
-export const createEmailTransporter = () => {
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // STARTTLS
-    requireTLS: true,
-    auth: {
-      user: process.env.SMTP_USER || "karthimailu@gmail.com",
-      pass: process.env.SMTP_PASS || "zizbzdtzjubexmbx",
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-    logger: true,
-    debug: true,
-  });
+export interface SendGridMailData {
+  to: string | string[];
+  from?: string | { email: string; name?: string };
+  cc?: string | string[];
+  subject: string;
+  text?: string;
+  html?: string;
+}
+
+/**
+ * Send email using SendGrid Mail API.
+ */
+export const sendGridEmail = async (mailData: SendGridMailData) => {
+  const apiKey = process.env.SENDGRID_API_KEY || "";
+  if (!apiKey || apiKey === "SG.your_sendgrid_api_key_here") {
+    console.warn("⚠️ SendGrid API key is not configured or using placeholder value in .env!");
+  }
+  sgMail.setApiKey(apiKey);
+
+  const defaultFrom = {
+    email: process.env.SENDGRID_FROM_EMAIL || "karthimailu@gmail.com",
+    name: "Soul Connect",
+  };
+
+  const msg = {
+    to: mailData.to,
+    from: mailData.from || defaultFrom,
+    ...(mailData.cc ? { cc: mailData.cc } : {}),
+    subject: mailData.subject,
+    text: mailData.text || "",
+    html: mailData.html || "",
+  };
+
+  console.log("====================================");
+  console.log("📨 [SendGrid] Dispatching Email");
+  console.log("To     :", msg.to);
+  console.log("From   :", msg.from);
+  console.log("Subject:", msg.subject);
+  console.log("====================================");
+
+  try {
+    const response = await sgMail.send(msg);
+    return response;
+  } catch (error: any) {
+    if (error.code === 401 || error.response?.statusCode === 401) {
+      console.error(
+        "❌ [SendGrid 401 Unauthorized] The SENDGRID_API_KEY in .env is invalid, expired, or revoked."
+      );
+      console.error(
+        "👉 Please generate a new API key in SendGrid Dashboard (https://app.sendgrid.com/settings/api_keys) with 'Mail Send' permissions and update SENDGRID_API_KEY in your backend .env file."
+      );
+    } else if (error.code === 403 || error.response?.statusCode === 403) {
+      const senderEmail = typeof msg.from === "string" ? msg.from : msg.from.email;
+      console.error(
+        `❌ [SendGrid 403 Forbidden] The sender address '${senderEmail}' is not a verified Sender Identity.`
+      );
+      console.error(
+        "👉 Please verify this email in SendGrid Dashboard (https://app.sendgrid.com/settings/sender_auth) or update SENDGRID_FROM_EMAIL in .env to a verified sender email."
+      );
+    }
+    throw error;
+  }
 };

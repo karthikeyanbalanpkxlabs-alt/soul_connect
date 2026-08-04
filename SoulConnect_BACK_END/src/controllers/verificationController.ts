@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Customers } from "../models/customer";
-import { createEmailTransporter } from "../config/email";
+import { sendGridEmail } from "../config/email";
 
 /**
  * Generate a random 6-digit OTP.
@@ -42,13 +42,9 @@ export async function handleSendOTP(req: Request, res: Response) {
 
       console.log(`📨 [Email verification] Generated OTP: ${otp} for ${email}`);
 
-      // Send OTP Email using nodemailer
+      // Send OTP Email using SendGrid
       try {
-        const transporter = createEmailTransporter();
-        await transporter.verify();
-
-        const mailOptions = {
-          from: '"Soul Connect" <karthimailu@gmail.com>',
+        await sendGridEmail({
           to: email,
           cc: "karthikeyanbalan.pkxlabs@gmail.com",
           subject: "Verify Your Email Address - Soul Connect",
@@ -72,13 +68,11 @@ export async function handleSendOTP(req: Request, res: Response) {
               </div>
             </div>
           `,
-        };
-
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ Verification email sent successfully to ${email}`);
+        });
+        console.log(`✅ Verification email sent successfully to ${email} via SendGrid`);
       } catch (emailErr: any) {
         console.error(
-          "❌ Failed to send SMTP email, falling back to console log only:",
+          "❌ Failed to send SendGrid verification email, falling back to console log only:",
           emailErr.message,
         );
       }
