@@ -423,10 +423,19 @@ export default function ProfilePage() {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      const existingCount = Array.isArray(profile?.image) && profile.image.length > 0
+        ? profile.image.length
+        : Array.isArray(profile?.photos) && profile.photos.length > 0
+        ? profile.photos.length
+        : 0;
+      if (existingCount + casualPhotos.length >= 3) {
+        showToast("Maximum of 3 profile photos allowed", "error");
+        return;
+      }
       const file = e.target.files[0];
       const imageUrl = URL.createObjectURL(file);
       setCasualPhotos((prev) => [...prev, imageUrl]);
-      showToast("Casual photo uploaded successfully!", "success");
+      showToast("Profile photo uploaded successfully!", "success");
     }
   };
 
@@ -2084,8 +2093,11 @@ export default function ProfilePage() {
             className={`tab-panel ${activeTab === "photos" ? "active" : ""}`}
           >
             <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">📷</div>Profile Photos
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">📷</div>Profile Photos
+                </div>
+                <span className="text-xs text-slate-400 font-medium">Max 3 photos</span>
               </div>
 
               {/* Photo Upload Form */}
@@ -2100,7 +2112,7 @@ export default function ProfilePage() {
               <div className="photos-grid">
                 {/* Profile Images from API */}
                 {Array.isArray(profile?.image) && profile.image.length > 0
-                  ? profile.image.map((imgObj: any, idx: number) => {
+                  ? profile.image.slice(0, 3).map((imgObj: any, idx: number) => {
                       const src = typeof imgObj === "string" ? imgObj : (imgObj?.url || imgObj?.path);
                       if (!src) return null;
                       return (
@@ -2119,7 +2131,7 @@ export default function ProfilePage() {
                       );
                     })
                   : Array.isArray(profile?.photos) && profile.photos.length > 0
-                  ? profile.photos.map((src: string, idx: number) => (
+                  ? profile.photos.slice(0, 3).map((src: string, idx: number) => (
                       <div key={idx} className="photo-slot relative overflow-hidden group">
                         <img
                           src={src}
@@ -2132,14 +2144,14 @@ export default function ProfilePage() {
 
                 {/* Dynamic Uploads */}
                 {casualPhotos.map((url, idx) => (
-                  <div key={idx} className="photo-slot relative group">
+                  <div key={idx} className="photo-slot relative group overflow-hidden">
                     <img
                       src={url}
-                      alt={`Uploaded casual ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      alt={`Uploaded photo ${idx + 1}`}
+                      className="w-full h-full object-cover rounded-xl"
                     />
                     <button
-                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity"
+                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
                       onClick={(e) => {
                         e.stopPropagation();
                         setCasualPhotos((prev) =>
@@ -2147,14 +2159,19 @@ export default function ProfilePage() {
                         );
                         showToast("Photo deleted", "info");
                       }}
+                      title="Delete Photo"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
 
-                {/* Add Photo Button Slot */}
-                {casualPhotos.length < 2 && (
+                {/* Add Photo Button Slot - Up to 3 photos max */}
+                {((Array.isArray(profile?.image) && profile.image.length > 0
+                  ? profile.image.length
+                  : Array.isArray(profile?.photos) && profile.photos.length > 0
+                  ? profile.photos.length
+                  : 0) + casualPhotos.length) < 3 && (
                   <div
                     className="photo-slot photo-slot-add"
                     onClick={triggerPhotoUpload}
@@ -2168,8 +2185,7 @@ export default function ProfilePage() {
               <div className="photos-note">
                 <div className="photos-note-icon">💡</div>
                 <p>
-                  Profiles with 5+ photos get 3× more connection requests.
-                  Private photos are only visible after interest is accepted.
+                  You can upload up to 3 profile photos. High quality photos get 3× more connection requests.
                 </p>
               </div>
             </div>
