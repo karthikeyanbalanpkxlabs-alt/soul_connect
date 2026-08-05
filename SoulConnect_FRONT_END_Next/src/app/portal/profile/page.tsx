@@ -72,6 +72,13 @@ export default function ProfilePage() {
         ambition: profile.ambition || "",
         blood_group: profile.blood_group || "",
         additional_report_info: profile.additional_report_info || "",
+        star: profile.star || profile.nakshatra || "",
+        rasi: profile.rasi || profile.moon_sign || "",
+        lagnam: profile.lagnam || profile.ascendant || "",
+        gothram: profile.gothram || "",
+        tob: profile.tob || profile.time_of_birth || "",
+        pob: profile.pob || profile.place_of_birth || "",
+        dosham: profile.dosham || "",
       });
 
       if (profile.family_photo) {
@@ -2300,55 +2307,162 @@ export default function ProfilePage() {
             className={`tab-panel ${activeTab === "horoscope" ? "active" : ""}`}
           >
             <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">⭐</div>Horoscope Details
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">⭐</div>Horoscope Details
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
               <div className="horoscope-grid">
                 <div className="horo-item">
                   <div className="horo-label">Star (Nakshatra)</div>
-                  <div className="horo-value">Rohini</div>
-                  <div className="horo-value-tamil">ரோகிணி</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.star || formData.star || "Rohini"}</div>
+                      <div className="horo-value-tamil">ரோகிணி</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.star || ""}
+                      onChange={(e) => handleChange("star", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="Star / Nakshatra"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Rasi (Moon Sign)</div>
-                  <div className="horo-value">Rishabam (Taurus)</div>
-                  <div className="horo-value-tamil">ரிஷபம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.rasi || formData.rasi || "Rishabam (Taurus)"}</div>
+                      <div className="horo-value-tamil">ரிஷபம்</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.rasi || ""}
+                      onChange={(e) => handleChange("rasi", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="Rasi / Moon Sign"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Lagnam (Ascendant)</div>
-                  <div className="horo-value">Mithunam (Gemini)</div>
-                  <div className="horo-value-tamil">மிதுனம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}</div>
+                      <div className="horo-value-tamil">மிதுனம்</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.lagnam || ""}
+                      onChange={(e) => handleChange("lagnam", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="Lagnam"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Gothram</div>
-                  <div className="horo-value">Vatsa Gothram</div>
-                  <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.gothram || formData.gothram || "Vatsa Gothram"}</div>
+                      <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.gothram || ""}
+                      onChange={(e) => handleChange("gothram", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="Gothram"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Date of Birth</div>
-                  <div className="horo-value">14 March 1997</div>
+                  {!isEditing ? (
+                    <div className="horo-value">{profile?.dob || formData.dob || "14 March 1997"}</div>
+                  ) : (
+                    <input
+                      type="date"
+                      value={formData.dob || ""}
+                      onChange={(e) => handleChange("dob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Time of Birth</div>
-                  <div className="horo-value">06:34 AM</div>
-                  <div className="horo-value-tamil">அதிகாலை</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.tob || formData.tob || "06:34 AM"}</div>
+                      <div className="horo-value-tamil">அதிகாலை</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.tob || ""}
+                      onChange={(e) => handleChange("tob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="e.g. 06:34 AM"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Place of Birth</div>
-                  <div className="horo-value">Kumbakonam</div>
-                  <div className="horo-value-tamil">கும்பகோணம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.pob || formData.pob || "Kumbakonam"}</div>
+                      <div className="horo-value-tamil">கும்பகோணம்</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.pob || ""}
+                      onChange={(e) => handleChange("pob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="Place of Birth"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Dosham</div>
-                  <div className="horo-value" style={{ color: "var(--sage)" }}>
-                    No Dosham
-                  </div>
-                  <div
-                    className="horo-value-tamil"
-                    style={{ color: "var(--sage)" }}
-                  >
-                    தோஷமில்லை
-                  </div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value" style={{ color: "var(--sage)" }}>
+                        {profile?.dosham || formData.dosham || "No Dosham"}
+                      </div>
+                      <div
+                        className="horo-value-tamil"
+                        style={{ color: "var(--sage)" }}
+                      >
+                        தோஷமில்லை
+                      </div>
+                    </>
+                  ) : (
+                    <select
+                      value={formData.dosham || ""}
+                      onChange={(e) => handleChange("dosham", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                    >
+                      <option value="">Select Dosham</option>
+                      <option value="No Dosham">No Dosham</option>
+                      <option value="Chevvai Dosham">Chevvai Dosham</option>
+                      <option value="Rahu-Ketu Dosham">Rahu-Ketu Dosham</option>
+                      <option value="Naga Dosham">Naga Dosham</option>
+                    </select>
+                  )}
                 </div>
               </div>
               <div className="horo-badge-wrap">
