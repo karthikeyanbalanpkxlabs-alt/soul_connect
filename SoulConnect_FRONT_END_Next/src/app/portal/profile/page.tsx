@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import Toast from "@/components/Toast";
 import keycloak from "@/lib/keycloak";
-import configUrls from "../../../../configUrls";
 import {
   ArrowLeft,
   Share2,
