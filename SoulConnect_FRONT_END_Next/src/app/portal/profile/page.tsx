@@ -1980,6 +1980,90 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
+            <div className="content-card reveal visible">
+              <div className="content-card-title">
+                <div className="ctitle-icon">📷</div>Family Photos
+              </div>
+
+              {/* Photo Upload Form */}
+              <input
+                type="file"
+                ref={photoInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handlePhotoChange}
+              />
+
+              <div className="photos-grid">
+                {/* Profile Images from API */}
+                {Array.isArray(profile?.image) && profile.image.length > 0
+                  ? profile.image.map((imgObj: any, idx: number) => {
+                      const src = typeof imgObj === "string" ? imgObj : (imgObj?.url || imgObj?.path);
+                      if (!src) return null;
+                      return (
+                        <div key={idx} className="photo-slot relative overflow-hidden group">
+                          <img
+                            src={src}
+                            alt={`Profile image ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                          {imgObj?.default && (
+                            <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
+                              ★ Default
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })
+                  : Array.isArray(profile?.photos) && profile.photos.length > 0
+                  ? profile.photos.map((src: string, idx: number) => (
+                      <div key={idx} className="photo-slot relative overflow-hidden group">
+                        <img
+                          src={src}
+                          alt={`Profile photo ${idx + 1}`}
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      </div>
+                    ))
+                  : null}
+
+                {/* Dynamic Uploads */}
+                {casualPhotos.map((url, idx) => (
+                  <div key={idx} className="photo-slot relative group">
+                    <img
+                      src={url}
+                      alt={`Uploaded casual ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCasualPhotos((prev) =>
+                          prev.filter((_, i) => i !== idx),
+                        );
+                        showToast("Photo deleted", "info");
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Add Photo Button Slot */}
+                {casualPhotos.length < 2 && (
+                  <div
+                    className="photo-slot photo-slot-add"
+                    onClick={triggerPhotoUpload}
+                  >
+                    <div className="photo-av">＋</div>
+                    <div className="photo-label">Add Photo</div>
+                  </div>
+                )}
+              </div>
+
+
+            </div>
 
             {/* Video Intro Card */}
             <div
