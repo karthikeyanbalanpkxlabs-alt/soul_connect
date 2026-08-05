@@ -32,6 +32,26 @@ import {
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../../../configUrls";
 
+const NAKSHATRAS = [
+  "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
+  "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
+  "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshta",
+  "Moola", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha",
+  "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+];
+
+const RASIS = [
+  "Mesham (Aries)", "Rishabam (Taurus)", "Mithunam (Gemini)", "Katagam (Cancer)",
+  "Simmam (Leo)", "Kanni (Virgo)", "Thulaam (Libra)", "Vrichigam (Scorpio)",
+  "Dhanusu (Sagittarius)", "Makaram (Capricorn)", "Kumbam (Aquarius)", "Meenam (Pisces)"
+];
+
+const LAGNAMS = [
+  "Mesham (Aries)", "Rishabam (Taurus)", "Mithunam (Gemini)", "Katagam (Cancer)",
+  "Simmam (Leo)", "Kanni (Virgo)", "Thulaam (Libra)", "Vrichigam (Scorpio)",
+  "Dhanusu (Sagittarius)", "Makaram (Capricorn)", "Kumbam (Aquarius)", "Meenam (Pisces)"
+];
+
 export default function ProfilePage() {
   const router = useRouter();
   const { profile, loadingProfile, profileError, refreshProfile, roles } =
@@ -2329,13 +2349,18 @@ export default function ProfilePage() {
                       <div className="horo-value-tamil">ரோகிணி</div>
                     </>
                   ) : (
-                    <input
-                      type="text"
+                    <select
                       value={formData.star || ""}
                       onChange={(e) => handleChange("star", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
-                      placeholder="Star / Nakshatra"
-                    />
+                    >
+                      <option value="">Select Star (Nakshatra)</option>
+                      {NAKSHATRAS.map((star) => (
+                        <option key={star} value={star}>
+                          {star}
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
                 <div className="horo-item">
@@ -2346,13 +2371,18 @@ export default function ProfilePage() {
                       <div className="horo-value-tamil">ரிஷபம்</div>
                     </>
                   ) : (
-                    <input
-                      type="text"
+                    <select
                       value={formData.rasi || ""}
                       onChange={(e) => handleChange("rasi", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
-                      placeholder="Rasi / Moon Sign"
-                    />
+                    >
+                      <option value="">Select Rasi (Moon Sign)</option>
+                      {RASIS.map((rasi) => (
+                        <option key={rasi} value={rasi}>
+                          {rasi}
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
                 <div className="horo-item">
@@ -2363,13 +2393,18 @@ export default function ProfilePage() {
                       <div className="horo-value-tamil">மிதுனம்</div>
                     </>
                   ) : (
-                    <input
-                      type="text"
+                    <select
                       value={formData.lagnam || ""}
                       onChange={(e) => handleChange("lagnam", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
-                      placeholder="Lagnam"
-                    />
+                    >
+                      <option value="">Select Lagnam (Ascendant)</option>
+                      {LAGNAMS.map((lagnam) => (
+                        <option key={lagnam} value={lagnam}>
+                          {lagnam}
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
                 <div className="horo-item">
