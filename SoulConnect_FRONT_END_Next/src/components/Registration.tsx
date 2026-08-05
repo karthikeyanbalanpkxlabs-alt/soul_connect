@@ -261,6 +261,10 @@ export default function Registration({
       showToast("Please fill in all required fields (Name, DOB, Gender, Mobile, Email, District)", "error");
       return;
     }
+    if (mobile.length !== 10) {
+      showToast("Please enter a valid 10-digit mobile number", "error");
+      return;
+    }
     if (images.length === 0) {
       showToast("Please upload at least 1 profile image.", "error");
       return;
@@ -405,7 +409,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
     setProfession(parsedData.profession);
     setEducation(parsedData.education);
     setDob("1998-05-15");
-    setMobile("+91 99887 76655");
+    setMobile("9988776655");
     setEmail(`${parsedData.name.toLowerCase()}@email.com`);
     
     showToast("Parsed profile details copied to Manual form!", "success");
@@ -658,12 +662,19 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="form-row">
                   <div className="form-group">
                     <label>Mobile Number</label>
-                    <input
-                      type="tel"
-                      placeholder="+91 98765 43210"
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
-                    />
+                    <div className="phone-input-container">
+                      <span className="phone-code-prefix">🇮🇳 +91</span>
+                      <input
+                        type="tel"
+                        placeholder="9876543210"
+                        value={mobile}
+                        maxLength={10}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setMobile(val);
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Email Address</label>
