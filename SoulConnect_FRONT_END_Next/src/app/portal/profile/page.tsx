@@ -73,6 +73,14 @@ export default function ProfilePage() {
         blood_group: profile.blood_group || "",
         additional_report_info: profile.additional_report_info || "",
       });
+
+      if (profile.family_photo) {
+        const src = typeof profile.family_photo === "string" ? profile.family_photo : (profile.family_photo?.url || profile.family_photo?.path);
+        if (src) setFamilyPhotos([src]);
+      } else if (Array.isArray(profile.family_photos) && profile.family_photos.length > 0) {
+        const src = typeof profile.family_photos[0] === "string" ? profile.family_photos[0] : (profile.family_photos[0]?.url || profile.family_photos[0]?.path);
+        if (src) setFamilyPhotos([src]);
+      }
     }
   }, [profile]);
 
@@ -188,6 +196,7 @@ export default function ProfilePage() {
   const [horoscopeUploaded, setHoroscopeUploaded] = useState(false);
   const [voiceNoteRecorded, setVoiceNoteRecorded] = useState(false);
   const [casualPhotos, setCasualPhotos] = useState<string[]>([]);
+  const [familyPhotos, setFamilyPhotos] = useState<string[]>([]);
   const [horoscopeFileName, setHoroscopeFileName] = useState("");
 
   // Calculations
@@ -199,6 +208,7 @@ export default function ProfilePage() {
 
   // References for inputs
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const familyPhotoInputRef = useRef<HTMLInputElement>(null);
   const horoInputRef = useRef<HTMLInputElement>(null);
 
   // Voice Recording Modal State
@@ -403,6 +413,10 @@ export default function ProfilePage() {
     photoInputRef.current?.click();
   };
 
+  const triggerFamilyPhotoUpload = () => {
+    familyPhotoInputRef.current?.click();
+  };
+
   const triggerHoroUpload = () => {
     horoInputRef.current?.click();
   };
@@ -413,6 +427,16 @@ export default function ProfilePage() {
       const imageUrl = URL.createObjectURL(file);
       setCasualPhotos((prev) => [...prev, imageUrl]);
       showToast("Casual photo uploaded successfully!", "success");
+    }
+  };
+
+  const handleFamilyPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const imageUrl = URL.createObjectURL(file);
+      // Only 1 photo allowed for Family Photos
+      setFamilyPhotos([imageUrl]);
+      showToast("Family photo uploaded successfully!", "success");
     }
   };
 
@@ -2150,88 +2174,56 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">📷</div>Family Photos
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">👨‍👩‍👧‍👦</div>Family Photos
+                </div>
+                <span className="text-xs text-slate-400 font-medium">Max 1 photo</span>
               </div>
 
               {/* Photo Upload Form */}
               <input
                 type="file"
-                ref={photoInputRef}
+                ref={familyPhotoInputRef}
                 className="hidden"
                 accept="image/*"
-                onChange={handlePhotoChange}
+                onChange={handleFamilyPhotoChange}
               />
 
               <div className="photos-grid">
-                {/* Profile Images from API */}
-                {Array.isArray(profile?.image) && profile.image.length > 0
-                  ? profile.image.map((imgObj: any, idx: number) => {
-                      const src = typeof imgObj === "string" ? imgObj : (imgObj?.url || imgObj?.path);
-                      if (!src) return null;
-                      return (
-                        <div key={idx} className="photo-slot relative overflow-hidden group">
-                          <img
-                            src={src}
-                            alt={`Profile image ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                          {imgObj?.default && (
-                            <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
-                              ★ Default
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })
-                  : Array.isArray(profile?.photos) && profile.photos.length > 0
-                  ? profile.photos.map((src: string, idx: number) => (
-                      <div key={idx} className="photo-slot relative overflow-hidden group">
-                        <img
-                          src={src}
-                          alt={`Profile photo ${idx + 1}`}
-                          className="w-full h-full object-cover rounded-xl"
-                        />
-                      </div>
-                    ))
-                  : null}
-
-                {/* Dynamic Uploads */}
-                {casualPhotos.map((url, idx) => (
-                  <div key={idx} className="photo-slot relative group">
+                {/* Uploaded Family Photo */}
+                {familyPhotos.map((url, idx) => (
+                  <div key={idx} className="photo-slot relative group overflow-hidden">
                     <img
                       src={url}
-                      alt={`Uploaded casual ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      alt={`Family photo ${idx + 1}`}
+                      className="w-full h-full object-cover rounded-xl"
                     />
                     <button
-                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity"
+                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setCasualPhotos((prev) =>
-                          prev.filter((_, i) => i !== idx),
-                        );
-                        showToast("Photo deleted", "info");
+                        setFamilyPhotos([]);
+                        showToast("Family photo deleted", "info");
                       }}
+                      title="Delete Family Photo"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
 
-                {/* Add Photo Button Slot */}
-                {casualPhotos.length < 2 && (
+                {/* Add Photo Button Slot - Only allowed 1 photo */}
+                {familyPhotos.length < 1 && (
                   <div
                     className="photo-slot photo-slot-add"
-                    onClick={triggerPhotoUpload}
+                    onClick={triggerFamilyPhotoUpload}
                   >
                     <div className="photo-av">＋</div>
-                    <div className="photo-label">Add Photo</div>
+                    <div className="photo-label">Add Family Photo</div>
                   </div>
                 )}
               </div>
-
-
             </div>
 
             {/* Video Intro Card */}
