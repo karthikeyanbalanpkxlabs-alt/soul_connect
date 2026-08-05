@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import Toast from "@/components/Toast";
+import keycloak from "@/lib/keycloak";
 import {
   ArrowLeft,
   Share2,
@@ -24,15 +25,134 @@ import {
   Info,
   CheckCircle2,
   AlertTriangle,
+  Pencil,
+  X,
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../../../configUrls";
 
+const NAKSHATRAS = [
+  "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
+  "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
+  "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshta",
+  "Moola", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha",
+  "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+];
+
+const RASIS = [
+  "Mesham (Aries)", "Rishabam (Taurus)", "Mithunam (Gemini)", "Katagam (Cancer)",
+  "Simmam (Leo)", "Kanni (Virgo)", "Thulaam (Libra)", "Vrichigam (Scorpio)",
+  "Dhanusu (Sagittarius)", "Makaram (Capricorn)", "Kumbam (Aquarius)", "Meenam (Pisces)"
+];
+
+const LAGNAMS = [
+  "Mesham (Aries)", "Rishabam (Taurus)", "Mithunam (Gemini)", "Katagam (Cancer)",
+  "Simmam (Leo)", "Kanni (Virgo)", "Thulaam (Libra)", "Vrichigam (Scorpio)",
+  "Dhanusu (Sagittarius)", "Makaram (Capricorn)", "Kumbam (Aquarius)", "Meenam (Pisces)"
+];
+
 export default function ProfilePage() {
   const router = useRouter();
-  const { profile, loadingProfile, profileError, refreshProfile } =
+  const { profile, loadingProfile, profileError, refreshProfile, roles } =
     useKeycloak();
+
+  const tokenParsed: any = keycloak?.tokenParsed;
+  const userRoles: string[] = roles || tokenParsed?.realm_access?.roles || [];
+  const isCustomer = userRoles.includes("customer_g");
+  const isManager = userRoles.includes("manager_g");
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<any>({});
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        first_name: profile.first_name || profile.firstName || "",
+        last_name: profile.last_name || profile.lastName || "",
+        email: profile.email || "",
+        phone_code: profile.phone_code || "+91",
+        phone_number: profile.phone_number || profile.phone || "",
+        dob: profile.dob || "",
+        gender: profile.gender || "",
+        maritial_status: profile.maritial_status || profile.marital_status || "",
+        height: profile.height || "",
+        district: profile.district || "",
+        taluk_town: profile.taluk_town || "",
+        state: profile.state || "",
+        zipcode: profile.zipcode || "",
+        religion: profile.religion || "",
+        caste: profile.caste || "",
+        mother_tongue: profile.mother_tongue || "",
+        education: profile.education || "",
+        profession: profile.profession || profile.occupation || "",
+        annual_income: profile.annual_income || "",
+        about_self: profile.about_self || "",
+        partner_preference: profile.partner_preference || "",
+        ambition: profile.ambition || "",
+        blood_group: profile.blood_group || "",
+        additional_report_info: profile.additional_report_info || "",
+        star: profile.star || profile.nakshatra || "",
+        rasi: profile.rasi || profile.moon_sign || "",
+        lagnam: profile.lagnam || profile.ascendant || "",
+        gothram: profile.gothram || "",
+        tob: profile.tob || profile.time_of_birth || "",
+        pob: profile.pob || profile.place_of_birth || "",
+        dosham: profile.dosham || "",
+      });
+
+      if (profile.family_photo) {
+        const src = typeof profile.family_photo === "string" ? profile.family_photo : (profile.family_photo?.url || profile.family_photo?.path);
+        if (src) setFamilyPhotos([src]);
+      } else if (Array.isArray(profile.family_photos) && profile.family_photos.length > 0) {
+        const src = typeof profile.family_photos[0] === "string" ? profile.family_photos[0] : (profile.family_photos[0]?.url || profile.family_photos[0]?.path);
+        if (src) setFamilyPhotos([src]);
+      }
+    }
+  }, [profile]);
+
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveInlineProfile = async () => {
+    try {
+      if (keycloak) {
+        await keycloak.updateToken(30);
+      }
+      const token = keycloak?.token;
+      const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+
+      const payload = {
+        ...profile,
+        ...formData,
+        keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
+        customer_id: profile?.customer_id,
+        _id: profile?._id,
+      };
+
+      const res = await fetch(`${apiUrl}/api/customer_edit`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && !data.error) {
+        showToast("Profile changes saved successfully! ✨", "success");
+        setIsEditing(false);
+        refreshProfile();
+      } else {
+        showToast(data.error || "Failed to update profile", "error");
+      }
+    } catch (err: any) {
+      console.error("Failed to update profile:", err);
+      showToast(err.message || "Failed to update profile", "error");
+    }
+  };
 
   const firstName = profile?.first_name || profile?.firstName || "";
   const lastName = profile?.last_name || profile?.lastName || "";
@@ -41,7 +161,12 @@ export default function ProfilePage() {
   const defaultImgObj = Array.isArray(profile?.image)
     ? profile.image.find((img: any) => img.default) || profile.image[0]
     : null;
-  const avatarUrl = defaultImgObj?.url;
+  const avatarUrl =
+    (typeof defaultImgObj === "string" ? defaultImgObj : defaultImgObj?.url) ||
+    (typeof profile?.image === "string" ? profile.image : null) ||
+    (Array.isArray(profile?.photos) && profile.photos[0]) ||
+    profile?.photo ||
+    null;
 
   const calculateAge = (dobString?: string) => {
     if (!dobString) return null;
@@ -98,6 +223,7 @@ export default function ProfilePage() {
   const [horoscopeUploaded, setHoroscopeUploaded] = useState(false);
   const [voiceNoteRecorded, setVoiceNoteRecorded] = useState(false);
   const [casualPhotos, setCasualPhotos] = useState<string[]>([]);
+  const [familyPhotos, setFamilyPhotos] = useState<string[]>([]);
   const [horoscopeFileName, setHoroscopeFileName] = useState("");
 
   // Calculations
@@ -109,6 +235,7 @@ export default function ProfilePage() {
 
   // References for inputs
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const familyPhotoInputRef = useRef<HTMLInputElement>(null);
   const horoInputRef = useRef<HTMLInputElement>(null);
 
   // Voice Recording Modal State
@@ -313,16 +440,39 @@ export default function ProfilePage() {
     photoInputRef.current?.click();
   };
 
+  const triggerFamilyPhotoUpload = () => {
+    familyPhotoInputRef.current?.click();
+  };
+
   const triggerHoroUpload = () => {
     horoInputRef.current?.click();
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      const existingCount = Array.isArray(profile?.image) && profile.image.length > 0
+        ? profile.image.length
+        : Array.isArray(profile?.photos) && profile.photos.length > 0
+        ? profile.photos.length
+        : 0;
+      if (existingCount + casualPhotos.length >= 3) {
+        showToast("Maximum of 3 profile photos allowed", "error");
+        return;
+      }
       const file = e.target.files[0];
       const imageUrl = URL.createObjectURL(file);
       setCasualPhotos((prev) => [...prev, imageUrl]);
-      showToast("Casual photo uploaded successfully!", "success");
+      showToast("Profile photo uploaded successfully!", "success");
+    }
+  };
+
+  const handleFamilyPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const imageUrl = URL.createObjectURL(file);
+      // Only 1 photo allowed for Family Photos
+      setFamilyPhotos([imageUrl]);
+      showToast("Family photo uploaded successfully!", "success");
     }
   };
 
@@ -398,10 +548,50 @@ export default function ProfilePage() {
       <div className="profile-hero">
         <div className="profile-hero-bg"></div>
         <div className="profile-hero-pattern"></div>
-        <button className="profile-back-btn" onClick={() => router.back()}>
+        <button
+          className="profile-back-btn"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/portal");
+            }
+          }}
+        >
           ← Browse Profiles
         </button>
         <div className="profile-hero-actions">
+          {isCustomer && (
+            !isEditing ? (
+              <button
+                className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs hover:bg-white/30 transition-all shadow-sm"
+                title="Edit Profile"
+                onClick={() => setIsEditing(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit Profile
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-sm"
+                  title="Save Changes"
+                  onClick={handleSaveInlineProfile}
+                >
+                  <Check className="h-3.5 w-3.5" /> Save Changes
+                </button>
+                <button
+                  className="hero-action-btn font-semibold flex items-center gap-1.5 px-3.5 !w-auto !rounded-full text-xs bg-slate-800/80 text-white hover:bg-slate-900 transition-all shadow-sm"
+                  title="Cancel Editing"
+                  onClick={() => {
+                    setIsEditing(false);
+                    if (profile) setFormData({ ...profile });
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" /> Cancel
+                </button>
+              </div>
+            )
+          )}
           <button
             className="hero-action-btn"
             title="Share"
@@ -435,13 +625,49 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* INLINE EDIT MODE BANNER */}
+      {isCustomer && isEditing && (
+        <div className="max-w-[1100px] mx-auto px-6 mt-4 mb-2">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">✏️</span>
+              <div>
+                <h4 className="font-bold text-xs uppercase tracking-wider text-amber-900">
+                  Profile Editing Mode Active
+                </h4>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Update your details directly on the page below and click Save Changes when finished.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveInlineProfile}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition"
+              >
+                ✓ Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  if (profile) setFormData({ ...profile });
+                }}
+                className="px-3 py-2 bg-white text-slate-700 hover:bg-slate-100 font-semibold text-xs rounded-xl border border-slate-200 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="profile-layout">
         {/* LEFT COLUMN */}
         <div className="profile-left">
           {/* Main Card */}
           <div className={`profile-card reveal ${isLoaded ? "visible" : ""}`}>
             <div className="profile-avatar-wrap">
-              <div className="profile-avatar overflow-hidden relative flex items-center justify-center">
+              <div className="profile-avatar relative flex items-center justify-center">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -453,7 +679,42 @@ export default function ProfilePage() {
                 )}
                 {profile?.public_verify && <div className="avatar-verified">✓</div>}
               </div>
-              <div className="profile-name">{nameKit}</div>
+              {!isEditing ? (
+                <div className="flex items-center justify-center gap-2 mt-3.5">
+                  <div className="profile-name !mt-0">{nameKit}</div>
+                  {isCustomer && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="p-1.5 rounded-full hover:bg-purple-50 text-slate-400 hover:text-purple-600 transition-colors"
+                      title="Edit Profile"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5 items-center mt-3.5 w-full max-w-[260px]">
+                  <div className="text-[10px] font-bold text-violet-600 uppercase tracking-wider">
+                    Editing Name
+                  </div>
+                  <div className="flex gap-2 w-full">
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={formData.first_name || ""}
+                      onChange={(e) => handleChange("first_name", e.target.value)}
+                      className="w-1/2 px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last Name"
+                      value={formData.last_name || ""}
+                      onChange={(e) => handleChange("last_name", e.target.value)}
+                      className="w-1/2 px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                    />
+                  </div>
+                </div>
+              )}
               {profile?.subscription_type && (
                 <div className="mt-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
                   {profile.subscription_type} Plan
@@ -464,10 +725,25 @@ export default function ProfilePage() {
                   {profile.approvalStatus}
                 </div>
               )}
-              <div className="profile-tagline">
-                {profile?.about_self ||
-                  "Looking for a partner equally at home with traditional values and modern growth."}
-              </div>
+              {!isEditing ? (
+                <div className="profile-tagline">
+                  {profile?.about_self ||
+                    "Looking for a partner equally at home with traditional values and modern growth."}
+                </div>
+              ) : (
+                <div className="w-full max-w-[260px] my-2 text-center">
+                  <div className="text-[10px] font-bold text-violet-600 uppercase tracking-wider mb-1">
+                    Headline / Summary
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="Short Headline / About self..."
+                    value={formData.about_self || ""}
+                    onChange={(e) => handleChange("about_self", e.target.value)}
+                    className="w-full p-2 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                  />
+                </div>
+              )}
               <div className="profile-location">📍 {locationStr}</div>
               <div className="profile-id">{customerId}</div>
             </div>
@@ -494,46 +770,83 @@ export default function ProfilePage() {
 
             {/* Actions */}
             <div className="profile-actions">
-              <button
-                className="btn-primary"
-                onClick={handleSendInterest}
-                style={{
-                  background: interestSent
-                    ? "linear-gradient(135deg, var(--sage), var(--teal))"
-                    : "",
-                }}
-              >
-                {interestSent ? "✓ Interest Sent" : "💬 Send Interest"}
-              </button>
-              <button className="btn-secondary" onClick={handleSendMessage}>
-                ✉ Send Message
-              </button>
-              <div className="btn-row">
-                <button
-                  className="btn-like"
-                  onClick={handleLike}
-                  style={{
-                    backgroundColor: isLiked ? "var(--rose-light)" : "white",
-                    borderColor: isLiked ? "var(--rose)" : "",
-                    fontWeight: isLiked ? "700" : "500",
-                  }}
-                >
-                  {isLiked ? "♥ Liked" : "♡ Like"}
-                </button>
-                <button
-                  className="btn-shortlist"
-                  onClick={handleShortlist}
-                  style={{
-                    backgroundColor: isShortlisted
-                      ? "var(--amber-light)"
-                      : "white",
-                    borderColor: isShortlisted ? "var(--amber)" : "",
-                    fontWeight: isShortlisted ? "700" : "500",
-                  }}
-                >
-                  {isShortlisted ? "★ Shortlisted" : "★ Shortlist"}
-                </button>
-              </div>
+              {isCustomer ? (
+                !isEditing ? (
+                  <button
+                    className="btn-primary"
+                    onClick={() => setIsEditing(true)}
+                    style={{
+                      background: "linear-gradient(135deg, var(--rose), var(--plum))",
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" /> Edit Profile
+                  </button>
+                ) : (
+                  <div className="flex flex-col gap-2 w-full">
+                    <button
+                      className="btn-primary"
+                      onClick={handleSaveInlineProfile}
+                      style={{
+                        background: "linear-gradient(135deg, #059669, #0D9488)",
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-1.5" /> Save Changes
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => {
+                        setIsEditing(false);
+                        if (profile) setFormData({ ...profile });
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )
+              ) : (
+                <>
+                  <button
+                    className="btn-primary"
+                    onClick={handleSendInterest}
+                    style={{
+                      background: interestSent
+                        ? "linear-gradient(135deg, var(--sage), var(--teal))"
+                        : "",
+                    }}
+                  >
+                    {interestSent ? "✓ Interest Sent" : "💬 Send Interest"}
+                  </button>
+                  <button className="btn-secondary" onClick={handleSendMessage}>
+                    ✉ Send Message
+                  </button>
+                  <div className="btn-row">
+                    <button
+                      className="btn-like"
+                      onClick={handleLike}
+                      style={{
+                        backgroundColor: isLiked ? "var(--rose-light)" : "white",
+                        borderColor: isLiked ? "var(--rose)" : "",
+                        fontWeight: isLiked ? "700" : "500",
+                      }}
+                    >
+                      {isLiked ? "♥ Liked" : "♡ Like"}
+                    </button>
+                    <button
+                      className="btn-shortlist"
+                      onClick={handleShortlist}
+                      style={{
+                        backgroundColor: isShortlisted
+                          ? "var(--amber-light)"
+                          : "white",
+                        borderColor: isShortlisted ? "var(--amber)" : "",
+                        fontWeight: isShortlisted ? "700" : "500",
+                      }}
+                    >
+                      {isShortlisted ? "★ Shortlisted" : "★ Shortlist"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Quick Facts */}
@@ -542,45 +855,146 @@ export default function ProfilePage() {
               <div className="fact-row">
                 <div className="fact-icon">🎂</div>
                 <div className="fact-label">Age / DOB</div>
-                <div className="fact-value">{ageDisplay}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    ageDisplay
+                  ) : (
+                    <input
+                      type="date"
+                      value={formData.dob || ""}
+                      onChange={(e) => handleChange("dob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">📏</div>
                 <div className="fact-label">Height</div>
-                <div className="fact-value">{profile?.height || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.height || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Height (e.g. 5'8&quot;)"
+                      value={formData.height || ""}
+                      onChange={(e) => handleChange("height", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🛕</div>
                 <div className="fact-label">Religion / Caste</div>
                 <div className="fact-value">
-                  {profile?.religion || "N/A"}
-                  {profile?.caste ? ` (${profile.caste})` : ""}
+                  {!isEditing ? (
+                    `${profile?.religion || "N/A"}${profile?.caste ? ` (${profile.caste})` : ""}`
+                  ) : (
+                    <div className="flex gap-1 w-full">
+                      <input
+                        type="text"
+                        placeholder="Religion"
+                        value={formData.religion || ""}
+                        onChange={(e) => handleChange("religion", e.target.value)}
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Caste"
+                        value={formData.caste || ""}
+                        onChange={(e) => handleChange("caste", e.target.value)}
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">💼</div>
                 <div className="fact-label">Profession</div>
-                <div className="fact-value">{profile?.profession || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.profession || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Profession"
+                      value={formData.profession || ""}
+                      onChange={(e) => handleChange("profession", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🎓</div>
                 <div className="fact-label">Education</div>
-                <div className="fact-value">{profile?.education || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.education || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Education"
+                      value={formData.education || ""}
+                      onChange={(e) => handleChange("education", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">💰</div>
                 <div className="fact-label">Income</div>
-                <div className="fact-value">{profile?.annual_income || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.annual_income || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Annual Income"
+                      value={formData.annual_income || ""}
+                      onChange={(e) => handleChange("annual_income", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">📍</div>
                 <div className="fact-label">District</div>
-                <div className="fact-value">{profile?.district || "N/A"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.district || "N/A"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="District"
+                      value={formData.district || ""}
+                      onChange={(e) => handleChange("district", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
               <div className="fact-row">
                 <div className="fact-icon">🌐</div>
                 <div className="fact-label">Languages</div>
-                <div className="fact-value">{profile?.mother_tongue || "Tamil"}</div>
+                <div className="fact-value">
+                  {!isEditing ? (
+                    profile?.mother_tongue || "Tamil"
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Mother Tongue / Languages"
+                      value={formData.mother_tongue || ""}
+                      onChange={(e) => handleChange("mother_tongue", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -680,13 +1094,38 @@ export default function ProfilePage() {
           {/* ABOUT TAB PANEL */}
           <div className={`tab-panel ${activeTab === "about" ? "active" : ""}`}>
             <div className={`content-card reveal ${isLoaded ? "visible" : ""}`}>
-              <div className="content-card-title">
-                <div className="ctitle-icon">✍</div>About Me
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">✍</div>About Me
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
-              <p className="about-text">
-                {profile?.about_self ||
-                  "Welcome to my profile! I am looking for a partner with shared values and mutual respect to build a meaningful life together."}
-              </p>
+              {!isEditing ? (
+                <p className="about-text">
+                  {profile?.about_self ||
+                    "Welcome to my profile! I am looking for a partner with shared values and mutual respect to build a meaningful life together."}
+                </p>
+              ) : (
+                <div className="mt-1">
+                  <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                    Edit About Yourself:
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.about_self || ""}
+                    onChange={(e) => handleChange("about_self", e.target.value)}
+                    className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                    placeholder="Write a warm description about your values, personality, and hobbies..."
+                  />
+                </div>
+              )}
               {profile?.identity_proff?.url && (
                 <div className="mt-4 p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -709,7 +1148,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Ambition */}
-            {profile?.ambition && (
+            {(!isEditing ? profile?.ambition : true) && (
               <div
                 className={`content-card reveal ${isLoaded ? "visible" : ""}`}
                 style={{ transitionDelay: ".05s" }}
@@ -717,12 +1156,27 @@ export default function ProfilePage() {
                 <div className="content-card-title">
                   <div className="ctitle-icon">🎯</div>Ambition
                 </div>
-                <p className="about-text">{profile.ambition}</p>
+                {!isEditing ? (
+                  <p className="about-text">{profile?.ambition}</p>
+                ) : (
+                  <div>
+                    <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                      Edit Ambition / Goals:
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.ambition || ""}
+                      onChange={(e) => handleChange("ambition", e.target.value)}
+                      className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                      placeholder="Describe your personal or career goals..."
+                    />
+                  </div>
+                )}
               </div>
             )}
 
             {/* Health & Medical Report */}
-            {(profile?.health_report || profile?.blood_group || profile?.additional_report_info) && (
+            {(!isEditing ? (profile?.health_report || profile?.blood_group || profile?.additional_report_info) : true) && (
               <div
                 className={`content-card reveal ${isLoaded ? "visible" : ""}`}
                 style={{ transitionDelay: ".07s" }}
@@ -732,27 +1186,45 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="space-y-4 text-sm mt-3">
-                  {profile.blood_group && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500">Blood Group:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">Blood Group:</span>
+                    {!isEditing ? (
                       <span className="font-semibold bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full text-xs border border-rose-100">
-                        {profile.blood_group}
+                        {profile?.blood_group || "N/A"}
                       </span>
-                    </div>
-                  )}
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="e.g. O+ve"
+                        value={formData.blood_group || ""}
+                        onChange={(e) => handleChange("blood_group", e.target.value)}
+                        className="px-2.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                      />
+                    )}
+                  </div>
                   
-                  {profile.additional_report_info && (
+                  {(!isEditing ? profile?.additional_report_info : true) && (
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                       <h4 className="font-semibold text-slate-800 text-[10px] uppercase tracking-wider text-slate-400 mb-1">
                         Additional Report Info
                       </h4>
-                      <p className="text-slate-600 leading-relaxed">
-                        {profile.additional_report_info}
-                      </p>
+                      {!isEditing ? (
+                        <p className="text-slate-600 leading-relaxed">
+                          {profile?.additional_report_info}
+                        </p>
+                      ) : (
+                        <textarea
+                          rows={2}
+                          value={formData.additional_report_info || ""}
+                          onChange={(e) => handleChange("additional_report_info", e.target.value)}
+                          className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          placeholder="Additional health details..."
+                        />
+                      )}
                     </div>
                   )}
 
-                  {profile.health_report?.url && (
+                  {profile?.health_report?.url && (
                     <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-xl">📄</span>
@@ -998,17 +1470,59 @@ export default function ProfilePage() {
             className={`tab-panel ${activeTab === "details" ? "active" : ""}`}
           >
             <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">👤</div>Personal Details
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">👤</div>Personal Details
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Full Name</div>
-                  <div className="detail-value">{nameKit}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      nameKit
+                    ) : (
+                      <div className="flex gap-1.5 w-full">
+                        <input
+                          type="text"
+                          placeholder="First Name"
+                          value={formData.first_name || ""}
+                          onChange={(e) => handleChange("first_name", e.target.value)}
+                          className="w-1/2 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Last Name"
+                          value={formData.last_name || ""}
+                          onChange={(e) => handleChange("last_name", e.target.value)}
+                          className="w-1/2 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Date of Birth</div>
-                  <div className="detail-value">{profile?.dob || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.dob || "N/A"
+                    ) : (
+                      <input
+                        type="date"
+                        value={formData.dob || ""}
+                        onChange={(e) => handleChange("dob", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Age</div>
@@ -1016,19 +1530,71 @@ export default function ProfilePage() {
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Gender</div>
-                  <div className="detail-value">{profile?.gender || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.gender || "N/A"
+                    ) : (
+                      <select
+                        value={formData.gender || ""}
+                        onChange={(e) => handleChange("gender", e.target.value)}
+                        className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Height</div>
-                  <div className="detail-value">{profile?.height || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.height || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.height || ""}
+                        onChange={(e) => handleChange("height", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Marital Status</div>
-                  <div className="detail-value">{profile?.maritial_status || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.maritial_status || profile?.marital_status || "N/A"
+                    ) : (
+                      <select
+                        value={formData.maritial_status || ""}
+                        onChange={(e) => handleChange("maritial_status", e.target.value)}
+                        className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      >
+                        <option value="">Select Status</option>
+                        <option value="Never Married">Never Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Awaiting Divorce">Awaiting Divorce</option>
+                      </select>
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Mother Tongue</div>
-                  <div className="detail-value">{profile?.mother_tongue || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.mother_tongue || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.mother_tongue || ""}
+                        onChange={(e) => handleChange("mother_tongue", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item relative">
                   <div className="detail-label">Email</div>
@@ -1076,16 +1642,57 @@ export default function ProfilePage() {
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">District</div>
-                  <div className="detail-value">{profile?.district || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.district || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.district || ""}
+                        onChange={(e) => handleChange("district", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Taluk / Town</div>
-                  <div className="detail-value">{profile?.taluk_town || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.taluk_town || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.taluk_town || ""}
+                        onChange={(e) => handleChange("taluk_town", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">State / Zipcode</div>
                   <div className="detail-value">
-                    {profile?.state || "N/A"} {profile?.zipcode ? `(${profile.zipcode})` : ""}
+                    {!isEditing ? (
+                      `${profile?.state || "N/A"} ${profile?.zipcode ? `(${profile.zipcode})` : ""}`
+                    ) : (
+                      <div className="flex gap-1 w-full">
+                        <input
+                          type="text"
+                          placeholder="State"
+                          value={formData.state || ""}
+                          onChange={(e) => handleChange("state", e.target.value)}
+                          className="w-2/3 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Zipcode"
+                          value={formData.zipcode || ""}
+                          onChange={(e) => handleChange("zipcode", e.target.value)}
+                          className="w-1/3 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1101,15 +1708,48 @@ export default function ProfilePage() {
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Highest Degree / Education</div>
-                  <div className="detail-value">{profile?.education || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.education || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.education || ""}
+                        onChange={(e) => handleChange("education", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Occupation / Profession</div>
-                  <div className="detail-value">{profile?.profession || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.profession || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.profession || ""}
+                        onChange={(e) => handleChange("profession", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Annual Income</div>
-                  <div className="detail-value">{profile?.annual_income || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.annual_income || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.annual_income || ""}
+                        onChange={(e) => handleChange("annual_income", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Work Location</div>
@@ -1128,15 +1768,48 @@ export default function ProfilePage() {
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Religion</div>
-                  <div className="detail-value">{profile?.religion || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.religion || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.religion || ""}
+                        onChange={(e) => handleChange("religion", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Caste</div>
-                  <div className="detail-value">{profile?.caste || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.caste || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.caste || ""}
+                        onChange={(e) => handleChange("caste", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Mother Tongue</div>
-                  <div className="detail-value">{profile?.mother_tongue || "N/A"}</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.mother_tongue || "N/A"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.mother_tongue || ""}
+                        onChange={(e) => handleChange("mother_tongue", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1407,13 +2080,38 @@ export default function ProfilePage() {
               className="content-card reveal visible"
               style={{ transitionDelay: ".1s" }}
             >
-              <div className="content-card-title">
-                <div className="ctitle-icon">💬</div>Partner Preferences Overview
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">💬</div>Partner Preferences Overview
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
-              <p className="about-text">
-                "{profile?.partner_preference ||
-                  "Like we mentioned before, your values often inform your dating preferences."}"
-              </p>
+              {!isEditing ? (
+                <p className="about-text">
+                  "{profile?.partner_preference ||
+                    "Like we mentioned before, your values often inform your dating preferences."}"
+                </p>
+              ) : (
+                <div className="mt-1">
+                  <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                    Edit Partner Preferences Description:
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.partner_preference || ""}
+                    onChange={(e) => handleChange("partner_preference", e.target.value)}
+                    className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                    placeholder="Describe what qualities and expectations you have in a partner..."
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -1422,8 +2120,11 @@ export default function ProfilePage() {
             className={`tab-panel ${activeTab === "photos" ? "active" : ""}`}
           >
             <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">📷</div>Profile Photos
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">📷</div>Profile Photos
+                </div>
+                <span className="text-xs text-slate-400 font-medium">Max 3 photos</span>
               </div>
 
               {/* Photo Upload Form */}
@@ -1437,32 +2138,47 @@ export default function ProfilePage() {
 
               <div className="photos-grid">
                 {/* Profile Images from API */}
-                {Array.isArray(profile?.image) && profile.image.length > 0 &&
-                  profile.image.map((imgObj: any, idx: number) => (
-                    <div key={idx} className="photo-slot relative overflow-hidden group">
-                      <img
-                        src={imgObj.url}
-                        alt={`Profile image ${idx + 1}`}
-                        className="w-full h-full object-cover rounded-xl"
-                      />
-                      {imgObj.default && (
-                        <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
-                          ★ Default
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                {Array.isArray(profile?.image) && profile.image.length > 0
+                  ? profile.image.slice(0, 3).map((imgObj: any, idx: number) => {
+                      const src = typeof imgObj === "string" ? imgObj : (imgObj?.url || imgObj?.path);
+                      if (!src) return null;
+                      return (
+                        <div key={idx} className="photo-slot relative overflow-hidden group">
+                          <img
+                            src={src}
+                            alt={`Profile image ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                          {imgObj?.default && (
+                            <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
+                              ★ Default
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })
+                  : Array.isArray(profile?.photos) && profile.photos.length > 0
+                  ? profile.photos.slice(0, 3).map((src: string, idx: number) => (
+                      <div key={idx} className="photo-slot relative overflow-hidden group">
+                        <img
+                          src={src}
+                          alt={`Profile photo ${idx + 1}`}
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      </div>
+                    ))
+                  : null}
 
                 {/* Dynamic Uploads */}
                 {casualPhotos.map((url, idx) => (
-                  <div key={idx} className="photo-slot relative group">
+                  <div key={idx} className="photo-slot relative group overflow-hidden">
                     <img
                       src={url}
-                      alt={`Uploaded casual ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      alt={`Uploaded photo ${idx + 1}`}
+                      className="w-full h-full object-cover rounded-xl"
                     />
                     <button
-                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity"
+                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
                       onClick={(e) => {
                         e.stopPropagation();
                         setCasualPhotos((prev) =>
@@ -1470,14 +2186,19 @@ export default function ProfilePage() {
                         );
                         showToast("Photo deleted", "info");
                       }}
+                      title="Delete Photo"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
 
-                {/* Add Photo Button Slot */}
-                {casualPhotos.length < 2 && (
+                {/* Add Photo Button Slot - Up to 3 photos max */}
+                {((Array.isArray(profile?.image) && profile.image.length > 0
+                  ? profile.image.length
+                  : Array.isArray(profile?.photos) && profile.photos.length > 0
+                  ? profile.photos.length
+                  : 0) + casualPhotos.length) < 3 && (
                   <div
                     className="photo-slot photo-slot-add"
                     onClick={triggerPhotoUpload}
@@ -1491,9 +2212,60 @@ export default function ProfilePage() {
               <div className="photos-note">
                 <div className="photos-note-icon">💡</div>
                 <p>
-                  Profiles with 5+ photos get 3× more connection requests.
-                  Private photos are only visible after interest is accepted.
+                  You can upload up to 3 profile photos. High quality photos get 3× more connection requests.
                 </p>
+              </div>
+            </div>
+            <div className="content-card reveal visible">
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">👨‍👩‍👧‍👦</div>Family Photos
+                </div>
+                <span className="text-xs text-slate-400 font-medium">Max 1 photo</span>
+              </div>
+
+              {/* Photo Upload Form */}
+              <input
+                type="file"
+                ref={familyPhotoInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFamilyPhotoChange}
+              />
+
+              <div className="photos-grid">
+                {/* Uploaded Family Photo */}
+                {familyPhotos.map((url, idx) => (
+                  <div key={idx} className="photo-slot relative group overflow-hidden">
+                    <img
+                      src={url}
+                      alt={`Family photo ${idx + 1}`}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                    <button
+                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFamilyPhotos([]);
+                        showToast("Family photo deleted", "info");
+                      }}
+                      title="Delete Family Photo"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Add Photo Button Slot - Only allowed 1 photo */}
+                {familyPhotos.length < 1 && (
+                  <div
+                    className="photo-slot photo-slot-add"
+                    onClick={triggerFamilyPhotoUpload}
+                  >
+                    <div className="photo-av">＋</div>
+                    <div className="photo-label">Add Family Photo</div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1555,55 +2327,177 @@ export default function ProfilePage() {
             className={`tab-panel ${activeTab === "horoscope" ? "active" : ""}`}
           >
             <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">⭐</div>Horoscope Details
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">⭐</div>Horoscope Details
+                </div>
+                {isCustomer && !isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </button>
+                )}
               </div>
               <div className="horoscope-grid">
                 <div className="horo-item">
                   <div className="horo-label">Star (Nakshatra)</div>
-                  <div className="horo-value">Rohini</div>
-                  <div className="horo-value-tamil">ரோகிணி</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.star || formData.star || "Rohini"}</div>
+                      <div className="horo-value-tamil">ரோகிணி</div>
+                    </>
+                  ) : (
+                    <select
+                      value={formData.star || ""}
+                      onChange={(e) => handleChange("star", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                    >
+                      <option value="">Select Star (Nakshatra)</option>
+                      {NAKSHATRAS.map((star) => (
+                        <option key={star} value={star}>
+                          {star}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Rasi (Moon Sign)</div>
-                  <div className="horo-value">Rishabam (Taurus)</div>
-                  <div className="horo-value-tamil">ரிஷபம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.rasi || formData.rasi || "Rishabam (Taurus)"}</div>
+                      <div className="horo-value-tamil">ரிஷபம்</div>
+                    </>
+                  ) : (
+                    <select
+                      value={formData.rasi || ""}
+                      onChange={(e) => handleChange("rasi", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                    >
+                      <option value="">Select Rasi (Moon Sign)</option>
+                      {RASIS.map((rasi) => (
+                        <option key={rasi} value={rasi}>
+                          {rasi}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Lagnam (Ascendant)</div>
-                  <div className="horo-value">Mithunam (Gemini)</div>
-                  <div className="horo-value-tamil">மிதுனம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}</div>
+                      <div className="horo-value-tamil">மிதுனம்</div>
+                    </>
+                  ) : (
+                    <select
+                      value={formData.lagnam || ""}
+                      onChange={(e) => handleChange("lagnam", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                    >
+                      <option value="">Select Lagnam (Ascendant)</option>
+                      {LAGNAMS.map((lagnam) => (
+                        <option key={lagnam} value={lagnam}>
+                          {lagnam}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Gothram</div>
-                  <div className="horo-value">Vatsa Gothram</div>
-                  <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.gothram || formData.gothram || "Vatsa Gothram"}</div>
+                      <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.gothram || ""}
+                      onChange={(e) => handleChange("gothram", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="Gothram"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Date of Birth</div>
-                  <div className="horo-value">14 March 1997</div>
+                  {!isEditing ? (
+                    <div className="horo-value">{profile?.dob || formData.dob || "14 March 1997"}</div>
+                  ) : (
+                    <input
+                      type="date"
+                      value={formData.dob || ""}
+                      onChange={(e) => handleChange("dob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Time of Birth</div>
-                  <div className="horo-value">06:34 AM</div>
-                  <div className="horo-value-tamil">அதிகாலை</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.tob || formData.tob || "06:34 AM"}</div>
+                      <div className="horo-value-tamil">அதிகாலை</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.tob || ""}
+                      onChange={(e) => handleChange("tob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="e.g. 06:34 AM"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Place of Birth</div>
-                  <div className="horo-value">Kumbakonam</div>
-                  <div className="horo-value-tamil">கும்பகோணம்</div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value">{profile?.pob || formData.pob || "Kumbakonam"}</div>
+                      <div className="horo-value-tamil">கும்பகோணம்</div>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.pob || ""}
+                      onChange={(e) => handleChange("pob", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      placeholder="Place of Birth"
+                    />
+                  )}
                 </div>
                 <div className="horo-item">
                   <div className="horo-label">Dosham</div>
-                  <div className="horo-value" style={{ color: "var(--sage)" }}>
-                    No Dosham
-                  </div>
-                  <div
-                    className="horo-value-tamil"
-                    style={{ color: "var(--sage)" }}
-                  >
-                    தோஷமில்லை
-                  </div>
+                  {!isEditing ? (
+                    <>
+                      <div className="horo-value" style={{ color: "var(--sage)" }}>
+                        {profile?.dosham || formData.dosham || "No Dosham"}
+                      </div>
+                      <div
+                        className="horo-value-tamil"
+                        style={{ color: "var(--sage)" }}
+                      >
+                        தோஷமில்லை
+                      </div>
+                    </>
+                  ) : (
+                    <select
+                      value={formData.dosham || ""}
+                      onChange={(e) => handleChange("dosham", e.target.value)}
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                    >
+                      <option value="">Select Dosham</option>
+                      <option value="No Dosham">No Dosham</option>
+                      <option value="Chevvai Dosham">Chevvai Dosham</option>
+                      <option value="Rahu-Ketu Dosham">Rahu-Ketu Dosham</option>
+                      <option value="Naga Dosham">Naga Dosham</option>
+                    </select>
+                  )}
                 </div>
               </div>
               <div className="horo-badge-wrap">
