@@ -1,18 +1,12 @@
 import { Request, Response } from "express";
-import { createEmailTransporter } from "../config/email";
+import { sendGridEmail } from "../config/email";
 
 export async function handleSendEmail(req: Request, res: Response) {
   const { to, subject, message } = req.body;
 
   try {
-    const transporter = createEmailTransporter();
-
-    // Verify SMTP Connection
-    await transporter.verify();
-    console.log("✅ SMTP Connected Successfully");
-
     const emailTo = to || "karthikeyanbalan.pkxlabs@gmail.com";
-    const emailSubject = subject || "Test Email from Gmail SMTP";
+    const emailSubject = subject || "Test Email from SendGrid API";
 
     let htmlContent = "";
     let textContent = "";
@@ -61,55 +55,38 @@ export async function handleSendEmail(req: Request, res: Response) {
         `;
       }
     } else {
-      textContent = "Hello,\nThis is a test email sent from Gmail SMTP.";
+      textContent = "Hello,\nThis is a test email sent from SendGrid API.";
       htmlContent = `
         <h2>Hello</h2>
-        <p>This is a test email sent from Gmail SMTP.</p>
+        <p>This is a test email sent from SendGrid API.</p>
       `;
     }
 
-    const mailOptions = {
-      from: '"Soul Connect" <karthimailu@gmail.com>',
+    const response = await sendGridEmail({
       to: emailTo,
       cc: "karthikeyanbalan.pkxlabs@gmail.com",
       subject: emailSubject,
       text: textContent,
       html: htmlContent,
-    };
+    });
 
     console.log("====================================");
-    console.log("📨 Sending Email");
-    console.log(mailOptions);
-    console.log("====================================");
-
-    const info = await transporter.sendMail(mailOptions);
-
-    console.log("====================================");
-    console.log("✅ Email Sent Successfully");
-    console.log("Accepted :", info.accepted);
-    console.log("Rejected :", info.rejected);
-    console.log("MessageID:", info.messageId);
-    console.log("Response :", info.response);
-    console.log("Envelope :", info.envelope);
+    console.log("✅ SendGrid Email Sent Successfully");
+    console.log("Response Status Code:", response[0]?.statusCode);
     console.log("====================================");
 
     return res.status(200).json({
       success: true,
-      message: "Email sent successfully",
-      accepted: info.accepted,
-      rejected: info.rejected,
-      response: info.response,
-      messageId: info.messageId,
-      envelope: info.envelope,
+      message: "Email sent successfully via SendGrid API",
+      statusCode: response[0]?.statusCode,
+      headers: response[0]?.headers,
     });
   } catch (error: any) {
     console.error("====================================");
-    console.error("❌ Gmail SMTP Exception");
+    console.error("❌ SendGrid Email Exception");
     console.error("Message      :", error.message);
     console.error("Code         :", error.code);
-    console.error("Command      :", error.command);
-    console.error("ResponseCode :", error.responseCode);
-    console.error("Response     :", error.response);
+    console.error("Response     :", error.response?.body || error.response);
     console.error("Stack        :", error.stack);
     console.error("====================================");
 
@@ -117,9 +94,7 @@ export async function handleSendEmail(req: Request, res: Response) {
       success: false,
       message: error.message,
       code: error.code,
-      command: error.command,
-      responseCode: error.responseCode,
-      response: error.response,
+      details: error.response?.body || error.response,
     });
   }
 }

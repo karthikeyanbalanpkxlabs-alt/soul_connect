@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
+import configUrls from "../../../../configUrls";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -211,6 +212,158 @@ export default function ProfilePage() {
   const [employmentStatus, setEmploymentStatus] = useState<
     "pending" | "submitted" | "verified"
   >("pending");
+
+  // Email and Phone Inline Verification states
+  const [verifyingType, setVerifyingType] = useState<"email" | "phone" | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+
+  const handleStartVerify = (type: "email" | "phone") => {
+    setVerifyingType(type);
+    setOtpSent(false);
+    setOtpCode("");
+  };
+
+  const handleSendOtp = async () => {
+    if (!profile?.email || !verifyingType) return;
+    setSendingOtp(true);
+    try {
+      const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+      const payload: any = {
+        email: profile.email,
+        type: verifyingType,
+      };
+
+      if (verifyingType === "phone") {
+        payload.phone_number = profile.phone_number;
+        payload.phone_code = profile.phone_code || "+91";
+      }
+
+      const res = await fetch(`${apiUrl}/api/public/verification/send-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to send code");
+      }
+
+      const data = await res.json();
+      setOtpSent(true);
+      if (verifyingType === "phone" && data.otp) {
+        showToast(`OTP Code sent (simulated): ${data.otp}`, "success");
+      } else {
+        showToast("Verification code sent successfully!", "success");
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Failed to send verification code", "error");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleConfirmOtp = async () => {
+    if (!profile?.email || !verifyingType || !otpCode) return;
+    setVerifyingOtp(true);
+    try {
+      const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+      const res = await fetch(`${apiUrl}/api/public/verification/verify-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: profile.email,
+          type: verifyingType,
+          otp: otpCode,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Verification failed");
+      }
+
+      showToast(`${verifyingType === "email" ? "Email" : "Phone number"} verified successfully!`, "success");
+      setVerifyingType(null);
+      setOtpSent(false);
+      setOtpCode("");
+      
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Invalid or expired code", "error");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const renderInlineVerification = (type: "email" | "phone") => {
+    return (
+      <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200 w-full">
+        <div className="text-xs text-slate-500 font-medium">
+          {otpSent 
+            ? `We sent a 6-digit code to your ${type === "email" ? "email address" : "phone number"}.` 
+            : `Click "Send Code" to verify your ${type === "email" ? "email" : "phone number"}.`}
+        </div>
+        
+        {otpSent ? (
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              placeholder="Enter 6-digit code"
+              maxLength={6}
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+              className="flex-1 px-3 py-1.5 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-violet-500 font-mono tracking-widest text-center"
+            />
+            <button
+              onClick={handleConfirmOtp}
+              disabled={verifyingOtp || otpCode.length !== 6}
+              className="px-3 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {verifyingOtp ? "Verifying..." : "Confirm"}
+            </button>
+            <button
+              onClick={() => {
+                setVerifyingType(null);
+                setOtpSent(false);
+                setOtpCode("");
+              }}
+              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              onClick={handleSendOtp}
+              disabled={sendingOtp}
+              className="px-3 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {sendingOtp ? "Sending..." : "Send Code"}
+            </button>
+            <button
+              onClick={() => setVerifyingType(null)}
+              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Interaction handlers
   const handleLike = () => {
@@ -1118,11 +1271,22 @@ export default function ProfilePage() {
                 <div className="ctitle-icon">🛡</div>Verification Status
               </div>
               <div className="verify-badges">
-                <div className="vbadge">
+                <div className={`vbadge ${profile?.phone_verified ? "" : "pending"}`}>
                   <div className="vbadge-icon">📱</div>
                   <div className="vbadge-text">
                     <strong>Mobile</strong>
-                    <small>✓ Verified</small>
+                    <small className={profile?.phone_verified ? "text-sage" : "text-amber"}>
+                      {profile?.phone_verified ? "✓ Verified" : "⏳ Pending verification"}
+                    </small>
+                  </div>
+                </div>
+                <div className={`vbadge ${profile?.email_verified ? "" : "pending"}`}>
+                  <div className="vbadge-icon">✉️</div>
+                  <div className="vbadge-text">
+                    <strong>Email</strong>
+                    <small className={profile?.email_verified ? "text-sage" : "text-amber"}>
+                      {profile?.email_verified ? "✓ Verified" : "⏳ Pending verification"}
+                    </small>
                   </div>
                 </div>
                 <div className="vbadge">
@@ -1373,43 +1537,49 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
-                <div className="detail-item">
+                <div className="detail-item relative">
                   <div className="detail-label">Email</div>
-                  <div className="detail-value">
-                    {!isEditing ? (
-                      profile?.email || "N/A"
-                    ) : (
-                      <input
-                        type="email"
-                        value={formData.email || ""}
-                        onChange={(e) => handleChange("email", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                  <div className="detail-value flex flex-wrap items-center gap-2 justify-between">
+                    <span>{profile?.email || "N/A"}</span>
+                    {profile?.email && (
+                      profile.email_verified ? (
+                        <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          ✓ Verified
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleStartVerify("email")}
+                          className="inline-flex items-center text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 px-2 py-0.5 rounded-full border border-violet-200 transition-colors cursor-pointer"
+                        >
+                          Verify Now
+                        </button>
+                      )
                     )}
                   </div>
+                  {verifyingType === "email" && renderInlineVerification("email")}
                 </div>
-                <div className="detail-item">
+                <div className="detail-item relative">
                   <div className="detail-label">Phone Number</div>
-                  <div className="detail-value">
-                    {!isEditing ? (
-                      `${profile?.phone_code || "+91"} ${profile?.phone_number || "N/A"}`
-                    ) : (
-                      <div className="flex gap-1 w-full">
-                        <input
-                          type="text"
-                          value={formData.phone_code || "+91"}
-                          onChange={(e) => handleChange("phone_code", e.target.value)}
-                          className="w-14 px-1 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                        />
-                        <input
-                          type="text"
-                          value={formData.phone_number || ""}
-                          onChange={(e) => handleChange("phone_number", e.target.value)}
-                          className="flex-1 px-2 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                        />
-                      </div>
+                  <div className="detail-value flex flex-wrap items-center gap-2 justify-between">
+                    <span>
+                      {profile?.phone_code || "+91"} {profile?.phone_number || "N/A"}
+                    </span>
+                    {profile?.phone_number && (
+                      profile.phone_verified ? (
+                        <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          ✓ Verified
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleStartVerify("phone")}
+                          className="inline-flex items-center text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 px-2 py-0.5 rounded-full border border-violet-200 transition-colors cursor-pointer"
+                        >
+                          Verify Now
+                        </button>
+                      )
                     )}
                   </div>
+                  {verifyingType === "phone" && renderInlineVerification("phone")}
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">District</div>
