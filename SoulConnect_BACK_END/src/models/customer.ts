@@ -13,6 +13,7 @@ const customerSchema = new mongoose.Schema(
     health_report: mongoose.Schema.Types.Mixed,
     family_photos: mongoose.Schema.Types.Mixed,
     horoscopeDetails: mongoose.Schema.Types.Mixed,
+    familyBackground: mongoose.Schema.Types.Mixed,
     blood_group: String,
     additional_report_info: String,
     public_verify_command_helper: String,

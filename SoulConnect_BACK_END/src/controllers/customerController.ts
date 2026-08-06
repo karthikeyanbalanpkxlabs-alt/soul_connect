@@ -971,6 +971,117 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       };
     }
 
+    if (
+      updateFields.familyBackground !== undefined ||
+      updateFields.father_name ||
+      updateFields.father_occupation ||
+      updateFields.mother_name ||
+      updateFields.mother_occupation ||
+      updateFields.siblings ||
+      updateFields.family_type ||
+      updateFields.family_status ||
+      updateFields.family_address ||
+      updateFields.family_values ||
+      updateFields.about_family
+    ) {
+      const existingFam = currentCustomer.get("familyBackground") || {};
+      const newFamInput = updateFields.familyBackground || {};
+      updateFields.familyBackground = {
+        ...existingFam,
+        ...newFamInput,
+        father_name:
+          newFamInput.father_name !== undefined
+            ? newFamInput.father_name
+            : updateFields.father_name !== undefined
+            ? updateFields.father_name
+            : existingFam.father_name || "",
+        father_occupation:
+          newFamInput.father_occupation !== undefined
+            ? newFamInput.father_occupation
+            : updateFields.father_occupation !== undefined
+            ? updateFields.father_occupation
+            : existingFam.father_occupation || "",
+        mother_name:
+          newFamInput.mother_name !== undefined
+            ? newFamInput.mother_name
+            : updateFields.mother_name !== undefined
+            ? updateFields.mother_name
+            : existingFam.mother_name || "",
+        mother_occupation:
+          newFamInput.mother_occupation !== undefined
+            ? newFamInput.mother_occupation
+            : updateFields.mother_occupation !== undefined
+            ? updateFields.mother_occupation
+            : existingFam.mother_occupation || "",
+        siblings:
+          newFamInput.siblings !== undefined
+            ? newFamInput.siblings
+            : updateFields.siblings !== undefined
+            ? updateFields.siblings
+            : existingFam.siblings || "",
+        siblings_details:
+          newFamInput.siblings_details !== undefined
+            ? newFamInput.siblings_details
+            : updateFields.siblings_details !== undefined
+            ? updateFields.siblings_details
+            : existingFam.siblings_details || "",
+        family_type:
+          newFamInput.family_type !== undefined
+            ? newFamInput.family_type
+            : updateFields.family_type !== undefined
+            ? updateFields.family_type
+            : existingFam.family_type || "",
+        family_type_details:
+          newFamInput.family_type_details !== undefined
+            ? newFamInput.family_type_details
+            : updateFields.family_type_details !== undefined
+            ? updateFields.family_type_details
+            : existingFam.family_type_details || "",
+        family_status:
+          newFamInput.family_status !== undefined
+            ? newFamInput.family_status
+            : updateFields.family_status !== undefined
+            ? updateFields.family_status
+            : existingFam.family_status || "",
+        family_status_details:
+          newFamInput.family_status_details !== undefined
+            ? newFamInput.family_status_details
+            : updateFields.family_status_details !== undefined
+            ? updateFields.family_status_details
+            : existingFam.family_status_details || "",
+        family_address:
+          newFamInput.family_address !== undefined
+            ? newFamInput.family_address
+            : updateFields.family_address !== undefined
+            ? updateFields.family_address
+            : existingFam.family_address || "",
+        family_values:
+          newFamInput.family_values !== undefined
+            ? newFamInput.family_values
+            : updateFields.family_values !== undefined
+            ? updateFields.family_values
+            : existingFam.family_values || "",
+        family_values_details:
+          newFamInput.family_values_details !== undefined
+            ? newFamInput.family_values_details
+            : updateFields.family_values_details !== undefined
+            ? updateFields.family_values_details
+            : existingFam.family_values_details || "",
+        about_family:
+          newFamInput.about_family !== undefined
+            ? newFamInput.about_family
+            : updateFields.about_family !== undefined
+            ? updateFields.about_family
+            : existingFam.about_family || "",
+        about_family_tamil:
+          newFamInput.about_family_tamil !== undefined
+            ? newFamInput.about_family_tamil
+            : updateFields.about_family_tamil !== undefined
+            ? updateFields.about_family_tamil
+            : existingFam.about_family_tamil || "",
+      };
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -1161,6 +1272,32 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       })(),
     };
 
+    const rawFam = req.body.familyBackground || {};
+    const processedFamilyBackground = {
+      father_name: rawFam.father_name || req.body.father_name || "",
+      father_occupation:
+        rawFam.father_occupation || req.body.father_occupation || "",
+      mother_name: rawFam.mother_name || req.body.mother_name || "",
+      mother_occupation:
+        rawFam.mother_occupation || req.body.mother_occupation || "",
+      siblings: rawFam.siblings || req.body.siblings || "",
+      siblings_details:
+        rawFam.siblings_details || req.body.siblings_details || "",
+      family_type: rawFam.family_type || req.body.family_type || "",
+      family_type_details:
+        rawFam.family_type_details || req.body.family_type_details || "",
+      family_status: rawFam.family_status || req.body.family_status || "",
+      family_status_details:
+        rawFam.family_status_details || req.body.family_status_details || "",
+      family_address: rawFam.family_address || req.body.family_address || "",
+      family_values: rawFam.family_values || req.body.family_values || "",
+      family_values_details:
+        rawFam.family_values_details || req.body.family_values_details || "",
+      about_family: rawFam.about_family || req.body.about_family || "",
+      about_family_tamil:
+        rawFam.about_family_tamil || req.body.about_family_tamil || "",
+    };
+
     if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
       if (existing) {
@@ -1285,6 +1422,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       health_report: processedHealthReport,
       family_photos: processedFamilyPhotos,
       horoscopeDetails: processedHoroscopeDetails,
+      familyBackground: processedFamilyBackground,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

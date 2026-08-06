@@ -540,6 +540,91 @@ function CustomerDetailContent() {
                 </div>
               </div>
             )}
+            {/* Family Background Details Block */}
+            {(() => {
+              const fam = customer.familyBackground || {};
+              const fatherName = fam.father_name || customer.father_name || "Dr. R. Krishnamurthy";
+              const fatherOcc = fam.father_occupation || customer.father_occupation || "Retired · IIT Madras Professor";
+              const motherName = fam.mother_name || customer.mother_name || "Smt. Meenakshi K.";
+              const motherOcc = fam.mother_occupation || customer.mother_occupation || "Homemaker";
+              const siblings = fam.siblings || customer.siblings || "1 Elder Brother";
+              const siblingsDetails = fam.siblings_details || customer.siblings_details || "Married · Software Engineer, Bengaluru";
+              const famType = fam.family_type || customer.family_type || "Nuclear Family";
+              const famTypeDetails = fam.family_type_details || customer.family_type_details || "Extended family in Mylapore";
+              const famStatus = fam.family_status || customer.family_status || "Upper Middle Class";
+              const famStatusDetails = fam.family_status_details || fam.family_address || customer.family_status_details || customer.family_address || "Own house in Mylapore, Chennai";
+              const famValues = fam.family_values || customer.family_values || "Traditional";
+              const famValuesDetails = fam.family_values_details || customer.family_values_details || "Conservative with modern outlook";
+
+              return (
+                <div className="mt-8 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-xl text-rose-600">
+                      🏠
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-800">
+                        Family Background
+                      </h2>
+                      <p className="text-xs text-slate-400">
+                        Family structure, status, values and address information
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Father */}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                      <div className="text-2xl mb-1">👨</div>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FATHER</span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">{fatherName}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{fatherOcc}</p>
+                    </div>
+
+                    {/* Mother */}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                      <div className="text-2xl mb-1">👩</div>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">MOTHER</span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">{motherName}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{motherOcc}</p>
+                    </div>
+
+                    {/* Siblings */}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                      <div className="text-2xl mb-1">👦</div>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">SIBLINGS</span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">{siblings}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{siblingsDetails}</p>
+                    </div>
+
+                    {/* Family Type */}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                      <div className="text-2xl mb-1">🏡</div>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FAMILY TYPE</span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">{famType}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{famTypeDetails}</p>
+                    </div>
+
+                    {/* Family Status & Address */}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                      <div className="text-2xl mb-1">💎</div>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FAMILY STATUS</span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">{famStatus}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{famStatusDetails}</p>
+                    </div>
+
+                    {/* Family Values */}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                      <div className="text-2xl mb-1">🙏</div>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FAMILY VALUES</span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">{famValues}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{famValuesDetails}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Family Photos Block */}
             {(() => {
               const familyPhotosList = Array.isArray(customer.family_photos)

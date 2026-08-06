@@ -80,6 +80,23 @@ const defaultFormData = {
     rahu_ketu_dosham: "Neutral",
     jathagam: null as any,
   },
+  familyBackground: {
+    father_name: "",
+    father_occupation: "",
+    mother_name: "",
+    mother_occupation: "",
+    siblings: "",
+    siblings_details: "",
+    family_type: "",
+    family_type_details: "",
+    family_status: "",
+    family_status_details: "",
+    family_address: "",
+    family_values: "",
+    family_values_details: "",
+    about_family: "",
+    about_family_tamil: "",
+  },
   transaction: [],
   public_verify: true,
   public_verify_command_helper: "",
@@ -179,6 +196,25 @@ export default function CustomerModal({
             chevvai_dosham: initialData.horoscopeDetails?.chevvai_dosham || initialData.chevvai_dosham || "No",
             rahu_ketu_dosham: initialData.horoscopeDetails?.rahu_ketu_dosham || initialData.rahu_ketu_dosham || "Neutral",
             jathagam: initialData.horoscopeDetails?.jathagam || initialData.jathagam || null,
+          },
+          familyBackground: {
+            ...defaultFormData.familyBackground,
+            ...(initialData.familyBackground || {}),
+            father_name: initialData.familyBackground?.father_name || initialData.father_name || "",
+            father_occupation: initialData.familyBackground?.father_occupation || initialData.father_occupation || "",
+            mother_name: initialData.familyBackground?.mother_name || initialData.mother_name || "",
+            mother_occupation: initialData.familyBackground?.mother_occupation || initialData.mother_occupation || "",
+            siblings: initialData.familyBackground?.siblings || initialData.siblings || "",
+            siblings_details: initialData.familyBackground?.siblings_details || initialData.siblings_details || "",
+            family_type: initialData.familyBackground?.family_type || initialData.family_type || "",
+            family_type_details: initialData.familyBackground?.family_type_details || initialData.family_type_details || "",
+            family_status: initialData.familyBackground?.family_status || initialData.family_status || "",
+            family_status_details: initialData.familyBackground?.family_status_details || initialData.family_status_details || "",
+            family_address: initialData.familyBackground?.family_address || initialData.family_address || "",
+            family_values: initialData.familyBackground?.family_values || initialData.family_values || "",
+            family_values_details: initialData.familyBackground?.family_values_details || initialData.family_values_details || "",
+            about_family: initialData.familyBackground?.about_family || initialData.about_family || "",
+            about_family_tamil: initialData.familyBackground?.about_family_tamil || initialData.about_family_tamil || "",
           },
           role: initialData.role || "customer_g",
         }
@@ -1518,6 +1554,247 @@ export default function CustomerModal({
                         />
                       </label>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 🏠 Family Background Details Section */}
+              <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-6 sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5">
+                <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                  <span className="text-xl">🏠</span>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">
+                      Family Background Details
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Father, Mother, Siblings, Family Status, Values & Address details
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {/* Father Name */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Father Name
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.father_name"
+                      value={formik.values.familyBackground?.father_name || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Dr. R. Krishnamurthy"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Father Occupation */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Father Occupation / Details
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.father_occupation"
+                      value={formik.values.familyBackground?.father_occupation || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Retired Professor"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Mother Name */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Mother Name
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.mother_name"
+                      value={formik.values.familyBackground?.mother_name || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Smt. Meenakshi K."
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Mother Occupation */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Mother Occupation / Details
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.mother_occupation"
+                      value={formik.values.familyBackground?.mother_occupation || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Homemaker"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Siblings */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Siblings Summary
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.siblings"
+                      value={formik.values.familyBackground?.siblings || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. 1 Elder Brother"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Siblings Details */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Siblings Occupation & Location
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.siblings_details"
+                      value={formik.values.familyBackground?.siblings_details || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Married · Software Engineer"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Family Type */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Family Type
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.family_type"
+                      value={formik.values.familyBackground?.family_type || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Nuclear Family"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Family Type Details */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Family Type Info
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.family_type_details"
+                      value={formik.values.familyBackground?.family_type_details || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Extended family in Mylapore"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Family Status */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Family Status
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.family_status"
+                      value={formik.values.familyBackground?.family_status || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Upper Middle Class"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Family Status Details */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Status Details / Property
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.family_status_details"
+                      value={formik.values.familyBackground?.family_status_details || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Own house in Mylapore, Chennai"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Family Address */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Family Address / Location
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.family_address"
+                      value={formik.values.familyBackground?.family_address || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Mylapore, Chennai, Tamil Nadu"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Family Values */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Family Values
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.family_values"
+                      value={formik.values.familyBackground?.family_values || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Traditional"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Family Values Details */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Values Info
+                    </label>
+                    <input
+                      type="text"
+                      name="familyBackground.family_values_details"
+                      value={formik.values.familyBackground?.family_values_details || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Conservative with modern outlook"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* About Family */}
+                  <div className="sm:col-span-2 md:col-span-3 lg:col-span-4">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      About Family Description
+                    </label>
+                    <textarea
+                      name="familyBackground.about_family"
+                      rows={2}
+                      value={formik.values.familyBackground?.about_family || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="Write brief description about the family..."
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
                   </div>
                 </div>
               </div>
