@@ -11,6 +11,7 @@ const customerSchema = new mongoose.Schema(
     identity_proff: mongoose.Schema.Types.Mixed,
     ambition: String,
     health_report: mongoose.Schema.Types.Mixed,
+    family_photos: mongoose.Schema.Types.Mixed,
     blood_group: String,
     additional_report_info: String,
     public_verify_command_helper: String,

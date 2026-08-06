@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Upload } from "lucide-react";
+import { X, Upload, Users, Plus, Trash2 } from "lucide-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import configUrls from "../../configUrls";
@@ -43,6 +43,7 @@ const defaultFormData = {
   subscription_type: "",
   subscription_view_access: 10000,
   image: [] as any[],
+  family_photos: [] as any[],
   video: "" as any,
   identity_proff: "" as any,
   transaction: [],
@@ -311,6 +312,30 @@ export default function CustomerModal({
     formik.setFieldValue("health_report", "");
   };
 
+  const handleFamilyPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload a valid image file (JPEG, PNG, WebP).");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should not exceed 5MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        formik.setFieldValue("family_photos", [{ url: base64String }]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeFamilyPhoto = () => {
+    formik.setFieldValue("family_photos", []);
+  };
+
   const images = Array.isArray(formik.values.image) ? formik.values.image : [];
   const validImages = images.filter((img: any) => img.url);
 
@@ -393,6 +418,79 @@ export default function CustomerModal({
                 )}
               </div>
               {renderFieldError("image")}
+            </div>
+
+            {/* Family Photos Upload Card */}
+            <div className="mb-8 p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
+                    <Users size={20} />
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-800 tracking-tight">
+                    Family Photos
+                  </h4>
+                </div>
+                <span className="text-xs font-medium text-slate-400">
+                  Max 1 photo
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                {(() => {
+                  const fpList = Array.isArray(formik.values.family_photos)
+                    ? formik.values.family_photos
+                    : (formik.values as any).family_photo
+                    ? [(formik.values as any).family_photo]
+                    : [];
+                  const validFP = fpList.filter((img: any) =>
+                    typeof img === "string" ? img : img?.url,
+                  );
+                  const firstFP = validFP[0];
+                  const fpUrl =
+                    typeof firstFP === "string" ? firstFP : firstFP?.url;
+
+                  if (fpUrl) {
+                    return (
+                      <div className="relative w-44 h-60 rounded-2xl border-2 border-slate-200 overflow-hidden group bg-slate-50 shadow-sm">
+                        <img
+                          src={fpUrl}
+                          alt="Family Photo"
+                          className="w-full h-full object-cover rounded-2xl"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={removeFamilyPhoto}
+                            className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 font-semibold shadow transition-colors flex items-center gap-1"
+                          >
+                            <Trash2 size={14} /> Remove Photo
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <label className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group">
+                      <Plus
+                        size={28}
+                        className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
+                      />
+                      <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
+                        Add Family Photo
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFamilyPhotoUpload}
+                      />
+                    </label>
+                  );
+                })()}
+              </div>
+              {renderFieldError("family_photos" as any)}
             </div>
 
             {/* Video Upload */}

@@ -547,6 +547,91 @@ function processUploadedHealthReport(
   }
 }
 
+function processUploadedFamilyPhotos(
+  familyPhotosInput: any,
+  req: Request,
+): { url: string }[] | string {
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let items: any[] = [];
+  if (Array.isArray(familyPhotosInput)) {
+    items = familyPhotosInput;
+  } else if (
+    familyPhotosInput !== null &&
+    familyPhotosInput !== undefined &&
+    familyPhotosInput !== ""
+  ) {
+    items = [familyPhotosInput];
+  } else {
+    return [];
+  }
+
+  if (items.length > 1) {
+    return "Invalid family photos upload. Maximum 1 photo allowed.";
+  }
+
+  const savedPhotos: { url: string }[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    let imgStr = "";
+
+    if (typeof item === "string") {
+      imgStr = item;
+    } else if (
+      item &&
+      typeof item === "object" &&
+      typeof item.url === "string"
+    ) {
+      imgStr = item.url;
+    } else {
+      return `Invalid family photo structure at index ${i}. Expected string or object with url property.`;
+    }
+
+    if (
+      imgStr.startsWith("http://") ||
+      imgStr.startsWith("https://") ||
+      (!imgStr.startsWith("data:") && imgStr.length < 200)
+    ) {
+      savedPhotos.push({ url: imgStr });
+      continue;
+    }
+
+    try {
+      let ext = "png";
+      let data = imgStr;
+
+      if (imgStr.startsWith("data:")) {
+        const commaIdx = imgStr.indexOf(",");
+        if (commaIdx !== -1) {
+          data = imgStr.substring(commaIdx + 1);
+          const mimeStr = imgStr.substring(5, commaIdx);
+          const mimeParts = mimeStr.split(";")[0].split("/");
+          if (mimeParts.length === 2) {
+            ext = mimeParts[1];
+          }
+        }
+      }
+
+      const buffer = Buffer.from(data, "base64");
+      const filename = `family_photo_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.${ext}`;
+      const filepath = path.join(uploadDir, filename);
+      fs.writeFileSync(filepath, buffer);
+
+      const host = req.get("host");
+      const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
+      savedPhotos.push({ url: imageUrl });
+    } catch (err: any) {
+      return `Failed to process family photo ${i + 1}: ${err.message}`;
+    }
+  }
+
+  return savedPhotos;
+}
+
 export async function handleCustomerEdit(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
@@ -693,6 +778,24 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       }
     }
 
+    const familyPhotosInput =
+      updateFields.family_photos !== undefined
+        ? updateFields.family_photos
+        : updateFields.family_photo;
+    if (familyPhotosInput !== undefined) {
+      if (familyPhotosInput === null || familyPhotosInput === "") {
+        updateFields.family_photos = [];
+        if (updateFields.family_photo) delete updateFields.family_photo;
+      } else {
+        const processed = processUploadedFamilyPhotos(familyPhotosInput, req);
+        if (typeof processed === "string") {
+          return res.status(400).json({ error: processed });
+        }
+        updateFields.family_photos = processed;
+        if (updateFields.family_photo) delete updateFields.family_photo;
+      }
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -763,6 +866,8 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       role,
       identity_proff,
       health_report,
+      family_photos,
+      family_photo,
       ...otherFields
     } = req?.body;
 
@@ -838,6 +943,21 @@ export async function handleCustomerCreate(req: Request, res: Response) {
         return res.status(400).json({ error: processedHealth });
       }
       processedHealthReport = processedHealth;
+    }
+
+    const familyPhotosInput =
+      family_photos !== undefined ? family_photos : family_photo;
+    let processedFamilyPhotos: any[] = [];
+    if (
+      familyPhotosInput !== undefined &&
+      familyPhotosInput !== null &&
+      familyPhotosInput !== ""
+    ) {
+      const processedFP = processUploadedFamilyPhotos(familyPhotosInput, req);
+      if (typeof processedFP === "string") {
+        return res.status(400).json({ error: processedFP });
+      }
+      processedFamilyPhotos = processedFP;
     }
 
     if (email && email.trim() !== "") {
@@ -962,6 +1082,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       video: processedVideo,
       identity_proff: processedIdentityProof,
       health_report: processedHealthReport,
+      family_photos: processedFamilyPhotos,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

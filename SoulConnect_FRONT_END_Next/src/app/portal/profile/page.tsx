@@ -27,6 +27,8 @@ import {
   AlertTriangle,
   Pencil,
   X,
+  Users,
+  Plus,
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
@@ -126,6 +128,7 @@ export default function ProfilePage() {
       const payload = {
         ...profile,
         ...formData,
+        family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : [],
         keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
         customer_id: profile?.customer_id,
         _id: profile?._id,
@@ -469,10 +472,13 @@ export default function ProfilePage() {
   const handleFamilyPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      // Only 1 photo allowed for Family Photos
-      setFamilyPhotos([imageUrl]);
-      showToast("Family photo uploaded successfully!", "success");
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFamilyPhotos([base64String]);
+        showToast("Family photo added successfully! Click Save Changes to apply.", "success");
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -2217,11 +2223,18 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="content-card reveal visible">
-              <div className="content-card-title flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="ctitle-icon">👨‍👩‍👧‍👦</div>Family Photos
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
+                    <Users size={20} />
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-800 tracking-tight">
+                    Family Photos
+                  </h4>
                 </div>
-                <span className="text-xs text-slate-400 font-medium">Max 1 photo</span>
+                <span className="text-xs font-medium text-slate-400">
+                  Max 1 photo
+                </span>
               </div>
 
               {/* Photo Upload Form */}
@@ -2233,14 +2246,14 @@ export default function ProfilePage() {
                 onChange={handleFamilyPhotoChange}
               />
 
-              <div className="photos-grid">
+              <div className="flex flex-wrap gap-4">
                 {/* Uploaded Family Photo */}
                 {familyPhotos.map((url, idx) => (
-                  <div key={idx} className="photo-slot relative group overflow-hidden">
+                  <div key={idx} className="relative w-44 h-60 rounded-2xl border-2 border-slate-200 overflow-hidden group bg-slate-50 shadow-sm">
                     <img
                       src={url}
                       alt={`Family photo ${idx + 1}`}
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover rounded-2xl"
                     />
                     <button
                       className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
@@ -2258,13 +2271,18 @@ export default function ProfilePage() {
 
                 {/* Add Photo Button Slot - Only allowed 1 photo */}
                 {familyPhotos.length < 1 && (
-                  <div
-                    className="photo-slot photo-slot-add"
+                  <label
+                    className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group"
                     onClick={triggerFamilyPhotoUpload}
                   >
-                    <div className="photo-av">＋</div>
-                    <div className="photo-label">Add Family Photo</div>
-                  </div>
+                    <Plus
+                      size={28}
+                      className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
+                    />
+                    <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
+                      Add Family Photo
+                    </span>
+                  </label>
                 )}
               </div>
             </div>
