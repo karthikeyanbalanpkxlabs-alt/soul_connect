@@ -1333,7 +1333,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div
+            {/* <div
               className={`content-card reveal ${isLoaded ? "visible" : ""}`}
               style={{ transitionDelay: ".1s" }}
             >
@@ -1352,9 +1352,9 @@ export default function ProfilePage() {
                 <span className="tag amber">✈️ Travel</span>
                 <span className="tag plum">🌿 Sustainable Living</span>
               </div>
-            </div>
+            </div> */}
 
-            <div
+            {/* <div
               className={`content-card reveal ${isLoaded ? "visible" : ""}`}
               style={{ transitionDelay: ".2s" }}
             >
@@ -1406,7 +1406,7 @@ export default function ProfilePage() {
                   <div className="vbar-fill" style={{ width: "61%" }}></div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div
               className={`content-card reveal ${isLoaded ? "visible" : ""}`}
