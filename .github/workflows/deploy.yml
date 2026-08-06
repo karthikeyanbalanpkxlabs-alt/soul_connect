@@ -9,7 +9,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy over SSH
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Deploy backend & frontend over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -21,7 +26,6 @@ jobs:
             cd /root/soul_connect
             git fetch origin main
             git reset --hard origin/main
-
             docker build -t soulconnect-backend:latest ./SoulConnect_BACK_END
             docker stop soulconnect-backend || true
             docker rm soulconnect-backend || true
@@ -33,7 +37,6 @@ jobs:
               -v soulconnect-backend-uploads:/app/uploads \
               --add-host=host.docker.internal:host-gateway \
               soulconnect-backend:latest
-
             docker build -t soulconnect-frontend:latest ./SoulConnect_FRONT_END_Next
             docker stop soulconnect-frontend || true
             docker rm soulconnect-frontend || true
@@ -42,5 +45,37 @@ jobs:
               --restart unless-stopped \
               -p 8080:80 \
               soulconnect-frontend:latest
-
             docker image prune -f
+
+      - name: Check if soul_theme changed
+        id: theme_check
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^soul_theme/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Copy Keycloak theme to server
+        if: steps.theme_check.outputs.changed == 'true'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "soul_theme/login/*"
+          target: "/opt/keycloak/themes/soul_theme/login"
+          strip_components: 2
+          overwrite: true
+
+      - name: Restart Keycloak (theme picked up)
+        if: steps.theme_check.outputs.changed == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            systemctl restart keycloak || docker restart keycloak || true
