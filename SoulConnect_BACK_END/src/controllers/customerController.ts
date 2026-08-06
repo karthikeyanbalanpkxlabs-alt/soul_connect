@@ -547,6 +547,158 @@ function processUploadedHealthReport(
   }
 }
 
+function processUploadedJathagam(
+  jathagamInput: any,
+  req: Request,
+): { url: string } | string | null {
+  if (!jathagamInput) return null;
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let fileStr = "";
+  if (typeof jathagamInput === "string") {
+    fileStr = jathagamInput;
+  } else if (
+    jathagamInput &&
+    typeof jathagamInput === "object" &&
+    typeof jathagamInput.url === "string"
+  ) {
+    fileStr = jathagamInput.url;
+  } else {
+    return null;
+  }
+
+  if (!fileStr) return null;
+
+  if (
+    fileStr.startsWith("http://") ||
+    fileStr.startsWith("https://") ||
+    (!fileStr.startsWith("data:") && fileStr.length < 200)
+  ) {
+    return { url: fileStr };
+  }
+
+  try {
+    let ext = "pdf";
+    let data = fileStr;
+
+    if (fileStr.startsWith("data:")) {
+      const commaIdx = fileStr.indexOf(",");
+      if (commaIdx !== -1) {
+        data = fileStr.substring(commaIdx + 1);
+        const mimeStr = fileStr.substring(5, commaIdx);
+        const mimeParts = mimeStr.split(";")[0].split("/");
+        if (mimeParts.length === 2) {
+          ext = mimeParts[1];
+        }
+      }
+    }
+
+    const buffer = Buffer.from(data, "base64");
+    const filename = `jathagam_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+    fs.writeFileSync(filepath, buffer);
+
+    const host = req.get("host");
+    const fileUrl = `${req.protocol}://${host}/uploads/${filename}`;
+    return { url: fileUrl };
+  } catch (err: any) {
+    console.error("Failed to process jathagam:", err);
+    return `Failed to process jathagam: ${err.message}`;
+  }
+}
+
+function processUploadedFamilyPhotos(
+  familyPhotosInput: any,
+  req: Request,
+): { url: string }[] | string {
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let items: any[] = [];
+  if (Array.isArray(familyPhotosInput)) {
+    items = familyPhotosInput;
+  } else if (
+    familyPhotosInput !== null &&
+    familyPhotosInput !== undefined &&
+    familyPhotosInput !== ""
+  ) {
+    items = [familyPhotosInput];
+  } else {
+    return [];
+  }
+
+  if (items.length < 1) {
+    return "Invalid family photos upload. Family photo is required (minimum 1 photo).";
+  }
+
+  if (items.length > 1) {
+    return "Invalid family photos upload. Maximum 1 photo allowed.";
+  }
+
+  const savedPhotos: { url: string }[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    let imgStr = "";
+
+    if (typeof item === "string") {
+      imgStr = item;
+    } else if (
+      item &&
+      typeof item === "object" &&
+      typeof item.url === "string"
+    ) {
+      imgStr = item.url;
+    } else {
+      return `Invalid family photo structure at index ${i}. Expected string or object with url property.`;
+    }
+
+    if (
+      imgStr.startsWith("http://") ||
+      imgStr.startsWith("https://") ||
+      (!imgStr.startsWith("data:") && imgStr.length < 200)
+    ) {
+      savedPhotos.push({ url: imgStr });
+      continue;
+    }
+
+    try {
+      let ext = "png";
+      let data = imgStr;
+
+      if (imgStr.startsWith("data:")) {
+        const commaIdx = imgStr.indexOf(",");
+        if (commaIdx !== -1) {
+          data = imgStr.substring(commaIdx + 1);
+          const mimeStr = imgStr.substring(5, commaIdx);
+          const mimeParts = mimeStr.split(";")[0].split("/");
+          if (mimeParts.length === 2) {
+            ext = mimeParts[1];
+          }
+        }
+      }
+
+      const buffer = Buffer.from(data, "base64");
+      const filename = `family_photo_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}.${ext}`;
+      const filepath = path.join(uploadDir, filename);
+      fs.writeFileSync(filepath, buffer);
+
+      const host = req.get("host");
+      const imageUrl = `${req.protocol}://${host}/uploads/${filename}`;
+      savedPhotos.push({ url: imageUrl });
+    } catch (err: any) {
+      return `Failed to process family photo ${i + 1}: ${err.message}`;
+    }
+  }
+
+  return savedPhotos;
+}
+
 export async function handleCustomerEdit(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId, ...updateFields } = req.body;
@@ -693,6 +845,243 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       }
     }
 
+    const familyPhotosInput =
+      updateFields.family_photos !== undefined
+        ? updateFields.family_photos
+        : updateFields.family_photo;
+    if (familyPhotosInput !== undefined) {
+      if (
+        familyPhotosInput === null ||
+        familyPhotosInput === "" ||
+        (Array.isArray(familyPhotosInput) && familyPhotosInput.length === 0)
+      ) {
+        return res.status(400).json({
+          error: "Invalid family photos upload. Family photo is required (minimum 1 photo).",
+        });
+      } else {
+        const processed = processUploadedFamilyPhotos(familyPhotosInput, req);
+        if (typeof processed === "string") {
+          return res.status(400).json({ error: processed });
+        }
+        updateFields.family_photos = processed;
+        if (updateFields.family_photo) delete updateFields.family_photo;
+      }
+    }
+
+    if (
+      updateFields.horoscopeDetails !== undefined ||
+      updateFields.star ||
+      updateFields.rasi ||
+      updateFields.lagnam ||
+      updateFields.gothram ||
+      updateFields.tob ||
+      updateFields.pob ||
+      updateFields.dosham ||
+      updateFields.manglik ||
+      updateFields.chevvai_dosham ||
+      updateFields.rahu_ketu_dosham ||
+      updateFields.jathagam
+    ) {
+      const existingHoro = currentCustomer.get("horoscopeDetails") || {};
+      const newHoroInput = updateFields.horoscopeDetails || {};
+      updateFields.horoscopeDetails = {
+        ...existingHoro,
+        ...newHoroInput,
+        dob:
+          newHoroInput.dob !== undefined
+            ? newHoroInput.dob
+            : updateFields.dob !== undefined
+            ? updateFields.dob
+            : existingHoro.dob || currentCustomer.get("dob") || "",
+        star:
+          newHoroInput.star !== undefined
+            ? newHoroInput.star
+            : updateFields.star !== undefined
+            ? updateFields.star
+            : existingHoro.star || currentCustomer.get("star") || "",
+        rasi:
+          newHoroInput.rasi !== undefined
+            ? newHoroInput.rasi
+            : updateFields.rasi !== undefined
+            ? updateFields.rasi
+            : existingHoro.rasi || currentCustomer.get("rasi") || "",
+        lagnam:
+          newHoroInput.lagnam !== undefined
+            ? newHoroInput.lagnam
+            : updateFields.lagnam !== undefined
+            ? updateFields.lagnam
+            : existingHoro.lagnam || currentCustomer.get("lagnam") || "",
+        gothram:
+          newHoroInput.gothram !== undefined
+            ? newHoroInput.gothram
+            : updateFields.gothram !== undefined
+            ? updateFields.gothram
+            : existingHoro.gothram || currentCustomer.get("gothram") || "",
+        tob:
+          newHoroInput.tob !== undefined
+            ? newHoroInput.tob
+            : updateFields.tob !== undefined
+            ? updateFields.tob
+            : existingHoro.tob || currentCustomer.get("tob") || "",
+        pob:
+          newHoroInput.pob !== undefined
+            ? newHoroInput.pob
+            : updateFields.pob !== undefined
+            ? updateFields.pob
+            : existingHoro.pob || currentCustomer.get("pob") || "",
+        dosham:
+          newHoroInput.dosham !== undefined
+            ? newHoroInput.dosham
+            : updateFields.dosham !== undefined
+            ? updateFields.dosham
+            : existingHoro.dosham || currentCustomer.get("dosham") || "No Dosham",
+        manglik:
+          newHoroInput.manglik !== undefined
+            ? newHoroInput.manglik
+            : updateFields.manglik !== undefined
+            ? updateFields.manglik
+            : existingHoro.manglik || currentCustomer.get("manglik") || "No",
+        chevvai_dosham:
+          newHoroInput.chevvai_dosham !== undefined
+            ? newHoroInput.chevvai_dosham
+            : updateFields.chevvai_dosham !== undefined
+            ? updateFields.chevvai_dosham
+            : existingHoro.chevvai_dosham ||
+              currentCustomer.get("chevvai_dosham") ||
+              "No",
+        rahu_ketu_dosham:
+          newHoroInput.rahu_ketu_dosham !== undefined
+            ? newHoroInput.rahu_ketu_dosham
+            : updateFields.rahu_ketu_dosham !== undefined
+            ? updateFields.rahu_ketu_dosham
+            : existingHoro.rahu_ketu_dosham ||
+              currentCustomer.get("rahu_ketu_dosham") ||
+              "Neutral",
+        jathagam: (() => {
+          const rawJath =
+            newHoroInput.jathagam !== undefined
+              ? newHoroInput.jathagam
+              : updateFields.jathagam !== undefined
+              ? updateFields.jathagam
+              : existingHoro.jathagam || currentCustomer.get("jathagam") || null;
+          if (!rawJath) return null;
+          const processed = processUploadedJathagam(rawJath, req);
+          return typeof processed === "string" ? rawJath : processed;
+        })(),
+      };
+    }
+
+    if (
+      updateFields.familyBackground !== undefined ||
+      updateFields.father_name ||
+      updateFields.father_occupation ||
+      updateFields.mother_name ||
+      updateFields.mother_occupation ||
+      updateFields.siblings ||
+      updateFields.family_type ||
+      updateFields.family_status ||
+      updateFields.family_address ||
+      updateFields.family_values ||
+      updateFields.about_family
+    ) {
+      const existingFam = currentCustomer.get("familyBackground") || {};
+      const newFamInput = updateFields.familyBackground || {};
+      updateFields.familyBackground = {
+        ...existingFam,
+        ...newFamInput,
+        father_name:
+          newFamInput.father_name !== undefined
+            ? newFamInput.father_name
+            : updateFields.father_name !== undefined
+            ? updateFields.father_name
+            : existingFam.father_name || "",
+        father_occupation:
+          newFamInput.father_occupation !== undefined
+            ? newFamInput.father_occupation
+            : updateFields.father_occupation !== undefined
+            ? updateFields.father_occupation
+            : existingFam.father_occupation || "",
+        mother_name:
+          newFamInput.mother_name !== undefined
+            ? newFamInput.mother_name
+            : updateFields.mother_name !== undefined
+            ? updateFields.mother_name
+            : existingFam.mother_name || "",
+        mother_occupation:
+          newFamInput.mother_occupation !== undefined
+            ? newFamInput.mother_occupation
+            : updateFields.mother_occupation !== undefined
+            ? updateFields.mother_occupation
+            : existingFam.mother_occupation || "",
+        siblings:
+          newFamInput.siblings !== undefined
+            ? newFamInput.siblings
+            : updateFields.siblings !== undefined
+            ? updateFields.siblings
+            : existingFam.siblings || "",
+        siblings_details:
+          newFamInput.siblings_details !== undefined
+            ? newFamInput.siblings_details
+            : updateFields.siblings_details !== undefined
+            ? updateFields.siblings_details
+            : existingFam.siblings_details || "",
+        family_type:
+          newFamInput.family_type !== undefined
+            ? newFamInput.family_type
+            : updateFields.family_type !== undefined
+            ? updateFields.family_type
+            : existingFam.family_type || "",
+        family_type_details:
+          newFamInput.family_type_details !== undefined
+            ? newFamInput.family_type_details
+            : updateFields.family_type_details !== undefined
+            ? updateFields.family_type_details
+            : existingFam.family_type_details || "",
+        family_status:
+          newFamInput.family_status !== undefined
+            ? newFamInput.family_status
+            : updateFields.family_status !== undefined
+            ? updateFields.family_status
+            : existingFam.family_status || "",
+        family_status_details:
+          newFamInput.family_status_details !== undefined
+            ? newFamInput.family_status_details
+            : updateFields.family_status_details !== undefined
+            ? updateFields.family_status_details
+            : existingFam.family_status_details || "",
+        family_address:
+          newFamInput.family_address !== undefined
+            ? newFamInput.family_address
+            : updateFields.family_address !== undefined
+            ? updateFields.family_address
+            : existingFam.family_address || "",
+        family_values:
+          newFamInput.family_values !== undefined
+            ? newFamInput.family_values
+            : updateFields.family_values !== undefined
+            ? updateFields.family_values
+            : existingFam.family_values || "",
+        family_values_details:
+          newFamInput.family_values_details !== undefined
+            ? newFamInput.family_values_details
+            : updateFields.family_values_details !== undefined
+            ? updateFields.family_values_details
+            : existingFam.family_values_details || "",
+        about_family:
+          newFamInput.about_family !== undefined
+            ? newFamInput.about_family
+            : updateFields.about_family !== undefined
+            ? updateFields.about_family
+            : existingFam.about_family || "",
+        about_family_tamil:
+          newFamInput.about_family_tamil !== undefined
+            ? newFamInput.about_family_tamil
+            : updateFields.about_family_tamil !== undefined
+            ? updateFields.about_family_tamil
+            : existingFam.about_family_tamil || "",
+      };
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -763,6 +1152,8 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       role,
       identity_proff,
       health_report,
+      family_photos,
+      family_photo,
       ...otherFields
     } = req?.body;
 
@@ -839,6 +1230,73 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       }
       processedHealthReport = processedHealth;
     }
+
+    const familyPhotosInput =
+      family_photos !== undefined ? family_photos : family_photo;
+    if (
+      familyPhotosInput === undefined ||
+      familyPhotosInput === null ||
+      familyPhotosInput === "" ||
+      (Array.isArray(familyPhotosInput) && familyPhotosInput.length === 0)
+    ) {
+      return res.status(400).json({
+        error: "Invalid family photos upload. Family photo is required (minimum 1 photo).",
+      });
+    }
+    const processedFP = processUploadedFamilyPhotos(familyPhotosInput, req);
+    if (typeof processedFP === "string") {
+      return res.status(400).json({ error: processedFP });
+    }
+    const processedFamilyPhotos = processedFP;
+
+    const rawHoro = req.body.horoscopeDetails || {};
+    const processedHoroscopeDetails = {
+      dob: rawHoro.dob || req.body.dob || "",
+      star: rawHoro.star || req.body.star || "",
+      rasi: rawHoro.rasi || req.body.rasi || "",
+      lagnam: rawHoro.lagnam || req.body.lagnam || "",
+      gothram: rawHoro.gothram || req.body.gothram || "",
+      tob: rawHoro.tob || req.body.tob || "",
+      pob: rawHoro.pob || req.body.pob || "",
+      dosham: rawHoro.dosham || req.body.dosham || "No Dosham",
+      manglik: rawHoro.manglik || req.body.manglik || "No",
+      chevvai_dosham:
+        rawHoro.chevvai_dosham || req.body.chevvai_dosham || "No",
+      rahu_ketu_dosham:
+        rawHoro.rahu_ketu_dosham || req.body.rahu_ketu_dosham || "Neutral",
+      jathagam: (() => {
+        const rawJath = rawHoro.jathagam || req.body.jathagam || null;
+        if (!rawJath) return null;
+        const processed = processUploadedJathagam(rawJath, req);
+        return typeof processed === "string" ? rawJath : processed;
+      })(),
+    };
+
+    const rawFam = req.body.familyBackground || {};
+    const processedFamilyBackground = {
+      father_name: rawFam.father_name || req.body.father_name || "",
+      father_occupation:
+        rawFam.father_occupation || req.body.father_occupation || "",
+      mother_name: rawFam.mother_name || req.body.mother_name || "",
+      mother_occupation:
+        rawFam.mother_occupation || req.body.mother_occupation || "",
+      siblings: rawFam.siblings || req.body.siblings || "",
+      siblings_details:
+        rawFam.siblings_details || req.body.siblings_details || "",
+      family_type: rawFam.family_type || req.body.family_type || "",
+      family_type_details:
+        rawFam.family_type_details || req.body.family_type_details || "",
+      family_status: rawFam.family_status || req.body.family_status || "",
+      family_status_details:
+        rawFam.family_status_details || req.body.family_status_details || "",
+      family_address: rawFam.family_address || req.body.family_address || "",
+      family_values: rawFam.family_values || req.body.family_values || "",
+      family_values_details:
+        rawFam.family_values_details || req.body.family_values_details || "",
+      about_family: rawFam.about_family || req.body.about_family || "",
+      about_family_tamil:
+        rawFam.about_family_tamil || req.body.about_family_tamil || "",
+    };
 
     if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
@@ -962,6 +1420,9 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       video: processedVideo,
       identity_proff: processedIdentityProof,
       health_report: processedHealthReport,
+      family_photos: processedFamilyPhotos,
+      horoscopeDetails: processedHoroscopeDetails,
+      familyBackground: processedFamilyBackground,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

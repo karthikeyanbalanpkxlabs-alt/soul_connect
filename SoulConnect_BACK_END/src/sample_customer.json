@@ -33,6 +33,37 @@
     }
   ],
   "video": "",
+  "family_photos": [],
+  "horoscopeDetails": {
+    "dob": "1989-02-22",
+    "star": "Rohini",
+    "rasi": "Rishabam (Taurus)",
+    "lagnam": "Mithunam (Gemini)",
+    "gothram": "Vatsa Gothram",
+    "tob": "06:34 AM",
+    "pob": "Kumbakonam",
+    "dosham": "No Dosham",
+    "manglik": "No",
+    "chevvai_dosham": "No",
+    "rahu_ketu_dosham": "Neutral",
+    "jathagam": null
+  },
+  "familyBackground": {
+    "father_name": "Dr. R. Krishnamurthy",
+    "father_occupation": "Retired · IIT Madras Professor",
+    "mother_name": "Smt. Meenakshi K.",
+    "mother_occupation": "Homemaker",
+    "siblings": "1 Elder Brother",
+    "siblings_details": "Married · Software Engineer, Bengaluru",
+    "family_type": "Nuclear Family",
+    "family_type_details": "Extended family in Mylapore",
+    "family_status": "Upper Middle Class",
+    "family_status_details": "Own house in Mylapore, Chennai",
+    "family_address": "Mylapore, Chennai, Tamil Nadu",
+    "family_values": "Traditional",
+    "family_values_details": "Conservative with modern outlook",
+    "about_family": "We are a close-knit Tamil Brahmin family from Kumbakonam, now settled in Mylapore, Chennai."
+  },
   "transaction": [
     {
       "payment_type": "razor_pay",

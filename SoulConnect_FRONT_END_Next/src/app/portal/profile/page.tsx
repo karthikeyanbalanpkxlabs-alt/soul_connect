@@ -27,6 +27,8 @@ import {
   AlertTriangle,
   Pencil,
   X,
+  Users,
+  Plus,
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
@@ -108,6 +110,13 @@ export default function ProfilePage() {
         const src = typeof profile.family_photos[0] === "string" ? profile.family_photos[0] : (profile.family_photos[0]?.url || profile.family_photos[0]?.path);
         if (src) setFamilyPhotos([src]);
       }
+
+      const jathObj = profile.horoscopeDetails?.jathagam || profile.jathagam;
+      if (jathObj) {
+        setHoroscopeUploaded(true);
+        const name = typeof jathObj === "object" ? jathObj.name || "jathagam_document.pdf" : "jathagam_document.pdf";
+        setHoroscopeFileName(name);
+      }
     }
   }, [profile]);
 
@@ -126,6 +135,39 @@ export default function ProfilePage() {
       const payload = {
         ...profile,
         ...formData,
+        family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : [],
+        horoscopeDetails: {
+          dob: formData.dob || profile?.horoscopeDetails?.dob || profile?.dob || "",
+          star: formData.star || profile?.horoscopeDetails?.star || profile?.star || "",
+          rasi: formData.rasi || profile?.horoscopeDetails?.rasi || profile?.rasi || "",
+          lagnam: formData.lagnam || profile?.horoscopeDetails?.lagnam || profile?.lagnam || "",
+          gothram: formData.gothram || profile?.horoscopeDetails?.gothram || profile?.gothram || "",
+          tob: formData.tob || profile?.horoscopeDetails?.tob || profile?.tob || "",
+          pob: formData.pob || profile?.horoscopeDetails?.pob || profile?.pob || "",
+          dosham: formData.dosham || profile?.horoscopeDetails?.dosham || profile?.dosham || "No Dosham",
+          manglik: formData.manglik || profile?.horoscopeDetails?.manglik || profile?.manglik || "No",
+          chevvai_dosham: formData.chevvai_dosham || profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No",
+          rahu_ketu_dosham: formData.rahu_ketu_dosham || profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral",
+          jathagam: profile?.horoscopeDetails?.jathagam || profile?.jathagam || null,
+        },
+        familyBackground: {
+          ...(profile?.familyBackground || {}),
+          father_name: formData.father_name || profile?.familyBackground?.father_name || profile?.father_name || "",
+          father_occupation: formData.father_occupation || profile?.familyBackground?.father_occupation || profile?.father_occupation || "",
+          mother_name: formData.mother_name || profile?.familyBackground?.mother_name || profile?.mother_name || "",
+          mother_occupation: formData.mother_occupation || profile?.familyBackground?.mother_occupation || profile?.mother_occupation || "",
+          siblings: formData.siblings || profile?.familyBackground?.siblings || profile?.siblings || "",
+          siblings_details: formData.siblings_details || profile?.familyBackground?.siblings_details || profile?.siblings_details || "",
+          family_type: formData.family_type || profile?.familyBackground?.family_type || profile?.family_type || "",
+          family_type_details: formData.family_type_details || profile?.familyBackground?.family_type_details || profile?.family_type_details || "",
+          family_status: formData.family_status || profile?.familyBackground?.family_status || profile?.family_status || "",
+          family_status_details: formData.family_status_details || profile?.familyBackground?.family_status_details || profile?.family_status_details || "",
+          family_address: formData.family_address || profile?.familyBackground?.family_address || profile?.family_address || "",
+          family_values: formData.family_values || profile?.familyBackground?.family_values || profile?.family_values || "",
+          family_values_details: formData.family_values_details || profile?.familyBackground?.family_values_details || profile?.family_values_details || "",
+          about_family: formData.about_family || profile?.familyBackground?.about_family || profile?.about_family || "",
+          about_family_tamil: formData.about_family_tamil || profile?.familyBackground?.about_family_tamil || profile?.about_family_tamil || "",
+        },
         keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
         customer_id: profile?.customer_id,
         _id: profile?._id,
@@ -469,10 +511,13 @@ export default function ProfilePage() {
   const handleFamilyPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      // Only 1 photo allowed for Family Photos
-      setFamilyPhotos([imageUrl]);
-      showToast("Family photo uploaded successfully!", "success");
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFamilyPhotos([base64String]);
+        showToast("Family photo added successfully! Click Save Changes to apply.", "success");
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -494,12 +539,53 @@ export default function ProfilePage() {
     }, 300);
   };
 
-  const handleHoroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHoroChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setHoroscopeFileName(file.name);
       setHoroscopeUploaded(true);
-      showToast("Jathagam / Birth Chart uploaded successfully!", "success");
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        try {
+          const token = keycloak?.token;
+          const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+          const res = await fetch(`${apiUrl}/api/customer_edit`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              ...profile,
+              horoscopeDetails: {
+                ...(profile?.horoscopeDetails || {}),
+                jathagam: {
+                  url: base64String,
+                  name: file.name,
+                  type: file.type,
+                },
+              },
+              keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
+              customer_id: profile?.customer_id,
+              _id: profile?._id,
+            }),
+          });
+
+          const data = await res.json();
+          if (res.ok && !data.error) {
+            showToast("Jathagam / Birth Chart saved to local uploads! ✨", "success");
+            if (refreshProfile) await refreshProfile();
+          } else {
+            showToast(data.error || "Failed to upload Jathagam", "error");
+          }
+        } catch (err: any) {
+          console.error("Error uploading Jathagam:", err);
+          showToast(err.message || "Failed to upload Jathagam", "error");
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -1854,59 +1940,67 @@ export default function ProfilePage() {
           <div
             className={`tab-panel ${activeTab === "family" ? "active" : ""}`}
           >
-            <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">🏠</div>Family Background
-              </div>
-              <div className="family-grid">
-                <div className="family-item">
-                  <div className="family-item-icon">👨</div>
-                  <div className="family-item-label">Father</div>
-                  <div className="family-item-value">Dr. R. Krishnamurthy</div>
-                  <div className="family-item-sub">
-                    Retired · IIT Madras Professor
+            {(() => {
+              const fam = profile?.familyBackground || {};
+              const fatherName = fam.father_name || profile?.father_name || "Dr. R. Krishnamurthy";
+              const fatherOcc = fam.father_occupation || profile?.father_occupation || "Retired · IIT Madras Professor";
+              const motherName = fam.mother_name || profile?.mother_name || "Smt. Meenakshi K.";
+              const motherOcc = fam.mother_occupation || profile?.mother_occupation || "Homemaker";
+              const siblings = fam.siblings || profile?.siblings || "1 Elder Brother";
+              const siblingsDetails = fam.siblings_details || profile?.siblings_details || "Married · Software Engineer, Bengaluru";
+              const famType = fam.family_type || profile?.family_type || "Nuclear Family";
+              const famTypeDetails = fam.family_type_details || profile?.family_type_details || "Extended family in Mylapore";
+              const famStatus = fam.family_status || profile?.family_status || "Upper Middle Class";
+              const famStatusDetails = fam.family_status_details || fam.family_address || profile?.family_status_details || profile?.family_address || "Own house in Mylapore, Chennai";
+              const famValues = fam.family_values || profile?.family_values || "Traditional";
+              const famValuesDetails = fam.family_values_details || profile?.family_values_details || "Conservative with modern outlook";
+
+              return (
+                <div className="content-card reveal visible">
+                  <div className="content-card-title">
+                    <div className="ctitle-icon">🏠</div>Family Background
+                  </div>
+                  <div className="family-grid">
+                    <div className="family-item">
+                      <div className="family-item-icon">👨</div>
+                      <div className="family-item-label">FATHER</div>
+                      <div className="family-item-value">{fatherName}</div>
+                      <div className="family-item-sub">{fatherOcc}</div>
+                    </div>
+                    <div className="family-item">
+                      <div className="family-item-icon">👩</div>
+                      <div className="family-item-label">MOTHER</div>
+                      <div className="family-item-value">{motherName}</div>
+                      <div className="family-item-sub">{motherOcc}</div>
+                    </div>
+                    <div className="family-item">
+                      <div className="family-item-icon">👦</div>
+                      <div className="family-item-label">SIBLINGS</div>
+                      <div className="family-item-value">{siblings}</div>
+                      <div className="family-item-sub">{siblingsDetails}</div>
+                    </div>
+                    <div className="family-item">
+                      <div className="family-item-icon">🏡</div>
+                      <div className="family-item-label">FAMILY TYPE</div>
+                      <div className="family-item-value">{famType}</div>
+                      <div className="family-item-sub">{famTypeDetails}</div>
+                    </div>
+                    <div className="family-item">
+                      <div className="family-item-icon">💎</div>
+                      <div className="family-item-label">FAMILY STATUS</div>
+                      <div className="family-item-value">{famStatus}</div>
+                      <div className="family-item-sub">{famStatusDetails}</div>
+                    </div>
+                    <div className="family-item">
+                      <div className="family-item-icon">🙏</div>
+                      <div className="family-item-label">FAMILY VALUES</div>
+                      <div className="family-item-value">{famValues}</div>
+                      <div className="family-item-sub">{famValuesDetails}</div>
+                    </div>
                   </div>
                 </div>
-                <div className="family-item">
-                  <div className="family-item-icon">👩</div>
-                  <div className="family-item-label">Mother</div>
-                  <div className="family-item-value">Smt. Meenakshi K.</div>
-                  <div className="family-item-sub">Homemaker</div>
-                </div>
-                <div className="family-item">
-                  <div className="family-item-icon">👦</div>
-                  <div className="family-item-label">Siblings</div>
-                  <div className="family-item-value">1 Elder Brother</div>
-                  <div className="family-item-sub">
-                    Married · Software Engineer, Bengaluru
-                  </div>
-                </div>
-                <div className="family-item">
-                  <div className="family-item-icon">🏡</div>
-                  <div className="family-item-label">Family Type</div>
-                  <div className="family-item-value">Nuclear Family</div>
-                  <div className="family-item-sub">
-                    Extended family in Mylapore
-                  </div>
-                </div>
-                <div className="family-item">
-                  <div className="family-item-icon">💎</div>
-                  <div className="family-item-label">Family Status</div>
-                  <div className="family-item-value">Upper Middle Class</div>
-                  <div className="family-item-sub">
-                    Own house in Mylapore, Chennai
-                  </div>
-                </div>
-                <div className="family-item">
-                  <div className="family-item-icon">🙏</div>
-                  <div className="family-item-label">Family Values</div>
-                  <div className="family-item-value">Traditional</div>
-                  <div className="family-item-sub">
-                    Conservative with modern outlook
-                  </div>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
 
             <div
               className="content-card reveal visible"
@@ -2217,11 +2311,18 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="content-card reveal visible">
-              <div className="content-card-title flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="ctitle-icon">👨‍👩‍👧‍👦</div>Family Photos
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
+                    <Users size={20} />
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-800 tracking-tight">
+                    Family Photos
+                  </h4>
                 </div>
-                <span className="text-xs text-slate-400 font-medium">Max 1 photo</span>
+                <span className="text-xs font-medium text-slate-400">
+                  Max 1 photo
+                </span>
               </div>
 
               {/* Photo Upload Form */}
@@ -2233,14 +2334,14 @@ export default function ProfilePage() {
                 onChange={handleFamilyPhotoChange}
               />
 
-              <div className="photos-grid">
+              <div className="flex flex-wrap gap-4">
                 {/* Uploaded Family Photo */}
                 {familyPhotos.map((url, idx) => (
-                  <div key={idx} className="photo-slot relative group overflow-hidden">
+                  <div key={idx} className="relative w-44 h-60 rounded-2xl border-2 border-slate-200 overflow-hidden group bg-slate-50 shadow-sm">
                     <img
                       src={url}
                       alt={`Family photo ${idx + 1}`}
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover rounded-2xl"
                     />
                     <button
                       className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
@@ -2258,13 +2359,18 @@ export default function ProfilePage() {
 
                 {/* Add Photo Button Slot - Only allowed 1 photo */}
                 {familyPhotos.length < 1 && (
-                  <div
-                    className="photo-slot photo-slot-add"
+                  <label
+                    className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group"
                     onClick={triggerFamilyPhotoUpload}
                   >
-                    <div className="photo-av">＋</div>
-                    <div className="photo-label">Add Family Photo</div>
-                  </div>
+                    <Plus
+                      size={28}
+                      className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
+                    />
+                    <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
+                      Add Family Photo
+                    </span>
+                  </label>
                 )}
               </div>
             </div>
@@ -2345,12 +2451,14 @@ export default function ProfilePage() {
                   <div className="horo-label">Star (Nakshatra)</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.star || formData.star || "Rohini"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.star || profile?.star || formData.star || "Rohini"}
+                      </div>
                       <div className="horo-value-tamil">ரோகிணி</div>
                     </>
                   ) : (
                     <select
-                      value={formData.star || ""}
+                      value={formData.star || profile?.horoscopeDetails?.star || ""}
                       onChange={(e) => handleChange("star", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2367,12 +2475,14 @@ export default function ProfilePage() {
                   <div className="horo-label">Rasi (Moon Sign)</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.rasi || formData.rasi || "Rishabam (Taurus)"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi || "Rishabam (Taurus)"}
+                      </div>
                       <div className="horo-value-tamil">ரிஷபம்</div>
                     </>
                   ) : (
                     <select
-                      value={formData.rasi || ""}
+                      value={formData.rasi || profile?.horoscopeDetails?.rasi || ""}
                       onChange={(e) => handleChange("rasi", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2389,12 +2499,14 @@ export default function ProfilePage() {
                   <div className="horo-label">Lagnam (Ascendant)</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}
+                      </div>
                       <div className="horo-value-tamil">மிதுனம்</div>
                     </>
                   ) : (
                     <select
-                      value={formData.lagnam || ""}
+                      value={formData.lagnam || profile?.horoscopeDetails?.lagnam || ""}
                       onChange={(e) => handleChange("lagnam", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2411,13 +2523,15 @@ export default function ProfilePage() {
                   <div className="horo-label">Gothram</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.gothram || formData.gothram || "Vatsa Gothram"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.gothram || profile?.gothram || formData.gothram || "Vatsa Gothram"}
+                      </div>
                       <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.gothram || ""}
+                      value={formData.gothram || profile?.horoscopeDetails?.gothram || ""}
                       onChange={(e) => handleChange("gothram", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Gothram"
@@ -2427,11 +2541,13 @@ export default function ProfilePage() {
                 <div className="horo-item">
                   <div className="horo-label">Date of Birth</div>
                   {!isEditing ? (
-                    <div className="horo-value">{profile?.dob || formData.dob || "14 March 1997"}</div>
+                    <div className="horo-value">
+                      {profile?.horoscopeDetails?.dob || profile?.dob || formData.dob || "1989-02-22"}
+                    </div>
                   ) : (
                     <input
                       type="date"
-                      value={formData.dob || ""}
+                      value={formData.dob || profile?.horoscopeDetails?.dob || ""}
                       onChange={(e) => handleChange("dob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     />
@@ -2441,13 +2557,15 @@ export default function ProfilePage() {
                   <div className="horo-label">Time of Birth</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.tob || formData.tob || "06:34 AM"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.tob || profile?.tob || formData.tob || "06:34 AM"}
+                      </div>
                       <div className="horo-value-tamil">அதிகாலை</div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.tob || ""}
+                      value={formData.tob || profile?.horoscopeDetails?.tob || ""}
                       onChange={(e) => handleChange("tob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="e.g. 06:34 AM"
@@ -2458,13 +2576,15 @@ export default function ProfilePage() {
                   <div className="horo-label">Place of Birth</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.pob || formData.pob || "Kumbakonam"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.pob || profile?.pob || formData.pob || "Kumbakonam"}
+                      </div>
                       <div className="horo-value-tamil">கும்பகோணம்</div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.pob || ""}
+                      value={formData.pob || profile?.horoscopeDetails?.pob || ""}
                       onChange={(e) => handleChange("pob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Place of Birth"
@@ -2476,7 +2596,7 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value" style={{ color: "var(--sage)" }}>
-                        {profile?.dosham || formData.dosham || "No Dosham"}
+                        {profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham || "No Dosham"}
                       </div>
                       <div
                         className="horo-value-tamil"
@@ -2487,7 +2607,7 @@ export default function ProfilePage() {
                     </>
                   ) : (
                     <select
-                      value={formData.dosham || ""}
+                      value={formData.dosham || profile?.horoscopeDetails?.dosham || ""}
                       onChange={(e) => handleChange("dosham", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2506,21 +2626,21 @@ export default function ProfilePage() {
                     className="hb-dot"
                     style={{ background: "var(--sage)" }}
                   ></div>
-                  Manglik: No
+                  Manglik: {profile?.horoscopeDetails?.manglik || profile?.manglik || "No"}
                 </div>
                 <div className="horo-badge">
                   <div
                     className="hb-dot"
                     style={{ background: "var(--plum)" }}
                   ></div>
-                  Chevvai Dosham: No
+                  Chevvai Dosham: {profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No"}
                 </div>
                 <div className="horo-badge">
                   <div
                     className="hb-dot"
                     style={{ background: "var(--rose)" }}
                   ></div>
-                  Rahu-Ketu: Neutral
+                  Rahu-Ketu: {profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral"}
                 </div>
               </div>
             </div>
@@ -2542,100 +2662,124 @@ export default function ProfilePage() {
                 onChange={handleHoroChange}
               />
 
-              {!horoscopeUploaded ? (
-                <div
-                  style={{
-                    background:
-                      "linear-gradient(135deg,var(--saffron-light),var(--amber-light))",
-                    borderRadius: "var(--radius-sm)",
-                    padding: "32px 24px",
-                    textAlign: "center",
-                    border: "1px solid rgba(245,158,11,.2)",
-                  }}
-                >
-                  <div style={{ fontSize: "2rem", marginBottom: "8px" }}>
-                    📜
-                  </div>
-                  <div
-                    style={{
-                      fontSize: ".9rem",
-                      fontWeight: 600,
-                      color: "var(--amber)",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    Jathagam / Birth Chart Not Uploaded
-                  </div>
-                  <p
-                    style={{
-                      fontSize: ".78rem",
-                      color: "var(--ink-60)",
-                      marginBottom: "18px",
-                      maxWidth: "400px",
-                      margin: "0 auto 18px",
-                    }}
-                  >
-                    Add your horoscope chart to calculate detailed planetary
-                    compatibility percentages with matching profiles.
-                  </p>
-                  <button
-                    className="btn-secondary"
-                    style={{
-                      display: "inline-flex",
-                      borderColor: "var(--amber)",
-                      color: "var(--amber)",
-                    }}
-                    onClick={triggerHoroUpload}
-                  >
-                    <Upload className="h-4 w-4 mr-2" /> Upload Jathagam (PDF /
-                    Image)
-                  </button>
-                </div>
-              ) : (
-                <div
-                  className="p-6 rounded-2xl border border-emerald-100"
-                  style={{
-                    background: "linear-gradient(135deg, #ECFDF5, #D1FAE5)",
-                  }}
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-emerald-100 text-emerald-600 p-2.5 rounded-full">
-                        <Check className="h-6 w-6" />
+              {(() => {
+                const jathObj = profile?.horoscopeDetails?.jathagam || profile?.jathagam;
+                const rawJathUrl = typeof jathObj === "string" ? jathObj : jathObj?.url;
+                const jathagamUrl = rawJathUrl
+                  ? rawJathUrl.startsWith("http") || rawJathUrl.startsWith("data:")
+                    ? rawJathUrl
+                    : `${configUrls?.apiUrl || "http://localhost:3000"}/${rawJathUrl.replace(/^\//, "")}`
+                  : null;
+                const isUploaded = horoscopeUploaded || !!jathagamUrl;
+
+                if (!isUploaded) {
+                  return (
+                    <div
+                      style={{
+                        background:
+                          "linear-gradient(135deg,var(--saffron-light),var(--amber-light))",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "32px 24px",
+                        textAlign: "center",
+                        border: "1px solid rgba(245,158,11,.2)",
+                      }}
+                    >
+                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>
+                        📜
                       </div>
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-sm">
-                          Birth Chart (Jathagam) Verified
-                        </h4>
-                        <p className="text-xs text-slate-500 mt-0.5 font-medium flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                          File: {horoscopeFileName || "jathagam_priya.pdf"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        className="text-xs bg-white text-slate-700 font-medium px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition"
-                        onClick={() =>
-                          showToast("Viewing chart PDF preview...", "info")
-                        }
-                      >
-                        Preview Chart
-                      </button>
-                      <button
-                        className="text-xs bg-rose text-white font-medium p-2 rounded-xl hover:bg-rose-dark transition"
-                        onClick={() => {
-                          setHoroscopeUploaded(false);
-                          setHoroscopeFileName("");
-                          showToast("Horoscope chart deleted", "info");
+                      <div
+                        style={{
+                          fontSize: ".9rem",
+                          fontWeight: 600,
+                          color: "var(--amber)",
+                          marginBottom: "6px",
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        Jathagam / Birth Chart Not Uploaded
+                      </div>
+                      <p
+                        style={{
+                          fontSize: ".78rem",
+                          color: "var(--ink-60)",
+                          marginBottom: "18px",
+                          maxWidth: "400px",
+                          margin: "0 auto 18px",
+                        }}
+                      >
+                        Add your horoscope chart to calculate detailed planetary
+                        compatibility percentages with matching profiles.
+                      </p>
+                      <button
+                        className="btn-secondary"
+                        style={{
+                          display: "inline-flex",
+                          borderColor: "var(--amber)",
+                          color: "var(--amber)",
+                        }}
+                        onClick={triggerHoroUpload}
+                      >
+                        <Upload className="h-4 w-4 mr-2" /> Upload Jathagam (PDF /
+                        Image)
                       </button>
                     </div>
+                  );
+                }
+
+                return (
+                  <div
+                    className="p-6 rounded-2xl border border-emerald-100"
+                    style={{
+                      background: "linear-gradient(135deg, #ECFDF5, #D1FAE5)",
+                    }}
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-emerald-100 text-emerald-600 p-2.5 rounded-full">
+                          <Check className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-sm">
+                            Birth Chart (Jathagam) Verified
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-0.5 font-medium flex items-center gap-1.5">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                            File: {horoscopeFileName || (typeof jathObj === "object" ? jathObj?.name : null) || "jathagam_document.pdf"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {jathagamUrl ? (
+                          <a
+                            href={jathagamUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs bg-emerald-600 text-white font-semibold px-4 py-2 rounded-xl shadow-sm hover:bg-emerald-700 transition inline-flex items-center gap-1"
+                          >
+                            View / Download Chart
+                          </a>
+                        ) : (
+                          <button
+                            className="text-xs bg-white text-slate-700 font-medium px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition"
+                            onClick={triggerHoroUpload}
+                          >
+                            Change File
+                          </button>
+                        )}
+                        <button
+                          className="text-xs bg-rose-600 text-white font-medium p-2 rounded-xl hover:bg-rose-700 transition"
+                          onClick={() => {
+                            setHoroscopeUploaded(false);
+                            setHoroscopeFileName("");
+                            showToast("Horoscope chart deleted", "info");
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-white" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
         </div>

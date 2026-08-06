@@ -15,11 +15,16 @@ import {
   Lock,
   ArrowRight,
   Mail,
+  Users,
+  Plus,
+  Trash2,
 } from "lucide-react";
+import keycloak from "@/lib/keycloak";
+import configUrls from "../../../../configUrls";
 import { useRouter } from "next/navigation";
 import { useKeycloak } from "@/providers/KeycloakProvider";
 function CardPage() {
-  const { profile } = useKeycloak();
+  const { profile, refreshProfile } = useKeycloak();
   const stateProps = usePortalPage();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Latest");
@@ -53,6 +58,34 @@ function CardPage() {
           ? profile.identity_proff
           : null;
     const hasIdProof = !!idProofUrl;
+
+    const familyPhotoUrl =
+      Array.isArray(profile?.family_photos) && profile.family_photos.length > 0
+        ? typeof profile.family_photos[0] === "string"
+          ? profile.family_photos[0]
+          : profile.family_photos[0]?.url
+        : profile?.family_photo
+        ? typeof profile.family_photo === "string"
+          ? profile.family_photo
+          : profile.family_photo?.url
+        : null;
+    const hasFamilyPhoto = !!familyPhotoUrl;
+
+    const horoObj = profile?.horoscopeDetails || {};
+    const starVal = horoObj.star || profile?.star;
+    const rasiVal = horoObj.rasi || profile?.rasi;
+    const jathagamUrl = horoObj.jathagam?.url || horoObj.jathagam || profile?.jathagam;
+    const hasHoroscope = !!(starVal || rasiVal || jathagamUrl);
+
+    const famObj = profile?.familyBackground || {};
+    const fatherVal = famObj.father_name || profile?.father_name;
+    const motherVal = famObj.mother_name || profile?.mother_name;
+    const famTypeVal = famObj.family_type || profile?.family_type;
+    const famStatusVal = famObj.family_status || profile?.family_status;
+    const famAddressVal = famObj.family_address || profile?.family_address;
+    const hasFamilyBackground = !!(fatherVal || motherVal || famTypeVal || famStatusVal || famAddressVal);
+
+    const allStepsComplete = hasIdProof && hasFamilyPhoto && hasHoroscope && hasFamilyBackground;
 
     return (
       <div className="py-12 px-4 max-w-3xl mx-auto">
@@ -136,15 +169,173 @@ function CardPage() {
                 </div>
               </div>
 
-              {/* Step 3 */}
+              {/* Step 3: Family Photo */}
               <div className="relative">
                 <span
-                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${hasIdProof
-                    ? "bg-amber-100 text-amber-600"
-                    : "bg-gray-100 text-gray-400"
-                    }`}
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasFamilyPhoto
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
                 >
-                  {hasIdProof ? (
+                  {hasFamilyPhoto ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Family Photo Upload
+                    </h4>
+                    {!hasFamilyPhoto && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasFamilyPhoto
+                      ? "Family photo successfully uploaded (Max 1 photo)."
+                      : "Please upload a Family Photo (Max 1 photo) for profile verification."}
+                  </p>
+
+                  {/* Family Photo Checkpoint Status */}
+                  <div className="mt-3">
+                    {hasFamilyPhoto && (
+                      <div className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl max-w-sm">
+                        <div className="w-16 h-20 rounded-xl overflow-hidden bg-slate-200 border border-slate-300">
+                          <img
+                            src={familyPhotoUrl}
+                            alt="Family Photo"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            Family Photo Uploaded
+                          </p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓ Max 1 photo verified
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4: Horoscope & Birth Details */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasHoroscope
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasHoroscope ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Horoscope & Birth Details
+                    </h4>
+                    {!hasHoroscope && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasHoroscope
+                      ? "Horoscope & birth details provided."
+                      : "Please add your Horoscope details (Star, Rasi, etc.) or upload Jathagam in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasHoroscope && (
+                      <div className="flex items-center gap-3 p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
+                          ⭐
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Horoscope Verified</p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓ Star: {starVal || "Provided"} {rasiVal ? `| Rasi: ${rasiVal}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 5: Family Background Details */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasFamilyBackground
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasFamilyBackground ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Family Background Details
+                    </h4>
+                    {!hasFamilyBackground && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasFamilyBackground
+                      ? "Family background and address details provided."
+                      : "Please add your Family Background details (Father, Mother, Status, Address, etc.) in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasFamilyBackground && (
+                      <div className="flex items-center gap-3 p-3 bg-purple-50/60 border border-purple-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                          🏠
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Family Background Verified</p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓ {fatherVal ? `Father: ${fatherVal}` : famStatusVal ? `Status: ${famStatusVal}` : "Details Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 6 */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    allStepsComplete
+                      ? "bg-amber-100 text-amber-600"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {allStepsComplete ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <Lock className="w-4 h-4" />
@@ -155,14 +346,14 @@ function CardPage() {
                     Manual Verification Check
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
-                    {hasIdProof
-                      ? "Our admin panel is verifying your documents and details."
-                      : "Awaiting ID proof submission before review can begin."}
+                    {allStepsComplete
+                      ? "Our admin panel is verifying your documents, family photo, horoscope, and family background."
+                      : "Awaiting ID proof, family photo, horoscope & family background submission before review can begin."}
                   </p>
                 </div>
               </div>
 
-              {/* Step 4 */}
+              {/* Step 6 */}
               <div className="relative">
                 <span className="absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-400 shadow-sm">
                   <Lock className="w-4 h-4" />

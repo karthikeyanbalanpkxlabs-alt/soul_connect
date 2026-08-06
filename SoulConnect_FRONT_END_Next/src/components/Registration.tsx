@@ -19,7 +19,10 @@ import {
   CheckCircle,
   AlertCircle,
   Sparkles,
-  Upload
+  Upload,
+  Users,
+  Plus,
+  Trash2
 } from "lucide-react";
 import { onSaveCustomer } from './api'
 import { useKeycloak } from "@/providers/KeycloakProvider";
@@ -84,6 +87,33 @@ export default function Registration({
 
   // Profile Image Upload States & Handlers
   const [images, setImages] = useState<any[]>([]);
+  const [familyPhotos, setFamilyPhotos] = useState<any[]>([]);
+
+  const handleFamilyPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        showToast("Please upload a valid image file (JPEG, PNG, WebP).", "error");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Image size should not exceed 5MB.", "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFamilyPhotos([{ url: base64String }]);
+        showToast("Family photo added successfully!", "success");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeFamilyPhoto = () => {
+    setFamilyPhotos([]);
+    showToast("Family photo removed.", "info");
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -269,6 +299,10 @@ export default function Registration({
       showToast("Please upload at least 1 profile image.", "error");
       return;
     }
+    if (familyPhotos.length === 0) {
+      showToast("Please upload a family photo.", "error");
+      return;
+    }
     // Transition to Step 2
     setRegStep(2);
     showToast("Profile drafted successfully! Please choose a plan and verify your ID.", "success");
@@ -323,6 +357,7 @@ export default function Registration({
       subscription_type: selectedPlanData?.id,
       subscription_view_access: 4,
       image: images,
+      family_photos: familyPhotos,
       video: "",
       identity_proff: identityProof,
       transaction: [],
@@ -617,6 +652,73 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                         />
                       </label>
                     )}
+                  </div>
+                </div>
+
+                {/* Family Photos Card Component */}
+                <div className="mb-8 p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
+                        <Users size={20} />
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-800 tracking-tight">
+                        Family Photos <span className="text-red-500">*</span>
+                      </h4>
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">
+                      Max 1 photo
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4">
+                    {(() => {
+                      const validFP = familyPhotos.filter((img: any) =>
+                        typeof img === "string" ? img : img?.url,
+                      );
+                      const firstFP = validFP[0];
+                      const fpUrl =
+                        typeof firstFP === "string" ? firstFP : firstFP?.url;
+
+                      if (fpUrl) {
+                        return (
+                          <div className="relative w-44 h-60 rounded-2xl border-2 border-slate-200 overflow-hidden group bg-slate-50 shadow-sm">
+                            <img
+                              src={fpUrl}
+                              alt="Family Photo"
+                              className="w-full h-full object-cover rounded-2xl"
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={removeFamilyPhoto}
+                                className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 font-semibold shadow transition-colors flex items-center gap-1"
+                              >
+                                <Trash2 size={14} /> Remove Photo
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <label className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group">
+                          <Plus
+                            size={28}
+                            className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
+                          />
+                          <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
+                            Add Family Photo
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFamilyPhotoUpload}
+                          />
+                        </label>
+                      );
+                    })()}
                   </div>
                 </div>
 
