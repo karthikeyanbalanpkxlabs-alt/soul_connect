@@ -71,6 +71,12 @@ function CardPage() {
         : null;
     const hasFamilyPhoto = !!familyPhotoUrl;
 
+    const horoObj = profile?.horoscopeDetails || {};
+    const starVal = horoObj.star || profile?.star;
+    const rasiVal = horoObj.rasi || profile?.rasi;
+    const jathagamUrl = horoObj.jathagam?.url || horoObj.jathagam || profile?.jathagam;
+    const hasHoroscope = !!(starVal || rasiVal || jathagamUrl);
+
     return (
       <div className="py-12 px-4 max-w-3xl mx-auto">
         <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
@@ -210,16 +216,66 @@ function CardPage() {
                 </div>
               </div>
 
-              {/* Step 4 */}
+              {/* Step 4: Horoscope & Birth Details */}
               <div className="relative">
                 <span
                   className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
-                    hasIdProof && hasFamilyPhoto
+                    hasHoroscope
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasHoroscope ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Horoscope & Birth Details
+                    </h4>
+                    {!hasHoroscope && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasHoroscope
+                      ? "Horoscope & birth details provided."
+                      : "Please add your Horoscope details (Star, Rasi, etc.) or upload Jathagam in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasHoroscope && (
+                      <div className="flex items-center gap-3 p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
+                          ⭐
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Horoscope Verified</p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓ Star: {starVal || "Provided"} {rasiVal ? `| Rasi: ${rasiVal}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 5 */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasIdProof && hasFamilyPhoto && hasHoroscope
                       ? "bg-amber-100 text-amber-600"
                       : "bg-gray-100 text-gray-400"
                   }`}
                 >
-                  {hasIdProof && hasFamilyPhoto ? (
+                  {hasIdProof && hasFamilyPhoto && hasHoroscope ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <Lock className="w-4 h-4" />
@@ -230,14 +286,14 @@ function CardPage() {
                     Manual Verification Check
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
-                    {hasIdProof && hasFamilyPhoto
-                      ? "Our admin panel is verifying your documents and family photo."
-                      : "Awaiting ID proof & family photo submission before review can begin."}
+                    {hasIdProof && hasFamilyPhoto && hasHoroscope
+                      ? "Our admin panel is verifying your documents, family photo, and horoscope."
+                      : "Awaiting ID proof, family photo & horoscope submission before review can begin."}
                   </p>
                 </div>
               </div>
 
-              {/* Step 5 */}
+              {/* Step 6 */}
               <div className="relative">
                 <span className="absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-400 shadow-sm">
                   <Lock className="w-4 h-4" />

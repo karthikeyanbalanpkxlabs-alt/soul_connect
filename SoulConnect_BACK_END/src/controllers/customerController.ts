@@ -547,6 +547,69 @@ function processUploadedHealthReport(
   }
 }
 
+function processUploadedJathagam(
+  jathagamInput: any,
+  req: Request,
+): { url: string } | string | null {
+  if (!jathagamInput) return null;
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  let fileStr = "";
+  if (typeof jathagamInput === "string") {
+    fileStr = jathagamInput;
+  } else if (
+    jathagamInput &&
+    typeof jathagamInput === "object" &&
+    typeof jathagamInput.url === "string"
+  ) {
+    fileStr = jathagamInput.url;
+  } else {
+    return null;
+  }
+
+  if (!fileStr) return null;
+
+  if (
+    fileStr.startsWith("http://") ||
+    fileStr.startsWith("https://") ||
+    (!fileStr.startsWith("data:") && fileStr.length < 200)
+  ) {
+    return { url: fileStr };
+  }
+
+  try {
+    let ext = "pdf";
+    let data = fileStr;
+
+    if (fileStr.startsWith("data:")) {
+      const commaIdx = fileStr.indexOf(",");
+      if (commaIdx !== -1) {
+        data = fileStr.substring(commaIdx + 1);
+        const mimeStr = fileStr.substring(5, commaIdx);
+        const mimeParts = mimeStr.split(";")[0].split("/");
+        if (mimeParts.length === 2) {
+          ext = mimeParts[1];
+        }
+      }
+    }
+
+    const buffer = Buffer.from(data, "base64");
+    const filename = `jathagam_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+    fs.writeFileSync(filepath, buffer);
+
+    const host = req.get("host");
+    const fileUrl = `${req.protocol}://${host}/uploads/${filename}`;
+    return { url: fileUrl };
+  } catch (err: any) {
+    console.error("Failed to process jathagam:", err);
+    return `Failed to process jathagam: ${err.message}`;
+  }
+}
+
 function processUploadedFamilyPhotos(
   familyPhotosInput: any,
   req: Request,
@@ -805,6 +868,109 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       }
     }
 
+    if (
+      updateFields.horoscopeDetails !== undefined ||
+      updateFields.star ||
+      updateFields.rasi ||
+      updateFields.lagnam ||
+      updateFields.gothram ||
+      updateFields.tob ||
+      updateFields.pob ||
+      updateFields.dosham ||
+      updateFields.manglik ||
+      updateFields.chevvai_dosham ||
+      updateFields.rahu_ketu_dosham ||
+      updateFields.jathagam
+    ) {
+      const existingHoro = currentCustomer.get("horoscopeDetails") || {};
+      const newHoroInput = updateFields.horoscopeDetails || {};
+      updateFields.horoscopeDetails = {
+        ...existingHoro,
+        ...newHoroInput,
+        dob:
+          newHoroInput.dob !== undefined
+            ? newHoroInput.dob
+            : updateFields.dob !== undefined
+            ? updateFields.dob
+            : existingHoro.dob || currentCustomer.get("dob") || "",
+        star:
+          newHoroInput.star !== undefined
+            ? newHoroInput.star
+            : updateFields.star !== undefined
+            ? updateFields.star
+            : existingHoro.star || currentCustomer.get("star") || "",
+        rasi:
+          newHoroInput.rasi !== undefined
+            ? newHoroInput.rasi
+            : updateFields.rasi !== undefined
+            ? updateFields.rasi
+            : existingHoro.rasi || currentCustomer.get("rasi") || "",
+        lagnam:
+          newHoroInput.lagnam !== undefined
+            ? newHoroInput.lagnam
+            : updateFields.lagnam !== undefined
+            ? updateFields.lagnam
+            : existingHoro.lagnam || currentCustomer.get("lagnam") || "",
+        gothram:
+          newHoroInput.gothram !== undefined
+            ? newHoroInput.gothram
+            : updateFields.gothram !== undefined
+            ? updateFields.gothram
+            : existingHoro.gothram || currentCustomer.get("gothram") || "",
+        tob:
+          newHoroInput.tob !== undefined
+            ? newHoroInput.tob
+            : updateFields.tob !== undefined
+            ? updateFields.tob
+            : existingHoro.tob || currentCustomer.get("tob") || "",
+        pob:
+          newHoroInput.pob !== undefined
+            ? newHoroInput.pob
+            : updateFields.pob !== undefined
+            ? updateFields.pob
+            : existingHoro.pob || currentCustomer.get("pob") || "",
+        dosham:
+          newHoroInput.dosham !== undefined
+            ? newHoroInput.dosham
+            : updateFields.dosham !== undefined
+            ? updateFields.dosham
+            : existingHoro.dosham || currentCustomer.get("dosham") || "No Dosham",
+        manglik:
+          newHoroInput.manglik !== undefined
+            ? newHoroInput.manglik
+            : updateFields.manglik !== undefined
+            ? updateFields.manglik
+            : existingHoro.manglik || currentCustomer.get("manglik") || "No",
+        chevvai_dosham:
+          newHoroInput.chevvai_dosham !== undefined
+            ? newHoroInput.chevvai_dosham
+            : updateFields.chevvai_dosham !== undefined
+            ? updateFields.chevvai_dosham
+            : existingHoro.chevvai_dosham ||
+              currentCustomer.get("chevvai_dosham") ||
+              "No",
+        rahu_ketu_dosham:
+          newHoroInput.rahu_ketu_dosham !== undefined
+            ? newHoroInput.rahu_ketu_dosham
+            : updateFields.rahu_ketu_dosham !== undefined
+            ? updateFields.rahu_ketu_dosham
+            : existingHoro.rahu_ketu_dosham ||
+              currentCustomer.get("rahu_ketu_dosham") ||
+              "Neutral",
+        jathagam: (() => {
+          const rawJath =
+            newHoroInput.jathagam !== undefined
+              ? newHoroInput.jathagam
+              : updateFields.jathagam !== undefined
+              ? updateFields.jathagam
+              : existingHoro.jathagam || currentCustomer.get("jathagam") || null;
+          if (!rawJath) return null;
+          const processed = processUploadedJathagam(rawJath, req);
+          return typeof processed === "string" ? rawJath : processed;
+        })(),
+      };
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -972,6 +1138,29 @@ export async function handleCustomerCreate(req: Request, res: Response) {
     }
     const processedFamilyPhotos = processedFP;
 
+    const rawHoro = req.body.horoscopeDetails || {};
+    const processedHoroscopeDetails = {
+      dob: rawHoro.dob || req.body.dob || "",
+      star: rawHoro.star || req.body.star || "",
+      rasi: rawHoro.rasi || req.body.rasi || "",
+      lagnam: rawHoro.lagnam || req.body.lagnam || "",
+      gothram: rawHoro.gothram || req.body.gothram || "",
+      tob: rawHoro.tob || req.body.tob || "",
+      pob: rawHoro.pob || req.body.pob || "",
+      dosham: rawHoro.dosham || req.body.dosham || "No Dosham",
+      manglik: rawHoro.manglik || req.body.manglik || "No",
+      chevvai_dosham:
+        rawHoro.chevvai_dosham || req.body.chevvai_dosham || "No",
+      rahu_ketu_dosham:
+        rawHoro.rahu_ketu_dosham || req.body.rahu_ketu_dosham || "Neutral",
+      jathagam: (() => {
+        const rawJath = rawHoro.jathagam || req.body.jathagam || null;
+        if (!rawJath) return null;
+        const processed = processUploadedJathagam(rawJath, req);
+        return typeof processed === "string" ? rawJath : processed;
+      })(),
+    };
+
     if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
       if (existing) {
@@ -1095,6 +1284,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       identity_proff: processedIdentityProof,
       health_report: processedHealthReport,
       family_photos: processedFamilyPhotos,
+      horoscopeDetails: processedHoroscopeDetails,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

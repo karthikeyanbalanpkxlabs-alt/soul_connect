@@ -12,6 +12,26 @@ interface CustomerModalProps {
   subscriptionList?: any[];
 }
 
+const NAKSHATRAS = [
+  "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
+  "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
+  "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshta",
+  "Moola", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha",
+  "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+];
+
+const RASIS = [
+  "Mesham (Aries)", "Rishabam (Taurus)", "Mithunam (Gemini)", "Katagam (Cancer)",
+  "Simmam (Leo)", "Kanni (Virgo)", "Thulaam (Libra)", "Vrichigam (Scorpio)",
+  "Dhanusu (Sagittarius)", "Makaram (Capricorn)", "Kumbam (Aquarius)", "Meenam (Pisces)"
+];
+
+const LAGNAMS = [
+  "Mesham (Aries)", "Rishabam (Taurus)", "Mithunam (Gemini)", "Katagam (Cancer)",
+  "Simmam (Leo)", "Kanni (Virgo)", "Thulaam (Libra)", "Vrichigam (Scorpio)",
+  "Dhanusu (Sagittarius)", "Makaram (Capricorn)", "Kumbam (Aquarius)", "Meenam (Pisces)"
+];
+
 const defaultFormData = {
   customer_id: "",
   first_name: "",
@@ -46,6 +66,20 @@ const defaultFormData = {
   family_photos: [] as any[],
   video: "" as any,
   identity_proff: "" as any,
+  horoscopeDetails: {
+    star: "",
+    rasi: "",
+    lagnam: "",
+    gothram: "",
+    dob: "",
+    tob: "",
+    pob: "",
+    dosham: "No Dosham",
+    manglik: "No",
+    chevvai_dosham: "No",
+    rahu_ketu_dosham: "Neutral",
+    jathagam: null as any,
+  },
   transaction: [],
   public_verify: true,
   public_verify_command_helper: "",
@@ -130,6 +164,22 @@ export default function CustomerModal({
       ? {
           ...defaultFormData,
           ...initialData,
+          horoscopeDetails: {
+            ...defaultFormData.horoscopeDetails,
+            ...(initialData.horoscopeDetails || {}),
+            star: initialData.horoscopeDetails?.star || initialData.star || "",
+            rasi: initialData.horoscopeDetails?.rasi || initialData.rasi || "",
+            lagnam: initialData.horoscopeDetails?.lagnam || initialData.lagnam || "",
+            gothram: initialData.horoscopeDetails?.gothram || initialData.gothram || "",
+            dob: initialData.horoscopeDetails?.dob || initialData.dob || "",
+            tob: initialData.horoscopeDetails?.tob || initialData.tob || "",
+            pob: initialData.horoscopeDetails?.pob || initialData.pob || "",
+            dosham: initialData.horoscopeDetails?.dosham || initialData.dosham || "No Dosham",
+            manglik: initialData.horoscopeDetails?.manglik || initialData.manglik || "No",
+            chevvai_dosham: initialData.horoscopeDetails?.chevvai_dosham || initialData.chevvai_dosham || "No",
+            rahu_ketu_dosham: initialData.horoscopeDetails?.rahu_ketu_dosham || initialData.rahu_ketu_dosham || "Neutral",
+            jathagam: initialData.horoscopeDetails?.jathagam || initialData.jathagam || null,
+          },
           role: initialData.role || "customer_g",
         }
       : defaultFormData,
@@ -315,6 +365,36 @@ export default function CustomerModal({
 
   const removeHealthReport = () => {
     formik.setFieldValue("health_report", "");
+  };
+
+  const handleJathagamUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const isAllowed =
+        file.type === "application/pdf" ||
+        file.type.startsWith("image/") ||
+        file.name.toLowerCase().endsWith(".pdf") ||
+        /\.(jpg|jpeg|png|gif)$/i.test(file.name);
+
+      if (!isAllowed) {
+        alert("Please upload only Image or PDF files.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        formik.setFieldValue("horoscopeDetails.jathagam", {
+          url: base64String,
+          name: file.name,
+          type: file.type,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeJathagam = () => {
+    formik.setFieldValue("horoscopeDetails.jathagam", null);
   };
 
   const handleFamilyPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1192,6 +1272,252 @@ export default function CustomerModal({
                       placeholder="Enter any additional details about the health report (Optional)"
                     />
                     {renderFieldError("additional_report_info")}
+                  </div>
+                </div>
+              </div>
+
+              {/* Horoscope & Birth Chart Details Section */}
+              <div className="sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5 border-t pt-6 mt-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center font-semibold text-lg">
+                    ⭐
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800">
+                    Horoscope & Birth Chart Details
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {/* Star / Nakshatra */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Star (Nakshatra)</label>
+                    <select
+                      name="horoscopeDetails.star"
+                      value={formik.values.horoscopeDetails?.star || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                    >
+                      <option value="">Select Star (Nakshatra)</option>
+                      {NAKSHATRAS.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Rasi / Moon Sign */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Rasi (Moon Sign)</label>
+                    <select
+                      name="horoscopeDetails.rasi"
+                      value={formik.values.horoscopeDetails?.rasi || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                    >
+                      <option value="">Select Rasi (Moon Sign)</option>
+                      {RASIS.map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Lagnam / Ascendant */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Lagnam (Ascendant)</label>
+                    <select
+                      name="horoscopeDetails.lagnam"
+                      value={formik.values.horoscopeDetails?.lagnam || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                    >
+                      <option value="">Select Lagnam (Ascendant)</option>
+                      {LAGNAMS.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Gothram */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Gothram</label>
+                    <input
+                      type="text"
+                      name="horoscopeDetails.gothram"
+                      value={formik.values.horoscopeDetails?.gothram || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                      placeholder="e.g. Vatsa Gothram"
+                    />
+                  </div>
+
+                  {/* Time of Birth */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Time of Birth</label>
+                    <input
+                      type="text"
+                      name="horoscopeDetails.tob"
+                      value={formik.values.horoscopeDetails?.tob || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                      placeholder="e.g. 06:34 AM"
+                    />
+                  </div>
+
+                  {/* Place of Birth */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Place of Birth</label>
+                    <input
+                      type="text"
+                      name="horoscopeDetails.pob"
+                      value={formik.values.horoscopeDetails?.pob || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                      placeholder="e.g. Kumbakonam"
+                    />
+                  </div>
+
+                  {/* Dosham */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Dosham</label>
+                    <select
+                      name="horoscopeDetails.dosham"
+                      value={formik.values.horoscopeDetails?.dosham || "No Dosham"}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                    >
+                      <option value="No Dosham">No Dosham</option>
+                      <option value="Chevvai Dosham">Chevvai Dosham</option>
+                      <option value="Rahu-Ketu Dosham">Rahu-Ketu Dosham</option>
+                      <option value="Naga Dosham">Naga Dosham</option>
+                    </select>
+                  </div>
+
+                  {/* Manglik Status */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Manglik Status</label>
+                    <select
+                      name="horoscopeDetails.manglik"
+                      value={formik.values.horoscopeDetails?.manglik || "No"}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                    >
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="Partial">Partial</option>
+                    </select>
+                  </div>
+
+                  {/* Chevvai Dosham Status */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Chevvai Dosham Status</label>
+                    <select
+                      name="horoscopeDetails.chevvai_dosham"
+                      value={formik.values.horoscopeDetails?.chevvai_dosham || "No"}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                    >
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                    </select>
+                  </div>
+
+                  {/* Rahu-Ketu Status */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">Rahu-Ketu Status</label>
+                    <select
+                      name="horoscopeDetails.rahu_ketu_dosham"
+                      value={formik.values.horoscopeDetails?.rahu_ketu_dosham || "Neutral"}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-2 border rounded-sm outline-none transition-colors bg-gray-50 focus:bg-white border-gray-300 focus:border-violet-500 text-sm"
+                    >
+                      <option value="Neutral">Neutral</option>
+                      <option value="Dosham Present">Dosham Present</option>
+                      <option value="No Dosham">No Dosham</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Jathagam / Birth Chart File Upload */}
+                <div className="mt-4 space-y-1">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Jathagam / Birth Chart (PDF or Image)
+                  </label>
+                  <div className="flex items-center gap-4">
+                    {formik.values.horoscopeDetails?.jathagam &&
+                    (typeof formik.values.horoscopeDetails.jathagam === "string"
+                      ? formik.values.horoscopeDetails.jathagam
+                      : formik.values.horoscopeDetails.jathagam.url) ? (
+                      (() => {
+                        const jathagam = formik.values.horoscopeDetails.jathagam;
+                        const url = typeof jathagam === "string" ? jathagam : jathagam.url;
+                        const name =
+                          typeof jathagam === "string"
+                            ? "Jathagam Document"
+                            : jathagam.name || "Jathagam Document";
+                        const isPdf =
+                          url?.includes("application/pdf") ||
+                          url?.endsWith(".pdf") ||
+                          jathagam.type === "application/pdf";
+
+                        return (
+                          <div className="relative w-48 h-24 rounded-lg border-2 border-amber-500 overflow-hidden group bg-amber-50/50 flex flex-col items-center justify-center p-2">
+                            {isPdf ? (
+                              <div className="flex flex-col items-center text-amber-900">
+                                <span className="text-xl mb-1">📜</span>
+                                <span className="text-[10px] font-semibold text-center truncate max-w-full">
+                                  {name}
+                                </span>
+                              </div>
+                            ) : (
+                              <img
+                                src={url}
+                                alt="Jathagam"
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-1 transition-opacity">
+                              {url.startsWith("http") && (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded hover:bg-amber-700 transition-colors"
+                                >
+                                  View
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={removeJathagam}
+                                className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded hover:bg-red-700 transition-colors"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <label className="w-48 h-24 rounded-lg border-2 border-dashed border-amber-300 flex flex-col items-center justify-center text-amber-600 hover:text-amber-700 hover:border-amber-500 cursor-pointer transition-colors bg-amber-50/40">
+                        <Upload size={18} className="mb-1 animate-pulse" />
+                        <span className="text-[10px] font-medium">Add Jathagam (PDF/Image)</span>
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="hidden"
+                          onChange={handleJathagamUpload}
+                        />
+                      </label>
+                    )}
                   </div>
                 </div>
               </div>

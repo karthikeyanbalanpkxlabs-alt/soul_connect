@@ -13,6 +13,7 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  Users,
 } from "lucide-react";
 import configUrls from "../../../../configUrls";
 function CustomerDetailContent() {
@@ -539,6 +540,195 @@ function CustomerDetailContent() {
                 </div>
               </div>
             )}
+            {/* Family Photos Block */}
+            {(() => {
+              const familyPhotosList = Array.isArray(customer.family_photos)
+                ? customer.family_photos
+                : typeof customer.family_photos === "string" && customer.family_photos
+                ? [{ url: customer.family_photos }]
+                : customer.family_photo
+                ? [typeof customer.family_photo === "string" ? { url: customer.family_photo } : customer.family_photo]
+                : [];
+              if (familyPhotosList.length === 0) return null;
+
+              return (
+                <div className="mt-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Users size={22} className="text-purple-600" />
+                    <h2 className="text-xl font-bold text-slate-800">
+                      Family Photo
+                    </h2>
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    {familyPhotosList.map((fp: any, idx: number) => {
+                      const url = typeof fp === "string" ? fp : fp?.url;
+                      if (!url) return null;
+                      return (
+                        <div
+                          key={idx}
+                          className="relative w-64 h-80 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm"
+                        >
+                          <img
+                            src={url}
+                            alt={`Family Photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
+                            <p className="text-xs font-bold">Family Photo Uploaded</p>
+                            <p className="text-[10px] text-emerald-400 font-semibold">✓ Verified</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Horoscope & Birth Chart Details Block */}
+            {(() => {
+              const horoObj = customer.horoscopeDetails || {};
+              const starVal = horoObj.star || customer.star;
+              const rasiVal = horoObj.rasi || customer.rasi;
+              const lagnamVal = horoObj.lagnam || customer.lagnam;
+              const gothramVal = horoObj.gothram || customer.gothram;
+              const dobVal = horoObj.dob || customer.dob;
+              const tobVal = horoObj.tob || customer.tob;
+              const pobVal = horoObj.pob || customer.pob;
+              const doshamVal = horoObj.dosham || customer.dosham || "No Dosham";
+              const manglikVal = horoObj.manglik || customer.manglik || "No";
+              const chevvaiVal = horoObj.chevvai_dosham || customer.chevvai_dosham || "No";
+              const rahuKetuVal = horoObj.rahu_ketu_dosham || customer.rahu_ketu_dosham || "Neutral";
+              const jathagam = horoObj.jathagam || customer.jathagam;
+              const rawJathUrl = typeof jathagam === "string" ? jathagam : jathagam?.url;
+              const jathagamUrl = rawJathUrl
+                ? rawJathUrl.startsWith("http") || rawJathUrl.startsWith("data:")
+                  ? rawJathUrl
+                  : `${configUrls?.apiUrl || "http://localhost:3000"}/${rawJathUrl.replace(/^\//, "")}`
+                : null;
+
+              const hasHoroInfo = starVal || rasiVal || lagnamVal || gothramVal || tobVal || pobVal || jathagamUrl;
+              if (!hasHoroInfo) return null;
+
+              return (
+                <div className="mt-8 rounded-2xl border border-amber-100 bg-white p-6 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">⭐</span>
+                      <h2 className="text-xl font-bold text-slate-800">
+                        Horoscope Details
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">STAR (NAKSHATRA)</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{starVal || "N/A"}</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">RASI (MOON SIGN)</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{rasiVal || "N/A"}</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">LAGNAM (ASCENDANT)</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{lagnamVal || "N/A"}</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">GOTHRAM</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{gothramVal || "N/A"}</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DATE OF BIRTH</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{dobVal || "N/A"}</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">TIME OF BIRTH</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{tobVal || "N/A"}</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PLACE OF BIRTH</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{pobVal || "N/A"}</span>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DOSHAM</span>
+                      <span className="text-sm font-bold text-emerald-600 block mt-0.5">{doshamVal}</span>
+                    </div>
+                  </div>
+
+                  {/* Dosham Badges */}
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      Manglik: {manglikVal}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                      <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                      Chevvai Dosham: {chevvaiVal}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                      Rahu-Ketu: {rahuKetuVal}
+                    </span>
+                  </div>
+
+                  {/* Jathagam Attachment */}
+                  {jathagamUrl && (() => {
+                    const isPdf =
+                      jathagamUrl.startsWith("data:application/pdf") ||
+                      jathagamUrl.toLowerCase().endsWith(".pdf") ||
+                      jathagamUrl.includes(".pdf");
+
+                    return (
+                      <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200/80 rounded-2xl">
+                        <h4 className="font-bold text-amber-950 text-sm mb-3 flex items-center gap-2">
+                          <span>📜</span> Jathagam / Birth Chart Document
+                        </h4>
+                        <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-white rounded-xl border border-amber-100 shadow-sm">
+                          {isPdf ? (
+                            <div className="flex h-24 w-24 flex-col items-center justify-center rounded-xl bg-amber-100/90 text-amber-900 font-bold p-2 text-center">
+                              <span className="text-2xl mb-1">📜</span>
+                              <span className="text-[10px] uppercase font-bold text-amber-800">PDF File</span>
+                            </div>
+                          ) : (
+                            <div className="h-36 w-48 overflow-hidden rounded-xl bg-black border border-slate-200 shadow-sm">
+                              <img
+                                src={jathagamUrl}
+                                alt="Jathagam Birth Chart"
+                                className="h-full w-full object-contain"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 text-center sm:text-left">
+                            <h4 className="font-bold text-slate-800 text-base">
+                              {jathagam?.name || "Jathagam (Birth Chart)"}
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {isPdf ? "Uploaded PDF Document" : "Uploaded Image File"}
+                            </p>
+                            <a
+                              href={jathagamUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 transition shadow-sm active:scale-95"
+                            >
+                              <span>View / Download Jathagam</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

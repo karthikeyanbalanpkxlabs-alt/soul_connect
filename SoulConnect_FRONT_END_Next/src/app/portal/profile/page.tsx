@@ -129,6 +129,20 @@ export default function ProfilePage() {
         ...profile,
         ...formData,
         family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : [],
+        horoscopeDetails: {
+          dob: formData.dob || profile?.horoscopeDetails?.dob || profile?.dob || "",
+          star: formData.star || profile?.horoscopeDetails?.star || profile?.star || "",
+          rasi: formData.rasi || profile?.horoscopeDetails?.rasi || profile?.rasi || "",
+          lagnam: formData.lagnam || profile?.horoscopeDetails?.lagnam || profile?.lagnam || "",
+          gothram: formData.gothram || profile?.horoscopeDetails?.gothram || profile?.gothram || "",
+          tob: formData.tob || profile?.horoscopeDetails?.tob || profile?.tob || "",
+          pob: formData.pob || profile?.horoscopeDetails?.pob || profile?.pob || "",
+          dosham: formData.dosham || profile?.horoscopeDetails?.dosham || profile?.dosham || "No Dosham",
+          manglik: formData.manglik || profile?.horoscopeDetails?.manglik || profile?.manglik || "No",
+          chevvai_dosham: formData.chevvai_dosham || profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No",
+          rahu_ketu_dosham: formData.rahu_ketu_dosham || profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral",
+          jathagam: profile?.horoscopeDetails?.jathagam || profile?.jathagam || null,
+        },
         keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
         customer_id: profile?.customer_id,
         _id: profile?._id,
@@ -500,12 +514,53 @@ export default function ProfilePage() {
     }, 300);
   };
 
-  const handleHoroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHoroChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setHoroscopeFileName(file.name);
       setHoroscopeUploaded(true);
-      showToast("Jathagam / Birth Chart uploaded successfully!", "success");
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        try {
+          const token = keycloak?.token;
+          const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+          const res = await fetch(`${apiUrl}/api/customer_edit`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              ...profile,
+              horoscopeDetails: {
+                ...(profile?.horoscopeDetails || {}),
+                jathagam: {
+                  url: base64String,
+                  name: file.name,
+                  type: file.type,
+                },
+              },
+              keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
+              customer_id: profile?.customer_id,
+              _id: profile?._id,
+            }),
+          });
+
+          const data = await res.json();
+          if (res.ok && !data.error) {
+            showToast("Jathagam / Birth Chart saved to local uploads! ✨", "success");
+            if (refreshProfile) await refreshProfile();
+          } else {
+            showToast(data.error || "Failed to upload Jathagam", "error");
+          }
+        } catch (err: any) {
+          console.error("Error uploading Jathagam:", err);
+          showToast(err.message || "Failed to upload Jathagam", "error");
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -2363,12 +2418,14 @@ export default function ProfilePage() {
                   <div className="horo-label">Star (Nakshatra)</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.star || formData.star || "Rohini"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.star || profile?.star || formData.star || "Rohini"}
+                      </div>
                       <div className="horo-value-tamil">ரோகிணி</div>
                     </>
                   ) : (
                     <select
-                      value={formData.star || ""}
+                      value={formData.star || profile?.horoscopeDetails?.star || ""}
                       onChange={(e) => handleChange("star", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2385,12 +2442,14 @@ export default function ProfilePage() {
                   <div className="horo-label">Rasi (Moon Sign)</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.rasi || formData.rasi || "Rishabam (Taurus)"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi || "Rishabam (Taurus)"}
+                      </div>
                       <div className="horo-value-tamil">ரிஷபம்</div>
                     </>
                   ) : (
                     <select
-                      value={formData.rasi || ""}
+                      value={formData.rasi || profile?.horoscopeDetails?.rasi || ""}
                       onChange={(e) => handleChange("rasi", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2407,12 +2466,14 @@ export default function ProfilePage() {
                   <div className="horo-label">Lagnam (Ascendant)</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}
+                      </div>
                       <div className="horo-value-tamil">மிதுனம்</div>
                     </>
                   ) : (
                     <select
-                      value={formData.lagnam || ""}
+                      value={formData.lagnam || profile?.horoscopeDetails?.lagnam || ""}
                       onChange={(e) => handleChange("lagnam", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2429,13 +2490,15 @@ export default function ProfilePage() {
                   <div className="horo-label">Gothram</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.gothram || formData.gothram || "Vatsa Gothram"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.gothram || profile?.gothram || formData.gothram || "Vatsa Gothram"}
+                      </div>
                       <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.gothram || ""}
+                      value={formData.gothram || profile?.horoscopeDetails?.gothram || ""}
                       onChange={(e) => handleChange("gothram", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Gothram"
@@ -2445,11 +2508,13 @@ export default function ProfilePage() {
                 <div className="horo-item">
                   <div className="horo-label">Date of Birth</div>
                   {!isEditing ? (
-                    <div className="horo-value">{profile?.dob || formData.dob || "14 March 1997"}</div>
+                    <div className="horo-value">
+                      {profile?.horoscopeDetails?.dob || profile?.dob || formData.dob || "1989-02-22"}
+                    </div>
                   ) : (
                     <input
                       type="date"
-                      value={formData.dob || ""}
+                      value={formData.dob || profile?.horoscopeDetails?.dob || ""}
                       onChange={(e) => handleChange("dob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     />
@@ -2459,13 +2524,15 @@ export default function ProfilePage() {
                   <div className="horo-label">Time of Birth</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.tob || formData.tob || "06:34 AM"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.tob || profile?.tob || formData.tob || "06:34 AM"}
+                      </div>
                       <div className="horo-value-tamil">அதிகாலை</div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.tob || ""}
+                      value={formData.tob || profile?.horoscopeDetails?.tob || ""}
                       onChange={(e) => handleChange("tob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="e.g. 06:34 AM"
@@ -2476,13 +2543,15 @@ export default function ProfilePage() {
                   <div className="horo-label">Place of Birth</div>
                   {!isEditing ? (
                     <>
-                      <div className="horo-value">{profile?.pob || formData.pob || "Kumbakonam"}</div>
+                      <div className="horo-value">
+                        {profile?.horoscopeDetails?.pob || profile?.pob || formData.pob || "Kumbakonam"}
+                      </div>
                       <div className="horo-value-tamil">கும்பகோணம்</div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.pob || ""}
+                      value={formData.pob || profile?.horoscopeDetails?.pob || ""}
                       onChange={(e) => handleChange("pob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Place of Birth"
@@ -2494,7 +2563,7 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value" style={{ color: "var(--sage)" }}>
-                        {profile?.dosham || formData.dosham || "No Dosham"}
+                        {profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham || "No Dosham"}
                       </div>
                       <div
                         className="horo-value-tamil"
@@ -2505,7 +2574,7 @@ export default function ProfilePage() {
                     </>
                   ) : (
                     <select
-                      value={formData.dosham || ""}
+                      value={formData.dosham || profile?.horoscopeDetails?.dosham || ""}
                       onChange={(e) => handleChange("dosham", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2524,21 +2593,21 @@ export default function ProfilePage() {
                     className="hb-dot"
                     style={{ background: "var(--sage)" }}
                   ></div>
-                  Manglik: No
+                  Manglik: {profile?.horoscopeDetails?.manglik || profile?.manglik || "No"}
                 </div>
                 <div className="horo-badge">
                   <div
                     className="hb-dot"
                     style={{ background: "var(--plum)" }}
                   ></div>
-                  Chevvai Dosham: No
+                  Chevvai Dosham: {profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No"}
                 </div>
                 <div className="horo-badge">
                   <div
                     className="hb-dot"
                     style={{ background: "var(--rose)" }}
                   ></div>
-                  Rahu-Ketu: Neutral
+                  Rahu-Ketu: {profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral"}
                 </div>
               </div>
             </div>

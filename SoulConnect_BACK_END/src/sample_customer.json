@@ -34,6 +34,20 @@
   ],
   "video": "",
   "family_photos": [],
+  "horoscopeDetails": {
+    "dob": "1989-02-22",
+    "star": "Rohini",
+    "rasi": "Rishabam (Taurus)",
+    "lagnam": "Mithunam (Gemini)",
+    "gothram": "Vatsa Gothram",
+    "tob": "06:34 AM",
+    "pob": "Kumbakonam",
+    "dosham": "No Dosham",
+    "manglik": "No",
+    "chevvai_dosham": "No",
+    "rahu_ketu_dosham": "Neutral",
+    "jathagam": null
+  },
   "transaction": [
     {
       "payment_type": "razor_pay",
