@@ -295,6 +295,10 @@ export default function Registration({
       showToast("Please upload at least 1 profile image.", "error");
       return;
     }
+    if (familyPhotos.length === 0) {
+      showToast("Please upload a family photo.", "error");
+      return;
+    }
     // Transition to Step 2
     setRegStep(2);
     showToast("Profile drafted successfully! Please choose a plan and verify your ID.", "success");
@@ -655,7 +659,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                         <Users size={20} />
                       </div>
                       <h4 className="text-lg font-bold text-slate-800 tracking-tight">
-                        Family Photos
+                        Family Photos <span className="text-red-500">*</span>
                       </h4>
                     </div>
                     <span className="text-xs font-medium text-slate-400">

@@ -89,6 +89,11 @@ const customerValidationSchema = Yup.object().shape({
     .of(Yup.object())
     .min(1, "At least 1 profile image is required")
     .max(5, "Maximum 5 profile images allowed"),
+  family_photos: Yup.array()
+    .of(Yup.object())
+    .min(1, "Family photo is required")
+    .max(1, "Maximum 1 family photo allowed")
+    .required("Family photo is required"),
   public_verify_command_helper: Yup.string().trim(),
 });
 
@@ -428,7 +433,7 @@ export default function CustomerModal({
                     <Users size={20} />
                   </div>
                   <h4 className="text-lg font-bold text-slate-800 tracking-tight">
-                    Family Photos
+                    Family Photos <span className="text-red-500">*</span>
                   </h4>
                 </div>
                 <span className="text-xs font-medium text-slate-400">

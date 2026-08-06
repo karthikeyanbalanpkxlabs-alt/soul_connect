@@ -569,6 +569,10 @@ function processUploadedFamilyPhotos(
     return [];
   }
 
+  if (items.length < 1) {
+    return "Invalid family photos upload. Family photo is required (minimum 1 photo).";
+  }
+
   if (items.length > 1) {
     return "Invalid family photos upload. Maximum 1 photo allowed.";
   }
@@ -783,9 +787,14 @@ export async function handleCustomerEdit(req: Request, res: Response) {
         ? updateFields.family_photos
         : updateFields.family_photo;
     if (familyPhotosInput !== undefined) {
-      if (familyPhotosInput === null || familyPhotosInput === "") {
-        updateFields.family_photos = [];
-        if (updateFields.family_photo) delete updateFields.family_photo;
+      if (
+        familyPhotosInput === null ||
+        familyPhotosInput === "" ||
+        (Array.isArray(familyPhotosInput) && familyPhotosInput.length === 0)
+      ) {
+        return res.status(400).json({
+          error: "Invalid family photos upload. Family photo is required (minimum 1 photo).",
+        });
       } else {
         const processed = processUploadedFamilyPhotos(familyPhotosInput, req);
         if (typeof processed === "string") {
@@ -947,18 +956,21 @@ export async function handleCustomerCreate(req: Request, res: Response) {
 
     const familyPhotosInput =
       family_photos !== undefined ? family_photos : family_photo;
-    let processedFamilyPhotos: any[] = [];
     if (
-      familyPhotosInput !== undefined &&
-      familyPhotosInput !== null &&
-      familyPhotosInput !== ""
+      familyPhotosInput === undefined ||
+      familyPhotosInput === null ||
+      familyPhotosInput === "" ||
+      (Array.isArray(familyPhotosInput) && familyPhotosInput.length === 0)
     ) {
-      const processedFP = processUploadedFamilyPhotos(familyPhotosInput, req);
-      if (typeof processedFP === "string") {
-        return res.status(400).json({ error: processedFP });
-      }
-      processedFamilyPhotos = processedFP;
+      return res.status(400).json({
+        error: "Invalid family photos upload. Family photo is required (minimum 1 photo).",
+      });
     }
+    const processedFP = processUploadedFamilyPhotos(familyPhotosInput, req);
+    if (typeof processedFP === "string") {
+      return res.status(400).json({ error: processedFP });
+    }
+    const processedFamilyPhotos = processedFP;
 
     if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
