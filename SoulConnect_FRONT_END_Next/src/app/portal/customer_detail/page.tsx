@@ -128,7 +128,7 @@ function CustomerDetailContent() {
         onClick={() => router.back()}
         className="cursor-pointer mb-6 flex items-center gap-2 text-slate-500 hover:text-violet-700 transition"
       >
-        <ArrowLeft size={20} /> Back to Customers
+        <ArrowLeft size={20} /> Back to Profile
       </button>
 
       <div className="mx-auto overflow-hidden rounded-3xl bg-white shadow-xl transition-all duration-300 hover:shadow-2xl">
@@ -386,7 +386,6 @@ function CustomerDetailContent() {
               </div>
             )}
 
-
             {/* Profile Video */}
             {customer.video &&
               (customer.video.url || typeof customer.video === "string") && (
@@ -463,22 +462,26 @@ function CustomerDetailContent() {
               })()}
 
             {/* Health & Medical Report Block */}
-            {(customer.health_report || customer.blood_group || customer.additional_report_info) && (
+            {(customer.health_report ||
+              customer.blood_group ||
+              customer.additional_report_info) && (
               <div className="mt-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-xl font-bold text-slate-800">
                   Health & Medical Report
                 </h2>
-                
+
                 <div className="space-y-4">
                   {customer.blood_group && (
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-500 text-sm">Blood Group:</span>
+                      <span className="text-slate-500 text-sm">
+                        Blood Group:
+                      </span>
                       <span className="font-semibold bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full text-xs border border-rose-100">
                         {customer.blood_group}
                       </span>
                     </div>
                   )}
-                  
+
                   {customer.additional_report_info && (
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                       <h4 className="font-semibold text-slate-800 text-xs uppercase tracking-wider text-slate-400 mb-1">
@@ -501,7 +504,8 @@ function CustomerDetailContent() {
                       const isPdf =
                         url.startsWith("data:application/pdf") ||
                         url.toLowerCase().endsWith(".pdf") ||
-                        (url.includes("health_") && url.toLowerCase().endsWith(".pdf"));
+                        (url.includes("health_") &&
+                          url.toLowerCase().endsWith(".pdf"));
 
                       return (
                         <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-violet-50 rounded-xl border border-violet-100">
@@ -544,11 +548,20 @@ function CustomerDetailContent() {
             {(() => {
               const life = customer.lifeStyle || {};
               const dietVal = life.diet || customer.diet || "Strict Vegetarian";
-              const smokingVal = life.smoking || customer.smoking || "Non-Smoker";
-              const drinkingVal = life.drinking || customer.drinking || "Non-Drinker";
-              const livingWithVal = life.living_with || customer.living_with || "With Family";
-              const relocateVal = life.willing_to_relocate || customer.willing_to_relocate || "Yes, TN preferred";
-              const interestsVal = life.interests || customer.interests || "Yoga, Cooking, Trekking";
+              const smokingVal =
+                life.smoking || customer.smoking || "Non-Smoker";
+              const drinkingVal =
+                life.drinking || customer.drinking || "Non-Drinker";
+              const livingWithVal =
+                life.living_with || customer.living_with || "With Family";
+              const relocateVal =
+                life.willing_to_relocate ||
+                customer.willing_to_relocate ||
+                "Yes, TN preferred";
+              const interestsVal =
+                life.interests ||
+                customer.interests ||
+                "Yoga, Cooking, Trekking";
 
               return (
                 <div className="mt-8 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
@@ -579,33 +592,57 @@ function CustomerDetailContent() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DIET</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-1">{dietVal}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        DIET
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">
+                        {dietVal}
+                      </span>
                     </div>
 
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SMOKING</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-1">{smokingVal}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        SMOKING
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">
+                        {smokingVal}
+                      </span>
                     </div>
 
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DRINKING</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-1">{drinkingVal}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        DRINKING
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">
+                        {drinkingVal}
+                      </span>
                     </div>
 
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">LIVING WITH</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-1">{livingWithVal}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        LIVING WITH
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">
+                        {livingWithVal}
+                      </span>
                     </div>
 
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">WILLING TO RELOCATE</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-1">{relocateVal}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        WILLING TO RELOCATE
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">
+                        {relocateVal}
+                      </span>
                     </div>
 
                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">INTERESTS</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-1">{interestsVal}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        INTERESTS
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">
+                        {interestsVal}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -615,18 +652,48 @@ function CustomerDetailContent() {
             {/* Family Background Details Block */}
             {(() => {
               const fam = customer.familyBackground || {};
-              const fatherName = fam.father_name || customer.father_name || "Dr. R. Krishnamurthy";
-              const fatherOcc = fam.father_occupation || customer.father_occupation || "Retired · IIT Madras Professor";
-              const motherName = fam.mother_name || customer.mother_name || "Smt. Meenakshi K.";
-              const motherOcc = fam.mother_occupation || customer.mother_occupation || "Homemaker";
-              const siblings = fam.siblings || customer.siblings || "1 Elder Brother";
-              const siblingsDetails = fam.siblings_details || customer.siblings_details || "Married · Software Engineer, Bengaluru";
-              const famType = fam.family_type || customer.family_type || "Nuclear Family";
-              const famTypeDetails = fam.family_type_details || customer.family_type_details || "Extended family in Mylapore";
-              const famStatus = fam.family_status || customer.family_status || "Upper Middle Class";
-              const famStatusDetails = fam.family_status_details || fam.family_address || customer.family_status_details || customer.family_address || "Own house in Mylapore, Chennai";
-              const famValues = fam.family_values || customer.family_values || "Traditional";
-              const famValuesDetails = fam.family_values_details || customer.family_values_details || "Conservative with modern outlook";
+              const fatherName =
+                fam.father_name ||
+                customer.father_name ||
+                "Dr. R. Krishnamurthy";
+              const fatherOcc =
+                fam.father_occupation ||
+                customer.father_occupation ||
+                "Retired · IIT Madras Professor";
+              const motherName =
+                fam.mother_name || customer.mother_name || "Smt. Meenakshi K.";
+              const motherOcc =
+                fam.mother_occupation ||
+                customer.mother_occupation ||
+                "Homemaker";
+              const siblings =
+                fam.siblings || customer.siblings || "1 Elder Brother";
+              const siblingsDetails =
+                fam.siblings_details ||
+                customer.siblings_details ||
+                "Married · Software Engineer, Bengaluru";
+              const famType =
+                fam.family_type || customer.family_type || "Nuclear Family";
+              const famTypeDetails =
+                fam.family_type_details ||
+                customer.family_type_details ||
+                "Extended family in Mylapore";
+              const famStatus =
+                fam.family_status ||
+                customer.family_status ||
+                "Upper Middle Class";
+              const famStatusDetails =
+                fam.family_status_details ||
+                fam.family_address ||
+                customer.family_status_details ||
+                customer.family_address ||
+                "Own house in Mylapore, Chennai";
+              const famValues =
+                fam.family_values || customer.family_values || "Traditional";
+              const famValuesDetails =
+                fam.family_values_details ||
+                customer.family_values_details ||
+                "Conservative with modern outlook";
 
               return (
                 <div className="mt-8 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
@@ -648,49 +715,85 @@ function CustomerDetailContent() {
                     {/* Father */}
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
                       <div className="text-2xl mb-1">👨</div>
-                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FATHER</span>
-                      <h4 className="text-base font-bold text-slate-800 mt-1">{fatherName}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{fatherOcc}</p>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                        FATHER
+                      </span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">
+                        {fatherName}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {fatherOcc}
+                      </p>
                     </div>
 
                     {/* Mother */}
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
                       <div className="text-2xl mb-1">👩</div>
-                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">MOTHER</span>
-                      <h4 className="text-base font-bold text-slate-800 mt-1">{motherName}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{motherOcc}</p>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                        MOTHER
+                      </span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">
+                        {motherName}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {motherOcc}
+                      </p>
                     </div>
 
                     {/* Siblings */}
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
                       <div className="text-2xl mb-1">👦</div>
-                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">SIBLINGS</span>
-                      <h4 className="text-base font-bold text-slate-800 mt-1">{siblings}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{siblingsDetails}</p>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                        SIBLINGS
+                      </span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">
+                        {siblings}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {siblingsDetails}
+                      </p>
                     </div>
 
                     {/* Family Type */}
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
                       <div className="text-2xl mb-1">🏡</div>
-                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FAMILY TYPE</span>
-                      <h4 className="text-base font-bold text-slate-800 mt-1">{famType}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{famTypeDetails}</p>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                        FAMILY TYPE
+                      </span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">
+                        {famType}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {famTypeDetails}
+                      </p>
                     </div>
 
                     {/* Family Status & Address */}
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
                       <div className="text-2xl mb-1">💎</div>
-                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FAMILY STATUS</span>
-                      <h4 className="text-base font-bold text-slate-800 mt-1">{famStatus}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{famStatusDetails}</p>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                        FAMILY STATUS
+                      </span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">
+                        {famStatus}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {famStatusDetails}
+                      </p>
                     </div>
 
                     {/* Family Values */}
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
                       <div className="text-2xl mb-1">🙏</div>
-                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">FAMILY VALUES</span>
-                      <h4 className="text-base font-bold text-slate-800 mt-1">{famValues}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{famValuesDetails}</p>
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                        FAMILY VALUES
+                      </span>
+                      <h4 className="text-base font-bold text-slate-800 mt-1">
+                        {famValues}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {famValuesDetails}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -701,11 +804,16 @@ function CustomerDetailContent() {
             {(() => {
               const familyPhotosList = Array.isArray(customer.family_photos)
                 ? customer.family_photos
-                : typeof customer.family_photos === "string" && customer.family_photos
-                ? [{ url: customer.family_photos }]
-                : customer.family_photo
-                ? [typeof customer.family_photo === "string" ? { url: customer.family_photo } : customer.family_photo]
-                : [];
+                : typeof customer.family_photos === "string" &&
+                    customer.family_photos
+                  ? [{ url: customer.family_photos }]
+                  : customer.family_photo
+                    ? [
+                        typeof customer.family_photo === "string"
+                          ? { url: customer.family_photo }
+                          : customer.family_photo,
+                      ]
+                    : [];
               if (familyPhotosList.length === 0) return null;
 
               return (
@@ -731,8 +839,12 @@ function CustomerDetailContent() {
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
-                            <p className="text-xs font-bold">Family Photo Uploaded</p>
-                            <p className="text-[10px] text-emerald-400 font-semibold">✓ Verified</p>
+                            <p className="text-xs font-bold">
+                              Family Photo Uploaded
+                            </p>
+                            <p className="text-[10px] text-emerald-400 font-semibold">
+                              ✓ Verified
+                            </p>
                           </div>
                         </div>
                       );
@@ -745,21 +857,46 @@ function CustomerDetailContent() {
             {/* Horoscope & Birth Chart Details Block */}
             {(() => {
               const horoObj = customer.horoscopeDetails || {};
-              const starVal = horoObj.star || customer.star || customer.nakshatra || "Rohini";
-              const rasiVal = horoObj.rasi || customer.rasi || customer.moon_sign || "Rishabam (Taurus)";
-              const lagnamVal = horoObj.lagnam || customer.lagnam || customer.ascendant || "Mithunam (Gemini)";
-              const gothramVal = horoObj.gothram || customer.gothram || "Vatsa Gothram";
+              const starVal =
+                horoObj.star || customer.star || customer.nakshatra || "Rohini";
+              const rasiVal =
+                horoObj.rasi ||
+                customer.rasi ||
+                customer.moon_sign ||
+                "Rishabam (Taurus)";
+              const lagnamVal =
+                horoObj.lagnam ||
+                customer.lagnam ||
+                customer.ascendant ||
+                "Mithunam (Gemini)";
+              const gothramVal =
+                horoObj.gothram || customer.gothram || "Vatsa Gothram";
               const dobVal = horoObj.dob || customer.dob || "1989-02-22";
-              const tobVal = horoObj.tob || customer.tob || customer.time_of_birth || "06:34 AM";
-              const pobVal = horoObj.pob || customer.pob || customer.place_of_birth || "Kumbakonam";
-              const doshamVal = horoObj.dosham || customer.dosham || "No Dosham";
+              const tobVal =
+                horoObj.tob ||
+                customer.tob ||
+                customer.time_of_birth ||
+                "06:34 AM";
+              const pobVal =
+                horoObj.pob ||
+                customer.pob ||
+                customer.place_of_birth ||
+                "Kumbakonam";
+              const doshamVal =
+                horoObj.dosham || customer.dosham || "No Dosham";
               const manglikVal = horoObj.manglik || customer.manglik || "No";
-              const chevvaiVal = horoObj.chevvai_dosham || customer.chevvai_dosham || "No";
-              const rahuKetuVal = horoObj.rahu_ketu_dosham || customer.rahu_ketu_dosham || "Neutral";
+              const chevvaiVal =
+                horoObj.chevvai_dosham || customer.chevvai_dosham || "No";
+              const rahuKetuVal =
+                horoObj.rahu_ketu_dosham ||
+                customer.rahu_ketu_dosham ||
+                "Neutral";
               const jathagam = horoObj.jathagam || customer.jathagam;
-              const rawJathUrl = typeof jathagam === "string" ? jathagam : jathagam?.url;
+              const rawJathUrl =
+                typeof jathagam === "string" ? jathagam : jathagam?.url;
               const jathagamUrl = rawJathUrl
-                ? rawJathUrl.startsWith("http") || rawJathUrl.startsWith("data:")
+                ? rawJathUrl.startsWith("http") ||
+                  rawJathUrl.startsWith("data:")
                   ? rawJathUrl
                   : `${configUrls?.apiUrl || "http://localhost:3000"}/${rawJathUrl.replace(/^\//, "")}`
                 : null;
@@ -776,7 +913,8 @@ function CustomerDetailContent() {
                           Horoscope & Birth Chart Details
                         </h2>
                         <p className="text-xs text-slate-400">
-                          Astrological nakshatra, rasi, lagnam and birth chart information
+                          Astrological nakshatra, rasi, lagnam and birth chart
+                          information
                         </p>
                       </div>
                     </div>
@@ -793,43 +931,75 @@ function CustomerDetailContent() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">STAR (NAKSHATRA)</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{starVal || "N/A"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        STAR (NAKSHATRA)
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {starVal || "N/A"}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">RASI (MOON SIGN)</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{rasiVal || "N/A"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        RASI (MOON SIGN)
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {rasiVal || "N/A"}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">LAGNAM (ASCENDANT)</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{lagnamVal || "N/A"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        LAGNAM (ASCENDANT)
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {lagnamVal || "N/A"}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">GOTHRAM</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{gothramVal || "N/A"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        GOTHRAM
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {gothramVal || "N/A"}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DATE OF BIRTH</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{dobVal || "N/A"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        DATE OF BIRTH
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {dobVal || "N/A"}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">TIME OF BIRTH</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{tobVal || "N/A"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        TIME OF BIRTH
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {tobVal || "N/A"}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PLACE OF BIRTH</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{pobVal || "N/A"}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        PLACE OF BIRTH
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {pobVal || "N/A"}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DOSHAM</span>
-                      <span className="text-sm font-bold text-emerald-600 block mt-0.5">{doshamVal}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        DOSHAM
+                      </span>
+                      <span className="text-sm font-bold text-emerald-600 block mt-0.5">
+                        {doshamVal}
+                      </span>
                     </div>
                   </div>
 
@@ -850,52 +1020,57 @@ function CustomerDetailContent() {
                   </div>
 
                   {/* Jathagam Attachment */}
-                  {jathagamUrl && (() => {
-                    const isPdf =
-                      jathagamUrl.startsWith("data:application/pdf") ||
-                      jathagamUrl.toLowerCase().endsWith(".pdf") ||
-                      jathagamUrl.includes(".pdf");
+                  {jathagamUrl &&
+                    (() => {
+                      const isPdf =
+                        jathagamUrl.startsWith("data:application/pdf") ||
+                        jathagamUrl.toLowerCase().endsWith(".pdf") ||
+                        jathagamUrl.includes(".pdf");
 
-                    return (
-                      <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200/80 rounded-2xl">
-                        <h4 className="font-bold text-amber-950 text-sm mb-3 flex items-center gap-2">
-                          <span>📜</span> Jathagam / Birth Chart Document
-                        </h4>
-                        <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-white rounded-xl border border-amber-100 shadow-sm">
-                          {isPdf ? (
-                            <div className="flex h-24 w-24 flex-col items-center justify-center rounded-xl bg-amber-100/90 text-amber-900 font-bold p-2 text-center">
-                              <span className="text-2xl mb-1">📜</span>
-                              <span className="text-[10px] uppercase font-bold text-amber-800">PDF File</span>
+                      return (
+                        <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200/80 rounded-2xl">
+                          <h4 className="font-bold text-amber-950 text-sm mb-3 flex items-center gap-2">
+                            <span>📜</span> Jathagam / Birth Chart Document
+                          </h4>
+                          <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-white rounded-xl border border-amber-100 shadow-sm">
+                            {isPdf ? (
+                              <div className="flex h-24 w-24 flex-col items-center justify-center rounded-xl bg-amber-100/90 text-amber-900 font-bold p-2 text-center">
+                                <span className="text-2xl mb-1">📜</span>
+                                <span className="text-[10px] uppercase font-bold text-amber-800">
+                                  PDF File
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="h-36 w-48 overflow-hidden rounded-xl bg-black border border-slate-200 shadow-sm">
+                                <img
+                                  src={jathagamUrl}
+                                  alt="Jathagam Birth Chart"
+                                  className="h-full w-full object-contain"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1 text-center sm:text-left">
+                              <h4 className="font-bold text-slate-800 text-base">
+                                {jathagam?.name || "Jathagam (Birth Chart)"}
+                              </h4>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {isPdf
+                                  ? "Uploaded PDF Document"
+                                  : "Uploaded Image File"}
+                              </p>
+                              <a
+                                href={jathagamUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 transition shadow-sm active:scale-95"
+                              >
+                                <span>View / Download Jathagam</span>
+                              </a>
                             </div>
-                          ) : (
-                            <div className="h-36 w-48 overflow-hidden rounded-xl bg-black border border-slate-200 shadow-sm">
-                              <img
-                                src={jathagamUrl}
-                                alt="Jathagam Birth Chart"
-                                className="h-full w-full object-contain"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 text-center sm:text-left">
-                            <h4 className="font-bold text-slate-800 text-base">
-                              {jathagam?.name || "Jathagam (Birth Chart)"}
-                            </h4>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {isPdf ? "Uploaded PDF Document" : "Uploaded Image File"}
-                            </p>
-                            <a
-                              href={jathagamUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 transition shadow-sm active:scale-95"
-                            >
-                              <span>View / Download Jathagam</span>
-                            </a>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
                 </div>
               );
             })()}
@@ -917,11 +1092,18 @@ function CustomerDetailContent() {
               const religion = pref.religion || "Hindu preferred";
               const caste = pref.caste || "Tamil Brahmin preferred";
               const casteOpen = pref.caste_open || "open";
-              const location = pref.location || "Tamil Nadu or willing to relocate";
-              const livingSetup = pref.living_setup || "Open to joint or nuclear family";
-              const values = pref.values || "Family-oriented, respectful, grounded";
-              const personality = pref.personality || "Honest, emotionally mature, ambitious";
-              const overview = pref.overview || customer.partner_preference || "Like we mentioned before, your values often inform your dating preferences – someone religious isn't likely to want to date an atheist, for instance";
+              const location =
+                pref.location || "Tamil Nadu or willing to relocate";
+              const livingSetup =
+                pref.living_setup || "Open to joint or nuclear family";
+              const values =
+                pref.values || "Family-oriented, respectful, grounded";
+              const personality =
+                pref.personality || "Honest, emotionally mature, ambitious";
+              const overview =
+                pref.overview ||
+                customer.partner_preference ||
+                "Like we mentioned before, your values often inform your dating preferences – someone religious isn't likely to want to date an atheist, for instance";
 
               return (
                 <div className="mt-8 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
@@ -935,7 +1117,8 @@ function CustomerDetailContent() {
                           Partner Preferences
                         </h2>
                         <p className="text-xs text-slate-400">
-                          Expectations, career, community and lifestyle preferences
+                          Expectations, career, community and lifestyle
+                          preferences
                         </p>
                       </div>
                     </div>
@@ -950,54 +1133,86 @@ function CustomerDetailContent() {
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🎂</span>
-                          <span className="text-xs font-semibold text-slate-600">Age Range</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Age Range
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">{ageRange}</span>
-                          {ageFlex && <span className="text-emerald-600 text-xs font-semibold">{ageFlex}</span>}
+                          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">
+                            {ageRange}
+                          </span>
+                          {ageFlex && (
+                            <span className="text-emerald-600 text-xs font-semibold">
+                              {ageFlex}
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">📏</span>
-                          <span className="text-xs font-semibold text-slate-600">Height</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Height
+                          </span>
                         </div>
-                        <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">{height}</span>
+                        <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">
+                          {height}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">💒</span>
-                          <span className="text-xs font-semibold text-slate-600">Marital Status</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Marital Status
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{marital}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {marital}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🍃</span>
-                          <span className="text-xs font-semibold text-slate-600">Diet</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Diet
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{diet}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {diet}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🚬</span>
-                          <span className="text-xs font-semibold text-slate-600">Smoking</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Smoking
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{smoking}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {smoking}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🍷</span>
-                          <span className="text-xs font-semibold text-slate-600">Drinking</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Drinking
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-800">{drinking}</span>
-                          {drinkingFlex && <span className="text-emerald-600 text-xs font-semibold">{drinkingFlex}</span>}
+                          <span className="text-xs font-bold text-slate-800">
+                            {drinking}
+                          </span>
+                          {drinkingFlex && (
+                            <span className="text-emerald-600 text-xs font-semibold">
+                              {drinkingFlex}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1012,25 +1227,37 @@ function CustomerDetailContent() {
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🎓</span>
-                          <span className="text-xs font-semibold text-slate-600">Education</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Education
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{edu}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {edu}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">💼</span>
-                          <span className="text-xs font-semibold text-slate-600">Occupation</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Occupation
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{occ}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {occ}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">💰</span>
-                          <span className="text-xs font-semibold text-slate-600">Income</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Income
+                          </span>
                         </div>
-                        <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">{income}</span>
+                        <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">
+                          {income}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1044,28 +1271,44 @@ function CustomerDetailContent() {
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🛕</span>
-                          <span className="text-xs font-semibold text-slate-600">Religion</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Religion
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{religion}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {religion}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🌐</span>
-                          <span className="text-xs font-semibold text-slate-600">Caste</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Caste
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-800">{caste}</span>
-                          {casteOpen && <span className="text-emerald-600 text-xs font-semibold">{casteOpen}</span>}
+                          <span className="text-xs font-bold text-slate-800">
+                            {caste}
+                          </span>
+                          {casteOpen && (
+                            <span className="text-emerald-600 text-xs font-semibold">
+                              {casteOpen}
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🌍</span>
-                          <span className="text-xs font-semibold text-slate-600">Location</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Location
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{location}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {location}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1079,25 +1322,37 @@ function CustomerDetailContent() {
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">🏠</span>
-                          <span className="text-xs font-semibold text-slate-600">Living Setup</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Living Setup
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{livingSetup}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {livingSetup}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">💡</span>
-                          <span className="text-xs font-semibold text-slate-600">Values</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Values
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{values}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {values}
+                        </span>
                       </div>
 
                       <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
                         <div className="flex items-center gap-3">
                           <span className="text-lg">✨</span>
-                          <span className="text-xs font-semibold text-slate-600">Personality</span>
+                          <span className="text-xs font-semibold text-slate-600">
+                            Personality
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">{personality}</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {personality}
+                        </span>
                       </div>
                     </div>
                   </div>
