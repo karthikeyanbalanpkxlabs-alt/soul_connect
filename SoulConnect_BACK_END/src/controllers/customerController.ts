@@ -1135,6 +1135,15 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       };
     }
 
+    if (updateFields.partnerPreferencesDetails !== undefined) {
+      const existingPref = currentCustomer.get("partnerPreferencesDetails") || {};
+      const newPrefInput = updateFields.partnerPreferencesDetails || {};
+      updateFields.partnerPreferencesDetails = {
+        ...existingPref,
+        ...newPrefInput,
+      };
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -1362,6 +1371,29 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       interests: rawLife.interests || req.body.interests || "",
     };
 
+    const rawPref = req.body.partnerPreferencesDetails || {};
+    const processedPartnerPreferencesDetails = {
+      age_range: rawPref.age_range || "",
+      age_flexible: rawPref.age_flexible || "",
+      height: rawPref.height || "",
+      marital_status: rawPref.marital_status || "",
+      diet: rawPref.diet || "",
+      smoking: rawPref.smoking || "",
+      drinking: rawPref.drinking || "",
+      drinking_flexible: rawPref.drinking_flexible || "",
+      education: rawPref.education || "",
+      occupation: rawPref.occupation || "",
+      income: rawPref.income || "",
+      religion: rawPref.religion || "",
+      caste: rawPref.caste || "",
+      caste_open: rawPref.caste_open || "",
+      location: rawPref.location || "",
+      living_setup: rawPref.living_setup || "",
+      values: rawPref.values || "",
+      personality: rawPref.personality || "",
+      overview: rawPref.overview || "",
+    };
+
     if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
       if (existing) {
@@ -1488,6 +1520,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       horoscopeDetails: processedHoroscopeDetails,
       familyBackground: processedFamilyBackground,
       lifeStyle: processedLifeStyle,
+      partnerPreferencesDetails: processedPartnerPreferencesDetails,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

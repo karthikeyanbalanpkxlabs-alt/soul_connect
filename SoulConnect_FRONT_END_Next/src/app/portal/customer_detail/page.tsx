@@ -899,6 +899,221 @@ function CustomerDetailContent() {
                 </div>
               );
             })()}
+
+            {/* Partner Preferences Details Block */}
+            {(() => {
+              const pref = customer.partnerPreferencesDetails || {};
+              const ageRange = pref.age_range || "27 – 33 yrs";
+              const ageFlex = pref.age_flexible || "flexible";
+              const height = pref.height || "5'7\" and above";
+              const marital = pref.marital_status || "Never Married preferred";
+              const diet = pref.diet || "Vegetarian only";
+              const smoking = pref.smoking || "Non-Smoker";
+              const drinking = pref.drinking || "Non-Drinker preferred";
+              const drinkingFlex = pref.drinking_flexible || "flexible";
+              const edu = pref.education || "Graduate & above";
+              const occ = pref.occupation || "Any professional field";
+              const income = pref.income || "₹8L+ per year";
+              const religion = pref.religion || "Hindu preferred";
+              const caste = pref.caste || "Tamil Brahmin preferred";
+              const casteOpen = pref.caste_open || "open";
+              const location = pref.location || "Tamil Nadu or willing to relocate";
+              const livingSetup = pref.living_setup || "Open to joint or nuclear family";
+              const values = pref.values || "Family-oriented, respectful, grounded";
+              const personality = pref.personality || "Honest, emotionally mature, ambitious";
+              const overview = pref.overview || customer.partner_preference || "Like we mentioned before, your values often inform your dating preferences – someone religious isn't likely to want to date an atheist, for instance";
+
+              return (
+                <div className="mt-8 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-xl text-rose-600">
+                        💖
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-800">
+                          Partner Preferences
+                        </h2>
+                        <p className="text-xs text-slate-400">
+                          Expectations, career, community and lifestyle preferences
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BASIC EXPECTATIONS */}
+                  <div className="mb-6">
+                    <h3 className="text-[11px] font-bold tracking-wider text-purple-600 uppercase mb-3">
+                      BASIC EXPECTATIONS
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🎂</span>
+                          <span className="text-xs font-semibold text-slate-600">Age Range</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">{ageRange}</span>
+                          {ageFlex && <span className="text-emerald-600 text-xs font-semibold">{ageFlex}</span>}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">📏</span>
+                          <span className="text-xs font-semibold text-slate-600">Height</span>
+                        </div>
+                        <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">{height}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">💒</span>
+                          <span className="text-xs font-semibold text-slate-600">Marital Status</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{marital}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🍃</span>
+                          <span className="text-xs font-semibold text-slate-600">Diet</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{diet}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🚬</span>
+                          <span className="text-xs font-semibold text-slate-600">Smoking</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{smoking}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🍷</span>
+                          <span className="text-xs font-semibold text-slate-600">Drinking</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-800">{drinking}</span>
+                          {drinkingFlex && <span className="text-emerald-600 text-xs font-semibold">{drinkingFlex}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* EDUCATION & CAREER */}
+                  <div className="mb-6">
+                    <h3 className="text-[11px] font-bold tracking-wider text-purple-600 uppercase mb-3">
+                      EDUCATION & CAREER
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🎓</span>
+                          <span className="text-xs font-semibold text-slate-600">Education</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{edu}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">💼</span>
+                          <span className="text-xs font-semibold text-slate-600">Occupation</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{occ}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">💰</span>
+                          <span className="text-xs font-semibold text-slate-600">Income</span>
+                        </div>
+                        <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">{income}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RELIGION & COMMUNITY */}
+                  <div className="mb-6">
+                    <h3 className="text-[11px] font-bold tracking-wider text-purple-600 uppercase mb-3">
+                      RELIGION & COMMUNITY
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🛕</span>
+                          <span className="text-xs font-semibold text-slate-600">Religion</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{religion}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🌐</span>
+                          <span className="text-xs font-semibold text-slate-600">Caste</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-800">{caste}</span>
+                          {casteOpen && <span className="text-emerald-600 text-xs font-semibold">{casteOpen}</span>}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🌍</span>
+                          <span className="text-xs font-semibold text-slate-600">Location</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{location}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PERSONALITY & LIFESTYLE */}
+                  <div className="mb-6">
+                    <h3 className="text-[11px] font-bold tracking-wider text-purple-600 uppercase mb-3">
+                      PERSONALITY & LIFESTYLE
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">🏠</span>
+                          <span className="text-xs font-semibold text-slate-600">Living Setup</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{livingSetup}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">💡</span>
+                          <span className="text-xs font-semibold text-slate-600">Values</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{values}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">✨</span>
+                          <span className="text-xs font-semibold text-slate-600">Personality</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-800">{personality}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* OVERVIEW */}
+                  <div className="p-5 bg-purple-50/50 border border-purple-100 rounded-2xl">
+                    <h4 className="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                      <span>💬</span> Partner Preferences Overview
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed italic">
+                      "{overview}"
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

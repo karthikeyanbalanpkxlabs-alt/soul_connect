@@ -107,6 +107,25 @@ export default function ProfilePage() {
         living_with: profile.lifeStyle?.living_with || profile.living_with || "",
         willing_to_relocate: profile.lifeStyle?.willing_to_relocate || profile.willing_to_relocate || "",
         interests: profile.lifeStyle?.interests || profile.interests || "",
+        pref_age_range: profile.partnerPreferencesDetails?.age_range || "27 – 33 yrs",
+        pref_age_flexible: profile.partnerPreferencesDetails?.age_flexible || "flexible",
+        pref_height: profile.partnerPreferencesDetails?.height || "5'7\" and above",
+        pref_marital_status: profile.partnerPreferencesDetails?.marital_status || "Never Married preferred",
+        pref_diet: profile.partnerPreferencesDetails?.diet || "Vegetarian only",
+        pref_smoking: profile.partnerPreferencesDetails?.smoking || "Non-Smoker",
+        pref_drinking: profile.partnerPreferencesDetails?.drinking || "Non-Drinker preferred",
+        pref_drinking_flexible: profile.partnerPreferencesDetails?.drinking_flexible || "flexible",
+        pref_education: profile.partnerPreferencesDetails?.education || "Graduate & above",
+        pref_occupation: profile.partnerPreferencesDetails?.occupation || "Any professional field",
+        pref_income: profile.partnerPreferencesDetails?.income || "₹8L+ per year",
+        pref_religion: profile.partnerPreferencesDetails?.religion || "Hindu preferred",
+        pref_caste: profile.partnerPreferencesDetails?.caste || "Tamil Brahmin preferred",
+        pref_caste_open: profile.partnerPreferencesDetails?.caste_open || "open",
+        pref_location: profile.partnerPreferencesDetails?.location || "Tamil Nadu or willing to relocate",
+        pref_living_setup: profile.partnerPreferencesDetails?.living_setup || "Open to joint or nuclear family",
+        pref_values: profile.partnerPreferencesDetails?.values || "Family-oriented, respectful, grounded",
+        pref_personality: profile.partnerPreferencesDetails?.personality || "Honest, emotionally mature, ambitious",
+        pref_overview: profile.partnerPreferencesDetails?.overview || profile.partner_preference || "",
       });
 
       if (profile.family_photo) {
@@ -217,6 +236,29 @@ export default function ProfilePage() {
           willing_to_relocate: formData.willing_to_relocate !== undefined ? formData.willing_to_relocate : (profile?.lifeStyle?.willing_to_relocate || profile?.willing_to_relocate || "Yes, TN preferred"),
           interests: formData.interests !== undefined ? formData.interests : (profile?.lifeStyle?.interests || profile?.interests || "Yoga, Cooking, Trekking"),
         },
+        partnerPreferencesDetails: {
+          ...(profile?.partnerPreferencesDetails || {}),
+          age_range: formData.pref_age_range !== undefined ? formData.pref_age_range : (profile?.partnerPreferencesDetails?.age_range || "27 – 33 yrs"),
+          age_flexible: formData.pref_age_flexible !== undefined ? formData.pref_age_flexible : (profile?.partnerPreferencesDetails?.age_flexible || "flexible"),
+          height: formData.pref_height !== undefined ? formData.pref_height : (profile?.partnerPreferencesDetails?.height || "5'7\" and above"),
+          marital_status: formData.pref_marital_status !== undefined ? formData.pref_marital_status : (profile?.partnerPreferencesDetails?.marital_status || "Never Married preferred"),
+          diet: formData.pref_diet !== undefined ? formData.pref_diet : (profile?.partnerPreferencesDetails?.diet || "Vegetarian only"),
+          smoking: formData.pref_smoking !== undefined ? formData.pref_smoking : (profile?.partnerPreferencesDetails?.smoking || "Non-Smoker"),
+          drinking: formData.pref_drinking !== undefined ? formData.pref_drinking : (profile?.partnerPreferencesDetails?.drinking || "Non-Drinker preferred"),
+          drinking_flexible: formData.pref_drinking_flexible !== undefined ? formData.pref_drinking_flexible : (profile?.partnerPreferencesDetails?.drinking_flexible || "flexible"),
+          education: formData.pref_education !== undefined ? formData.pref_education : (profile?.partnerPreferencesDetails?.education || "Graduate & above"),
+          occupation: formData.pref_occupation !== undefined ? formData.pref_occupation : (profile?.partnerPreferencesDetails?.occupation || "Any professional field"),
+          income: formData.pref_income !== undefined ? formData.pref_income : (profile?.partnerPreferencesDetails?.income || "₹8L+ per year"),
+          religion: formData.pref_religion !== undefined ? formData.pref_religion : (profile?.partnerPreferencesDetails?.religion || "Hindu preferred"),
+          caste: formData.pref_caste !== undefined ? formData.pref_caste : (profile?.partnerPreferencesDetails?.caste || "Tamil Brahmin preferred"),
+          caste_open: formData.pref_caste_open !== undefined ? formData.pref_caste_open : (profile?.partnerPreferencesDetails?.caste_open || "open"),
+          location: formData.pref_location !== undefined ? formData.pref_location : (profile?.partnerPreferencesDetails?.location || "Tamil Nadu or willing to relocate"),
+          living_setup: formData.pref_living_setup !== undefined ? formData.pref_living_setup : (profile?.partnerPreferencesDetails?.living_setup || "Open to joint or nuclear family"),
+          values: formData.pref_values !== undefined ? formData.pref_values : (profile?.partnerPreferencesDetails?.values || "Family-oriented, respectful, grounded"),
+          personality: formData.pref_personality !== undefined ? formData.pref_personality : (profile?.partnerPreferencesDetails?.personality || "Honest, emotionally mature, ambitious"),
+          overview: formData.pref_overview !== undefined ? formData.pref_overview : (profile?.partnerPreferencesDetails?.overview || profile?.partner_preference || ""),
+        },
+        partner_preference: formData.pref_overview !== undefined ? formData.pref_overview : (profile?.partner_preference || ""),
         keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
         customer_id: profile?.customer_id,
         _id: profile?._id,
@@ -2198,152 +2240,335 @@ export default function ProfilePage() {
           <div
             className={`tab-panel ${activeTab === "partner" ? "active" : ""}`}
           >
-            <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">💞</div>Partner Preferences
-              </div>
-              <div className="pref-section-label">Basic Expectations</div>
-              <div className="pref-row">
-                <div className="pref-icon">🎂</div>
-                <div className="pref-label">Age Range</div>
-                <div className="pref-value">
-                  <span className="pref-pill">27 – 33 yrs</span>
-                  <span className="pref-flex">flexible</span>
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">📏</div>
-                <div className="pref-label">Height</div>
-                <div className="pref-value">
-                  <span className="pref-pill">5'7" and above</span>
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💒</div>
-                <div className="pref-label">Marital Status</div>
-                <div className="pref-value">Never Married preferred</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🍃</div>
-                <div className="pref-label">Diet</div>
-                <div className="pref-value">Vegetarian only</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🚬</div>
-                <div className="pref-label">Smoking</div>
-                <div className="pref-value">Non-Smoker</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🍷</div>
-                <div className="pref-label">Drinking</div>
-                <div className="pref-value">
-                  Non-Drinker preferred{" "}
-                  <span className="pref-flex">flexible</span>
-                </div>
-              </div>
+            {(() => {
+              const pref = profile?.partnerPreferencesDetails || {};
+              const ageRange = pref.age_range || profile?.pref_age_range || "27 – 33 yrs";
+              const ageFlex = pref.age_flexible || profile?.pref_age_flexible || "flexible";
+              const height = pref.height || profile?.pref_height || "5'7\" and above";
+              const marital = pref.marital_status || profile?.pref_marital_status || "Never Married preferred";
+              const diet = pref.diet || profile?.pref_diet || "Vegetarian only";
+              const smoking = pref.smoking || profile?.pref_smoking || "Non-Smoker";
+              const drinking = pref.drinking || profile?.pref_drinking || "Non-Drinker preferred";
+              const drinkingFlex = pref.drinking_flexible || profile?.pref_drinking_flexible || "flexible";
+              const edu = pref.education || profile?.pref_education || "Graduate & above";
+              const occ = pref.occupation || profile?.pref_occupation || "Any professional field";
+              const income = pref.income || profile?.pref_income || "₹8L+ per year";
+              const religion = pref.religion || profile?.pref_religion || "Hindu preferred";
+              const caste = pref.caste || profile?.pref_caste || "Tamil Brahmin preferred";
+              const casteOpen = pref.caste_open || profile?.pref_caste_open || "open";
+              const location = pref.location || profile?.pref_location || "Tamil Nadu or willing to relocate";
+              const livingSetup = pref.living_setup || profile?.pref_living_setup || "Open to joint or nuclear family";
+              const values = pref.values || profile?.pref_values || "Family-oriented, respectful, grounded";
+              const personality = pref.personality || profile?.pref_personality || "Honest, emotionally mature, ambitious";
+              const overview = pref.overview || profile?.partnerPreferencesDetails?.overview || profile?.partner_preference || "Like we mentioned before, your values often inform your dating preferences – someone religious isn't likely to want to date an atheist, for instance";
 
-              <div className="pref-section-label">Education & Career</div>
-              <div className="pref-row">
-                <div className="pref-icon">🎓</div>
-                <div className="pref-label">Education</div>
-                <div className="pref-value">Graduate & above</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💼</div>
-                <div className="pref-label">Occupation</div>
-                <div className="pref-value">Any professional field</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💰</div>
-                <div className="pref-label">Income</div>
-                <div className="pref-value">
-                  <span className="pref-pill">₹8L+ per year</span>
-                </div>
-              </div>
+              return (
+                <>
+                  <div className="content-card reveal visible">
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">💖</div>Partner Preferences
+                    </div>
 
-              <div className="pref-section-label">Religion & Community</div>
-              <div className="pref-row">
-                <div className="pref-icon">🛕</div>
-                <div className="pref-label">Religion</div>
-                <div className="pref-value">Hindu preferred</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🌐</div>
-                <div className="pref-label">Caste</div>
-                <div className="pref-value">
-                  Tamil Brahmin preferred{" "}
-                  <span className="pref-flex">open</span>
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🌍</div>
-                <div className="pref-label">Location</div>
-                <div className="pref-value">
-                  Tamil Nadu or willing to relocate
-                </div>
-              </div>
+                    <div className="pref-section-label">Basic Expectations</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🎂</div>
+                      <div className="pref-label">Age Range</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <>
+                            <span className="pref-pill">{ageRange}</span>
+                            {ageFlex && <span className="pref-flex">{ageFlex}</span>}
+                          </>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_age_range || ""}
+                            onChange={(e) => handleChange("pref_age_range", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">📏</div>
+                      <div className="pref-label">Height</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <span className="pref-pill">{height}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_height || ""}
+                            onChange={(e) => handleChange("pref_height", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💒</div>
+                      <div className="pref-label">Marital Status</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          marital
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_marital_status || ""}
+                            onChange={(e) => handleChange("pref_marital_status", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🍃</div>
+                      <div className="pref-label">Diet</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          diet
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_diet || ""}
+                            onChange={(e) => handleChange("pref_diet", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🚬</div>
+                      <div className="pref-label">Smoking</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          smoking
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_smoking || ""}
+                            onChange={(e) => handleChange("pref_smoking", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🍷</div>
+                      <div className="pref-label">Drinking</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <>
+                            {drinking}{" "}
+                            {drinkingFlex && <span className="pref-flex">{drinkingFlex}</span>}
+                          </>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_drinking || ""}
+                            onChange={(e) => handleChange("pref_drinking", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
 
-              <div className="pref-section-label">Personality & Lifestyle</div>
-              <div className="pref-row">
-                <div className="pref-icon">🏠</div>
-                <div className="pref-label">Living Setup</div>
-                <div className="pref-value">
-                  Open to joint or nuclear family
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💡</div>
-                <div className="pref-label">Values</div>
-                <div className="pref-value">
-                  Family-oriented, respectful, grounded
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">✨</div>
-                <div className="pref-label">Personality</div>
-                <div className="pref-value">
-                  Honest, emotionally mature, ambitious
-                </div>
-              </div>
-            </div>
+                    <div className="pref-section-label">Education & Career</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🎓</div>
+                      <div className="pref-label">Education</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          edu
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_education || ""}
+                            onChange={(e) => handleChange("pref_education", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💼</div>
+                      <div className="pref-label">Occupation</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          occ
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_occupation || ""}
+                            onChange={(e) => handleChange("pref_occupation", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💰</div>
+                      <div className="pref-label">Income</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <span className="pref-pill">{income}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_income || ""}
+                            onChange={(e) => handleChange("pref_income", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
 
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".1s" }}
-            >
-              <div className="content-card-title flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="ctitle-icon">💬</div>Partner Preferences Overview
-                </div>
-                {isCustomer && !isEditing && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                    <div className="pref-section-label">Religion & Community</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🛕</div>
+                      <div className="pref-label">Religion</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          religion
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_religion || ""}
+                            onChange={(e) => handleChange("pref_religion", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🌐</div>
+                      <div className="pref-label">Caste</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <>
+                            {caste}{" "}
+                            {casteOpen && <span className="pref-flex">{casteOpen}</span>}
+                          </>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_caste || ""}
+                            onChange={(e) => handleChange("pref_caste", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🌍</div>
+                      <div className="pref-label">Location</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          location
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_location || ""}
+                            onChange={(e) => handleChange("pref_location", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pref-section-label">Personality & Lifestyle</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🏠</div>
+                      <div className="pref-label">Living Setup</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          livingSetup
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_living_setup || ""}
+                            onChange={(e) => handleChange("pref_living_setup", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💡</div>
+                      <div className="pref-label">Values</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          values
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_values || ""}
+                            onChange={(e) => handleChange("pref_values", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">✨</div>
+                      <div className="pref-label">Personality</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          personality
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_personality || ""}
+                            onChange={(e) => handleChange("pref_personality", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="content-card reveal visible"
+                    style={{ transitionDelay: ".1s" }}
                   >
-                    <Pencil className="h-3 w-3" /> Edit
-                  </button>
-                )}
-              </div>
-              {!isEditing ? (
-                <p className="about-text">
-                  "{profile?.partner_preference ||
-                    "Like we mentioned before, your values often inform your dating preferences."}"
-                </p>
-              ) : (
-                <div className="mt-1">
-                  <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
-                    Edit Partner Preferences Description:
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={formData.partner_preference || ""}
-                    onChange={(e) => handleChange("partner_preference", e.target.value)}
-                    className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
-                    placeholder="Describe what qualities and expectations you have in a partner..."
-                  />
-                </div>
-              )}
-            </div>
+                    <div className="content-card-title flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="ctitle-icon">💬</div>Partner Preferences Overview
+                      </div>
+                      {isCustomer && !isEditing && (
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                        >
+                          <Pencil className="h-3 w-3" /> Edit
+                        </button>
+                      )}
+                    </div>
+                    {!isEditing ? (
+                      <p className="about-text">
+                        "{overview}"
+                      </p>
+                    ) : (
+                      <div className="mt-1">
+                        <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                          Edit Partner Preferences Description:
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={formData.pref_overview !== undefined ? formData.pref_overview : overview}
+                          onChange={(e) => {
+                            handleChange("pref_overview", e.target.value);
+                            handleChange("partner_preference", e.target.value);
+                          }}
+                          className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                          placeholder="Describe what qualities and expectations you have in a partner..."
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           {/* PHOTOS TAB PANEL */}
