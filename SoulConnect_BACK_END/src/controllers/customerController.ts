@@ -110,6 +110,31 @@ export async function handleCustomerList(
           }
         } else if (key === "gender") {
           filter[dbKey] = { $regex: `^${val}$`, $options: "i" };
+        } else if (key === "star" || key === "rasi" || key === "lagnam" || key === "gothram" || key === "dosham") {
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { [key]: { $regex: val, $options: "i" } },
+              { [`horoscopeDetails.${key}`]: { $regex: val, $options: "i" } },
+            ],
+          });
+        } else if (key === "diet" || key === "smoking" || key === "drinking" || key === "living_with" || key === "willing_to_relocate" || key === "interests") {
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { [key]: { $regex: val, $options: "i" } },
+              { [`lifeStyle.${key}`]: { $regex: val, $options: "i" } },
+            ],
+          });
+        } else if (key.startsWith("pref_") || key.startsWith("partner_pref_")) {
+          const actualPrefKey = key.replace(/^(pref_|partner_pref_)/, "");
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { [`partnerPreferencesDetails.${actualPrefKey}`]: { $regex: val, $options: "i" } },
+              { partner_preference: { $regex: val, $options: "i" } },
+            ],
+          });
         } else {
           filter[dbKey] = { $regex: val, $options: "i" };
         }

@@ -121,17 +121,23 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           </div>
           <div>
             <label className="text-xs text-gray-500 font-semibold block mb-1">
-              Subscription Type
+              Blood Group
             </label>
-            <input
-              type="text"
-              value={filters["subscription_type"] || ""}
-              placeholder="Search Subscription Type"
+            <select
+              value={filters["blood_group"] || ""}
+              onChange={(e) => onFilterChange("blood_group", e.target.value)}
               className="w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#c28b70] transition-colors"
-              onChange={(e) =>
-                onFilterChange("subscription_type", e.target.value)
-              }
-            />
+            >
+              <option value="">All Blood Groups</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
           </div>
           <div>
             <style>{`
@@ -317,50 +323,241 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           )}
         </div>
 
-        {/* Marital Status Accordion */}
+        {/* Horoscope & Birth Chart Details Accordion */}
         <div className="mb-2">
           <button
-            disabled
-            onClick={() => toggleAccordion("marital")}
-            className={`opacity-60 w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
-              openAccordion === "marital"
+            onClick={() => toggleAccordion("horoscope")}
+            className={`w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
+              openAccordion === "horoscope"
                 ? "bg-[#c28b70] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-gray-400" />
-              <span>Marrital Status</span>
+              <span>⭐</span>
+              <span>Horoscope & Birth Chart</span>
             </div>
-            {openAccordion === "marital" ? (
+            {openAccordion === "horoscope" ? (
               <Minus className="w-4 h-4" />
             ) : (
               <Plus className="w-4 h-4" />
             )}
           </button>
+          {openAccordion === "horoscope" && (
+            <div className="p-4 bg-white border border-gray-100 border-t-0 space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Star / Nakshatra
+                </label>
+                <select
+                  value={filters["star"] || ""}
+                  onChange={(e) => onFilterChange("star", e.target.value)}
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                >
+                  <option value="">All Nakshatras</option>
+                  {[
+                    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira",
+                    "Thiruvathirai", "Punarvasu", "Poosam", "Ayilyam", "Magam",
+                    "Pooram", "Uthiram", "Hastham", "Chithirai", "Swathi",
+                    "Visakam", "Anusham", "Kettai", "Moolam", "Pooradam",
+                    "Uthiradam", "Thiruvonam", "Avittam", "Sathayam", "Poorattathi",
+                    "Uthirattathi", "Revathi"
+                  ].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Rasi / Moon Sign
+                </label>
+                <select
+                  value={filters["rasi"] || ""}
+                  onChange={(e) => onFilterChange("rasi", e.target.value)}
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                >
+                  <option value="">All Rasis</option>
+                  {[
+                    "Mesham", "Rishabam", "Mithunam", "Kadagam", "Simmam",
+                    "Kanni", "Thulaam", "Viruchigam", "Dhanusu", "Magaram",
+                    "Kumbam", "Meenam"
+                  ].map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Dosham Filter
+                </label>
+                <select
+                  value={filters["dosham"] || ""}
+                  onChange={(e) => onFilterChange("dosham", e.target.value)}
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                >
+                  <option value="">All Doshams</option>
+                  <option value="No Dosham">No Dosham</option>
+                  <option value="Chevvai Dosham">Chevvai Dosham</option>
+                  <option value="Rahu-Ketu Dosham">Rahu-Ketu Dosham</option>
+                  <option value="Manglik">Manglik</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Religion Accordion */}
+        {/* Lifestyle Details Accordion */}
         <div className="mb-2">
           <button
-            disabled
-            onClick={() => toggleAccordion("religion")}
-            className={`opacity-60 w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
-              openAccordion === "religion"
+            onClick={() => toggleAccordion("lifestyle")}
+            className={`w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
+              openAccordion === "lifestyle"
                 ? "bg-[#c28b70] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-gray-400" />
-              <span>Religion</span>
+              <span>🌿</span>
+              <span>Lifestyle Details</span>
             </div>
-            {openAccordion === "religion" ? (
+            {openAccordion === "lifestyle" ? (
               <Minus className="w-4 h-4" />
             ) : (
               <Plus className="w-4 h-4" />
             )}
           </button>
+          {openAccordion === "lifestyle" && (
+            <div className="p-4 bg-white border border-gray-100 border-t-0 space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Diet
+                </label>
+                <select
+                  value={filters["diet"] || ""}
+                  onChange={(e) => onFilterChange("diet", e.target.value)}
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                >
+                  <option value="">All Diets</option>
+                  <option value="Strict Vegetarian">Strict Vegetarian</option>
+                  <option value="Vegetarian">Vegetarian</option>
+                  <option value="Non-Vegetarian">Non-Vegetarian</option>
+                  <option value="Eggetarian">Eggetarian</option>
+                  <option value="Jain Vegetarian">Jain Vegetarian</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Smoking
+                </label>
+                <select
+                  value={filters["smoking"] || ""}
+                  onChange={(e) => onFilterChange("smoking", e.target.value)}
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                >
+                  <option value="">All Habits</option>
+                  <option value="Non-Smoker">Non-Smoker</option>
+                  <option value="Occasional Smoker">Occasional Smoker</option>
+                  <option value="Regular Smoker">Regular Smoker</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Drinking
+                </label>
+                <select
+                  value={filters["drinking"] || ""}
+                  onChange={(e) => onFilterChange("drinking", e.target.value)}
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                >
+                  <option value="">All Habits</option>
+                  <option value="Non-Drinker">Non-Drinker</option>
+                  <option value="Social Drinker">Social Drinker</option>
+                  <option value="Regular Drinker">Regular Drinker</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Partner Preferences Details Accordion */}
+        <div className="mb-2">
+          <button
+            onClick={() => toggleAccordion("partner_prefs")}
+            className={`w-full flex items-center justify-between px-4 py-3 text-left font-medium transition-colors ${
+              openAccordion === "partner_prefs"
+                ? "bg-[#c28b70] text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span>💖</span>
+              <span>Partner Preferences</span>
+            </div>
+            {openAccordion === "partner_prefs" ? (
+              <Minus className="w-4 h-4" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+          </button>
+          {openAccordion === "partner_prefs" && (
+            <div className="p-4 bg-white border border-gray-100 border-t-0 space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Preferred Diet
+                </label>
+                <input
+                  type="text"
+                  value={filters["pref_diet"] || ""}
+                  placeholder="e.g. Vegetarian"
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                  onChange={(e) => onFilterChange("pref_diet", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Preferred Marital Status
+                </label>
+                <input
+                  type="text"
+                  value={filters["pref_marital_status"] || ""}
+                  placeholder="e.g. Never Married"
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                  onChange={(e) => onFilterChange("pref_marital_status", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Preferred Education
+                </label>
+                <input
+                  type="text"
+                  value={filters["pref_education"] || ""}
+                  placeholder="e.g. Graduate"
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                  onChange={(e) => onFilterChange("pref_education", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 font-semibold block mb-1">
+                  Preferred Location
+                </label>
+                <input
+                  type="text"
+                  value={filters["pref_location"] || ""}
+                  placeholder="e.g. Tamil Nadu"
+                  className="w-full bg-white rounded-md border border-gray-300 px-2.5 py-1.5 text-xs outline-none focus:border-[#c28b70]"
+                  onChange={(e) => onFilterChange("pref_location", e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
