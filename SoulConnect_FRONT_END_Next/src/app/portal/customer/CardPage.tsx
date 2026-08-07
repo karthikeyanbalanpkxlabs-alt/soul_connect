@@ -750,7 +750,33 @@ function CardPage() {
           )}
         </div>
       ) : (
-        <div>{"Loading..."}</div>
+        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 p-6">
+          <div className="relative flex flex-col items-center text-center">
+            {/* Outer glowing pulsing aura */}
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-r from-rose-400 via-purple-400 to-amber-400 opacity-20 blur-2xl animate-pulse" />
+
+            {/* Center Animated Loader Badge */}
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-white shadow-2xl border border-rose-100">
+              <div className="h-16 w-16 animate-spin rounded-full border-[3.5px] border-rose-500 border-t-transparent" />
+              <span className="absolute text-2xl animate-bounce">💖</span>
+            </div>
+
+            {/* Loading Title & Subtitle */}
+            <h3 className="mt-6 font-serif text-2xl font-bold tracking-tight text-slate-800">
+              Loading Profiles...
+            </h3>
+            <p className="mt-2 text-xs text-slate-500 max-w-sm leading-relaxed">
+              Fetching verified profiles, horoscope details, and family preferences
+            </p>
+
+            {/* Animated Pulse Dots */}
+            <div className="mt-6 flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-bounce" />
+              <span className="h-2.5 w-2.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.2s]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-bounce [animation-delay:0.4s]" />
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
