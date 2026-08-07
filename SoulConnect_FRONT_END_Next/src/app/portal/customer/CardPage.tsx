@@ -85,7 +85,16 @@ function CardPage() {
     const famAddressVal = famObj.family_address || profile?.family_address;
     const hasFamilyBackground = !!(fatherVal || motherVal || famTypeVal || famStatusVal || famAddressVal);
 
-    const allStepsComplete = hasIdProof && hasFamilyPhoto && hasHoroscope && hasFamilyBackground;
+    const lifeObj = profile?.lifeStyle || {};
+    const dietVal = lifeObj.diet || profile?.diet;
+    const smokingVal = lifeObj.smoking || profile?.smoking;
+    const drinkingVal = lifeObj.drinking || profile?.drinking;
+    const livingWithVal = lifeObj.living_with || profile?.living_with;
+    const relocateVal = lifeObj.willing_to_relocate || profile?.willing_to_relocate;
+    const interestsVal = lifeObj.interests || profile?.interests;
+    const hasLifestyle = !!(dietVal || smokingVal || drinkingVal || livingWithVal || relocateVal || interestsVal);
+
+    const allStepsComplete = hasIdProof && hasFamilyPhoto && hasHoroscope && hasFamilyBackground && hasLifestyle;
 
     return (
       <div className="py-12 px-4 max-w-3xl mx-auto">
@@ -326,7 +335,57 @@ function CardPage() {
                 </div>
               </div>
 
-              {/* Step 6 */}
+              {/* Lifestyle Details */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasLifestyle
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasLifestyle ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Lifestyle Details
+                    </h4>
+                    {!hasLifestyle && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasLifestyle
+                      ? "Lifestyle habits and personal preferences provided."
+                      : "Please add your Lifestyle details (Diet, Smoking, Drinking, Living arrangements, Relocation, Interests) in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasLifestyle && (
+                      <div className="flex items-center gap-3 p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                          🌿
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Lifestyle Verified</p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓ {dietVal ? `Diet: ${dietVal}` : interestsVal ? `Interests: ${interestsVal}` : "Details Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Manual Verification Check */}
               <div className="relative">
                 <span
                   className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
@@ -347,8 +406,8 @@ function CardPage() {
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
                     {allStepsComplete
-                      ? "Our admin panel is verifying your documents, family photo, horoscope, and family background."
-                      : "Awaiting ID proof, family photo, horoscope & family background submission before review can begin."}
+                      ? "Our admin panel is verifying your documents, family photo, horoscope, family background, and lifestyle details."
+                      : "Awaiting ID proof, family photo, horoscope, family background & lifestyle submission before review can begin."}
                   </p>
                 </div>
               </div>

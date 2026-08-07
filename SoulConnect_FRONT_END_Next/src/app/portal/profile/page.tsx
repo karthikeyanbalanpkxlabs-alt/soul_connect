@@ -154,6 +154,18 @@ export default function ProfilePage() {
         }
       }
 
+      if (
+        (formData.diet !== undefined && !String(formData.diet).trim()) ||
+        (formData.smoking !== undefined && !String(formData.smoking).trim()) ||
+        (formData.drinking !== undefined && !String(formData.drinking).trim()) ||
+        (formData.living_with !== undefined && !String(formData.living_with).trim()) ||
+        (formData.willing_to_relocate !== undefined && !String(formData.willing_to_relocate).trim()) ||
+        (formData.interests !== undefined && !String(formData.interests).trim())
+      ) {
+        showToast("Please complete all Lifestyle details (Diet, Smoking, Drinking, Living With, Relocate, Interests)", "error");
+        return;
+      }
+
       if (keycloak) {
         await keycloak.updateToken(30);
       }
@@ -1952,8 +1964,19 @@ export default function ProfilePage() {
               className="content-card reveal visible"
               style={{ transitionDelay: ".3s" }}
             >
-              <div className="content-card-title">
-                <div className="ctitle-icon">🌿</div>Lifestyle
+              <div className="content-card-title !flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">🌿</div>Lifestyle
+                </div>
+                {profile?.public_verify ? (
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    ✓ Verified
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    ⏳ Verification Pending
+                  </span>
+                )}
               </div>
               <div className="details-grid">
                 <div className="detail-item">
