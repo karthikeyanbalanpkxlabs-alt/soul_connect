@@ -29,6 +29,7 @@ import {
   X,
   Users,
   Plus,
+  Star,
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
@@ -128,6 +129,17 @@ export default function ProfilePage() {
         pref_overview: profile.partnerPreferencesDetails?.overview || profile.partner_preference || "",
       });
 
+      const existingImages = Array.isArray(profile.image) && profile.image.length > 0
+        ? profile.image.map((img: any) => typeof img === "string" ? img : (img?.url || img?.path)).filter(Boolean)
+        : Array.isArray(profile.photos) && profile.photos.length > 0
+        ? profile.photos.map((img: any) => typeof img === "string" ? img : (img?.url || img?.path)).filter(Boolean)
+        : typeof profile.image === "string" && profile.image
+        ? [profile.image]
+        : [];
+      if (existingImages.length > 0) {
+        setCasualPhotos(existingImages);
+      }
+
       if (profile.family_photo) {
         const src = typeof profile.family_photo === "string" ? profile.family_photo : (profile.family_photo?.url || profile.family_photo?.path);
         if (src) setFamilyPhotos([src]);
@@ -191,10 +203,17 @@ export default function ProfilePage() {
       const token = keycloak?.token;
       const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
 
+      const imageObjects = casualPhotos.map((url, idx) => ({
+        url,
+        default: idx === 0,
+      }));
+
       const payload = {
         ...profile,
         ...formData,
-        family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : [],
+        image: imageObjects,
+        photos: casualPhotos,
+        family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : (profile?.family_photos || []),
         horoscopeDetails: {
           dob: formData.dob || profile?.horoscopeDetails?.dob || profile?.dob || "",
           star: formData.star || profile?.horoscopeDetails?.star || profile?.star || "",
@@ -583,20 +602,30 @@ export default function ProfilePage() {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const existingCount = Array.isArray(profile?.image) && profile.image.length > 0
-        ? profile.image.length
-        : Array.isArray(profile?.photos) && profile.photos.length > 0
-        ? profile.photos.length
-        : 0;
-      if (existingCount + casualPhotos.length >= 3) {
-        showToast("Maximum of 3 profile photos allowed", "error");
+      if (casualPhotos.length >= 5) {
+        showToast("Maximum of 5 profile photos allowed", "error");
         return;
       }
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setCasualPhotos((prev) => [...prev, imageUrl]);
-      showToast("Profile photo uploaded successfully!", "success");
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setCasualPhotos((prev) => [...prev, base64String]);
+        showToast("Profile photo uploaded! Click 'Save Changes' or 'Save Photos' to save.", "success");
+      };
+      reader.readAsDataURL(file);
     }
+  };
+
+  const handleSetDefaultPhoto = (index: number) => {
+    if (index === 0) return;
+    setCasualPhotos((prev) => {
+      const updated = [...prev];
+      const [selected] = updated.splice(index, 1);
+      updated.unshift(selected);
+      return updated;
+    });
+    showToast("Default photo updated! Click 'Save Photo Changes' to apply.", "success");
   };
 
   const handleFamilyPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2580,7 +2609,15 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <div className="ctitle-icon">📷</div>Profile Photos
                 </div>
-                <span className="text-xs text-slate-400 font-medium">Max 3 photos</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-400 font-medium">Max 5 photos</span>
+                  <button
+                    onClick={handleSaveInlineProfile}
+                    className="px-4 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm active:scale-95 transition flex items-center gap-1.5"
+                  >
+                    <span>Save Photo Changes</span>
+                  </button>
+                </div>
               </div>
 
               {/* Photo Upload Form */}
@@ -2593,54 +2630,37 @@ export default function ProfilePage() {
               />
 
               <div className="photos-grid">
-                {/* Profile Images from API */}
-                {Array.isArray(profile?.image) && profile.image.length > 0
-                  ? profile.image.slice(0, 3).map((imgObj: any, idx: number) => {
-                      const src = typeof imgObj === "string" ? imgObj : (imgObj?.url || imgObj?.path);
-                      if (!src) return null;
-                      return (
-                        <div key={idx} className="photo-slot relative overflow-hidden group">
-                          <img
-                            src={src}
-                            alt={`Profile image ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                          {imgObj?.default && (
-                            <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
-                              ★ Default
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })
-                  : Array.isArray(profile?.photos) && profile.photos.length > 0
-                  ? profile.photos.slice(0, 3).map((src: string, idx: number) => (
-                      <div key={idx} className="photo-slot relative overflow-hidden group">
-                        <img
-                          src={src}
-                          alt={`Profile photo ${idx + 1}`}
-                          className="w-full h-full object-cover rounded-xl"
-                        />
-                      </div>
-                    ))
-                  : null}
-
-                {/* Dynamic Uploads */}
                 {casualPhotos.map((url, idx) => (
-                  <div key={idx} className="photo-slot relative group overflow-hidden">
+                  <div key={idx} className="photo-slot relative group overflow-hidden border border-slate-200 shadow-sm rounded-xl">
                     <img
                       src={url}
-                      alt={`Uploaded photo ${idx + 1}`}
+                      alt={`Profile photo ${idx + 1}`}
                       className="w-full h-full object-cover rounded-xl"
                     />
+                    {idx === 0 ? (
+                      <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-white text-white" /> Default
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetDefaultPhoto(idx);
+                        }}
+                        className="absolute top-2 left-2 bg-black/60 hover:bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow opacity-90 hover:opacity-100 transition flex items-center gap-1"
+                        title="Set as Default Profile Photo"
+                      >
+                        <Star className="h-3 w-3" /> Set Default
+                      </button>
+                    )}
                     <button
-                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
+                      className="absolute bottom-2 right-2 bg-rose-600 text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
                       onClick={(e) => {
                         e.stopPropagation();
                         setCasualPhotos((prev) =>
                           prev.filter((_, i) => i !== idx),
                         );
-                        showToast("Photo deleted", "info");
+                        showToast("Photo removed. Click Save Photo Changes to apply.", "info");
                       }}
                       title="Delete Photo"
                     >
@@ -2649,18 +2669,14 @@ export default function ProfilePage() {
                   </div>
                 ))}
 
-                {/* Add Photo Button Slot - Up to 3 photos max */}
-                {((Array.isArray(profile?.image) && profile.image.length > 0
-                  ? profile.image.length
-                  : Array.isArray(profile?.photos) && profile.photos.length > 0
-                  ? profile.photos.length
-                  : 0) + casualPhotos.length) < 3 && (
+                {/* Add Photo Button Slot - Up to 5 photos max */}
+                {casualPhotos.length < 5 && (
                   <div
-                    className="photo-slot photo-slot-add"
+                    className="photo-slot photo-slot-add border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50/50 hover:bg-violet-50 transition cursor-pointer"
                     onClick={triggerPhotoUpload}
                   >
-                    <div className="photo-av">＋</div>
-                    <div className="photo-label">Add Photo</div>
+                    <div className="photo-av text-violet-600">＋</div>
+                    <div className="photo-label text-violet-700 font-semibold">Add Photo</div>
                   </div>
                 )}
               </div>
@@ -2668,7 +2684,7 @@ export default function ProfilePage() {
               <div className="photos-note">
                 <div className="photos-note-icon">💡</div>
                 <p>
-                  You can upload up to 3 profile photos. High quality photos get 3× more connection requests.
+                  You can upload up to 5 profile photos. High quality photos get 3× more connection requests. Click <strong>Save Photo Changes</strong> after uploading.
                 </p>
               </div>
             </div>
