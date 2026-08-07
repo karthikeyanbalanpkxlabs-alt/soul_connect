@@ -101,6 +101,12 @@ export default function ProfilePage() {
         tob: profile.tob || profile.time_of_birth || "",
         pob: profile.pob || profile.place_of_birth || "",
         dosham: profile.dosham || "",
+        diet: profile.lifeStyle?.diet || profile.diet || "",
+        smoking: profile.lifeStyle?.smoking || profile.smoking || "",
+        drinking: profile.lifeStyle?.drinking || profile.drinking || "",
+        living_with: profile.lifeStyle?.living_with || profile.living_with || "",
+        willing_to_relocate: profile.lifeStyle?.willing_to_relocate || profile.willing_to_relocate || "",
+        interests: profile.lifeStyle?.interests || profile.interests || "",
       });
 
       if (profile.family_photo) {
@@ -126,6 +132,28 @@ export default function ProfilePage() {
 
   const handleSaveInlineProfile = async () => {
     try {
+      if (formData.dob) {
+        const dobDate = new Date(formData.dob);
+        if (isNaN(dobDate.getTime())) {
+          showToast("Please enter a valid Date of Birth", "error");
+          return;
+        }
+        const today = new Date();
+        if (dobDate > today) {
+          showToast("Date of Birth cannot be in the future", "error");
+          return;
+        }
+        let age = today.getFullYear() - dobDate.getFullYear();
+        const m = today.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+          age--;
+        }
+        if (age < 18) {
+          showToast("Age must be at least 18 years old", "error");
+          return;
+        }
+      }
+
       if (keycloak) {
         await keycloak.updateToken(30);
       }
@@ -167,6 +195,15 @@ export default function ProfilePage() {
           family_values_details: formData.family_values_details || profile?.familyBackground?.family_values_details || profile?.family_values_details || "",
           about_family: formData.about_family || profile?.familyBackground?.about_family || profile?.about_family || "",
           about_family_tamil: formData.about_family_tamil || profile?.familyBackground?.about_family_tamil || profile?.about_family_tamil || "",
+        },
+        lifeStyle: {
+          ...(profile?.lifeStyle || {}),
+          diet: formData.diet !== undefined ? formData.diet : (profile?.lifeStyle?.diet || profile?.diet || "Strict Vegetarian"),
+          smoking: formData.smoking !== undefined ? formData.smoking : (profile?.lifeStyle?.smoking || profile?.smoking || "Non-Smoker"),
+          drinking: formData.drinking !== undefined ? formData.drinking : (profile?.lifeStyle?.drinking || profile?.drinking || "Non-Drinker"),
+          living_with: formData.living_with !== undefined ? formData.living_with : (profile?.lifeStyle?.living_with || profile?.living_with || "With Family"),
+          willing_to_relocate: formData.willing_to_relocate !== undefined ? formData.willing_to_relocate : (profile?.lifeStyle?.willing_to_relocate || profile?.willing_to_relocate || "Yes, TN preferred"),
+          interests: formData.interests !== undefined ? formData.interests : (profile?.lifeStyle?.interests || profile?.interests || "Yoga, Cooking, Trekking"),
         },
         keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
         customer_id: profile?.customer_id,
@@ -801,16 +838,27 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
-              {profile?.subscription_type && (
-                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                  {profile.subscription_type} Plan
-                </div>
-              )}
-              {profile?.approvalStatus && (
-                <div className="mt-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                  {profile.approvalStatus}
-                </div>
-              )}
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2">
+                {profile?.subscription_type && (
+                  <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                    {profile.subscription_type} Plan
+                  </div>
+                )}
+                {profile?.public_verify ? (
+                  <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <span>✓</span> Publicly Verified
+                  </div>
+                ) : (
+                  <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                    <span>⏳</span> Verification Pending
+                  </div>
+                )}
+                {profile?.approvalStatus && (
+                  <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                    {profile.approvalStatus}
+                  </div>
+                )}
+              </div>
               {!isEditing ? (
                 <div className="profile-tagline">
                   {profile?.about_self ||
@@ -1910,27 +1958,93 @@ export default function ProfilePage() {
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Diet</div>
-                  <div className="detail-value">Strict Vegetarian</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.diet || profile?.diet || "Strict Vegetarian"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.diet || ""}
+                        onChange={(e) => handleChange("diet", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Smoking</div>
-                  <div className="detail-value">Non-Smoker</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.smoking || profile?.smoking || "Non-Smoker"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.smoking || ""}
+                        onChange={(e) => handleChange("smoking", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Drinking</div>
-                  <div className="detail-value">Non-Drinker</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.drinking || profile?.drinking || "Non-Drinker"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.drinking || ""}
+                        onChange={(e) => handleChange("drinking", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Living With</div>
-                  <div className="detail-value">With Family</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.living_with || profile?.living_with || "With Family"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.living_with || ""}
+                        onChange={(e) => handleChange("living_with", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Willing to Relocate</div>
-                  <div className="detail-value">Yes, TN preferred</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.willing_to_relocate || profile?.willing_to_relocate || "Yes, TN preferred"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.willing_to_relocate || ""}
+                        onChange={(e) => handleChange("willing_to_relocate", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Interests</div>
-                  <div className="detail-value">Yoga, Cooking, Trekking</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.interests || profile?.interests || "Yoga, Cooking, Trekking"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.interests || ""}
+                        onChange={(e) => handleChange("interests", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -540,6 +540,67 @@ function CustomerDetailContent() {
                 </div>
               </div>
             )}
+            {/* Lifestyle Details Block */}
+            {(() => {
+              const life = customer.lifeStyle || {};
+              const dietVal = life.diet || customer.diet || "Strict Vegetarian";
+              const smokingVal = life.smoking || customer.smoking || "Non-Smoker";
+              const drinkingVal = life.drinking || customer.drinking || "Non-Drinker";
+              const livingWithVal = life.living_with || customer.living_with || "With Family";
+              const relocateVal = life.willing_to_relocate || customer.willing_to_relocate || "Yes, TN preferred";
+              const interestsVal = life.interests || customer.interests || "Yoga, Cooking, Trekking";
+
+              return (
+                <div className="mt-8 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-xl text-emerald-600">
+                      🌿
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-800">
+                        Lifestyle
+                      </h2>
+                      <p className="text-xs text-slate-400">
+                        Personal habits, living arrangements and interests
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DIET</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">{dietVal}</span>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">SMOKING</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">{smokingVal}</span>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DRINKING</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">{drinkingVal}</span>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">LIVING WITH</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">{livingWithVal}</span>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">WILLING TO RELOCATE</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">{relocateVal}</span>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">INTERESTS</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-1">{interestsVal}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Family Background Details Block */}
             {(() => {
               const fam = customer.familyBackground || {};

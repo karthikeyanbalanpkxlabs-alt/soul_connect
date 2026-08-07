@@ -1082,6 +1082,59 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       };
     }
 
+    if (
+      updateFields.lifeStyle !== undefined ||
+      updateFields.diet ||
+      updateFields.smoking ||
+      updateFields.drinking ||
+      updateFields.living_with ||
+      updateFields.willing_to_relocate ||
+      updateFields.interests
+    ) {
+      const existingLife = currentCustomer.get("lifeStyle") || {};
+      const newLifeInput = updateFields.lifeStyle || {};
+      updateFields.lifeStyle = {
+        ...existingLife,
+        ...newLifeInput,
+        diet:
+          newLifeInput.diet !== undefined
+            ? newLifeInput.diet
+            : updateFields.diet !== undefined
+            ? updateFields.diet
+            : existingLife.diet || "",
+        smoking:
+          newLifeInput.smoking !== undefined
+            ? newLifeInput.smoking
+            : updateFields.smoking !== undefined
+            ? updateFields.smoking
+            : existingLife.smoking || "",
+        drinking:
+          newLifeInput.drinking !== undefined
+            ? newLifeInput.drinking
+            : updateFields.drinking !== undefined
+            ? updateFields.drinking
+            : existingLife.drinking || "",
+        living_with:
+          newLifeInput.living_with !== undefined
+            ? newLifeInput.living_with
+            : updateFields.living_with !== undefined
+            ? updateFields.living_with
+            : existingLife.living_with || "",
+        willing_to_relocate:
+          newLifeInput.willing_to_relocate !== undefined
+            ? newLifeInput.willing_to_relocate
+            : updateFields.willing_to_relocate !== undefined
+            ? updateFields.willing_to_relocate
+            : existingLife.willing_to_relocate || "",
+        interests:
+          newLifeInput.interests !== undefined
+            ? newLifeInput.interests
+            : updateFields.interests !== undefined
+            ? updateFields.interests
+            : existingLife.interests || "",
+      };
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -1298,6 +1351,17 @@ export async function handleCustomerCreate(req: Request, res: Response) {
         rawFam.about_family_tamil || req.body.about_family_tamil || "",
     };
 
+    const rawLife = req.body.lifeStyle || {};
+    const processedLifeStyle = {
+      diet: rawLife.diet || req.body.diet || "",
+      smoking: rawLife.smoking || req.body.smoking || "",
+      drinking: rawLife.drinking || req.body.drinking || "",
+      living_with: rawLife.living_with || req.body.living_with || "",
+      willing_to_relocate:
+        rawLife.willing_to_relocate || req.body.willing_to_relocate || "",
+      interests: rawLife.interests || req.body.interests || "",
+    };
+
     if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
       if (existing) {
@@ -1423,6 +1487,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       family_photos: processedFamilyPhotos,
       horoscopeDetails: processedHoroscopeDetails,
       familyBackground: processedFamilyBackground,
+      lifeStyle: processedLifeStyle,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

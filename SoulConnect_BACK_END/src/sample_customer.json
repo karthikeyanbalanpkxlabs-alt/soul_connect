@@ -64,6 +64,14 @@
     "family_values_details": "Conservative with modern outlook",
     "about_family": "We are a close-knit Tamil Brahmin family from Kumbakonam, now settled in Mylapore, Chennai."
   },
+  "lifeStyle": {
+    "diet": "Strict Vegetarian",
+    "smoking": "Non-Smoker",
+    "drinking": "Non-Drinker",
+    "living_with": "With Family",
+    "willing_to_relocate": "Yes, TN preferred",
+    "interests": "Yoga, Cooking, Trekking"
+  },
   "transaction": [
     {
       "payment_type": "razor_pay",
