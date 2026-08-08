@@ -202,6 +202,86 @@ export async function handleCustomerList(
   }
 }
 
+export async function handleCustomerTransactionList(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const filter: any = req.body.filter || {};
+    const limit = parseInt(req.body.limit) || 100;
+    const skip = parseInt(req.body.skip) || 0;
+
+    // Filter to only include documents that have transaction data
+    filter.$or = [
+      { "transaction.history.0": { $exists: true } },
+      { "transaction.0": { $exists: true } },
+    ];
+
+    const reqFilters = req.body.filters || {};
+    for (const key of Object.keys(reqFilters)) {
+      const val = reqFilters[key];
+      if (val !== undefined && val !== null && val !== "") {
+        let dbKey = key;
+        if (key === "firstName") dbKey = "first_name";
+        if (key === "lastName") dbKey = "last_name";
+        if (key === "name") {
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { first_name: { $regex: val, $options: "i" } },
+              { last_name: { $regex: val, $options: "i" } },
+              { firstName: { $regex: val, $options: "i" } },
+              { lastName: { $regex: val, $options: "i" } },
+            ],
+          });
+        } else {
+          filter[dbKey] = { $regex: val, $options: "i" };
+        }
+      }
+    }
+
+    let sortOption: any = { _id: -1 };
+    if (req.body.sort) {
+      if (typeof req.body.sort === "object") {
+        sortOption = req.body.sort;
+      } else if (typeof req.body.sort === "string") {
+        if (req.body.sort.toLowerCase() === "asc") {
+          sortOption = { _id: 1 };
+        } else if (req.body.sort.toLowerCase() === "desc") {
+          sortOption = { _id: -1 };
+        } else {
+          const direction = req.body.order === "asc" ? 1 : -1;
+          sortOption = { [req.body.sort]: direction };
+        }
+      }
+    } else if (req.body.order) {
+      if (req.body.order.toLowerCase() === "asc") {
+        sortOption = { _id: 1 };
+      } else {
+        sortOption = { _id: -1 };
+      }
+    }
+
+    const total = await Customers.countDocuments(filter);
+    const list = await Customers.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      total,
+      limit,
+      skip,
+      data: list,
+    });
+  } catch (err: any) {
+    console.error("transactions_list error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch transaction list" });
+  }
+}
+
 export async function handleCustomerDetail(req: Request, res: Response) {
   try {
     const { id, customer_id, email, keycloakId } = req.body;

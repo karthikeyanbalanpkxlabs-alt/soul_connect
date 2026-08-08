@@ -2,6 +2,7 @@ import { Router } from "express";
 import { keycloak } from "../keycloak-config";
 import {
   handleCustomerList,
+  handleCustomerTransactionList,
   handleCustomerDetail,
   handleCustomerDetailGet,
   handleProfileDetail,
@@ -31,8 +32,10 @@ const router = Router();
 
 // --- PROTECTED ROUTES ---
 
-router.post("/transactions_list", keycloak.protect(), (req, res) =>
-  handleCustomerList(req, res, false),
+router.post(
+  "/transactions_list",
+  keycloak.protect(),
+  handleCustomerTransactionList,
 );
 router.get(
   "/transactions_detail/:id",
@@ -84,6 +87,7 @@ router.get("/protected", keycloak.protect(), (req, res) => {
 router.post("/public/customer_list", (req, res) =>
   handleCustomerList(req, res, true),
 );
+router.post("/public/transactions_list", handleCustomerTransactionList);
 router.post("/public/customer_detail", handleCustomerDetail);
 router.get("/public/customer_detail/:id", handleCustomerDetailGet);
 router.post("/public/profile_detail", handleProfileDetail);
