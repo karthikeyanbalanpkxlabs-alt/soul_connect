@@ -6,7 +6,7 @@ import PaymentAccountModal from "@/components/PaymentAccountModal";
 import PaymentAccountDetailModal from "@/components/PaymentAccountDetailModal";
 import Toast from "@/components/Toast";
 import usePortalPaymentAccountPage from "./usePortalPaymentAccountPage";
-import { Eye, Pencil, Power, ShieldAlert, Plus, CreditCard } from "lucide-react";
+import { Eye, Pencil, ShieldAlert, Plus, CreditCard } from "lucide-react";
 
 function ListPage() {
   const stateProps = usePortalPaymentAccountPage();
@@ -89,20 +89,38 @@ function ListPage() {
     },
     {
       key: "is_active",
-      label: "Status",
+      label: "Active Status",
       isFilterable: true,
       render: (row: any) => {
         const isActive = !!row.is_active;
         return (
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-              isActive
-                ? "bg-emerald-100 text-emerald-700 font-semibold"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {isActive ? "Active" : "Inactive"}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => stateProps.onToggleStatus(row)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isActive ? "bg-emerald-500" : "bg-gray-300"
+              }`}
+              title={
+                isActive
+                  ? "Active - Click to deactivate"
+                  : "Inactive - Click to activate (Deactivates all other accounts)"
+              }
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  isActive ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+            <span
+              className={`text-xs font-bold tracking-wider ${
+                isActive ? "text-emerald-600 font-bold" : "text-gray-400 font-medium"
+              }`}
+            >
+              {isActive ? "Active" : "Inactive"}
+            </span>
+          </div>
         );
       },
     },
@@ -139,18 +157,6 @@ function ListPage() {
           >
             <Pencil size={13} />
             Edit
-          </button>
-          <button
-            onClick={() => stateProps.onToggleStatus(row)}
-            className={`transition flex items-center gap-1 font-medium cursor-pointer px-2.5 py-1 rounded-lg text-xs ${
-              row.is_active
-                ? "text-rose-600 hover:bg-rose-50 border border-rose-200"
-                : "text-emerald-600 hover:bg-emerald-50 border border-emerald-200"
-            }`}
-            title={row.is_active ? "Deactivate Account" : "Activate Account"}
-          >
-            <Power size={13} />
-            {row.is_active ? "Deactivate" : "Activate"}
           </button>
         </div>
       ),

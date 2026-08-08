@@ -75,12 +75,19 @@ export async function handlePaymentAccountCreate(req: Request, res: Response) {
       });
     }
 
+    const shouldBeActive = is_active !== undefined ? !!is_active : true;
+
+    // SINGLE ACTIVE ACCOUNT RULE: Deactivate all other accounts if this account is active
+    if (shouldBeActive) {
+      await PaymentAccount.updateMany({}, { $set: { is_active: false } });
+    }
+
     const now = new Date();
     const newAccount = new PaymentAccount({
       account_name: account_name.trim(),
       provider: provider.trim(),
       config: config || {},
-      is_active: is_active !== undefined ? !!is_active : true,
+      is_active: shouldBeActive,
       created_at: now,
       updated_at: now,
     });
@@ -139,6 +146,14 @@ export async function handlePaymentAccountEdit(req: Request, res: Response) {
     if (provider !== undefined) updateFields.provider = provider.trim();
     if (config !== undefined) updateFields.config = config;
     if (is_active !== undefined) updateFields.is_active = !!is_active;
+
+    // SINGLE ACTIVE ACCOUNT RULE: Deactivate all other accounts if this account is active
+    if (is_active === true) {
+      await PaymentAccount.updateMany(
+        { _id: { $ne: targetId } },
+        { $set: { is_active: false } },
+      );
+    }
 
     const updatedAccount = await PaymentAccount.findByIdAndUpdate(
       targetId,

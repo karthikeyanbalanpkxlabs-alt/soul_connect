@@ -142,6 +142,20 @@ export default function usePortalPaymentAccountPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
+      // Optimistically set active status if creating/editing as active
+      if (formData.is_active) {
+        const targetId = formData.id || formData._id;
+        setRows((prevRows) =>
+          prevRows.map((r) => {
+            const currentId = r._id || r.id;
+            if (targetId && currentId === targetId) {
+              return { ...r, is_active: true };
+            }
+            return { ...r, is_active: false };
+          }),
+        );
+      }
+
       const res = await fetch(configUrls?.apiUrl + endpoint, {
         method: "POST",
         headers,
@@ -164,22 +178,48 @@ export default function usePortalPaymentAccountPage() {
       loadPaymentAccounts();
     } catch (err: any) {
       showToast(err.message || "Error saving payment account", "error");
+      loadPaymentAccounts();
       throw err;
     }
   };
 
   const onToggleStatus = async (account: any) => {
     try {
+      const targetId = account._id || account.id;
       const updatedStatus = !account.is_active;
+
+      // INSTANT OPTIMISTIC UPDATE: If activating this account, set all other accounts to inactive immediately
+      setRows((prevRows) =>
+        prevRows.map((r) => {
+          const currentId = r._id || r.id;
+          if (currentId === targetId) {
+            return { ...r, is_active: updatedStatus };
+          } else if (updatedStatus) {
+            return { ...r, is_active: false };
+          }
+          return r;
+        }),
+      );
+
       await onSaveAccount({
-        id: account._id || account.id,
+        id: targetId,
         account_name: account.account_name,
         provider: account.provider,
         is_active: updatedStatus,
         config: account.config,
       });
+
+      if (updatedStatus) {
+        showToast(
+          `'${account.account_name}' activated! All other accounts are now deactivated.`,
+          "success",
+        );
+      } else {
+        showToast(`'${account.account_name}' deactivated.`, "info");
+      }
     } catch (err: any) {
       console.error("onToggleStatus error:", err);
+      loadPaymentAccounts();
     }
   };
 
