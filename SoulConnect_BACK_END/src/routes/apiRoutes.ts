@@ -34,7 +34,11 @@ import {
   handlePaymentAccountDetail,
   handlePaymentAccountDetailGet,
 } from "../controllers/paymentAccountController";
-import { handleMakePayment } from "../controllers/paymentController";
+import {
+  handleMakePayment,
+  handleCreateRazorpayOrder,
+  handleRazorpayWebhook,
+} from "../controllers/paymentController";
 
 const router = Router();
 
