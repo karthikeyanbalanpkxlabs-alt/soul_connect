@@ -34,6 +34,7 @@ import {
   handlePaymentAccountDetail,
   handlePaymentAccountDetailGet,
 } from "../controllers/paymentAccountController";
+import { handleMakePayment } from "../controllers/paymentController";
 
 const router = Router();
 
@@ -87,14 +88,48 @@ router.post("/users", keycloak.protect(), handleCreateUser);
 router.put("/users/:id", keycloak.protect(), handleUpdateUser);
 
 // --- PAYMENT ACCOUNT ROUTES ---
-router.post("/payment_account_list", keycloak.protect(), handlePaymentAccountList);
-router.get("/payment_account_list", keycloak.protect(), handlePaymentAccountList);
-router.post("/payment_account/create", keycloak.protect(), handlePaymentAccountCreate);
-router.post("/payment_account_create", keycloak.protect(), handlePaymentAccountCreate);
-router.post("/payment_account/edit", keycloak.protect(), handlePaymentAccountEdit);
-router.post("/payment_account_edit", keycloak.protect(), handlePaymentAccountEdit);
-router.post("/payment_account_detail", keycloak.protect(), handlePaymentAccountDetail);
-router.get("/payment_account_detail/:id", keycloak.protect(), handlePaymentAccountDetailGet);
+router.post(
+  "/payment_account_list",
+  keycloak.protect(),
+  handlePaymentAccountList,
+);
+router.get(
+  "/payment_account_list",
+  keycloak.protect(),
+  handlePaymentAccountList,
+);
+router.post(
+  "/payment_account/create",
+  keycloak.protect(),
+  handlePaymentAccountCreate,
+);
+router.post(
+  "/payment_account_create",
+  keycloak.protect(),
+  handlePaymentAccountCreate,
+);
+router.post(
+  "/payment_account/edit",
+  keycloak.protect(),
+  handlePaymentAccountEdit,
+);
+router.post(
+  "/payment_account_edit",
+  keycloak.protect(),
+  handlePaymentAccountEdit,
+);
+router.post(
+  "/payment_account_detail",
+  keycloak.protect(),
+  handlePaymentAccountDetail,
+);
+router.get(
+  "/payment_account_detail/:id",
+  keycloak.protect(),
+  handlePaymentAccountDetailGet,
+);
+router.post("/makePayment", keycloak.protect(), handleMakePayment);
+router.post("/make_payment", keycloak.protect(), handleMakePayment);
 
 router.get("/protected", keycloak.protect(), (req, res) => {
   res.json({ message: "Hello Protected World!" });
@@ -126,6 +161,10 @@ router.post("/public/payment_account_create", handlePaymentAccountCreate);
 router.post("/public/payment_account_edit", handlePaymentAccountEdit);
 router.post("/public/payment_account_detail", handlePaymentAccountDetail);
 router.get("/public/payment_account_detail/:id", handlePaymentAccountDetailGet);
+
+router.post("/public/makePayment", handleMakePayment);
+router.post("/public/make_payment", handleMakePayment);
+router.post("/makePayment", handleMakePayment);
 
 router.get("/public", (req, res) => {
   res.json({ message: "Hello Public World!" });
