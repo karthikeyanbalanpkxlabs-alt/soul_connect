@@ -27,6 +27,13 @@ import {
   handleSendOTP,
   handleVerifyOTP,
 } from "../controllers/verificationController";
+import {
+  handlePaymentAccountList,
+  handlePaymentAccountCreate,
+  handlePaymentAccountEdit,
+  handlePaymentAccountDetail,
+  handlePaymentAccountDetailGet,
+} from "../controllers/paymentAccountController";
 
 const router = Router();
 
@@ -79,6 +86,16 @@ router.get("/users", keycloak.protect(), handleGetUsers);
 router.post("/users", keycloak.protect(), handleCreateUser);
 router.put("/users/:id", keycloak.protect(), handleUpdateUser);
 
+// --- PAYMENT ACCOUNT ROUTES ---
+router.post("/payment_account_list", keycloak.protect(), handlePaymentAccountList);
+router.get("/payment_account_list", keycloak.protect(), handlePaymentAccountList);
+router.post("/payment_account/create", keycloak.protect(), handlePaymentAccountCreate);
+router.post("/payment_account_create", keycloak.protect(), handlePaymentAccountCreate);
+router.post("/payment_account/edit", keycloak.protect(), handlePaymentAccountEdit);
+router.post("/payment_account_edit", keycloak.protect(), handlePaymentAccountEdit);
+router.post("/payment_account_detail", keycloak.protect(), handlePaymentAccountDetail);
+router.get("/payment_account_detail/:id", keycloak.protect(), handlePaymentAccountDetailGet);
+
 router.get("/protected", keycloak.protect(), (req, res) => {
   res.json({ message: "Hello Protected World!" });
 });
@@ -102,6 +119,13 @@ router.post("/public/subscription/create", handleSubscriptionCreate);
 router.post("/public/subscription/edit", handleSubscriptionEdit);
 router.get("/public/dashboard_analytics", handleDashboardAnalytics);
 router.post("/public/dashboard_analytics", handleDashboardAnalytics);
+
+router.post("/public/payment_account_list", handlePaymentAccountList);
+router.get("/public/payment_account_list", handlePaymentAccountList);
+router.post("/public/payment_account_create", handlePaymentAccountCreate);
+router.post("/public/payment_account_edit", handlePaymentAccountEdit);
+router.post("/public/payment_account_detail", handlePaymentAccountDetail);
+router.get("/public/payment_account_detail/:id", handlePaymentAccountDetailGet);
 
 router.get("/public", (req, res) => {
   res.json({ message: "Hello Public World!" });

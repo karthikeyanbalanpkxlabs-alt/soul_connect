@@ -13,6 +13,7 @@ import {
   X,
   ReceiptText,
   CircleDollarSign,
+  CreditCard,
 } from "lucide-react";
 
 import keycloak from "../lib/keycloak";
@@ -35,6 +36,16 @@ export default function SideBarKit({ children }: SideBarKitProps) {
     setMobileOpen(false);
   }, [pathname]);
 
+  const tokenParsed: any = keycloak?.tokenParsed;
+
+  let roles =
+    tokenParsed?.realm_access?.roles?.filter(
+      (role: string) => role === "manager_g" || role === "customer_g",
+    ) || [];
+
+  const role = roles.length > 0 ? roles[0] : "no_roles";
+  const isManager = role.includes("manager") || profile?.role === "manager_g";
+
   const menus = [
     {
       name: "Dashboard",
@@ -56,21 +67,21 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       icon: CircleDollarSign,
       router: "/portal/subscription",
     },
+    ...(isManager
+      ? [
+          {
+            name: "Payment Account",
+            icon: CreditCard,
+            router: "/portal/payment_account",
+          },
+        ]
+      : []),
     {
       name: "Profile",
       icon: Settings,
       router: "/portal/profile",
     },
   ];
-
-  const tokenParsed: any = keycloak?.tokenParsed;
-
-  let roles =
-    tokenParsed?.realm_access?.roles?.filter(
-      (role: string) => role === "manager_g" || role === "customer_g",
-    ) || [];
-
-  const role = roles.length > 0 ? roles[0] : "no_roles";
 
   const isPortalUser =
     role.includes("manager") && pathname.startsWith("/portal");
