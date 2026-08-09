@@ -2,6 +2,7 @@ import { Router } from "express";
 import { keycloak } from "../keycloak-config";
 import {
   handleCustomerList,
+  handleCustomerTransactionList,
   handleCustomerDetail,
   handleCustomerDetailGet,
   handleProfileDetail,
@@ -26,13 +27,27 @@ import {
   handleSendOTP,
   handleVerifyOTP,
 } from "../controllers/verificationController";
+import {
+  handlePaymentAccountList,
+  handlePaymentAccountCreate,
+  handlePaymentAccountEdit,
+  handlePaymentAccountDetail,
+  handlePaymentAccountDetailGet,
+} from "../controllers/paymentAccountController";
+import {
+  handleMakePayment,
+  handleCreateRazorpayOrder,
+  handleRazorpayWebhook,
+} from "../controllers/paymentController";
 
 const router = Router();
 
 // --- PROTECTED ROUTES ---
 
-router.post("/transactions_list", keycloak.protect(), (req, res) =>
-  handleCustomerList(req, res, false),
+router.post(
+  "/transactions_list",
+  keycloak.protect(),
+  handleCustomerTransactionList,
 );
 router.get(
   "/transactions_detail/:id",
@@ -76,6 +91,50 @@ router.get("/users", keycloak.protect(), handleGetUsers);
 router.post("/users", keycloak.protect(), handleCreateUser);
 router.put("/users/:id", keycloak.protect(), handleUpdateUser);
 
+// --- PAYMENT ACCOUNT ROUTES ---
+router.post(
+  "/payment_account_list",
+  keycloak.protect(),
+  handlePaymentAccountList,
+);
+router.get(
+  "/payment_account_list",
+  keycloak.protect(),
+  handlePaymentAccountList,
+);
+router.post(
+  "/payment_account/create",
+  keycloak.protect(),
+  handlePaymentAccountCreate,
+);
+router.post(
+  "/payment_account_create",
+  keycloak.protect(),
+  handlePaymentAccountCreate,
+);
+router.post(
+  "/payment_account/edit",
+  keycloak.protect(),
+  handlePaymentAccountEdit,
+);
+router.post(
+  "/payment_account_edit",
+  keycloak.protect(),
+  handlePaymentAccountEdit,
+);
+router.post(
+  "/payment_account_detail",
+  keycloak.protect(),
+  handlePaymentAccountDetail,
+);
+router.get(
+  "/payment_account_detail/:id",
+  keycloak.protect(),
+  handlePaymentAccountDetailGet,
+);
+router.post("/makePayment", keycloak.protect(), handleMakePayment);
+router.post("/make_payment", keycloak.protect(), handleMakePayment);
+
 router.get("/protected", keycloak.protect(), (req, res) => {
   res.json({ message: "Hello Protected World!" });
 });
@@ -84,6 +143,7 @@ router.get("/protected", keycloak.protect(), (req, res) => {
 router.post("/public/customer_list", (req, res) =>
   handleCustomerList(req, res, true),
 );
+router.post("/public/transactions_list", handleCustomerTransactionList);
 router.post("/public/customer_detail", handleCustomerDetail);
 router.get("/public/customer_detail/:id", handleCustomerDetailGet);
 router.post("/public/profile_detail", handleProfileDetail);
@@ -98,6 +158,17 @@ router.post("/public/subscription/create", handleSubscriptionCreate);
 router.post("/public/subscription/edit", handleSubscriptionEdit);
 router.get("/public/dashboard_analytics", handleDashboardAnalytics);
 router.post("/public/dashboard_analytics", handleDashboardAnalytics);
+
+router.post("/public/payment_account_list", handlePaymentAccountList);
+router.get("/public/payment_account_list", handlePaymentAccountList);
+router.post("/public/payment_account_create", handlePaymentAccountCreate);
+router.post("/public/payment_account_edit", handlePaymentAccountEdit);
+router.post("/public/payment_account_detail", handlePaymentAccountDetail);
+router.get("/public/payment_account_detail/:id", handlePaymentAccountDetailGet);
+
+router.post("/public/makePayment", handleMakePayment);
+router.post("/public/make_payment", handleMakePayment);
+router.post("/makePayment", handleMakePayment);
 
 router.get("/public", (req, res) => {
   res.json({ message: "Hello Public World!" });

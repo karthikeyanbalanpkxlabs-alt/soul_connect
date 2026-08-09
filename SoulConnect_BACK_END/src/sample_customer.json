@@ -64,6 +64,35 @@
     "family_values_details": "Conservative with modern outlook",
     "about_family": "We are a close-knit Tamil Brahmin family from Kumbakonam, now settled in Mylapore, Chennai."
   },
+  "lifeStyle": {
+    "diet": "Strict Vegetarian",
+    "smoking": "Non-Smoker",
+    "drinking": "Non-Drinker",
+    "living_with": "With Family",
+    "willing_to_relocate": "Yes, TN preferred",
+    "interests": "Yoga, Cooking, Trekking"
+  },
+  "partnerPreferencesDetails": {
+    "age_range": "27 – 33 yrs",
+    "age_flexible": "flexible",
+    "height": "5'7\" and above",
+    "marital_status": "Never Married preferred",
+    "diet": "Vegetarian only",
+    "smoking": "Non-Smoker",
+    "drinking": "Non-Drinker preferred",
+    "drinking_flexible": "flexible",
+    "education": "Graduate & above",
+    "occupation": "Any professional field",
+    "income": "₹8L+ per year",
+    "religion": "Hindu preferred",
+    "caste": "Tamil Brahmin preferred",
+    "caste_open": "open",
+    "location": "Tamil Nadu or willing to relocate",
+    "living_setup": "Open to joint or nuclear family",
+    "values": "Family-oriented, respectful, grounded",
+    "personality": "Honest, emotionally mature, ambitious",
+    "overview": "Like we mentioned before, your values often inform your dating preferences – someone religious isn't likely to want to date an atheist, for instance"
+  },
   "transaction": [
     {
       "payment_type": "razor_pay",

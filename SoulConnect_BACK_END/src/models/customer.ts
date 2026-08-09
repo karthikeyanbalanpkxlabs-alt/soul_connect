@@ -14,6 +14,8 @@ const customerSchema = new mongoose.Schema(
     family_photos: mongoose.Schema.Types.Mixed,
     horoscopeDetails: mongoose.Schema.Types.Mixed,
     familyBackground: mongoose.Schema.Types.Mixed,
+    lifeStyle: mongoose.Schema.Types.Mixed,
+    partnerPreferencesDetails: mongoose.Schema.Types.Mixed,
     blood_group: String,
     additional_report_info: String,
     public_verify_command_helper: String,

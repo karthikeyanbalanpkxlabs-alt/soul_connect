@@ -110,6 +110,31 @@ export async function handleCustomerList(
           }
         } else if (key === "gender") {
           filter[dbKey] = { $regex: `^${val}$`, $options: "i" };
+        } else if (key === "star" || key === "rasi" || key === "lagnam" || key === "gothram" || key === "dosham") {
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { [key]: { $regex: val, $options: "i" } },
+              { [`horoscopeDetails.${key}`]: { $regex: val, $options: "i" } },
+            ],
+          });
+        } else if (key === "diet" || key === "smoking" || key === "drinking" || key === "living_with" || key === "willing_to_relocate" || key === "interests") {
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { [key]: { $regex: val, $options: "i" } },
+              { [`lifeStyle.${key}`]: { $regex: val, $options: "i" } },
+            ],
+          });
+        } else if (key.startsWith("pref_") || key.startsWith("partner_pref_")) {
+          const actualPrefKey = key.replace(/^(pref_|partner_pref_)/, "");
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { [`partnerPreferencesDetails.${actualPrefKey}`]: { $regex: val, $options: "i" } },
+              { partner_preference: { $regex: val, $options: "i" } },
+            ],
+          });
         } else {
           filter[dbKey] = { $regex: val, $options: "i" };
         }
@@ -174,6 +199,86 @@ export async function handleCustomerList(
     res
       .status(500)
       .json({ error: err.message || "Failed to fetch customer list" });
+  }
+}
+
+export async function handleCustomerTransactionList(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const filter: any = req.body.filter || {};
+    const limit = parseInt(req.body.limit) || 100;
+    const skip = parseInt(req.body.skip) || 0;
+
+    // Filter to only include documents that have transaction data
+    filter.$or = [
+      { "transaction.history.0": { $exists: true } },
+      { "transaction.0": { $exists: true } },
+    ];
+
+    const reqFilters = req.body.filters || {};
+    for (const key of Object.keys(reqFilters)) {
+      const val = reqFilters[key];
+      if (val !== undefined && val !== null && val !== "") {
+        let dbKey = key;
+        if (key === "firstName") dbKey = "first_name";
+        if (key === "lastName") dbKey = "last_name";
+        if (key === "name") {
+          filter.$and = filter.$and || [];
+          filter.$and.push({
+            $or: [
+              { first_name: { $regex: val, $options: "i" } },
+              { last_name: { $regex: val, $options: "i" } },
+              { firstName: { $regex: val, $options: "i" } },
+              { lastName: { $regex: val, $options: "i" } },
+            ],
+          });
+        } else {
+          filter[dbKey] = { $regex: val, $options: "i" };
+        }
+      }
+    }
+
+    let sortOption: any = { _id: -1 };
+    if (req.body.sort) {
+      if (typeof req.body.sort === "object") {
+        sortOption = req.body.sort;
+      } else if (typeof req.body.sort === "string") {
+        if (req.body.sort.toLowerCase() === "asc") {
+          sortOption = { _id: 1 };
+        } else if (req.body.sort.toLowerCase() === "desc") {
+          sortOption = { _id: -1 };
+        } else {
+          const direction = req.body.order === "asc" ? 1 : -1;
+          sortOption = { [req.body.sort]: direction };
+        }
+      }
+    } else if (req.body.order) {
+      if (req.body.order.toLowerCase() === "asc") {
+        sortOption = { _id: 1 };
+      } else {
+        sortOption = { _id: -1 };
+      }
+    }
+
+    const total = await Customers.countDocuments(filter);
+    const list = await Customers.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      total,
+      limit,
+      skip,
+      data: list,
+    });
+  } catch (err: any) {
+    console.error("transactions_list error:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch transaction list" });
   }
 }
 
@@ -1082,6 +1187,68 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       };
     }
 
+    if (
+      updateFields.lifeStyle !== undefined ||
+      updateFields.diet ||
+      updateFields.smoking ||
+      updateFields.drinking ||
+      updateFields.living_with ||
+      updateFields.willing_to_relocate ||
+      updateFields.interests
+    ) {
+      const existingLife = currentCustomer.get("lifeStyle") || {};
+      const newLifeInput = updateFields.lifeStyle || {};
+      updateFields.lifeStyle = {
+        ...existingLife,
+        ...newLifeInput,
+        diet:
+          newLifeInput.diet !== undefined
+            ? newLifeInput.diet
+            : updateFields.diet !== undefined
+            ? updateFields.diet
+            : existingLife.diet || "",
+        smoking:
+          newLifeInput.smoking !== undefined
+            ? newLifeInput.smoking
+            : updateFields.smoking !== undefined
+            ? updateFields.smoking
+            : existingLife.smoking || "",
+        drinking:
+          newLifeInput.drinking !== undefined
+            ? newLifeInput.drinking
+            : updateFields.drinking !== undefined
+            ? updateFields.drinking
+            : existingLife.drinking || "",
+        living_with:
+          newLifeInput.living_with !== undefined
+            ? newLifeInput.living_with
+            : updateFields.living_with !== undefined
+            ? updateFields.living_with
+            : existingLife.living_with || "",
+        willing_to_relocate:
+          newLifeInput.willing_to_relocate !== undefined
+            ? newLifeInput.willing_to_relocate
+            : updateFields.willing_to_relocate !== undefined
+            ? updateFields.willing_to_relocate
+            : existingLife.willing_to_relocate || "",
+        interests:
+          newLifeInput.interests !== undefined
+            ? newLifeInput.interests
+            : updateFields.interests !== undefined
+            ? updateFields.interests
+            : existingLife.interests || "",
+      };
+    }
+
+    if (updateFields.partnerPreferencesDetails !== undefined) {
+      const existingPref = currentCustomer.get("partnerPreferencesDetails") || {};
+      const newPrefInput = updateFields.partnerPreferencesDetails || {};
+      updateFields.partnerPreferencesDetails = {
+        ...existingPref,
+        ...newPrefInput,
+      };
+    }
+
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
@@ -1298,6 +1465,40 @@ export async function handleCustomerCreate(req: Request, res: Response) {
         rawFam.about_family_tamil || req.body.about_family_tamil || "",
     };
 
+    const rawLife = req.body.lifeStyle || {};
+    const processedLifeStyle = {
+      diet: rawLife.diet || req.body.diet || "",
+      smoking: rawLife.smoking || req.body.smoking || "",
+      drinking: rawLife.drinking || req.body.drinking || "",
+      living_with: rawLife.living_with || req.body.living_with || "",
+      willing_to_relocate:
+        rawLife.willing_to_relocate || req.body.willing_to_relocate || "",
+      interests: rawLife.interests || req.body.interests || "",
+    };
+
+    const rawPref = req.body.partnerPreferencesDetails || {};
+    const processedPartnerPreferencesDetails = {
+      age_range: rawPref.age_range || "",
+      age_flexible: rawPref.age_flexible || "",
+      height: rawPref.height || "",
+      marital_status: rawPref.marital_status || "",
+      diet: rawPref.diet || "",
+      smoking: rawPref.smoking || "",
+      drinking: rawPref.drinking || "",
+      drinking_flexible: rawPref.drinking_flexible || "",
+      education: rawPref.education || "",
+      occupation: rawPref.occupation || "",
+      income: rawPref.income || "",
+      religion: rawPref.religion || "",
+      caste: rawPref.caste || "",
+      caste_open: rawPref.caste_open || "",
+      location: rawPref.location || "",
+      living_setup: rawPref.living_setup || "",
+      values: rawPref.values || "",
+      personality: rawPref.personality || "",
+      overview: rawPref.overview || "",
+    };
+
     if (email && email.trim() !== "") {
       const existing = await Customers.findOne({ email });
       if (existing) {
@@ -1423,6 +1624,8 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       family_photos: processedFamilyPhotos,
       horoscopeDetails: processedHoroscopeDetails,
       familyBackground: processedFamilyBackground,
+      lifeStyle: processedLifeStyle,
+      partnerPreferencesDetails: processedPartnerPreferencesDetails,
       role,
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),

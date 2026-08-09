@@ -28,6 +28,13 @@ function usePortalCustomerPage() {
   const [limit, setLimit] = React.useState(10);
   const [total, setTotal] = React.useState(0);
   const [filters, setFilters] = React.useState<Record<string, string>>({});
+  const [sortField, setSortField] = React.useState<string>("");
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
+
+  const handleSortChange = (field: string, order: "asc" | "desc") => {
+    setSortField(field);
+    setSortOrder(order);
+  };
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<any>(null);
   const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
@@ -411,6 +418,8 @@ function usePortalCustomerPage() {
           skip,
           limit,
           filters,
+          sort: sortField,
+          order: sortOrder,
         }),
       })
         .then((r) => r.json())
@@ -619,7 +628,7 @@ function usePortalCustomerPage() {
     } else {
       loadCustomers();
     }
-  }, [skip, limit, filters]);
+  }, [skip, limit, filters, sortField, sortOrder]);
 
   return {
     getRoles,
@@ -658,6 +667,11 @@ function usePortalCustomerPage() {
     onHandleClickCreateClientPublic,
     toast,
     setToast,
+    sortField,
+    setSortField,
+    sortOrder,
+    setSortOrder,
+    handleSortChange,
   };
 }
 

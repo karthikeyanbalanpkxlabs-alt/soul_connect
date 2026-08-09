@@ -28,21 +28,18 @@ function CardPage() {
   const stateProps = usePortalPage();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Latest");
-  const [getLoader, setLoader] = useState(false)
+  const [getLoader, setLoader] = useState(false);
   const tabs = ["Latest", "Popular", "Trending", "Best"];
-
 
   useEffect(() => {
     setTimeout(() => {
-      setLoader(true)
-    }, 2000)
+      setLoader(true);
+    }, 2000);
 
     return () => {
-      setLoader(false)
-    }
-
-  }, [])
-
+      setLoader(false);
+    };
+  }, []);
 
   const handleView = (id: string) => {
     router.push(`/portal/customer_detail?id=${id}`);
@@ -65,16 +62,17 @@ function CardPage() {
           ? profile.family_photos[0]
           : profile.family_photos[0]?.url
         : profile?.family_photo
-        ? typeof profile.family_photo === "string"
-          ? profile.family_photo
-          : profile.family_photo?.url
-        : null;
+          ? typeof profile.family_photo === "string"
+            ? profile.family_photo
+            : profile.family_photo?.url
+          : null;
     const hasFamilyPhoto = !!familyPhotoUrl;
 
     const horoObj = profile?.horoscopeDetails || {};
     const starVal = horoObj.star || profile?.star;
     const rasiVal = horoObj.rasi || profile?.rasi;
-    const jathagamUrl = horoObj.jathagam?.url || horoObj.jathagam || profile?.jathagam;
+    const jathagamUrl =
+      horoObj.jathagam?.url || horoObj.jathagam || profile?.jathagam;
     const hasHoroscope = !!(starVal || rasiVal || jathagamUrl);
 
     const famObj = profile?.familyBackground || {};
@@ -83,9 +81,37 @@ function CardPage() {
     const famTypeVal = famObj.family_type || profile?.family_type;
     const famStatusVal = famObj.family_status || profile?.family_status;
     const famAddressVal = famObj.family_address || profile?.family_address;
-    const hasFamilyBackground = !!(fatherVal || motherVal || famTypeVal || famStatusVal || famAddressVal);
+    const hasFamilyBackground = !!(
+      fatherVal ||
+      motherVal ||
+      famTypeVal ||
+      famStatusVal ||
+      famAddressVal
+    );
 
-    const allStepsComplete = hasIdProof && hasFamilyPhoto && hasHoroscope && hasFamilyBackground;
+    const lifeObj = profile?.lifeStyle || {};
+    const dietVal = lifeObj.diet || profile?.diet;
+    const smokingVal = lifeObj.smoking || profile?.smoking;
+    const drinkingVal = lifeObj.drinking || profile?.drinking;
+    const livingWithVal = lifeObj.living_with || profile?.living_with;
+    const relocateVal =
+      lifeObj.willing_to_relocate || profile?.willing_to_relocate;
+    const interestsVal = lifeObj.interests || profile?.interests;
+    const hasLifestyle = !!(
+      dietVal ||
+      smokingVal ||
+      drinkingVal ||
+      livingWithVal ||
+      relocateVal ||
+      interestsVal
+    );
+
+    const allStepsComplete =
+      hasIdProof &&
+      hasFamilyPhoto &&
+      hasHoroscope &&
+      hasFamilyBackground &&
+      hasLifestyle;
 
     return (
       <div className="py-12 px-4 max-w-3xl mx-auto">
@@ -139,10 +165,11 @@ function CardPage() {
               {/* Step 2 */}
               <div className="relative">
                 <span
-                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${hasIdProof
-                    ? "bg-emerald-500 text-white"
-                    : "bg-amber-500 text-white animate-pulse"
-                    }`}
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasIdProof
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
                 >
                   {hasIdProof ? (
                     <Check className="w-4 h-4" />
@@ -265,9 +292,12 @@ function CardPage() {
                           ⭐
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-slate-800">Horoscope Verified</p>
+                          <p className="text-xs font-bold text-slate-800">
+                            Horoscope Verified
+                          </p>
                           <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
-                            ✓ Star: {starVal || "Provided"} {rasiVal ? `| Rasi: ${rasiVal}` : ""}
+                            ✓ Star: {starVal || "Provided"}{" "}
+                            {rasiVal ? `| Rasi: ${rasiVal}` : ""}
                           </p>
                         </div>
                       </div>
@@ -315,9 +345,16 @@ function CardPage() {
                           🏠
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-slate-800">Family Background Verified</p>
+                          <p className="text-xs font-bold text-slate-800">
+                            Family Background Verified
+                          </p>
                           <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
-                            ✓ {fatherVal ? `Father: ${fatherVal}` : famStatusVal ? `Status: ${famStatusVal}` : "Details Provided"}
+                            ✓{" "}
+                            {fatherVal
+                              ? `Father: ${fatherVal}`
+                              : famStatusVal
+                                ? `Status: ${famStatusVal}`
+                                : "Details Provided"}
                           </p>
                         </div>
                       </div>
@@ -326,7 +363,64 @@ function CardPage() {
                 </div>
               </div>
 
-              {/* Step 6 */}
+              {/* Lifestyle Details */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasLifestyle
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasLifestyle ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Lifestyle Details
+                    </h4>
+                    {!hasLifestyle && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasLifestyle
+                      ? "Lifestyle habits and personal preferences provided."
+                      : "Please add your Lifestyle details (Diet, Smoking, Drinking, Living arrangements, Relocation, Interests) in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasLifestyle && (
+                      <div className="flex items-center gap-3 p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                          🌿
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            Lifestyle Verified
+                          </p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓{" "}
+                            {dietVal
+                              ? `Diet: ${dietVal}`
+                              : interestsVal
+                                ? `Interests: ${interestsVal}`
+                                : "Details Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Manual Verification Check */}
               <div className="relative">
                 <span
                   className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
@@ -347,8 +441,8 @@ function CardPage() {
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
                     {allStepsComplete
-                      ? "Our admin panel is verifying your documents, family photo, horoscope, and family background."
-                      : "Awaiting ID proof, family photo, horoscope & family background submission before review can begin."}
+                      ? "Our admin panel is verifying your documents, family photo, horoscope, family background, and lifestyle details."
+                      : "Awaiting ID proof, family photo, horoscope, family background & lifestyle submission before review can begin."}
                   </p>
                 </div>
               </div>
@@ -414,76 +508,79 @@ function CardPage() {
     );
   };
   return (
-
     <>
-      {getLoader ? <div style={{marginTop:60}} className="p-6 md:p-10 max-w-[1600px] mx-auto bg-white min-h-screen">
-        {profile?.public_verify ? (
-          <>
-            {/* Top action buttons */}
-            <div className="mb-8 flex items-center justify-between border-b pb-4">
-              <h1 className="font-serif text-3xl  text-gray-800">
-                Your Match Profiles
-              </h1>
-              {stateProps?.getRoles?.includes("manager") && (
-                <div className="flex gap-4">
-                  <button
-                    className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
-                    onClick={stateProps?.onHandleClickCreateCustomer}
-                  >
-                    + Create
-                  </button>
-                  <button
+      {getLoader ? (
+        <div
+          style={{ marginTop: 60 }}
+          className="p-6 md:p-10 max-w-[1600px] mx-auto bg-white min-h-screen"
+        >
+          {profile?.public_verify ? (
+            <>
+              {/* Top action buttons */}
+              <div className="mb-8 flex items-center justify-between border-b pb-4">
+                <h1 className="font-serif text-3xl  text-gray-800">
+                  Your Match Profiles
+                </h1>
+                {stateProps?.getRoles?.includes("manager") && (
+                  <div className="flex gap-4">
+                    <button
+                      className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
+                      onClick={stateProps?.onHandleClickCreateCustomer}
+                    >
+                      + Create
+                    </button>
+                    {/* <button
                     className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
                     onClick={stateProps?.onHandleClickCreateClient}
                   >
                     + Create Client
-                  </button>
-                  {stateProps?.getRoles?.includes("manager") && (
-                    <button
-                      className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
-                      onClick={stateProps?.onHandleClickCreateManager}
-                    >
-                      + Create Manager
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col lg:flex-row items-start">
-              {/* Left Sidebar */}
-              <FilterSidebar
-                filters={stateProps?.filters}
-                onFilterChange={stateProps?.handleFilterChange}
-              />
-
-              {/* Right Content */}
-              <div className="flex-1 w-full lg:w-auto mt-8 lg:mt-0">
-                {/* Breadcrumbs & Title */}
-                <div className="mb-6">
-                  <div className="text-sm text-gray-500 mb-2">
-                    <span className="hover:text-gray-800 cursor-pointer transition-colors">
-                      Home
-                    </span>{" "}
-                    |{" "}
-                    <span className="text-gray-800 font-medium cursor-pointer">
-                      Latest
-                    </span>{" "}
-                    |{" "}
-                    <span className="hover:text-gray-800 cursor-pointer transition-colors">
-                      Popular
-                    </span>
+                  </button> */}
+                    {stateProps?.getRoles?.includes("manager") && (
+                      <button
+                        className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
+                        onClick={stateProps?.onHandleClickCreateManager}
+                      >
+                        + Create Manager
+                      </button>
+                    )}
                   </div>
-                  {/* <p className="text-gray-600 text-sm">
+                )}
+              </div>
+
+              <div className="flex flex-col lg:flex-row items-start">
+                {/* Left Sidebar */}
+                <FilterSidebar
+                  filters={stateProps?.filters}
+                  onFilterChange={stateProps?.handleFilterChange}
+                />
+
+                {/* Right Content */}
+                <div className="flex-1 w-full lg:w-auto mt-8 lg:mt-0">
+                  {/* Breadcrumbs & Title */}
+                  <div className="mb-6">
+                    <div className="text-sm text-gray-500 mb-2">
+                      <span className="hover:text-gray-800 cursor-pointer transition-colors">
+                        Home
+                      </span>{" "}
+                      |{" "}
+                      <span className="text-gray-800 font-medium cursor-pointer">
+                        Latest
+                      </span>{" "}
+                      |{" "}
+                      <span className="hover:text-gray-800 cursor-pointer transition-colors">
+                        Popular
+                      </span>
+                    </div>
+                    {/* <p className="text-gray-600 text-sm">
               <strong className="text-gray-800 font-medium">
                 Sed Dignissim Lacinia Nunc
               </strong>{" "}
               (Fusce tellus sed augue semper porta)
             </p> */}
-                </div>
+                  </div>
 
-                {/* Tabs */}
-                {/* <div className="flex bg-gray-100 rounded overflow-hidden mb-8 w-fit border border-gray-200">
+                  {/* Tabs */}
+                  {/* <div className="flex bg-gray-100 rounded overflow-hidden mb-8 w-fit border border-gray-200">
             {tabs.map((tab) => (
               <button
                 key={tab}
@@ -499,158 +596,188 @@ function CardPage() {
             ))}
           </div> */}
 
-                {/* Cards List */}
-                <div className="flex flex-col gap-6">
-                  {stateProps?.loading ? (
-                    <div className="py-12 text-center text-gray-500">
-                      Loading profiles...
-                    </div>
-                  ) : stateProps?.rows && stateProps.rows.length > 0 ? (
-                    stateProps.rows.map((row: any) => (
-                      <ProfileCard
-                        key={row.customer_id || row.id}
-                        customer={row}
-                        onEdit={stateProps?.onHandleEditCustomer}
-                        onDelete={stateProps?.onDeleteCustomer}
-                        onView={handleView}
-                        canDelete={stateProps?.getRoles?.includes("manager")}
-                      />
-                    ))
-                  ) : (
-                    <div className="py-12 text-center text-gray-500">
-                      No profiles found.
-                    </div>
-                  )}
-                </div>
+                  {/* Cards List */}
+                  <div className="flex flex-col gap-6">
+                    {stateProps?.loading ? (
+                      <div className="py-12 text-center text-gray-500">
+                        Loading profiles...
+                      </div>
+                    ) : stateProps?.rows && stateProps.rows.length > 0 ? (
+                      stateProps.rows.map((row: any) => (
+                        <ProfileCard
+                          key={row.customer_id || row.id}
+                          customer={row}
+                          onEdit={stateProps?.onHandleEditCustomer}
+                          onDelete={stateProps?.onDeleteCustomer}
+                          onView={handleView}
+                          canDelete={stateProps?.getRoles?.includes("manager")}
+                        />
+                      ))
+                    ) : (
+                      <div className="py-12 text-center text-gray-500">
+                        No profiles found.
+                      </div>
+                    )}
+                  </div>
 
-                {/* Pagination & Per Page */}
-                {!stateProps?.loading &&
-                  stateProps?.total > 0 &&
-                  (() => {
-                    const totalPages = Math.max(
-                      1,
-                      Math.ceil(
-                        (stateProps?.total || 0) / (stateProps?.limit || 10),
-                      ),
-                    );
-                    const currentPage =
-                      Math.floor(
-                        (stateProps?.skip || 0) / (stateProps?.limit || 10),
-                      ) + 1;
-                    return (
-                      <div className="mt-12 flex flex-col sm:flex-row justify-between items-center gap-4 border-t pt-6 border-gray-100">
-                        <div className="text-sm text-gray-500">
-                          Showing{" "}
-                          <span className="font-semibold">
-                            {stateProps.skip + 1}
-                          </span>{" "}
-                          to{" "}
-                          <span className="font-semibold">
-                            {Math.min(
-                              stateProps.skip + stateProps.limit,
-                              stateProps.total,
-                            )}
-                          </span>{" "}
-                          of{" "}
-                          <span className="font-semibold">
-                            {stateProps.total}
-                          </span>{" "}
-                          entries
-                        </div>
-
-                        <div className="flex items-center gap-6">
-                          {/* Per Page Select */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">
-                              Rows per page:
-                            </span>
-                            <select
-                              value={stateProps?.limit}
-                              onChange={(e) => {
-                                const val = Number(e.target.value);
-                                stateProps?.setLimit(val);
-                                stateProps?.setSkip(0);
-                              }}
-                              className="bg-white border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-[#c28b70]"
-                            >
-                              <option value={5}>5</option>
-                              <option value={10}>10</option>
-                              <option value={25}>25</option>
-                              <option value={50}>50</option>
-                            </select>
+                  {/* Pagination & Per Page */}
+                  {!stateProps?.loading &&
+                    stateProps?.total > 0 &&
+                    (() => {
+                      const totalPages = Math.max(
+                        1,
+                        Math.ceil(
+                          (stateProps?.total || 0) / (stateProps?.limit || 10),
+                        ),
+                      );
+                      const currentPage =
+                        Math.floor(
+                          (stateProps?.skip || 0) / (stateProps?.limit || 10),
+                        ) + 1;
+                      return (
+                        <div className="mt-12 flex flex-col sm:flex-row justify-between items-center gap-4 border-t pt-6 border-gray-100">
+                          <div className="text-sm text-gray-500">
+                            Showing{" "}
+                            <span className="font-semibold">
+                              {stateProps.skip + 1}
+                            </span>{" "}
+                            to{" "}
+                            <span className="font-semibold">
+                              {Math.min(
+                                stateProps.skip + stateProps.limit,
+                                stateProps.total,
+                              )}
+                            </span>{" "}
+                            of{" "}
+                            <span className="font-semibold">
+                              {stateProps.total}
+                            </span>{" "}
+                            entries
                           </div>
 
-                          {/* Page Numbers */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              disabled={currentPage === 1}
-                              onClick={() =>
-                                stateProps?.setSkip(
-                                  Math.max(
-                                    0,
-                                    (stateProps?.skip || 0) -
-                                    (stateProps?.limit || 10),
-                                  ),
-                                )
-                              }
-                              className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <ChevronLeft className="w-4 h-4" />
-                            </button>
+                          <div className="flex items-center gap-6">
+                            {/* Per Page Select */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">
+                                Rows per page:
+                              </span>
+                              <select
+                                value={stateProps?.limit}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  stateProps?.setLimit(val);
+                                  stateProps?.setSkip(0);
+                                }}
+                                className="bg-white border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-[#c28b70]"
+                              >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                              </select>
+                            </div>
 
-                            {Array.from(
-                              { length: totalPages },
-                              (_, i) => i + 1,
-                            ).map((page) => (
+                            {/* Page Numbers */}
+                            <div className="flex items-center gap-2">
                               <button
-                                key={page}
+                                disabled={currentPage === 1}
                                 onClick={() =>
                                   stateProps?.setSkip(
-                                    (page - 1) * (stateProps?.limit || 10),
+                                    Math.max(
+                                      0,
+                                      (stateProps?.skip || 0) -
+                                        (stateProps?.limit || 10),
+                                    ),
                                   )
                                 }
-                                className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors ${page === currentPage
-                                    ? "bg-[#c28b70] text-white border border-[#c28b70]"
-                                    : "border border-gray-200 text-gray-600 hover:bg-gray-50"
-                                  }`}
+                                className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {page}
+                                <ChevronLeft className="w-4 h-4" />
                               </button>
-                            ))}
 
-                            <button
-                              disabled={currentPage >= totalPages}
-                              onClick={() =>
-                                stateProps?.setSkip(
-                                  (stateProps?.skip || 0) +
-                                  (stateProps?.limit || 10),
-                                )
-                              }
-                              className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <ChevronRight className="w-4 h-4" />
-                            </button>
+                              {Array.from(
+                                { length: totalPages },
+                                (_, i) => i + 1,
+                              ).map((page) => (
+                                <button
+                                  key={page}
+                                  onClick={() =>
+                                    stateProps?.setSkip(
+                                      (page - 1) * (stateProps?.limit || 10),
+                                    )
+                                  }
+                                  className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors ${
+                                    page === currentPage
+                                      ? "bg-[#c28b70] text-white border border-[#c28b70]"
+                                      : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              ))}
+
+                              <button
+                                disabled={currentPage >= totalPages}
+                                onClick={() =>
+                                  stateProps?.setSkip(
+                                    (stateProps?.skip || 0) +
+                                      (stateProps?.limit || 10),
+                                  )
+                                }
+                                className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
+                </div>
               </div>
+            </>
+          ) : (
+            <>{renderPublicVerify()}</>
+          )}
+          {stateProps?.isModalOpen && (
+            <CustomerModal
+              isOpen={stateProps?.isModalOpen}
+              onClose={() => stateProps?.setIsModalOpen(false)}
+              onSave={stateProps?.onSaveCustomer}
+              initialData={stateProps?.editingCustomer}
+              subscriptionList={stateProps?.subscriptions}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 p-6">
+          <div className="relative flex flex-col items-center text-center">
+            {/* Outer glowing pulsing aura */}
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-r from-rose-400 via-purple-400 to-amber-400 opacity-20 blur-2xl animate-pulse" />
+
+            {/* Center Animated Loader Badge */}
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-white shadow-2xl border border-rose-100">
+              <div className="h-16 w-16 animate-spin rounded-full border-[3.5px] border-rose-500 border-t-transparent" />
+              <span className="absolute text-2xl animate-bounce">💖</span>
             </div>
-          </>
-        ) : (
-          <>{renderPublicVerify()}</>
-        )}
-        {stateProps?.isModalOpen && (
-          <CustomerModal
-            isOpen={stateProps?.isModalOpen}
-            onClose={() => stateProps?.setIsModalOpen(false)}
-            onSave={stateProps?.onSaveCustomer}
-            initialData={stateProps?.editingCustomer}
-            subscriptionList={stateProps?.subscriptions}
-          />
-        )}
-      </div> : <div>{'Loading...'}</div>}
+
+            {/* Loading Title & Subtitle */}
+            <h3 className="mt-6 font-serif text-2xl font-bold tracking-tight text-slate-800">
+              Loading Profiles...
+            </h3>
+            <p className="mt-2 text-xs text-slate-500 max-w-sm leading-relaxed">
+              Fetching verified profiles, horoscope details, and family preferences
+            </p>
+
+            {/* Animated Pulse Dots */}
+            <div className="mt-6 flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-bounce" />
+              <span className="h-2.5 w-2.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.2s]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-bounce [animation-delay:0.4s]" />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

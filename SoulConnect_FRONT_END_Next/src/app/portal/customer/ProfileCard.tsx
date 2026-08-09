@@ -24,7 +24,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     `${customer?.first_name || "Unknown"} ${customer?.last_name || ""}`.trim();
   const calculateAge = (dobStr?: string) => {
     if (!dobStr) return "N/A";
-    let day = 0, month = 0, year = 0;
+    let day = 0,
+      month = 0,
+      year = 0;
     if (dobStr.includes("-")) {
       const parts = dobStr.split("-");
       if (parts[0].length === 4) {
@@ -77,12 +79,26 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       ? customer.about_self
       : "Integer non nisl elit in ac tempor ante, eget iaculis augue. Nuncekon dolor mi, accumsan quis ante id, eleifend suscipit purus. Praesent augue eros, consectetur eu eleifend inno, eget condimentum auctor, libero ipsum viverra nisi, at vulputate ex mi suscipit nunc ut dui malesuada ornare ut id tellus.";
 
+  const DEFAULT_PLACEHOLDER =
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop";
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    target.onerror = null;
+    target.src = DEFAULT_PLACEHOLDER;
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-6 py-6 border-b border-gray-100 last:border-b-0">
       {/* Left: Image */}
       <div className="w-full md:w-64 h-80 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+        <img
+          src={imageUrl}
+          alt={name}
+          onError={handleImageError}
+          className="w-full h-full object-cover"
+        />
       </div>
 
       {/* Middle: Details */}
@@ -117,6 +133,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             </p>
             <p>
               <strong className="text-gray-800">Annual Income:</strong> {income}
+            </p>
+            <p>
+              <strong className="text-gray-800">Description:</strong>{" "}
+              {description}
             </p>
           </div>
         </div>
@@ -154,12 +174,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
       {/* Right: Description & Socials */}
       <div className="w-full md:w-72 flex-shrink-0 flex flex-col justify-between">
-        <p className="text-sm text-gray-500 leading-relaxed mb-6">
+        {/* <p className="text-sm text-gray-500 leading-relaxed mb-6">
           {description}
-        </p>
+        </p> */}
 
         <div>
-          <div className="flex gap-2 mb-6">
+          {/* <div className="flex gap-2 mb-6">
             <a
               href="#"
               className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded font-bold text-xs hover:bg-blue-700 transition-colors"
@@ -190,7 +210,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             >
               yt
             </a>
-          </div>
+          </div> */}
 
           {/* <button 
             onClick={() => onView?.(customer._id)}

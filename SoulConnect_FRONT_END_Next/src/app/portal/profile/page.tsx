@@ -29,6 +29,7 @@ import {
   X,
   Users,
   Plus,
+  Star,
 } from "lucide-react";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
@@ -101,7 +102,43 @@ export default function ProfilePage() {
         tob: profile.tob || profile.time_of_birth || "",
         pob: profile.pob || profile.place_of_birth || "",
         dosham: profile.dosham || "",
+        diet: profile.lifeStyle?.diet || profile.diet || "",
+        smoking: profile.lifeStyle?.smoking || profile.smoking || "",
+        drinking: profile.lifeStyle?.drinking || profile.drinking || "",
+        living_with: profile.lifeStyle?.living_with || profile.living_with || "",
+        willing_to_relocate: profile.lifeStyle?.willing_to_relocate || profile.willing_to_relocate || "",
+        interests: profile.lifeStyle?.interests || profile.interests || "",
+        pref_age_range: profile.partnerPreferencesDetails?.age_range || "27 – 33 yrs",
+        pref_age_flexible: profile.partnerPreferencesDetails?.age_flexible || "flexible",
+        pref_height: profile.partnerPreferencesDetails?.height || "5'7\" and above",
+        pref_marital_status: profile.partnerPreferencesDetails?.marital_status || "Never Married preferred",
+        pref_diet: profile.partnerPreferencesDetails?.diet || "Vegetarian only",
+        pref_smoking: profile.partnerPreferencesDetails?.smoking || "Non-Smoker",
+        pref_drinking: profile.partnerPreferencesDetails?.drinking || "Non-Drinker preferred",
+        pref_drinking_flexible: profile.partnerPreferencesDetails?.drinking_flexible || "flexible",
+        pref_education: profile.partnerPreferencesDetails?.education || "Graduate & above",
+        pref_occupation: profile.partnerPreferencesDetails?.occupation || "Any professional field",
+        pref_income: profile.partnerPreferencesDetails?.income || "₹8L+ per year",
+        pref_religion: profile.partnerPreferencesDetails?.religion || "Hindu preferred",
+        pref_caste: profile.partnerPreferencesDetails?.caste || "Tamil Brahmin preferred",
+        pref_caste_open: profile.partnerPreferencesDetails?.caste_open || "open",
+        pref_location: profile.partnerPreferencesDetails?.location || "Tamil Nadu or willing to relocate",
+        pref_living_setup: profile.partnerPreferencesDetails?.living_setup || "Open to joint or nuclear family",
+        pref_values: profile.partnerPreferencesDetails?.values || "Family-oriented, respectful, grounded",
+        pref_personality: profile.partnerPreferencesDetails?.personality || "Honest, emotionally mature, ambitious",
+        pref_overview: profile.partnerPreferencesDetails?.overview || profile.partner_preference || "",
       });
+
+      const existingImages = Array.isArray(profile.image) && profile.image.length > 0
+        ? profile.image.map((img: any) => typeof img === "string" ? img : (img?.url || img?.path)).filter(Boolean)
+        : Array.isArray(profile.photos) && profile.photos.length > 0
+        ? profile.photos.map((img: any) => typeof img === "string" ? img : (img?.url || img?.path)).filter(Boolean)
+        : typeof profile.image === "string" && profile.image
+        ? [profile.image]
+        : [];
+      if (existingImages.length > 0) {
+        setCasualPhotos(existingImages);
+      }
 
       if (profile.family_photo) {
         const src = typeof profile.family_photo === "string" ? profile.family_photo : (profile.family_photo?.url || profile.family_photo?.path);
@@ -126,16 +163,57 @@ export default function ProfilePage() {
 
   const handleSaveInlineProfile = async () => {
     try {
+      if (formData.dob) {
+        const dobDate = new Date(formData.dob);
+        if (isNaN(dobDate.getTime())) {
+          showToast("Please enter a valid Date of Birth", "error");
+          return;
+        }
+        const today = new Date();
+        if (dobDate > today) {
+          showToast("Date of Birth cannot be in the future", "error");
+          return;
+        }
+        let age = today.getFullYear() - dobDate.getFullYear();
+        const m = today.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+          age--;
+        }
+        if (age < 18) {
+          showToast("Age must be at least 18 years old", "error");
+          return;
+        }
+      }
+
+      if (
+        (formData.diet !== undefined && !String(formData.diet).trim()) ||
+        (formData.smoking !== undefined && !String(formData.smoking).trim()) ||
+        (formData.drinking !== undefined && !String(formData.drinking).trim()) ||
+        (formData.living_with !== undefined && !String(formData.living_with).trim()) ||
+        (formData.willing_to_relocate !== undefined && !String(formData.willing_to_relocate).trim()) ||
+        (formData.interests !== undefined && !String(formData.interests).trim())
+      ) {
+        showToast("Please complete all Lifestyle details (Diet, Smoking, Drinking, Living With, Relocate, Interests)", "error");
+        return;
+      }
+
       if (keycloak) {
         await keycloak.updateToken(30);
       }
       const token = keycloak?.token;
       const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
 
+      const imageObjects = casualPhotos.map((url, idx) => ({
+        url,
+        default: idx === 0,
+      }));
+
       const payload = {
         ...profile,
         ...formData,
-        family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : [],
+        image: imageObjects,
+        photos: casualPhotos,
+        family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : (profile?.family_photos || []),
         horoscopeDetails: {
           dob: formData.dob || profile?.horoscopeDetails?.dob || profile?.dob || "",
           star: formData.star || profile?.horoscopeDetails?.star || profile?.star || "",
@@ -168,6 +246,38 @@ export default function ProfilePage() {
           about_family: formData.about_family || profile?.familyBackground?.about_family || profile?.about_family || "",
           about_family_tamil: formData.about_family_tamil || profile?.familyBackground?.about_family_tamil || profile?.about_family_tamil || "",
         },
+        lifeStyle: {
+          ...(profile?.lifeStyle || {}),
+          diet: formData.diet !== undefined ? formData.diet : (profile?.lifeStyle?.diet || profile?.diet || "Strict Vegetarian"),
+          smoking: formData.smoking !== undefined ? formData.smoking : (profile?.lifeStyle?.smoking || profile?.smoking || "Non-Smoker"),
+          drinking: formData.drinking !== undefined ? formData.drinking : (profile?.lifeStyle?.drinking || profile?.drinking || "Non-Drinker"),
+          living_with: formData.living_with !== undefined ? formData.living_with : (profile?.lifeStyle?.living_with || profile?.living_with || "With Family"),
+          willing_to_relocate: formData.willing_to_relocate !== undefined ? formData.willing_to_relocate : (profile?.lifeStyle?.willing_to_relocate || profile?.willing_to_relocate || "Yes, TN preferred"),
+          interests: formData.interests !== undefined ? formData.interests : (profile?.lifeStyle?.interests || profile?.interests || "Yoga, Cooking, Trekking"),
+        },
+        partnerPreferencesDetails: {
+          ...(profile?.partnerPreferencesDetails || {}),
+          age_range: formData.pref_age_range !== undefined ? formData.pref_age_range : (profile?.partnerPreferencesDetails?.age_range || "27 – 33 yrs"),
+          age_flexible: formData.pref_age_flexible !== undefined ? formData.pref_age_flexible : (profile?.partnerPreferencesDetails?.age_flexible || "flexible"),
+          height: formData.pref_height !== undefined ? formData.pref_height : (profile?.partnerPreferencesDetails?.height || "5'7\" and above"),
+          marital_status: formData.pref_marital_status !== undefined ? formData.pref_marital_status : (profile?.partnerPreferencesDetails?.marital_status || "Never Married preferred"),
+          diet: formData.pref_diet !== undefined ? formData.pref_diet : (profile?.partnerPreferencesDetails?.diet || "Vegetarian only"),
+          smoking: formData.pref_smoking !== undefined ? formData.pref_smoking : (profile?.partnerPreferencesDetails?.smoking || "Non-Smoker"),
+          drinking: formData.pref_drinking !== undefined ? formData.pref_drinking : (profile?.partnerPreferencesDetails?.drinking || "Non-Drinker preferred"),
+          drinking_flexible: formData.pref_drinking_flexible !== undefined ? formData.pref_drinking_flexible : (profile?.partnerPreferencesDetails?.drinking_flexible || "flexible"),
+          education: formData.pref_education !== undefined ? formData.pref_education : (profile?.partnerPreferencesDetails?.education || "Graduate & above"),
+          occupation: formData.pref_occupation !== undefined ? formData.pref_occupation : (profile?.partnerPreferencesDetails?.occupation || "Any professional field"),
+          income: formData.pref_income !== undefined ? formData.pref_income : (profile?.partnerPreferencesDetails?.income || "₹8L+ per year"),
+          religion: formData.pref_religion !== undefined ? formData.pref_religion : (profile?.partnerPreferencesDetails?.religion || "Hindu preferred"),
+          caste: formData.pref_caste !== undefined ? formData.pref_caste : (profile?.partnerPreferencesDetails?.caste || "Tamil Brahmin preferred"),
+          caste_open: formData.pref_caste_open !== undefined ? formData.pref_caste_open : (profile?.partnerPreferencesDetails?.caste_open || "open"),
+          location: formData.pref_location !== undefined ? formData.pref_location : (profile?.partnerPreferencesDetails?.location || "Tamil Nadu or willing to relocate"),
+          living_setup: formData.pref_living_setup !== undefined ? formData.pref_living_setup : (profile?.partnerPreferencesDetails?.living_setup || "Open to joint or nuclear family"),
+          values: formData.pref_values !== undefined ? formData.pref_values : (profile?.partnerPreferencesDetails?.values || "Family-oriented, respectful, grounded"),
+          personality: formData.pref_personality !== undefined ? formData.pref_personality : (profile?.partnerPreferencesDetails?.personality || "Honest, emotionally mature, ambitious"),
+          overview: formData.pref_overview !== undefined ? formData.pref_overview : (profile?.partnerPreferencesDetails?.overview || profile?.partner_preference || ""),
+        },
+        partner_preference: formData.pref_overview !== undefined ? formData.pref_overview : (profile?.partner_preference || ""),
         keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
         customer_id: profile?.customer_id,
         _id: profile?._id,
@@ -492,20 +602,30 @@ export default function ProfilePage() {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const existingCount = Array.isArray(profile?.image) && profile.image.length > 0
-        ? profile.image.length
-        : Array.isArray(profile?.photos) && profile.photos.length > 0
-        ? profile.photos.length
-        : 0;
-      if (existingCount + casualPhotos.length >= 3) {
-        showToast("Maximum of 3 profile photos allowed", "error");
+      if (casualPhotos.length >= 5) {
+        showToast("Maximum of 5 profile photos allowed", "error");
         return;
       }
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setCasualPhotos((prev) => [...prev, imageUrl]);
-      showToast("Profile photo uploaded successfully!", "success");
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setCasualPhotos((prev) => [...prev, base64String]);
+        showToast("Profile photo uploaded! Click 'Save Changes' or 'Save Photos' to save.", "success");
+      };
+      reader.readAsDataURL(file);
     }
+  };
+
+  const handleSetDefaultPhoto = (index: number) => {
+    if (index === 0) return;
+    setCasualPhotos((prev) => {
+      const updated = [...prev];
+      const [selected] = updated.splice(index, 1);
+      updated.unshift(selected);
+      return updated;
+    });
+    showToast("Default photo updated! Click 'Save Photo Changes' to apply.", "success");
   };
 
   const handleFamilyPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -801,16 +921,27 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
-              {profile?.subscription_type && (
-                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                  {profile.subscription_type} Plan
-                </div>
-              )}
-              {profile?.approvalStatus && (
-                <div className="mt-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                  {profile.approvalStatus}
-                </div>
-              )}
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2">
+                {profile?.subscription_type && (
+                  <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                    {profile.subscription_type} Plan
+                  </div>
+                )}
+                {profile?.public_verify ? (
+                  <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <span>✓</span> Publicly Verified
+                  </div>
+                ) : (
+                  <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                    <span>⏳</span> Verification Pending
+                  </div>
+                )}
+                {profile?.approvalStatus && (
+                  <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                    {profile.approvalStatus}
+                  </div>
+                )}
+              </div>
               {!isEditing ? (
                 <div className="profile-tagline">
                   {profile?.about_self ||
@@ -1904,33 +2035,110 @@ export default function ProfilePage() {
               className="content-card reveal visible"
               style={{ transitionDelay: ".3s" }}
             >
-              <div className="content-card-title">
-                <div className="ctitle-icon">🌿</div>Lifestyle
+              <div className="content-card-title !flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">🌿</div>Lifestyle
+                </div>
+                {profile?.public_verify ? (
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    ✓ Verified
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    ⏳ Verification Pending
+                  </span>
+                )}
               </div>
               <div className="details-grid">
                 <div className="detail-item">
                   <div className="detail-label">Diet</div>
-                  <div className="detail-value">Strict Vegetarian</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.diet || profile?.diet || "Strict Vegetarian"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.diet || ""}
+                        onChange={(e) => handleChange("diet", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Smoking</div>
-                  <div className="detail-value">Non-Smoker</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.smoking || profile?.smoking || "Non-Smoker"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.smoking || ""}
+                        onChange={(e) => handleChange("smoking", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Drinking</div>
-                  <div className="detail-value">Non-Drinker</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.drinking || profile?.drinking || "Non-Drinker"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.drinking || ""}
+                        onChange={(e) => handleChange("drinking", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Living With</div>
-                  <div className="detail-value">With Family</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.living_with || profile?.living_with || "With Family"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.living_with || ""}
+                        onChange={(e) => handleChange("living_with", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Willing to Relocate</div>
-                  <div className="detail-value">Yes, TN preferred</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.willing_to_relocate || profile?.willing_to_relocate || "Yes, TN preferred"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.willing_to_relocate || ""}
+                        onChange={(e) => handleChange("willing_to_relocate", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Interests</div>
-                  <div className="detail-value">Yoga, Cooking, Trekking</div>
+                  <div className="detail-value">
+                    {!isEditing ? (
+                      profile?.lifeStyle?.interests || profile?.interests || "Yoga, Cooking, Trekking"
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.interests || ""}
+                        onChange={(e) => handleChange("interests", e.target.value)}
+                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -2061,152 +2269,335 @@ export default function ProfilePage() {
           <div
             className={`tab-panel ${activeTab === "partner" ? "active" : ""}`}
           >
-            <div className="content-card reveal visible">
-              <div className="content-card-title">
-                <div className="ctitle-icon">💞</div>Partner Preferences
-              </div>
-              <div className="pref-section-label">Basic Expectations</div>
-              <div className="pref-row">
-                <div className="pref-icon">🎂</div>
-                <div className="pref-label">Age Range</div>
-                <div className="pref-value">
-                  <span className="pref-pill">27 – 33 yrs</span>
-                  <span className="pref-flex">flexible</span>
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">📏</div>
-                <div className="pref-label">Height</div>
-                <div className="pref-value">
-                  <span className="pref-pill">5'7" and above</span>
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💒</div>
-                <div className="pref-label">Marital Status</div>
-                <div className="pref-value">Never Married preferred</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🍃</div>
-                <div className="pref-label">Diet</div>
-                <div className="pref-value">Vegetarian only</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🚬</div>
-                <div className="pref-label">Smoking</div>
-                <div className="pref-value">Non-Smoker</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🍷</div>
-                <div className="pref-label">Drinking</div>
-                <div className="pref-value">
-                  Non-Drinker preferred{" "}
-                  <span className="pref-flex">flexible</span>
-                </div>
-              </div>
+            {(() => {
+              const pref = profile?.partnerPreferencesDetails || {};
+              const ageRange = pref.age_range || profile?.pref_age_range || "27 – 33 yrs";
+              const ageFlex = pref.age_flexible || profile?.pref_age_flexible || "flexible";
+              const height = pref.height || profile?.pref_height || "5'7\" and above";
+              const marital = pref.marital_status || profile?.pref_marital_status || "Never Married preferred";
+              const diet = pref.diet || profile?.pref_diet || "Vegetarian only";
+              const smoking = pref.smoking || profile?.pref_smoking || "Non-Smoker";
+              const drinking = pref.drinking || profile?.pref_drinking || "Non-Drinker preferred";
+              const drinkingFlex = pref.drinking_flexible || profile?.pref_drinking_flexible || "flexible";
+              const edu = pref.education || profile?.pref_education || "Graduate & above";
+              const occ = pref.occupation || profile?.pref_occupation || "Any professional field";
+              const income = pref.income || profile?.pref_income || "₹8L+ per year";
+              const religion = pref.religion || profile?.pref_religion || "Hindu preferred";
+              const caste = pref.caste || profile?.pref_caste || "Tamil Brahmin preferred";
+              const casteOpen = pref.caste_open || profile?.pref_caste_open || "open";
+              const location = pref.location || profile?.pref_location || "Tamil Nadu or willing to relocate";
+              const livingSetup = pref.living_setup || profile?.pref_living_setup || "Open to joint or nuclear family";
+              const values = pref.values || profile?.pref_values || "Family-oriented, respectful, grounded";
+              const personality = pref.personality || profile?.pref_personality || "Honest, emotionally mature, ambitious";
+              const overview = pref.overview || profile?.partnerPreferencesDetails?.overview || profile?.partner_preference || "Like we mentioned before, your values often inform your dating preferences – someone religious isn't likely to want to date an atheist, for instance";
 
-              <div className="pref-section-label">Education & Career</div>
-              <div className="pref-row">
-                <div className="pref-icon">🎓</div>
-                <div className="pref-label">Education</div>
-                <div className="pref-value">Graduate & above</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💼</div>
-                <div className="pref-label">Occupation</div>
-                <div className="pref-value">Any professional field</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💰</div>
-                <div className="pref-label">Income</div>
-                <div className="pref-value">
-                  <span className="pref-pill">₹8L+ per year</span>
-                </div>
-              </div>
+              return (
+                <>
+                  <div className="content-card reveal visible">
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">💖</div>Partner Preferences
+                    </div>
 
-              <div className="pref-section-label">Religion & Community</div>
-              <div className="pref-row">
-                <div className="pref-icon">🛕</div>
-                <div className="pref-label">Religion</div>
-                <div className="pref-value">Hindu preferred</div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🌐</div>
-                <div className="pref-label">Caste</div>
-                <div className="pref-value">
-                  Tamil Brahmin preferred{" "}
-                  <span className="pref-flex">open</span>
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">🌍</div>
-                <div className="pref-label">Location</div>
-                <div className="pref-value">
-                  Tamil Nadu or willing to relocate
-                </div>
-              </div>
+                    <div className="pref-section-label">Basic Expectations</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🎂</div>
+                      <div className="pref-label">Age Range</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <>
+                            <span className="pref-pill">{ageRange}</span>
+                            {ageFlex && <span className="pref-flex">{ageFlex}</span>}
+                          </>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_age_range || ""}
+                            onChange={(e) => handleChange("pref_age_range", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">📏</div>
+                      <div className="pref-label">Height</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <span className="pref-pill">{height}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_height || ""}
+                            onChange={(e) => handleChange("pref_height", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💒</div>
+                      <div className="pref-label">Marital Status</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          marital
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_marital_status || ""}
+                            onChange={(e) => handleChange("pref_marital_status", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🍃</div>
+                      <div className="pref-label">Diet</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          diet
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_diet || ""}
+                            onChange={(e) => handleChange("pref_diet", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🚬</div>
+                      <div className="pref-label">Smoking</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          smoking
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_smoking || ""}
+                            onChange={(e) => handleChange("pref_smoking", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🍷</div>
+                      <div className="pref-label">Drinking</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <>
+                            {drinking}{" "}
+                            {drinkingFlex && <span className="pref-flex">{drinkingFlex}</span>}
+                          </>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_drinking || ""}
+                            onChange={(e) => handleChange("pref_drinking", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
 
-              <div className="pref-section-label">Personality & Lifestyle</div>
-              <div className="pref-row">
-                <div className="pref-icon">🏠</div>
-                <div className="pref-label">Living Setup</div>
-                <div className="pref-value">
-                  Open to joint or nuclear family
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">💡</div>
-                <div className="pref-label">Values</div>
-                <div className="pref-value">
-                  Family-oriented, respectful, grounded
-                </div>
-              </div>
-              <div className="pref-row">
-                <div className="pref-icon">✨</div>
-                <div className="pref-label">Personality</div>
-                <div className="pref-value">
-                  Honest, emotionally mature, ambitious
-                </div>
-              </div>
-            </div>
+                    <div className="pref-section-label">Education & Career</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🎓</div>
+                      <div className="pref-label">Education</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          edu
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_education || ""}
+                            onChange={(e) => handleChange("pref_education", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💼</div>
+                      <div className="pref-label">Occupation</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          occ
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_occupation || ""}
+                            onChange={(e) => handleChange("pref_occupation", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💰</div>
+                      <div className="pref-label">Income</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <span className="pref-pill">{income}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_income || ""}
+                            onChange={(e) => handleChange("pref_income", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
 
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".1s" }}
-            >
-              <div className="content-card-title flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="ctitle-icon">💬</div>Partner Preferences Overview
-                </div>
-                {isCustomer && !isEditing && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                    <div className="pref-section-label">Religion & Community</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🛕</div>
+                      <div className="pref-label">Religion</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          religion
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_religion || ""}
+                            onChange={(e) => handleChange("pref_religion", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🌐</div>
+                      <div className="pref-label">Caste</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          <>
+                            {caste}{" "}
+                            {casteOpen && <span className="pref-flex">{casteOpen}</span>}
+                          </>
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_caste || ""}
+                            onChange={(e) => handleChange("pref_caste", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🌍</div>
+                      <div className="pref-label">Location</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          location
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_location || ""}
+                            onChange={(e) => handleChange("pref_location", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pref-section-label">Personality & Lifestyle</div>
+                    <div className="pref-row">
+                      <div className="pref-icon">🏠</div>
+                      <div className="pref-label">Living Setup</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          livingSetup
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_living_setup || ""}
+                            onChange={(e) => handleChange("pref_living_setup", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">💡</div>
+                      <div className="pref-label">Values</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          values
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_values || ""}
+                            onChange={(e) => handleChange("pref_values", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="pref-row">
+                      <div className="pref-icon">✨</div>
+                      <div className="pref-label">Personality</div>
+                      <div className="pref-value">
+                        {!isEditing ? (
+                          personality
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData.pref_personality || ""}
+                            onChange={(e) => handleChange("pref_personality", e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="content-card reveal visible"
+                    style={{ transitionDelay: ".1s" }}
                   >
-                    <Pencil className="h-3 w-3" /> Edit
-                  </button>
-                )}
-              </div>
-              {!isEditing ? (
-                <p className="about-text">
-                  "{profile?.partner_preference ||
-                    "Like we mentioned before, your values often inform your dating preferences."}"
-                </p>
-              ) : (
-                <div className="mt-1">
-                  <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
-                    Edit Partner Preferences Description:
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={formData.partner_preference || ""}
-                    onChange={(e) => handleChange("partner_preference", e.target.value)}
-                    className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
-                    placeholder="Describe what qualities and expectations you have in a partner..."
-                  />
-                </div>
-              )}
-            </div>
+                    <div className="content-card-title flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="ctitle-icon">💬</div>Partner Preferences Overview
+                      </div>
+                      {isCustomer && !isEditing && (
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="text-xs font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1 bg-violet-50 px-3 py-1 rounded-lg transition"
+                        >
+                          <Pencil className="h-3 w-3" /> Edit
+                        </button>
+                      )}
+                    </div>
+                    {!isEditing ? (
+                      <p className="about-text">
+                        "{overview}"
+                      </p>
+                    ) : (
+                      <div className="mt-1">
+                        <label className="block text-[11px] font-bold text-violet-600 uppercase tracking-wider mb-1.5">
+                          Edit Partner Preferences Description:
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={formData.pref_overview !== undefined ? formData.pref_overview : overview}
+                          onChange={(e) => {
+                            handleChange("pref_overview", e.target.value);
+                            handleChange("partner_preference", e.target.value);
+                          }}
+                          className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                          placeholder="Describe what qualities and expectations you have in a partner..."
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           {/* PHOTOS TAB PANEL */}
@@ -2218,7 +2609,15 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <div className="ctitle-icon">📷</div>Profile Photos
                 </div>
-                <span className="text-xs text-slate-400 font-medium">Max 3 photos</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-400 font-medium">Max 5 photos</span>
+                  <button
+                    onClick={handleSaveInlineProfile}
+                    className="px-4 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm active:scale-95 transition flex items-center gap-1.5"
+                  >
+                    <span>Save Photo Changes</span>
+                  </button>
+                </div>
               </div>
 
               {/* Photo Upload Form */}
@@ -2231,54 +2630,37 @@ export default function ProfilePage() {
               />
 
               <div className="photos-grid">
-                {/* Profile Images from API */}
-                {Array.isArray(profile?.image) && profile.image.length > 0
-                  ? profile.image.slice(0, 3).map((imgObj: any, idx: number) => {
-                      const src = typeof imgObj === "string" ? imgObj : (imgObj?.url || imgObj?.path);
-                      if (!src) return null;
-                      return (
-                        <div key={idx} className="photo-slot relative overflow-hidden group">
-                          <img
-                            src={src}
-                            alt={`Profile image ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                          {imgObj?.default && (
-                            <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow">
-                              ★ Default
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })
-                  : Array.isArray(profile?.photos) && profile.photos.length > 0
-                  ? profile.photos.slice(0, 3).map((src: string, idx: number) => (
-                      <div key={idx} className="photo-slot relative overflow-hidden group">
-                        <img
-                          src={src}
-                          alt={`Profile photo ${idx + 1}`}
-                          className="w-full h-full object-cover rounded-xl"
-                        />
-                      </div>
-                    ))
-                  : null}
-
-                {/* Dynamic Uploads */}
                 {casualPhotos.map((url, idx) => (
-                  <div key={idx} className="photo-slot relative group overflow-hidden">
+                  <div key={idx} className="photo-slot relative group overflow-hidden border border-slate-200 shadow-sm rounded-xl">
                     <img
                       src={url}
-                      alt={`Uploaded photo ${idx + 1}`}
+                      alt={`Profile photo ${idx + 1}`}
                       className="w-full h-full object-cover rounded-xl"
                     />
+                    {idx === 0 ? (
+                      <span className="absolute top-2 left-2 text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded shadow flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-white text-white" /> Default
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetDefaultPhoto(idx);
+                        }}
+                        className="absolute top-2 left-2 bg-black/60 hover:bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow opacity-90 hover:opacity-100 transition flex items-center gap-1"
+                        title="Set as Default Profile Photo"
+                      >
+                        <Star className="h-3 w-3" /> Set Default
+                      </button>
+                    )}
                     <button
-                      className="absolute bottom-2 right-2 bg-rose text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
+                      className="absolute bottom-2 right-2 bg-rose-600 text-white p-1.5 rounded-full opacity-90 hover:opacity-100 transition-opacity shadow"
                       onClick={(e) => {
                         e.stopPropagation();
                         setCasualPhotos((prev) =>
                           prev.filter((_, i) => i !== idx),
                         );
-                        showToast("Photo deleted", "info");
+                        showToast("Photo removed. Click Save Photo Changes to apply.", "info");
                       }}
                       title="Delete Photo"
                     >
@@ -2287,18 +2669,14 @@ export default function ProfilePage() {
                   </div>
                 ))}
 
-                {/* Add Photo Button Slot - Up to 3 photos max */}
-                {((Array.isArray(profile?.image) && profile.image.length > 0
-                  ? profile.image.length
-                  : Array.isArray(profile?.photos) && profile.photos.length > 0
-                  ? profile.photos.length
-                  : 0) + casualPhotos.length) < 3 && (
+                {/* Add Photo Button Slot - Up to 5 photos max */}
+                {casualPhotos.length < 5 && (
                   <div
-                    className="photo-slot photo-slot-add"
+                    className="photo-slot photo-slot-add border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50/50 hover:bg-violet-50 transition cursor-pointer"
                     onClick={triggerPhotoUpload}
                   >
-                    <div className="photo-av">＋</div>
-                    <div className="photo-label">Add Photo</div>
+                    <div className="photo-av text-violet-600">＋</div>
+                    <div className="photo-label text-violet-700 font-semibold">Add Photo</div>
                   </div>
                 )}
               </div>
@@ -2306,7 +2684,7 @@ export default function ProfilePage() {
               <div className="photos-note">
                 <div className="photos-note-icon">💡</div>
                 <p>
-                  You can upload up to 3 profile photos. High quality photos get 3× more connection requests.
+                  You can upload up to 5 profile photos. High quality photos get 3× more connection requests. Click <strong>Save Photo Changes</strong> after uploading.
                 </p>
               </div>
             </div>

@@ -97,6 +97,35 @@ const defaultFormData = {
     about_family: "",
     about_family_tamil: "",
   },
+  lifeStyle: {
+    diet: "",
+    smoking: "",
+    drinking: "",
+    living_with: "",
+    willing_to_relocate: "",
+    interests: "",
+  },
+  partnerPreferencesDetails: {
+    age_range: "",
+    age_flexible: "",
+    height: "",
+    marital_status: "",
+    diet: "",
+    smoking: "",
+    drinking: "",
+    drinking_flexible: "",
+    education: "",
+    occupation: "",
+    income: "",
+    religion: "",
+    caste: "",
+    caste_open: "",
+    location: "",
+    living_setup: "",
+    values: "",
+    personality: "",
+    overview: "",
+  },
   transaction: [],
   public_verify: true,
   public_verify_command_helper: "",
@@ -114,7 +143,25 @@ const customerValidationSchema = Yup.object().shape({
     .trim()
     .required("Phone number is required")
     .matches(/^[0-9+\s-]{7,15}$/, "Invalid phone number format"),
-  dob: Yup.string().required("Date of birth is required"),
+  dob: Yup.string()
+    .required("Date of birth is required")
+    .test("is-valid-date", "Invalid Date of Birth", (value) => {
+      if (!value) return false;
+      const date = new Date(value);
+      return !isNaN(date.getTime()) && date <= new Date();
+    })
+    .test("is-adult", "Customer must be at least 18 years old", (value) => {
+      if (!value) return false;
+      const dob = new Date(value);
+      if (isNaN(dob.getTime())) return false;
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      return age >= 18;
+    }),
   gender: Yup.string().required("Gender is required"),
   maritial_status: Yup.string().required("Marital status is required"),
   district: Yup.string().trim().required("District is required"),
@@ -215,6 +262,21 @@ export default function CustomerModal({
             family_values_details: initialData.familyBackground?.family_values_details || initialData.family_values_details || "",
             about_family: initialData.familyBackground?.about_family || initialData.about_family || "",
             about_family_tamil: initialData.familyBackground?.about_family_tamil || initialData.about_family_tamil || "",
+          },
+          lifeStyle: {
+            ...defaultFormData.lifeStyle,
+            ...(initialData.lifeStyle || {}),
+            diet: initialData.lifeStyle?.diet || initialData.diet || "",
+            smoking: initialData.lifeStyle?.smoking || initialData.smoking || "",
+            drinking: initialData.lifeStyle?.drinking || initialData.drinking || "",
+            living_with: initialData.lifeStyle?.living_with || initialData.living_with || "",
+            willing_to_relocate: initialData.lifeStyle?.willing_to_relocate || initialData.willing_to_relocate || "",
+            interests: initialData.lifeStyle?.interests || initialData.interests || "",
+          },
+          partnerPreferencesDetails: {
+            ...defaultFormData.partnerPreferencesDetails,
+            ...(initialData.partnerPreferencesDetails || {}),
+            overview: initialData.partnerPreferencesDetails?.overview || initialData.partner_preference || "",
           },
           role: initialData.role || "customer_g",
         }
@@ -1793,6 +1855,329 @@ export default function CustomerModal({
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       placeholder="Write brief description about the family..."
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Lifestyle Details */}
+              <div className="mt-8 pt-6 border-t border-gray-100 sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5">
+                <h3 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-xl">🌿</span> Lifestyle Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {/* Diet */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Diet
+                    </label>
+                    <input
+                      type="text"
+                      name="lifeStyle.diet"
+                      value={formik.values.lifeStyle?.diet || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Strict Vegetarian / Non-Vegetarian"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Smoking */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Smoking
+                    </label>
+                    <input
+                      type="text"
+                      name="lifeStyle.smoking"
+                      value={formik.values.lifeStyle?.smoking || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Non-Smoker / Occasional"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Drinking */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Drinking
+                    </label>
+                    <input
+                      type="text"
+                      name="lifeStyle.drinking"
+                      value={formik.values.lifeStyle?.drinking || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Non-Drinker / Social Drinker"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Living With */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Living With
+                    </label>
+                    <input
+                      type="text"
+                      name="lifeStyle.living_with"
+                      value={formik.values.lifeStyle?.living_with || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. With Family / Alone"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Willing to Relocate */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Willing to Relocate
+                    </label>
+                    <input
+                      type="text"
+                      name="lifeStyle.willing_to_relocate"
+                      value={formik.values.lifeStyle?.willing_to_relocate || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Yes, TN preferred"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Interests */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Interests & Hobbies
+                    </label>
+                    <input
+                      type="text"
+                      name="lifeStyle.interests"
+                      value={formik.values.lifeStyle?.interests || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Yoga, Cooking, Trekking"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Partner Preferences Details */}
+              <div className="mt-8 pt-6 border-t border-gray-100 sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5">
+                <h3 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-xl">💖</span> Partner Preferences Details
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {/* Age Range */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Age Range
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.age_range"
+                      value={formik.values.partnerPreferencesDetails?.age_range || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. 27 – 33 yrs"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Height */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Height Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.height"
+                      value={formik.values.partnerPreferencesDetails?.height || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. 5'7&quot; and above"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Marital Status */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Marital Status Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.marital_status"
+                      value={formik.values.partnerPreferencesDetails?.marital_status || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Never Married preferred"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Diet Preference */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Diet Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.diet"
+                      value={formik.values.partnerPreferencesDetails?.diet || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Vegetarian only"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Education Preference */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Education Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.education"
+                      value={formik.values.partnerPreferencesDetails?.education || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Graduate & above"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Occupation Preference */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Occupation Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.occupation"
+                      value={formik.values.partnerPreferencesDetails?.occupation || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Any professional field"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Income Preference */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Income Expectation
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.income"
+                      value={formik.values.partnerPreferencesDetails?.income || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. ₹8L+ per year"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Religion Preference */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Religion Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.religion"
+                      value={formik.values.partnerPreferencesDetails?.religion || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Hindu preferred"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Caste Preference */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Caste Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.caste"
+                      value={formik.values.partnerPreferencesDetails?.caste || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Tamil Brahmin preferred"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Location Preference */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Location Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.location"
+                      value={formik.values.partnerPreferencesDetails?.location || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Tamil Nadu or willing to relocate"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Living Setup */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Living Setup Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.living_setup"
+                      value={formik.values.partnerPreferencesDetails?.living_setup || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Open to joint or nuclear family"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Values & Personality */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Values Preference
+                    </label>
+                    <input
+                      type="text"
+                      name="partnerPreferencesDetails.values"
+                      value={formik.values.partnerPreferencesDetails?.values || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="e.g. Family-oriented, respectful"
+                      className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+
+                  {/* Overview */}
+                  <div className="sm:col-span-2 md:col-span-3 lg:col-span-4">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Partner Preferences Overview / Summary
+                    </label>
+                    <textarea
+                      name="partnerPreferencesDetails.overview"
+                      rows={2}
+                      value={formik.values.partnerPreferencesDetails?.overview || ""}
+                      onChange={(e) => {
+                        formik.handleChange(e);
+                        formik.setFieldValue("partner_preference", e.target.value);
+                      }}
+                      onBlur={formik.handleBlur}
+                      placeholder="Describe what qualities and expectations you have in a partner..."
                       className="w-full px-3 py-2 border rounded text-xs bg-white focus:outline-none focus:border-violet-500"
                     />
                   </div>

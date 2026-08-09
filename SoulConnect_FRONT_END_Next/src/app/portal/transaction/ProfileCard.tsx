@@ -77,12 +77,26 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       ? customer.about_self
       : "Integer non nisl elit in ac tempor ante, eget iaculis augue. Nuncekon dolor mi, accumsan quis ante id, eleifend suscipit purus. Praesent augue eros, consectetur eu eleifend inno, eget condimentum auctor, libero ipsum viverra nisi, at vulputate ex mi suscipit nunc ut dui malesuada ornare ut id tellus.";
 
+  const DEFAULT_PLACEHOLDER =
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop";
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.currentTarget;
+    target.onerror = null;
+    target.src = DEFAULT_PLACEHOLDER;
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-6 py-6 border-b border-gray-100 last:border-b-0">
       {/* Left: Image */}
       <div className="w-full md:w-64 h-80 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+        <img
+          src={imageUrl}
+          alt={name}
+          onError={handleImageError}
+          className="w-full h-full object-cover"
+        />
       </div>
 
       {/* Middle: Details */}

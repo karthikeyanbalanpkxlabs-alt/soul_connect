@@ -4,10 +4,10 @@ import React from "react";
 // import { useNavigate } from "react-router-dom";
 // @ts-ignore
 // import DynamicTable from "../components/DynamicTable";
-import DynamicTable from "../../../components/DynamicTable";
-import CustomerModal from "../../../components/CustomerModal";
+import DynamicTable from "@/components/DynamicTable";
+import CustomerModal from "@/components/CustomerModal";
 import usePortalPage from "./usePortalCustomerPage";
-import Toast from "../../../components/Toast";
+import Toast from "@/components/Toast";
 
 function ListPage() {
   const stateProps = usePortalPage();
@@ -28,6 +28,9 @@ function ListPage() {
         onFilterChange={stateProps?.handleFilterChange}
         onLimitChange={stateProps?.setLimit}
         onPageChange={(newSkip: any) => stateProps?.setSkip(newSkip)}
+        sortField={stateProps?.sortField}
+        sortOrder={stateProps?.sortOrder}
+        onSortChange={stateProps?.handleSortChange}
       />
 
       {stateProps?.toast && (
