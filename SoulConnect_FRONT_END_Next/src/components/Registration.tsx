@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { onSaveCustomer } from './api'
 import { useKeycloak } from "@/providers/KeycloakProvider";
+import configUrls from "../../configUrls";
+import keycloak from "@/lib/keycloak";
 const generateId = () => {
   return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
 };
@@ -51,6 +53,35 @@ export default function Registration({
 }: RegistrationProps) {
   // Wizard Step State: 1 = Create Profile, 2 = Plan & Verification
   const [regStep, setRegStep] = useState(1);
+
+  // Subscriptions API State
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+
+  const getSubscriptionListAPI = () => {
+    const endpoint = keycloak.authenticated
+      ? "/api/subscriptions"
+      : "/api/public/subscriptions";
+    const headers: any = { "Content-Type": "application/json" };
+    if (keycloak.authenticated && keycloak?.token) {
+      headers.Authorization = `Bearer ${keycloak.token}`;
+    }
+    const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
+    fetch(apiUrl + endpoint, {
+      method: "GET",
+      headers,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("subscription data response:", data);
+        const list = Array.isArray(data) ? data : data?.data || [];
+        setSubscriptions(list);
+      })
+      .catch((e) => console.error("Error fetching subscription:", e));
+  };
+
+  useEffect(() => {
+    getSubscriptionListAPI();
+  }, []);
 
   // Tab State for Step 1
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
@@ -221,8 +252,8 @@ export default function Registration({
     },
   ];
 
-  // Membership Plans Data
-  const membershipPlans = [
+  // Membership Plans Data (Fallback Static Data)
+  const staticMembershipPlans = [
     {
       id: "free",
       name: "Free Entry",
@@ -235,7 +266,8 @@ export default function Registration({
         "Receive match suggestions"
       ],
       badge: "Free",
-      colorClass: "free"
+      colorClass: "free",
+      isPopular: false
     },
     {
       id: "premium",
@@ -250,7 +282,8 @@ export default function Registration({
         "Advanced education/job filters"
       ],
       badge: "Premium",
-      colorClass: "premium"
+      colorClass: "premium",
+      isPopular: true
     },
     {
       id: "elite",
@@ -265,7 +298,8 @@ export default function Registration({
         "Enhanced privacy control options"
       ],
       badge: "Elite",
-      colorClass: "elite"
+      colorClass: "elite",
+      isPopular: false
     },
     {
       id: "vip",
@@ -280,9 +314,66 @@ export default function Registration({
         "Premium boosting algorithms"
       ],
       badge: "VIP",
-      colorClass: "vip"
+      colorClass: "vip",
+      isPopular: false
     }
   ];
+
+  const activeSubscriptions = subscriptions
+    .filter((sub: any) => sub.active !== false && sub.status !== "inactive")
+    .sort((a: any, b: any) => {
+      const priceA = Number(String(a.price || 0).replace(/[^0-9.]/g, "")) || 0;
+      const priceB = Number(String(b.price || 0).replace(/[^0-9.]/g, "")) || 0;
+      return priceA - priceB;
+    });
+
+  const membershipPlans =
+    activeSubscriptions.length > 0
+      ? activeSubscriptions.map((sub: any, idx: number) => {
+          const rawFeatures = sub.feature || sub.features || [];
+          const features = Array.isArray(rawFeatures)
+            ? rawFeatures.map((f: any) =>
+                typeof f === "object"
+                  ? f.value || f.name || f.title || ""
+                  : String(f)
+              )
+            : [];
+
+          const formattedPrice =
+            sub.price !== undefined && sub.price !== null
+              ? `${sub.currency_type || "₹"}${
+                  typeof sub.price === "number"
+                    ? sub.price.toLocaleString("en-IN")
+                    : sub.price
+                }`
+              : "₹0";
+
+          const periodStr = sub.plan
+            ? `${sub.plan.period_value} ${sub.plan.period_type}(s) validity`
+            : "";
+
+          const isPopular = Boolean(
+            sub.most_popluar || sub.most_popular || sub.isPopular
+          );
+
+          return {
+            id: sub._id || sub.id || sub.type || `plan-${idx}`,
+            name: sub.name || sub.type || "Subscription Plan",
+            price: formattedPrice,
+            description: sub.description || sub.sub || periodStr || "Membership plan",
+            features:
+              features.length > 0
+                ? features
+                : staticMembershipPlans[idx % staticMembershipPlans.length]?.features || [],
+            badge: sub.badge || sub.tagLabel || sub.tag_label || sub.type || sub.name || "Plan",
+            colorClass:
+              sub.colorClass ||
+              sub.tagClass ||
+              (isPopular ? "premium" : idx % 2 === 0 ? "free" : "elite"),
+            isPopular: isPopular,
+          };
+        })
+      : staticMembershipPlans;
 
   // First step manual form validation and submit
   const handleManualSubmit = (e: React.MouseEvent) => {
