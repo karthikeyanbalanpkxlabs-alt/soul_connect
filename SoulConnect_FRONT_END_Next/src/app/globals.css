@@ -233,6 +233,42 @@ section { padding: 96px 5vw; }
 .form-group select { cursor: pointer; }
 .form-group textarea { resize: vertical; min-height: 80px; }
 
+.phone-input-container {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.phone-input-container:focus-within {
+  border-color: var(--plum);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.08);
+}
+.phone-code-prefix {
+  padding: 11px 14px;
+  background: rgba(124,58,237,.05);
+  border-right: 1.5px solid var(--border-soft);
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--ink-80);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  user-select: none;
+}
+.phone-input-container input {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  flex: 1;
+  background: transparent !important;
+  width: 100%;
+}
+
+
 .form-section-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--plum); margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--plum-light); text-align: left; }
 .btn-form-submit {
   width: 100%; padding: 14px; border-radius: 12px; border: none;
