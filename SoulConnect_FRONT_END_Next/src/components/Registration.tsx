@@ -102,6 +102,7 @@ export default function Registration({
   const [education, setEducation] = useState("");
   const [profession, setProfession] = useState("");
   const [income, setIncome] = useState("Prefer not to say");
+  const [heightUnit, setHeightUnit] = useState<"ft" | "cm">("ft");
   const [height, setHeight] = useState("");
   const [aboutMe, setAboutMe] = useState("");
   const [preferences, setPreferences] = useState("");
@@ -1027,17 +1028,109 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Height</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="!mb-0">Height</label>
+                      <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[11px] font-semibold">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHeightUnit("ft");
+                            setHeight("");
+                          }}
+                          className={`px-2 py-0.5 rounded-md transition-all ${
+                            heightUnit === "ft"
+                              ? "bg-violet-600 text-white shadow-sm"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          ft / in
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHeightUnit("cm");
+                            setHeight("");
+                          }}
+                          className={`px-2 py-0.5 rounded-md transition-all ${
+                            heightUnit === "cm"
+                              ? "bg-violet-600 text-white shadow-sm"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          cm
+                        </button>
+                      </div>
+                    </div>
                     <select value={height} onChange={(e) => setHeight(e.target.value)}>
-                      <option value="">Select height</option>
-                      <option value="4'8 - 5'0">4'8" - 5'0"</option>
-                      <option value="5'0 - 5'2">5'0" - 5'2"</option>
-                      <option value="5'2 - 5'4">5'2" - 5'4"</option>
-                      <option value="5'4 - 5'6">5'4" - 5'6"</option>
-                      <option value="5'6 - 5'8">5'6" - 5'8"</option>
-                      <option value="5'8 - 5'10">5'8" - 5'10"</option>
-                      <option value="5'10 - 6'0">5'10" - 6'0"</option>
-                      <option value="6'0+">6'0"+</option>
+                      <option value="">
+                        Select height ({heightUnit === "ft" ? "ft/in" : "cm"})
+                      </option>
+                      {heightUnit === "ft" ? (
+                        <>
+                          <option value="Below 4'0">Below 4'0"</option>
+                          <option value="4'0 - 122 cm">4'0" (122 cm)</option>
+                          <option value="4'1 - 124 cm">4'1" (124 cm)</option>
+                          <option value="4'2 - 127 cm">4'2" (127 cm)</option>
+                          <option value="4'3 - 129 cm">4'3" (129 cm)</option>
+                          <option value="4'4 - 132 cm">4'4" (132 cm)</option>
+                          <option value="4'5 - 134 cm">4'5" (134 cm)</option>
+                          <option value="4'6 - 137 cm">4'6" (137 cm)</option>
+                          <option value="4'7 - 139 cm">4'7" (139 cm)</option>
+                          <option value="4'8 - 142 cm">4'8" (142 cm)</option>
+                          <option value="4'9 - 144 cm">4'9" (144 cm)</option>
+                          <option value="4'10 - 147 cm">4'10" (147 cm)</option>
+                          <option value="4'11 - 149 cm">4'11" (149 cm)</option>
+                          <option value="5'0 - 152 cm">5'0" (152 cm)</option>
+                          <option value="5'1 - 154 cm">5'1" (154 cm)</option>
+                          <option value="5'2 - 157 cm">5'2" (157 cm)</option>
+                          <option value="5'3 - 160 cm">5'3" (160 cm)</option>
+                          <option value="5'4 - 162 cm">5'4" (162 cm)</option>
+                          <option value="5'5 - 165 cm">5'5" (165 cm)</option>
+                          <option value="5'6 - 167 cm">5'6" (167 cm)</option>
+                          <option value="5'7 - 170 cm">5'7" (170 cm)</option>
+                          <option value="5'8 - 172 cm">5'8" (172 cm)</option>
+                          <option value="5'9 - 175 cm">5'9" (175 cm)</option>
+                          <option value="5'10 - 177 cm">5'10" (177 cm)</option>
+                          <option value="5'11 - 180 cm">5'11" (180 cm)</option>
+                          <option value="6'0 - 182 cm">6'0" (182 cm)</option>
+                          <option value="6'1 - 185 cm">6'1" (185 cm)</option>
+                          <option value="6'2 - 187 cm">6'2" (187 cm)</option>
+                          <option value="6'3 - 190 cm">6'3" (190 cm)</option>
+                          <option value="6'4 - 193 cm">6'4" (193 cm)</option>
+                          <option value="6'5 - 195 cm">6'5" (195 cm)</option>
+                          <option value="Above 6'5">Above 6'5"</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Below 135 cm">Below 135 cm</option>
+                          <option value="135 cm - 4'5">135 cm (4'5")</option>
+                          <option value="137 cm - 4'6">137 cm (4'6")</option>
+                          <option value="140 cm - 4'7">140 cm (4'7")</option>
+                          <option value="142 cm - 4'8">142 cm (4'8")</option>
+                          <option value="145 cm - 4'9">145 cm (4'9")</option>
+                          <option value="147 cm - 4'10">147 cm (4'10")</option>
+                          <option value="150 cm - 4'11">150 cm (4'11")</option>
+                          <option value="152 cm - 5'0">152 cm (5'0")</option>
+                          <option value="155 cm - 5'1">155 cm (5'1")</option>
+                          <option value="157 cm - 5'2">157 cm (5'2")</option>
+                          <option value="160 cm - 5'3">160 cm (5'3")</option>
+                          <option value="162 cm - 5'4">162 cm (5'4")</option>
+                          <option value="165 cm - 5'5">165 cm (5'5")</option>
+                          <option value="167 cm - 5'6">167 cm (5'6")</option>
+                          <option value="170 cm - 5'7">170 cm (5'7")</option>
+                          <option value="172 cm - 5'8">172 cm (5'8")</option>
+                          <option value="175 cm - 5'9">175 cm (5'9")</option>
+                          <option value="177 cm - 5'10">177 cm (5'10")</option>
+                          <option value="180 cm - 5'11">180 cm (5'11")</option>
+                          <option value="182 cm - 6'0">182 cm (6'0")</option>
+                          <option value="185 cm - 6'1">185 cm (6'1")</option>
+                          <option value="187 cm - 6'2">187 cm (6'2")</option>
+                          <option value="190 cm - 6'3">190 cm (6'3")</option>
+                          <option value="193 cm - 6'4">193 cm (6'4")</option>
+                          <option value="195 cm - 6'5">195 cm (6'5")</option>
+                          <option value="Above 195 cm">Above 195 cm</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>
