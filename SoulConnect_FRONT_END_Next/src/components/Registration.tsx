@@ -151,8 +151,8 @@ export default function Registration({
     if (file) {
       const currentImages = Array.isArray(images) ? images : [];
       const validImages = currentImages.filter((img: any) => img.url);
-      if (validImages.length >= 5) {
-        showToast("Maximum 5 images allowed.", "error");
+      if (validImages.length >= 3) {
+        showToast("Maximum 3 images allowed.", "error");
         return;
       }
       if (!file.type.startsWith("image/")) {
@@ -690,51 +690,76 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   Fill in your details. Takes about 10 minutes. All fields are private by default.
                 </div>
 
-                {/* Profile Images Upload */}
-                <div className="mb-8 text-left">
-                  <label className="text-sm font-semibold text-gray-700 mb-3 block">
-                    Profile Images (Max 5, Click star to set default) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex flex-wrap gap-4">
-                    {images.filter((img: any) => img.url).map((img: any, index: number) => (
-                      <div
-                        key={index}
-                        className={`relative w-28 h-28 rounded-xl border-4 overflow-hidden group bg-gray-100 ${
-                          img.default ? "border-amber-400" : "border-gray-200"
-                        }`}
-                      >
-                        <img
-                          src={img.url}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
-                          <button
-                            type="button"
-                            onClick={() => setAsDefaultImage(index)}
-                            className={`text-xs px-2 py-1 rounded text-white font-medium transition-colors ${
-                              img.default
-                                ? "bg-amber-500"
-                                : "bg-gray-700 hover:bg-amber-500"
-                            }`}
-                          >
-                            {img.default ? "★ Default" : "Set Default"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
+                {/* Profile Images Card Component */}
+                <div className="mb-8 p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm text-left">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
+                        <Camera size={20} />
                       </div>
-                    ))}
+                      <h4 className="text-lg font-bold text-slate-800 tracking-tight">
+                        Profile Images <span className="text-red-500">*</span>
+                      </h4>
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">
+                      Max 3 photos
+                    </span>
+                  </div>
 
-                    {images.filter((img: any) => img.url).length < 5 && (
-                      <label className="w-28 h-28 rounded-xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-violet-500 hover:border-violet-500 cursor-pointer transition-colors bg-gray-50">
-                        <Upload size={24} className="mb-1" />
-                        <span className="text-xs font-medium">Add Image</span>
+                  <div className="flex flex-wrap gap-4">
+                    {images
+                      .filter((img: any) => img.url)
+                      .map((img: any, index: number) => (
+                        <div
+                          key={index}
+                          className={`relative w-44 h-60 rounded-2xl border-2 overflow-hidden group bg-slate-50 shadow-sm transition-all ${
+                            img.default
+                              ? "border-amber-400 ring-2 ring-amber-400/30"
+                              : "border-slate-200"
+                          }`}
+                        >
+                          {img.default && (
+                            <div className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md z-10 flex items-center gap-1">
+                              <span>★ Default</span>
+                            </div>
+                          )}
+                          <img
+                            src={img.url}
+                            alt={`Profile Image ${index + 1}`}
+                            className="w-full h-full object-cover rounded-2xl"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity p-2">
+                            <button
+                              type="button"
+                              onClick={() => setAsDefaultImage(index)}
+                              className={`text-xs px-3 py-1.5 rounded-lg text-white font-semibold transition-colors shadow flex items-center gap-1 ${
+                                img.default
+                                  ? "bg-amber-500 hover:bg-amber-600"
+                                  : "bg-slate-700 hover:bg-amber-500"
+                              }`}
+                            >
+                              ★ {img.default ? "Default Image" : "Set Default"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 font-semibold shadow transition-colors flex items-center gap-1"
+                            >
+                              <Trash2 size={14} /> Remove Photo
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                    {images.filter((img: any) => img.url).length < 3 && (
+                      <label className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group">
+                        <Plus
+                          size={28}
+                          className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
+                        />
+                        <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
+                          Add Image
+                        </span>
                         <input
                           type="file"
                           accept="image/*"
