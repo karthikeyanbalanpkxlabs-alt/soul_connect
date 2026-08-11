@@ -112,9 +112,17 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
     },
   ];
 
+  const activeSubscriptions = subscriptions
+    .filter((sub: any) => sub.active !== false && sub.status !== "inactive")
+    .sort((a: any, b: any) => {
+      const priceA = Number(String(a.price || 0).replace(/[^0-9.]/g, "")) || 0;
+      const priceB = Number(String(b.price || 0).replace(/[^0-9.]/g, "")) || 0;
+      return priceA - priceB;
+    });
+
   const plans =
-    subscriptions.length > 0
-      ? subscriptions.map((sub: any, idx: number) => {
+    activeSubscriptions.length > 0
+      ? activeSubscriptions.map((sub: any, idx: number) => {
           const rawFeatures = sub.feature || sub.features || [];
           const features = Array.isArray(rawFeatures)
             ? rawFeatures.map((f: any) =>
@@ -164,6 +172,7 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
           };
         })
       : staticPlans;
+
 
   return (
     <section id="pricing" className="payment-section">
