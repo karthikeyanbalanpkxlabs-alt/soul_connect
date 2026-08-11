@@ -1,11 +1,43 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import configUrls from "../../configUrls";
+import keycloak from "@/lib/keycloak";
+
 interface PricingProps {
-  onOpenPayment: (planName: string, price: string, features: string[]) => void;
+  onOpenPayment?: (planName: string, price: string, features: string[]) => void;
 }
 
 export default function Pricing({ onOpenPayment }: PricingProps) {
-  const plans = [
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+
+  const getSubscriptionListAPI = () => {
+    const endpoint = keycloak.authenticated
+      ? "/api/subscriptions"
+      : "/api/public/subscriptions";
+    const headers: any = { "Content-Type": "application/json" };
+    if (keycloak.authenticated && keycloak?.token) {
+      headers.Authorization = `Bearer ${keycloak.token}`;
+    }
+    const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
+    fetch(apiUrl + endpoint, {
+      method: "GET",
+      headers,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("subscription data response:", data);
+        const list = Array.isArray(data) ? data : data?.data || [];
+        setSubscriptions(list);
+      })
+      .catch((e) => console.error("Error fetching subscription:", e));
+  };
+
+  useEffect(() => {
+    getSubscriptionListAPI();
+  }, []);
+
+  const staticPlans = [
     {
       id: "free",
       name: "Free Entry",
@@ -80,12 +112,75 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
     },
   ];
 
+  const activeSubscriptions = subscriptions
+    .filter((sub: any) => sub.active !== false && sub.status !== "inactive")
+    .sort((a: any, b: any) => {
+      const priceA = Number(String(a.price || 0).replace(/[^0-9.]/g, "")) || 0;
+      const priceB = Number(String(b.price || 0).replace(/[^0-9.]/g, "")) || 0;
+      return priceA - priceB;
+    });
+
+  const plans =
+    activeSubscriptions.length > 0
+      ? activeSubscriptions.map((sub: any, idx: number) => {
+          const rawFeatures = sub.feature || sub.features || [];
+          const features = Array.isArray(rawFeatures)
+            ? rawFeatures.map((f: any) =>
+                typeof f === "object"
+                  ? f.value || f.name || f.title || ""
+                  : String(f)
+              )
+            : [];
+
+          const formattedPrice =
+            sub.price !== undefined && sub.price !== null
+              ? `${sub.currency_type || "₹"}${
+                  typeof sub.price === "number"
+                    ? sub.price.toLocaleString("en-IN")
+                    : sub.price
+                }`
+              : "₹0";
+
+          const periodStr = sub.plan
+            ? `${sub.plan.period_value} ${sub.plan.period_type}(s) validity`
+            : "";
+
+          const isPopular = Boolean(
+            sub.most_popluar || sub.most_popular || sub.isPopular
+          );
+
+          return {
+            id: sub._id || sub.id || sub.type || `plan-${idx}`,
+            name: sub.name || sub.type || "Subscription Plan",
+            price: formattedPrice,
+            sub: sub.description || sub.sub || periodStr || "Membership plan",
+            tagClass:
+              sub.tagClass || (isPopular ? "tag-premium" : "tag-free"),
+            tagLabel: sub.tagLabel || sub.tag_label || sub.type || "Plan",
+            isFeatured: Boolean(
+              sub.isFeatured || sub.is_featured || isPopular
+            ),
+            isPopular: isPopular,
+            btnClass:
+              sub.btnClass ||
+              (isPopular ? "btn-plan-white" : "btn-plan-outline"),
+            btnText: sub.btnText || "Choose Plan",
+            features:
+              features.length > 0
+                ? features
+                : staticPlans[idx % staticPlans.length]?.features || [],
+          };
+        })
+      : staticPlans;
+
+
   return (
     <section id="pricing" className="payment-section">
       <div className="eyebrow">Membership Plans</div>
       <h2 className="section-title">A plan for every family's journey</h2>
       <p className="section-sub">
-        Choose a tier that fits your pacing. Upgrade or downgrade at any time with secure payment options.
+        Choose a tier that fits your pacing. Upgrade or downgrade at any time
+        with secure payment options.
       </p>
 
       <div className="payment-grid">
@@ -95,18 +190,18 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
             className={`plan-card ${plan.isFeatured ? "featured" : ""}`}
           >
             {plan.isPopular && <div className="plan-popular">MOST POPULAR</div>}
-            
+
             <span className={`plan-tag ${plan.tagClass}`}>
               {plan.tagLabel}
             </span>
 
             <div className="plan-price">{plan.price}</div>
             <div className="plan-price-sub">{plan.sub}</div>
-            
+
             <h3>{plan.name}</h3>
 
             <div className="plan-features">
-              {plan.features.map((feature, idx) => (
+              {plan.features.map((feature: string, idx: number) => (
                 <div key={idx} className="plan-feat">
                   <span className="ck">✓</span>
                   <span>{feature}</span>
@@ -115,7 +210,7 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
             </div>
 
             {/* <button
-              onClick={() => onOpenPayment(plan.name, plan.price, plan.features)}
+              onClick={() => onOpenPayment && onOpenPayment(plan.name, plan.price, plan.features)}
               className={`btn-plan ${plan.btnClass}`}
             >
               {plan.btnText}
@@ -131,7 +226,9 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
             <span className="gw-icon">⚡</span>
             <div style={{ textAlign: "left" }}>
               <div className="gw-name">UPI Transfer</div>
-              <div className="gw-desc">Instant activation via GPay, PhonePe, Paytm</div>
+              <div className="gw-desc">
+                Instant activation via GPay, PhonePe, Paytm
+              </div>
             </div>
           </div>
           <div className="gw-card">
