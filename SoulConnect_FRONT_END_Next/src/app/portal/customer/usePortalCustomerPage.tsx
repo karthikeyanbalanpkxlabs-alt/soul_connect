@@ -327,11 +327,11 @@ function usePortalCustomerPage() {
     //dataGenerateId
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
-      first_name: "bipafof168",
-      last_name: "bipafof168",
+      first_name: "faheko2987",
+      last_name: "faheko2987",
       // email: `gisipi5319@davopa.com`,
-      email: `bipafof168@novelv.com`,
-      phone_number: "5989505899",
+      email: `faheko2987@novelv.com`,
+      phone_number: "8950589933",
       role: "customer_g",
       dob: "02-12-1999",
       gender: "male",
@@ -722,7 +722,7 @@ function usePortalCustomerPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: "karthimailu@gmail.com",
+          to: "supportsoulconect@gmail.com",
           subject: "Hello BK!",
           message: "this email is sent from SoulConect Portal",
         }),
