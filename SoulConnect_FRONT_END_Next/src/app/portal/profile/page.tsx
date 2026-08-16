@@ -281,6 +281,137 @@ const MOTHER_TONGUE_OPTIONS = [
   "Other",
 ];
 
+const PREF_AGE_RANGE_OPTIONS = [
+  "18 – 23 yrs",
+  "21 – 26 yrs",
+  "24 – 29 yrs",
+  "27 – 33 yrs",
+  "30 – 36 yrs",
+  "33 – 40 yrs",
+  "38 – 45 yrs",
+  "42 – 50 yrs",
+  "50+ yrs",
+  "Flexible",
+];
+
+const PREF_HEIGHT_OPTIONS = [
+  "Any height",
+  "4'10\" and above",
+  "5'0\" and above",
+  "5'2\" and above",
+  "5'4\" and above",
+  "5'6\" and above",
+  "5'7\" and above",
+  "5'8\" and above",
+  "5'10\" and above",
+  "6'0\" and above",
+];
+
+const PREF_MARITAL_OPTIONS = [
+  "Never Married preferred",
+  "Never Married only",
+  "Divorced preferred",
+  "Widowed preferred",
+  "Awaiting Divorce preferred",
+  "Open to all",
+];
+
+const PREF_DIET_OPTIONS = [
+  "Vegetarian only",
+  "Strict Vegetarian",
+  "Non-Vegetarian preferred",
+  "Eggetarian",
+  "Vegan",
+  "No preference",
+];
+
+const PREF_SMOKING_OPTIONS = [
+  "Non-Smoker",
+  "Non-Smoker preferred",
+  "Occasional Smoker ok",
+  "No preference",
+];
+
+const PREF_DRINKING_OPTIONS = [
+  "Non-Drinker preferred",
+  "Non-Drinker only",
+  "Social Drinker ok",
+  "No preference",
+];
+
+const PREF_EDUCATION_OPTIONS = [
+  "Graduate & above",
+  "Post Graduate & above",
+  "Doctorate / PhD",
+  "Professional Degree (Engg/MBBS/MBA/CA)",
+  "10th / 12th / Diploma & above",
+  "No preference",
+];
+
+const PREF_OCCUPATION_OPTIONS = [
+  "Any professional field",
+  "Software / IT",
+  "Doctor / Medical",
+  "Engineering / Tech",
+  "Govt. / PSU Job",
+  "Business / Entrepreneur",
+  "Teaching / Academics",
+  "Finance / Banking",
+  "No preference",
+];
+
+const PREF_INCOME_OPTIONS = [
+  "Any income",
+  "₹3L+ per year",
+  "₹5L+ per year",
+  "₹8L+ per year",
+  "₹12L+ per year",
+  "₹15L+ per year",
+  "₹25L+ per year",
+  "₹50L+ per year",
+];
+
+const PREF_RELIGION_OPTIONS = [
+  "Hindu preferred",
+  "Hindu only",
+  "Muslim preferred",
+  "Christian preferred",
+  "Jain preferred",
+  "Sikh preferred",
+  "Any religion",
+];
+
+const PREF_CASTE_OPTIONS = [
+  "Tamil Brahmin preferred",
+  "BC preferred",
+  "MBC preferred",
+  "FC / OC preferred",
+  "SC / ST preferred",
+  "Vanniyar preferred",
+  "Gounder preferred",
+  "Thevar preferred",
+  "Nadar preferred",
+  "Chettiar preferred",
+  "Pillai preferred",
+  "Mudaliar preferred",
+  "Naidu preferred",
+  "Reddy preferred",
+  "Same caste preferred",
+  "Caste no bar / Open",
+];
+
+const PREF_LOCATION_OPTIONS = [
+  "Tamil Nadu or willing to relocate",
+  "Chennai preferred",
+  "Coimbatore preferred",
+  "Madurai preferred",
+  "Bangalore / Karnataka preferred",
+  "Anywhere in South India",
+  "Anywhere in India",
+  "Abroad / NRI preferred",
+  "Open to all locations",
+];
+
 const NAKSHATRAS = [
   "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
   "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
@@ -2607,12 +2738,16 @@ export default function ProfilePage() {
                             {ageFlex && <span className="pref-flex">{ageFlex}</span>}
                           </>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_age_range || ""}
+                          <select
+                            value={formData.pref_age_range || pref.age_range || profile?.pref_age_range || ""}
                             onChange={(e) => handleChange("pref_age_range", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Age Range</option>
+                            {PREF_AGE_RANGE_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2623,12 +2758,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           <span className="pref-pill">{height}</span>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_height || ""}
+                          <select
+                            value={formData.pref_height || pref.height || profile?.pref_height || ""}
                             onChange={(e) => handleChange("pref_height", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Height Expectation</option>
+                            {PREF_HEIGHT_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2639,12 +2778,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           marital
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_marital_status || ""}
+                          <select
+                            value={formData.pref_marital_status || pref.marital_status || profile?.pref_marital_status || ""}
                             onChange={(e) => handleChange("pref_marital_status", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Marital Preference</option>
+                            {PREF_MARITAL_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2655,12 +2798,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           diet
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_diet || ""}
+                          <select
+                            value={formData.pref_diet || pref.diet || profile?.pref_diet || ""}
                             onChange={(e) => handleChange("pref_diet", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Diet Preference</option>
+                            {PREF_DIET_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2671,12 +2818,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           smoking
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_smoking || ""}
+                          <select
+                            value={formData.pref_smoking || pref.smoking || profile?.pref_smoking || ""}
                             onChange={(e) => handleChange("pref_smoking", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Smoking Preference</option>
+                            {PREF_SMOKING_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2690,12 +2841,16 @@ export default function ProfilePage() {
                             {drinkingFlex && <span className="pref-flex">{drinkingFlex}</span>}
                           </>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_drinking || ""}
+                          <select
+                            value={formData.pref_drinking || pref.drinking || profile?.pref_drinking || ""}
                             onChange={(e) => handleChange("pref_drinking", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Drinking Preference</option>
+                            {PREF_DRINKING_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2708,12 +2863,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           edu
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_education || ""}
+                          <select
+                            value={formData.pref_education || pref.education || profile?.pref_education || ""}
                             onChange={(e) => handleChange("pref_education", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Education Preference</option>
+                            {PREF_EDUCATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2724,12 +2883,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           occ
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_occupation || ""}
+                          <select
+                            value={formData.pref_occupation || pref.occupation || profile?.pref_occupation || ""}
                             onChange={(e) => handleChange("pref_occupation", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Occupation Preference</option>
+                            {PREF_OCCUPATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2740,12 +2903,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           <span className="pref-pill">{income}</span>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_income || ""}
+                          <select
+                            value={formData.pref_income || pref.income || profile?.pref_income || ""}
                             onChange={(e) => handleChange("pref_income", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Income Preference</option>
+                            {PREF_INCOME_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2758,12 +2925,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           religion
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_religion || ""}
+                          <select
+                            value={formData.pref_religion || pref.religion || profile?.pref_religion || ""}
                             onChange={(e) => handleChange("pref_religion", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Religion Preference</option>
+                            {PREF_RELIGION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2777,12 +2948,16 @@ export default function ProfilePage() {
                             {casteOpen && <span className="pref-flex">{casteOpen}</span>}
                           </>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_caste || ""}
+                          <select
+                            value={formData.pref_caste || pref.caste || profile?.pref_caste || ""}
                             onChange={(e) => handleChange("pref_caste", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Caste Preference</option>
+                            {PREF_CASTE_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2793,12 +2968,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           location
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_location || ""}
+                          <select
+                            value={formData.pref_location || pref.location || profile?.pref_location || ""}
                             onChange={(e) => handleChange("pref_location", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Location Preference</option>
+                            {PREF_LOCATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
