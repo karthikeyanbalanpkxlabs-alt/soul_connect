@@ -959,42 +959,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* INLINE EDIT MODE BANNER */}
-      {isCustomer && isEditing && (
-        <div className="max-w-[1100px] mx-auto px-6 mt-4 mb-2">
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm animate-in fade-in">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">✏️</span>
-              <div>
-                <h4 className="font-bold text-xs uppercase tracking-wider text-amber-900">
-                  Profile Editing Mode Active
-                </h4>
-                <p className="text-xs text-amber-700 mt-0.5">
-                  Update your details directly on the page below and click Save Changes when finished.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveInlineProfile}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition"
-              >
-                ✓ Save Changes
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  if (profile) setFormData({ ...profile });
-                }}
-                className="px-3 py-2 bg-white text-slate-700 hover:bg-slate-100 font-semibold text-xs rounded-xl border border-slate-200 transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="profile-layout">
         {/* LEFT COLUMN */}
         <div className="profile-left">
@@ -1394,6 +1358,42 @@ export default function ProfilePage() {
 
         {/* RIGHT COLUMN */}
         <div className="profile-right">
+          {/* INLINE EDIT MODE BANNER */}
+          {isCustomer && isEditing && (
+            <div className="mb-4">
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm animate-in fade-in">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">✏️</span>
+                  <div>
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-amber-900">
+                      Profile Editing Mode Active
+                    </h4>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Update your details directly on the page below and click Save Changes when finished.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={handleSaveInlineProfile}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition"
+                  >
+                    ✓ Save Changes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      if (profile) setFormData({ ...profile });
+                    }}
+                    className="px-3 py-2 bg-white text-slate-700 hover:bg-slate-100 font-semibold text-xs rounded-xl border border-slate-200 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tab Bar */}
           <div
             className={`profile-tabs-bar reveal ${isLoaded ? "visible" : ""}`}
