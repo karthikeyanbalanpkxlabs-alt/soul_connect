@@ -607,22 +607,26 @@ export default function ProfilePage() {
         },
         familyBackground: {
           ...(profile?.familyBackground || {}),
-          father_name: formData.father_name || profile?.familyBackground?.father_name || profile?.father_name || "",
-          father_occupation: formData.father_occupation || profile?.familyBackground?.father_occupation || profile?.father_occupation || "",
-          mother_name: formData.mother_name || profile?.familyBackground?.mother_name || profile?.mother_name || "",
-          mother_occupation: formData.mother_occupation || profile?.familyBackground?.mother_occupation || profile?.mother_occupation || "",
-          siblings: formData.siblings || profile?.familyBackground?.siblings || profile?.siblings || "",
-          siblings_details: formData.siblings_details || profile?.familyBackground?.siblings_details || profile?.siblings_details || "",
-          family_type: formData.family_type || profile?.familyBackground?.family_type || profile?.family_type || "",
-          family_type_details: formData.family_type_details || profile?.familyBackground?.family_type_details || profile?.family_type_details || "",
-          family_status: formData.family_status || profile?.familyBackground?.family_status || profile?.family_status || "",
-          family_status_details: formData.family_status_details || profile?.familyBackground?.family_status_details || profile?.family_status_details || "",
-          family_address: formData.family_address || profile?.familyBackground?.family_address || profile?.family_address || "",
-          family_values: formData.family_values || profile?.familyBackground?.family_values || profile?.family_values || "",
-          family_values_details: formData.family_values_details || profile?.familyBackground?.family_values_details || profile?.family_values_details || "",
-          about_family: formData.about_family || profile?.familyBackground?.about_family || profile?.about_family || "",
-          about_family_tamil: formData.about_family_tamil || profile?.familyBackground?.about_family_tamil || profile?.about_family_tamil || "",
+          father_name: formData.father_name !== undefined ? formData.father_name : (profile?.familyBackground?.father_name || profile?.father_name || ""),
+          father_occupation: formData.father_occupation !== undefined ? formData.father_occupation : (profile?.familyBackground?.father_occupation || profile?.father_occupation || ""),
+          mother_name: formData.mother_name !== undefined ? formData.mother_name : (profile?.familyBackground?.mother_name || profile?.mother_name || ""),
+          mother_occupation: formData.mother_occupation !== undefined ? formData.mother_occupation : (profile?.familyBackground?.mother_occupation || profile?.mother_occupation || ""),
+          siblings: formData.siblings !== undefined ? formData.siblings : (profile?.familyBackground?.siblings || profile?.siblings || ""),
+          siblings_details: formData.siblings_details !== undefined ? formData.siblings_details : (profile?.familyBackground?.siblings_details || profile?.siblings_details || ""),
+          family_type: formData.family_type !== undefined ? formData.family_type : (profile?.familyBackground?.family_type || profile?.family_type || ""),
+          family_type_details: formData.family_type_details !== undefined ? formData.family_type_details : (profile?.familyBackground?.family_type_details || profile?.family_type_details || ""),
+          family_status: formData.family_status !== undefined ? formData.family_status : (profile?.familyBackground?.family_status || profile?.family_status || ""),
+          family_status_details: formData.family_status_details !== undefined ? formData.family_status_details : (profile?.familyBackground?.family_status_details || profile?.family_address || ""),
+          family_address: formData.family_address !== undefined ? formData.family_address : (profile?.familyBackground?.family_address || profile?.family_address || ""),
+          family_values: formData.family_values !== undefined ? formData.family_values : (profile?.familyBackground?.family_values || profile?.family_values || ""),
+          family_values_details: formData.family_values_details !== undefined ? formData.family_values_details : (profile?.familyBackground?.family_values_details || profile?.family_values_details || ""),
+          about_family: formData.about_family !== undefined ? formData.about_family : (profile?.familyBackground?.about_family || profile?.about_family || ""),
+          about_family_tamil: formData.about_family_tamil !== undefined ? formData.about_family_tamil : (profile?.familyBackground?.about_family_tamil || profile?.about_family_tamil || ""),
         },
+        native_place: formData.native_place !== undefined ? formData.native_place : (profile?.native_place || ""),
+        current_city: formData.current_city !== undefined ? formData.current_city : (profile?.current_city || ""),
+        native_place_tamil: formData.native_place_tamil !== undefined ? formData.native_place_tamil : (profile?.native_place_tamil || ""),
+        grew_up_in: formData.grew_up_in !== undefined ? formData.grew_up_in : (profile?.grew_up_in || ""),
         lifeStyle: {
           ...(profile?.lifeStyle || {}),
           diet: formData.diet !== undefined ? formData.diet : (profile?.lifeStyle?.diet || profile?.diet || "Strict Vegetarian"),
@@ -2579,119 +2583,353 @@ export default function ProfilePage() {
           >
             {(() => {
               const fam = profile?.familyBackground || {};
-              const fatherName = fam.father_name || profile?.father_name || "Dr. R. Krishnamurthy";
-              const fatherOcc = fam.father_occupation || profile?.father_occupation || "Retired · IIT Madras Professor";
-              const motherName = fam.mother_name || profile?.mother_name || "Smt. Meenakshi K.";
-              const motherOcc = fam.mother_occupation || profile?.mother_occupation || "Homemaker";
-              const siblings = fam.siblings || profile?.siblings || "1 Elder Brother";
-              const siblingsDetails = fam.siblings_details || profile?.siblings_details || "Married · Software Engineer, Bengaluru";
-              const famType = fam.family_type || profile?.family_type || "Nuclear Family";
-              const famTypeDetails = fam.family_type_details || profile?.family_type_details || "Extended family in Mylapore";
-              const famStatus = fam.family_status || profile?.family_status || "Upper Middle Class";
-              const famStatusDetails = fam.family_status_details || fam.family_address || profile?.family_status_details || profile?.family_address || "Own house in Mylapore, Chennai";
-              const famValues = fam.family_values || profile?.family_values || "Traditional";
-              const famValuesDetails = fam.family_values_details || profile?.family_values_details || "Conservative with modern outlook";
+              const fatherName = formData.father_name !== undefined ? formData.father_name : (fam.father_name || profile?.father_name || "");
+              const fatherOcc = formData.father_occupation !== undefined ? formData.father_occupation : (fam.father_occupation || profile?.father_occupation || "");
+              const motherName = formData.mother_name !== undefined ? formData.mother_name : (fam.mother_name || profile?.mother_name || "");
+              const motherOcc = formData.mother_occupation !== undefined ? formData.mother_occupation : (fam.mother_occupation || profile?.mother_occupation || "");
+              const siblings = formData.siblings !== undefined ? formData.siblings : (fam.siblings || profile?.siblings || "");
+              const siblingsDetails = formData.siblings_details !== undefined ? formData.siblings_details : (fam.siblings_details || profile?.siblings_details || "");
+              const famType = formData.family_type !== undefined ? formData.family_type : (fam.family_type || profile?.family_type || "");
+              const famTypeDetails = formData.family_type_details !== undefined ? formData.family_type_details : (fam.family_type_details || profile?.family_type_details || "");
+              const famStatus = formData.family_status !== undefined ? formData.family_status : (fam.family_status || profile?.family_status || "");
+              const famStatusDetails = formData.family_status_details !== undefined ? formData.family_status_details : (fam.family_status_details || fam.family_address || profile?.family_status_details || profile?.family_address || "");
+              const famValues = formData.family_values !== undefined ? formData.family_values : (fam.family_values || profile?.family_values || "");
+              const famValuesDetails = formData.family_values_details !== undefined ? formData.family_values_details : (fam.family_values_details || profile?.family_values_details || "");
+
+              const nativePlace = formData.native_place !== undefined ? formData.native_place : (profile?.native_place || profile?.district || "");
+              const currentCity = formData.current_city !== undefined ? formData.current_city : (profile?.current_city || profile?.city || "");
+              const nativeTamil = formData.native_place_tamil !== undefined ? formData.native_place_tamil : (profile?.native_place_tamil || "");
+              const grewUpIn = formData.grew_up_in !== undefined ? formData.grew_up_in : (profile?.grew_up_in || "");
+
+              const aboutFamily = formData.about_family !== undefined ? formData.about_family : (fam.about_family || profile?.about_family || "");
+              const aboutFamilyTamil = formData.about_family_tamil !== undefined ? formData.about_family_tamil : (fam.about_family_tamil || profile?.about_family_tamil || "");
 
               return (
-                <div className="content-card reveal visible">
-                  <div className="content-card-title">
-                    <div className="ctitle-icon">🏠</div>Family Background
+                <>
+                  {/* Family Background */}
+                  <div className="content-card reveal visible">
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">🏠</div>Family Background
+                    </div>
+                    <div className="family-grid">
+                      {/* FATHER */}
+                      <div className="family-item">
+                        <div className="family-item-icon">👨</div>
+                        <div className="family-item-label">FATHER</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{fatherName || "-"}</div>
+                            {fatherOcc && <div className="family-item-sub">{fatherOcc}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <input
+                              type="text"
+                              placeholder="Father Name"
+                              value={fatherName}
+                              onChange={(e) => handleChange("father_name", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Occupation / Status"
+                              value={fatherOcc}
+                              onChange={(e) => handleChange("father_occupation", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* MOTHER */}
+                      <div className="family-item">
+                        <div className="family-item-icon">👩</div>
+                        <div className="family-item-label">MOTHER</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{motherName || "-"}</div>
+                            {motherOcc && <div className="family-item-sub">{motherOcc}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <input
+                              type="text"
+                              placeholder="Mother Name"
+                              value={motherName}
+                              onChange={(e) => handleChange("mother_name", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Occupation / Status"
+                              value={motherOcc}
+                              onChange={(e) => handleChange("mother_occupation", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SIBLINGS */}
+                      <div className="family-item">
+                        <div className="family-item-icon">👦</div>
+                        <div className="family-item-label">SIBLINGS</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{siblings || "-"}</div>
+                            {siblingsDetails && <div className="family-item-sub">{siblingsDetails}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <input
+                              type="text"
+                              placeholder="e.g. 1 Elder Brother"
+                              value={siblings}
+                              onChange={(e) => handleChange("siblings", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Siblings Details"
+                              value={siblingsDetails}
+                              onChange={(e) => handleChange("siblings_details", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* FAMILY TYPE */}
+                      <div className="family-item">
+                        <div className="family-item-icon">🏡</div>
+                        <div className="family-item-label">FAMILY TYPE</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{famType || "-"}</div>
+                            {famTypeDetails && <div className="family-item-sub">{famTypeDetails}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <select
+                              value={famType}
+                              onChange={(e) => handleChange("family_type", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            >
+                              <option value="">Select Family Type</option>
+                              <option value="Nuclear Family">Nuclear Family</option>
+                              <option value="Joint Family">Joint Family</option>
+                              <option value="Extended Family">Extended Family</option>
+                            </select>
+                            <input
+                              type="text"
+                              placeholder="Family Type Details"
+                              value={famTypeDetails}
+                              onChange={(e) => handleChange("family_type_details", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* FAMILY STATUS */}
+                      <div className="family-item">
+                        <div className="family-item-icon">💎</div>
+                        <div className="family-item-label">FAMILY STATUS</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{famStatus || "-"}</div>
+                            {famStatusDetails && <div className="family-item-sub">{famStatusDetails}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <select
+                              value={famStatus}
+                              onChange={(e) => handleChange("family_status", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            >
+                              <option value="">Select Family Status</option>
+                              <option value="Upper Middle Class">Upper Middle Class</option>
+                              <option value="Middle Class">Middle Class</option>
+                              <option value="Upper Class / Wealthy">Upper Class / Wealthy</option>
+                              <option value="Affluent">Affluent</option>
+                            </select>
+                            <input
+                              type="text"
+                              placeholder="Location / House Details"
+                              value={famStatusDetails}
+                              onChange={(e) => handleChange("family_status_details", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* FAMILY VALUES */}
+                      <div className="family-item">
+                        <div className="family-item-icon">🙏</div>
+                        <div className="family-item-label">FAMILY VALUES</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{famValues || "-"}</div>
+                            {famValuesDetails && <div className="family-item-sub">{famValuesDetails}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <select
+                              value={famValues}
+                              onChange={(e) => handleChange("family_values", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            >
+                              <option value="">Select Family Values</option>
+                              <option value="Traditional">Traditional</option>
+                              <option value="Moderate">Moderate</option>
+                              <option value="Liberal">Liberal</option>
+                              <option value="Conservative">Conservative</option>
+                            </select>
+                            <input
+                              type="text"
+                              placeholder="Family Values Details"
+                              value={famValuesDetails}
+                              onChange={(e) => handleChange("family_values_details", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="family-grid">
-                    <div className="family-item">
-                      <div className="family-item-icon">👨</div>
-                      <div className="family-item-label">FATHER</div>
-                      <div className="family-item-value">{fatherName}</div>
-                      <div className="family-item-sub">{fatherOcc}</div>
+
+                  {/* Location & Native */}
+                  <div
+                    className="content-card reveal visible"
+                    style={{ transitionDelay: ".1s" }}
+                  >
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">📍</div>Location & Native
                     </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">👩</div>
-                      <div className="family-item-label">MOTHER</div>
-                      <div className="family-item-value">{motherName}</div>
-                      <div className="family-item-sub">{motherOcc}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">👦</div>
-                      <div className="family-item-label">SIBLINGS</div>
-                      <div className="family-item-value">{siblings}</div>
-                      <div className="family-item-sub">{siblingsDetails}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">🏡</div>
-                      <div className="family-item-label">FAMILY TYPE</div>
-                      <div className="family-item-value">{famType}</div>
-                      <div className="family-item-sub">{famTypeDetails}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">💎</div>
-                      <div className="family-item-label">FAMILY STATUS</div>
-                      <div className="family-item-value">{famStatus}</div>
-                      <div className="family-item-sub">{famStatusDetails}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">🙏</div>
-                      <div className="family-item-label">FAMILY VALUES</div>
-                      <div className="family-item-value">{famValues}</div>
-                      <div className="family-item-sub">{famValuesDetails}</div>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <div className="detail-label">Native Place</div>
+                        <div className="detail-value">
+                          {!isEditing ? (
+                            nativePlace || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Native Place"
+                              value={nativePlace}
+                              onChange={(e) => handleChange("native_place", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <div className="detail-label">Current City</div>
+                        <div className="detail-value">
+                          {!isEditing ? (
+                            currentCity || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Current City"
+                              value={currentCity}
+                              onChange={(e) => handleChange("current_city", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <div className="detail-label">Native (Tamil)</div>
+                        <div
+                          className="detail-value"
+                          style={{ fontFamily: "var(--font-tamil)" }}
+                        >
+                          {!isEditing ? (
+                            nativeTamil || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Native Place (Tamil)"
+                              value={nativeTamil}
+                              onChange={(e) => handleChange("native_place_tamil", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              style={{ fontFamily: "var(--font-tamil)" }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <div className="detail-label">Grew Up In</div>
+                        <div className="detail-value">
+                          {!isEditing ? (
+                            grewUpIn || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Grew Up In"
+                              value={grewUpIn}
+                              onChange={(e) => handleChange("grew_up_in", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* About the Family */}
+                  <div
+                    className="content-card reveal visible"
+                    style={{ transitionDelay: ".2s" }}
+                  >
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">💌</div>About the Family
+                    </div>
+                    {!isEditing ? (
+                      <>
+                        {aboutFamily && <p className="about-text">{aboutFamily}</p>}
+                        {aboutFamilyTamil && (
+                          <p className="about-text-tamil">{aboutFamilyTamil}</p>
+                        )}
+                        {!aboutFamily && !aboutFamilyTamil && (
+                          <p className="text-xs text-slate-400 font-medium">-</p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                            About Family (English)
+                          </label>
+                          <textarea
+                            rows={3}
+                            placeholder="Write about your family..."
+                            value={aboutFamily}
+                            onChange={(e) => handleChange("about_family", e.target.value)}
+                            className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800 font-medium"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                            About Family (Tamil)
+                          </label>
+                          <textarea
+                            rows={3}
+                            placeholder="உங்கள் குடும்பத்தைப் பற்றி தமிழில் எழுதுங்கள்..."
+                            value={aboutFamilyTamil}
+                            onChange={(e) => handleChange("about_family_tamil", e.target.value)}
+                            className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800 font-medium"
+                            style={{ fontFamily: "var(--font-tamil)" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
               );
             })()}
-
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".1s" }}
-            >
-              <div className="content-card-title">
-                <div className="ctitle-icon">📍</div>Location & Native
-              </div>
-              <div className="details-grid">
-                <div className="detail-item">
-                  <div className="detail-label">Native Place</div>
-                  <div className="detail-value">Kumbakonam, Thanjavur</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Current City</div>
-                  <div className="detail-value">Chennai, Tamil Nadu</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Native (Tamil)</div>
-                  <div
-                    className="detail-value"
-                    style={{ fontFamily: "var(--font-tamil)" }}
-                  >
-                    கும்பகோணம், தஞ்சாவூர்
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Grew Up In</div>
-                  <div className="detail-value">Mylapore, Chennai</div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".2s" }}
-            >
-              <div className="content-card-title">
-                <div className="ctitle-icon">💌</div>About the Family
-              </div>
-              <p className="about-text">
-                We are a close-knit Tamil Brahmin family from Kumbakonam, now
-                settled in Mylapore, Chennai. My father was a professor at IIT
-                Madras; my brother is an engineer in Bengaluru. We believe in
-                education, simplicity, and respect — both for each other and for
-                our traditions. The family actively participates in community
-                and temple events.
-              </p>
-              <p className="about-text-tamil">
-                எங்கள் குடும்பம் தஞ்சாவூர் மாவட்டத்தை சார்ந்தது. தற்போது சென்னை
-                மயிலாப்பூரில் குடியிருக்கிறோம். கல்வி மற்றும் ஆன்மீகம் எங்கள்
-                குடும்பத்தின் முக்கிய மதிப்புகள்.
-              </p>
-            </div>
           </div>
 
           {/* PARTNER PREFS TAB PANEL */}
