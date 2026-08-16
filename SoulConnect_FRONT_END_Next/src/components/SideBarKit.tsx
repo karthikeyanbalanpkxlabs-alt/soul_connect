@@ -90,10 +90,20 @@ export default function SideBarKit({ children }: SideBarKitProps) {
     return <>{children}</>;
   }
 
+  const userName =
+    profile?.first_name ||
+    profile?.firstName ||
+    keycloak?.tokenParsed?.preferred_username ||
+    "User";
+
+  const userEmail = profile?.email || keycloak?.tokenParsed?.email;
+  const userRole = role.replaceAll("_g", "");
+  const initial = userName.charAt(0).toUpperCase();
+
   return (
     <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-gray-50">
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 z-40 relative">
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 z-30 flex-shrink-0">
         <Link
           href="/portal"
           className="nav-logo"
@@ -103,6 +113,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           <div className="logo-dot"></div>
         </Link>
         <button
+          type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-1 rounded focus:outline-none"
         >
@@ -117,55 +128,70 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/20 z-40"
+          className="md:hidden fixed inset-0 bg-black/30 z-40 transition-opacity"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div
+      <aside
         style={{
           borderRight: "1px solid var(--border-soft)",
         }}
-        className={`fixed md:static inset-y-0 left-0 z-50 h-screen overflow-hidden bg-white transition-transform duration-300 transform md:translate-x-0
-        ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-        ${collapsed ? "md:w-[110px] w-64" : "w-64"}`}
+        className={`fixed md:static inset-y-0 left-0 z-50 h-screen bg-white transition-all duration-300 flex flex-col justify-between shadow-lg md:shadow-none
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        ${collapsed ? "md:w-20 w-64" : "w-64"}`}
       >
-        {/* Header - Desktop Only */}
+        {/* Header */}
         <div
           style={{
             borderBottom: "1px solid var(--border-soft)",
           }}
-          className="hidden md:flex items-center justify-between p-4"
+          className={`flex items-center ${
+            collapsed ? "justify-center px-2" : "justify-between px-4"
+          } h-16 flex-shrink-0`}
         >
-          <div className="flex items-center overflow-hidden pr-10">
-            {!collapsed ? (
-              <Link href="/" className="nav-logo">
+          {!collapsed ? (
+            <>
+              <Link
+                href="/portal"
+                className="nav-logo"
+                style={{ textDecoration: "none" }}
+              >
                 Soul<span>Conect</span>
                 <div className="logo-dot"></div>
               </Link>
-            ) : (
-              <Link href="/" className="nav-logo-mini">
-                S<span>C</span>
-                <div className="logo-dot"></div>
-              </Link>
-            )}
-          </div>
-
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded"
-          >
-            {collapsed ? (
-              <Menu size={20} className="text-violet-600" />
-            ) : (
-              <ChevronLeft size={20} className="text-violet-600" />
-            )}
-          </button>
+              <button
+                type="button"
+                onClick={() => setCollapsed(true)}
+                className="hidden md:flex p-1.5 rounded-lg hover:bg-violet-50 text-violet-600 transition-colors"
+                title="Collapse sidebar"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="md:hidden p-1.5 rounded-lg hover:bg-violet-50 text-violet-600 transition-colors"
+                title="Close menu"
+              >
+                <X size={20} />
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              className="p-2 rounded-lg hover:bg-violet-50 text-violet-600 transition-colors"
+              title="Expand sidebar"
+            >
+              <Menu size={20} />
+            </button>
+          )}
         </div>
 
         {/* Menu Items */}
-        <div className="mt-4 px-2">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-1">
           {menus.map((menu) => {
             const Icon = menu.icon;
             // The root '/portal' needs an exact match, while others can use startsWith
@@ -181,25 +207,27 @@ export default function SideBarKit({ children }: SideBarKitProps) {
                   router.push(menu.router);
                   setMobileOpen(false); // close on mobile when clicked
                 }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 cursor-pointer transition-all duration-200
-                ${
+                title={collapsed ? menu.name : undefined}
+                className={`flex items-center ${
+                  collapsed ? "justify-center px-2 py-3" : "px-3.5 py-2.5"
+                } rounded-lg cursor-pointer transition-all duration-200 ${
                   isActive
-                    ? "bg-pink-100 border-r-4 border-pink-500"
-                    : "hover:bg-pink-50"
+                    ? "bg-pink-100 border-r-4 border-pink-500 font-semibold"
+                    : "hover:bg-pink-50 font-medium"
                 }`}
               >
                 <Icon
                   size={20}
-                  style={{
-                    margin: collapsed ? "auto" : undefined,
-                  }}
-                  className={isActive ? "text-[#c0436a]" : "text-violet-600"}
+                  className={`flex-shrink-0 ${
+                    isActive ? "text-[#c0436a]" : "text-violet-600"
+                  }`}
                 />
 
                 {!collapsed && (
                   <span
-                    className={`text-sm
-                    ${isActive ? "text-[#c0436a] font-bold" : "text-violet-600 font-medium"}`}
+                    className={`ml-3 text-sm truncate ${
+                      isActive ? "text-[#c0436a] font-bold" : "text-violet-600"
+                    }`}
                   >
                     {menu.name}
                   </span>
@@ -207,50 +235,78 @@ export default function SideBarKit({ children }: SideBarKitProps) {
               </div>
             );
           })}
-
-          {/* User Info & Logout */}
-          <div className="absolute bottom-0 w-[calc(100%-20px)]">
-            <div className="flex flex-col gap-1 px-4 py-2 rounded-lg text-left">
-              <div className="overflow-hidden font-semibold capitalize text-gray-800">
-                {profile?.first_name ||
-                  profile?.firstName ||
-                  keycloak?.tokenParsed?.preferred_username}
-              </div>
-              {profile?.email && (
-                <div className="text-xs text-gray-500 truncate">
-                  {profile.email}
-                </div>
-              )}
-              <div className="capitalize text-xs text-pink-600 font-medium">
-                {role.replaceAll("_g", "")}
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                localStorage.clear();
-                keycloak.logout();
-              }}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer hover:bg-red-50 transition-all duration-200"
-            >
-              <LogOut
-                size={20}
-                style={{
-                  margin: collapsed ? "auto" : undefined,
-                }}
-                className="text-red-500"
-              />
-
-              {!collapsed && (
-                <span className="text-sm font-medium text-red-500">Logout</span>
-              )}
-            </div>
-          </div>
         </div>
-      </div>
+
+        {/* User Info & Logout (Footer) */}
+        <div
+          style={{
+            borderTop: "1px solid var(--border-soft)",
+          }}
+          className="flex-shrink-0 p-3 bg-white"
+        >
+          {!collapsed ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm">
+                  {initial}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold capitalize text-gray-800 truncate">
+                    {userName}
+                  </div>
+                  {userEmail && (
+                    <div
+                      className="text-xs text-gray-500 truncate"
+                      title={userEmail}
+                    >
+                      {userEmail}
+                    </div>
+                  )}
+                  <div className="capitalize text-xs text-pink-600 font-medium truncate">
+                    {userRole}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => {
+                  localStorage.clear();
+                  keycloak.logout();
+                }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-red-50 transition-all duration-200"
+              >
+                <LogOut size={20} className="text-red-500 flex-shrink-0" />
+                <span className="text-sm font-medium text-red-500 truncate">
+                  Logout
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs shadow-sm cursor-default"
+                title={`${userName} (${userRole})`}
+              >
+                {initial}
+              </div>
+              <div
+                onClick={() => {
+                  localStorage.clear();
+                  keycloak.logout();
+                }}
+                title="Logout"
+                className="p-2 rounded-lg cursor-pointer hover:bg-red-50 transition-all duration-200"
+              >
+                <LogOut size={20} className="text-red-500" />
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
 
       {/* Page Content */}
       <div className="flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }
+
