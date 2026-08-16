@@ -34,6 +34,127 @@ import {
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../../../configUrls";
+import { districts } from "@/data/districts";
+
+const STAR_TAMIL_MAP: Record<string, string> = {
+  "Ashwini": "அசுவினி",
+  "Bharani": "பரணி",
+  "Krittika": "கார்த்திகை",
+  "Rohini": "ரோகிணி",
+  "Mrigashirsha": "மிருகசீரிஷம்",
+  "Ardra": "திருவாதிரை",
+  "Punarvasu": "புனர்பூசம்",
+  "Pushya": "பூசம்",
+  "Ashlesha": "ஆயில்யம்",
+  "Magha": "மகம்",
+  "Purva Phalguni": "பூரம்",
+  "Uttara Phalguni": "உத்திரம்",
+  "Hasta": "அஸ்தம்",
+  "Chitra": "சித்திரை",
+  "Swati": "சுவாதி",
+  "Vishakha": "விசாகம்",
+  "Anuradha": "அனுஷம்",
+  "Jyeshta": "கேட்டை",
+  "Moola": "மூலம்",
+  "Purva Ashadha": "பூராடம்",
+  "Uttara Ashadha": "உத்திராடம்",
+  "Shravana": "திருவோணம்",
+  "Dhanishta": "அவிட்டம்",
+  "Shatabhisha": "சதயம்",
+  "Purva Bhadrapada": "பூரட்டாதி",
+  "Uttara Bhadrapada": "உத்திரட்டாதி",
+  "Revati": "ரேவதி",
+};
+
+const RASI_TAMIL_MAP: Record<string, string> = {
+  "Mesham (Aries)": "மேஷம்",
+  "Mesham": "மேஷம்",
+  "Aries": "மேஷம்",
+  "Rishabam (Taurus)": "ரிஷபம்",
+  "Rishabam": "ரிஷபம்",
+  "Taurus": "ரிஷபம்",
+  "Mithunam (Gemini)": "மிதுனம்",
+  "Mithunam": "மிதுனம்",
+  "Gemini": "மிதுனம்",
+  "Katagam (Cancer)": "கடகம்",
+  "Katagam": "கடகம்",
+  "Cancer": "கடகம்",
+  "Simmam (Leo)": "சிம்மம்",
+  "Simmam": "சிம்மம்",
+  "Leo": "சிம்மம்",
+  "Kanni (Virgo)": "கன்னி",
+  "Kanni": "கன்னி",
+  "Virgo": "கன்னி",
+  "Thulaam (Libra)": "துலாம்",
+  "Thulaam": "துலாம்",
+  "Libra": "துலாம்",
+  "Vrichigam (Scorpio)": "விருச்சிகம்",
+  "Vrichigam": "விருச்சிகம்",
+  "Scorpio": "விருச்சிகம்",
+  "Dhanusu (Sagittarius)": "தனுசு",
+  "Dhanusu": "தனுசு",
+  "Sagittarius": "தனுசு",
+  "Makaram (Capricorn)": "மகரம்",
+  "Makaram": "மகரம்",
+  "Capricorn": "மகரம்",
+  "Kumbam (Aquarius)": "கும்பம்",
+  "Kumbam": "கும்பம்",
+  "Aquarius": "கும்பம்",
+  "Meenam (Pisces)": "மீனம்",
+  "Meenam": "மீனம்",
+  "Pisces": "மீனம்",
+};
+
+const getStarTamil = (star?: string) => {
+  if (!star) return "";
+  const trimmed = star.trim();
+  if (STAR_TAMIL_MAP[trimmed]) return STAR_TAMIL_MAP[trimmed];
+  const key = Object.keys(STAR_TAMIL_MAP).find(
+    (k) => k.toLowerCase() === trimmed.toLowerCase()
+  );
+  return key ? STAR_TAMIL_MAP[key] : "";
+};
+
+const getRasiTamil = (val?: string) => {
+  if (!val) return "";
+  const trimmed = val.trim();
+  if (RASI_TAMIL_MAP[trimmed]) return RASI_TAMIL_MAP[trimmed];
+  const key = Object.keys(RASI_TAMIL_MAP).find((k) =>
+    trimmed.toLowerCase().includes(k.toLowerCase())
+  );
+  return key ? RASI_TAMIL_MAP[key] : "";
+};
+
+const getDoshamTamil = (dosham?: string) => {
+  if (!dosham) return "";
+  const lower = dosham.toLowerCase();
+  if (lower.includes("no") || lower.includes("none")) return "தோஷமில்லை";
+  if (lower.includes("chevvai")) return "செவ்வாய் தோஷம்";
+  if (lower.includes("rahu")) return "ராகு கேது தோஷம்";
+  if (lower.includes("naga")) return "நாக தோஷம்";
+  return dosham;
+};
+
+const getPobTamil = (pob?: string) => {
+  if (!pob) return "";
+  const matched = districts.find(
+    (d) => d.name.toLowerCase() === pob.trim().toLowerCase()
+  );
+  return matched ? matched.tamil : "";
+};
+
+const getTobTamil = (tob?: string) => {
+  if (!tob) return "";
+  const lower = tob.toLowerCase();
+  if (lower.includes("am")) {
+    const hourMatch = lower.match(/^(\d{1,2})/);
+    const hour = hourMatch ? parseInt(hourMatch[1], 10) : 6;
+    if (hour >= 4 && hour <= 7) return "அதிகாலை";
+    return "காலை";
+  }
+  if (lower.includes("pm")) return "மாலை / இரவு";
+  return "";
+};
 
 const NAKSHATRAS = [
   "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
@@ -2830,9 +2951,13 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.star || profile?.star || formData.star || "Rohini"}
+                        {profile?.horoscopeDetails?.star || profile?.star || formData.star || "-"}
                       </div>
-                      <div className="horo-value-tamil">ரோகிணி</div>
+                      {getStarTamil(profile?.horoscopeDetails?.star || profile?.star || formData.star) && (
+                        <div className="horo-value-tamil">
+                          {getStarTamil(profile?.horoscopeDetails?.star || profile?.star || formData.star)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
@@ -2854,9 +2979,13 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi || "Rishabam (Taurus)"}
+                        {profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi || "-"}
                       </div>
-                      <div className="horo-value-tamil">ரிஷபம்</div>
+                      {getRasiTamil(profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi) && (
+                        <div className="horo-value-tamil">
+                          {getRasiTamil(profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
@@ -2878,9 +3007,13 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}
+                        {profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam || "-"}
                       </div>
-                      <div className="horo-value-tamil">மிதுனம்</div>
+                      {getRasiTamil(profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam) && (
+                        <div className="horo-value-tamil">
+                          {getRasiTamil(profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
@@ -2902,9 +3035,8 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.gothram || profile?.gothram || formData.gothram || "Vatsa Gothram"}
+                        {profile?.horoscopeDetails?.gothram || profile?.gothram || formData.gothram || "-"}
                       </div>
-                      <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
                     </>
                   ) : (
                     <input
@@ -2920,7 +3052,7 @@ export default function ProfilePage() {
                   <div className="horo-label">Date of Birth</div>
                   {!isEditing ? (
                     <div className="horo-value">
-                      {profile?.horoscopeDetails?.dob || profile?.dob || formData.dob || "1989-02-22"}
+                      {profile?.horoscopeDetails?.dob || profile?.dob || formData.dob || "-"}
                     </div>
                   ) : (
                     <input
@@ -2936,9 +3068,13 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.tob || profile?.tob || formData.tob || "06:34 AM"}
+                        {profile?.horoscopeDetails?.tob || profile?.tob || formData.tob || "-"}
                       </div>
-                      <div className="horo-value-tamil">அதிகாலை</div>
+                      {getTobTamil(profile?.horoscopeDetails?.tob || profile?.tob || formData.tob) && (
+                        <div className="horo-value-tamil">
+                          {getTobTamil(profile?.horoscopeDetails?.tob || profile?.tob || formData.tob)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <input
@@ -2955,9 +3091,13 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.pob || profile?.pob || formData.pob || "Kumbakonam"}
+                        {profile?.horoscopeDetails?.pob || profile?.pob || formData.pob || "-"}
                       </div>
-                      <div className="horo-value-tamil">கும்பகோணம்</div>
+                      {getPobTamil(profile?.horoscopeDetails?.pob || profile?.pob || formData.pob) && (
+                        <div className="horo-value-tamil">
+                          {getPobTamil(profile?.horoscopeDetails?.pob || profile?.pob || formData.pob)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <input
@@ -2976,12 +3116,14 @@ export default function ProfilePage() {
                       <div className="horo-value" style={{ color: "var(--sage)" }}>
                         {profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham || "No Dosham"}
                       </div>
-                      <div
-                        className="horo-value-tamil"
-                        style={{ color: "var(--sage)" }}
-                      >
-                        தோஷமில்லை
-                      </div>
+                      {getDoshamTamil(profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham) && (
+                        <div
+                          className="horo-value-tamil"
+                          style={{ color: "var(--sage)" }}
+                        >
+                          {getDoshamTamil(profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
