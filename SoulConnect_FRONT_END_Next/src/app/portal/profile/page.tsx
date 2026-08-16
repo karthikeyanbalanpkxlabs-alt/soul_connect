@@ -163,6 +163,26 @@ const getHoroVal = (profile: any, formData: any, key: string, fallback: string =
   return fallback;
 };
 
+const BLOOD_GROUPS = [
+  "A+ve",
+  "A-ve",
+  "B+ve",
+  "B-ve",
+  "O+ve",
+  "O-ve",
+  "AB+ve",
+  "AB-ve",
+  "A1+ve",
+  "A1-ve",
+  "A2+ve",
+  "A2-ve",
+  "A1B+ve",
+  "A1B-ve",
+  "A2B+ve",
+  "A2B-ve",
+  "Bombay Blood Group",
+];
+
 const NAKSHATRAS = [
   "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
   "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
@@ -1538,13 +1558,18 @@ export default function ProfilePage() {
                         {profile?.blood_group || "N/A"}
                       </span>
                     ) : (
-                      <input
-                        type="text"
-                        placeholder="e.g. O+ve"
-                        value={formData.blood_group || ""}
+                      <select
+                        value={formData.blood_group || profile?.blood_group || ""}
                         onChange={(e) => handleChange("blood_group", e.target.value)}
-                        className="px-2.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                      />
+                        className="px-2.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                      >
+                        <option value="">Select Blood Group</option>
+                        {BLOOD_GROUPS.map((bg) => (
+                          <option key={bg} value={bg}>
+                            {bg}
+                          </option>
+                        ))}
+                      </select>
                     )}
                   </div>
                   
