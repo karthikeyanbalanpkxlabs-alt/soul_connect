@@ -34,6 +34,383 @@ import {
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../../../configUrls";
+import { districts } from "@/data/districts";
+
+const STAR_TAMIL_MAP: Record<string, string> = {
+  "Ashwini": "அசுவினி",
+  "Bharani": "பரணி",
+  "Krittika": "கார்த்திகை",
+  "Rohini": "ரோகிணி",
+  "Mrigashirsha": "மிருகசீரிஷம்",
+  "Ardra": "திருவாதிரை",
+  "Punarvasu": "புனர்பூசம்",
+  "Pushya": "பூசம்",
+  "Ashlesha": "ஆயில்யம்",
+  "Magha": "மகம்",
+  "Purva Phalguni": "பூரம்",
+  "Uttara Phalguni": "உத்திரம்",
+  "Hasta": "அஸ்தம்",
+  "Chitra": "சித்திரை",
+  "Swati": "சுவாதி",
+  "Vishakha": "விசாகம்",
+  "Anuradha": "அனுஷம்",
+  "Jyeshta": "கேட்டை",
+  "Moola": "மூலம்",
+  "Purva Ashadha": "பூராடம்",
+  "Uttara Ashadha": "உத்திராடம்",
+  "Shravana": "திருவோணம்",
+  "Dhanishta": "அவிட்டம்",
+  "Shatabhisha": "சதயம்",
+  "Purva Bhadrapada": "பூரட்டாதி",
+  "Uttara Bhadrapada": "உத்திரட்டாதி",
+  "Revati": "ரேவதி",
+};
+
+const RASI_TAMIL_MAP: Record<string, string> = {
+  "Mesham (Aries)": "மேஷம்",
+  "Mesham": "மேஷம்",
+  "Aries": "மேஷம்",
+  "Rishabam (Taurus)": "ரிஷபம்",
+  "Rishabam": "ரிஷபம்",
+  "Taurus": "ரிஷபம்",
+  "Mithunam (Gemini)": "மிதுனம்",
+  "Mithunam": "மிதுனம்",
+  "Gemini": "மிதுனம்",
+  "Katagam (Cancer)": "கடகம்",
+  "Katagam": "கடகம்",
+  "Cancer": "கடகம்",
+  "Simmam (Leo)": "சிம்மம்",
+  "Simmam": "சிம்மம்",
+  "Leo": "சிம்மம்",
+  "Kanni (Virgo)": "கன்னி",
+  "Kanni": "கன்னி",
+  "Virgo": "கன்னி",
+  "Thulaam (Libra)": "துலாம்",
+  "Thulaam": "துலாம்",
+  "Libra": "துலாம்",
+  "Vrichigam (Scorpio)": "விருச்சிகம்",
+  "Vrichigam": "விருச்சிகம்",
+  "Scorpio": "விருச்சிகம்",
+  "Dhanusu (Sagittarius)": "தனுசு",
+  "Dhanusu": "தனுசு",
+  "Sagittarius": "தனுசு",
+  "Makaram (Capricorn)": "மகரம்",
+  "Makaram": "மகரம்",
+  "Capricorn": "மகரம்",
+  "Kumbam (Aquarius)": "கும்பம்",
+  "Kumbam": "கும்பம்",
+  "Aquarius": "கும்பம்",
+  "Meenam (Pisces)": "மீனம்",
+  "Meenam": "மீனம்",
+  "Pisces": "மீனம்",
+};
+
+const getStarTamil = (star?: string) => {
+  if (!star) return "";
+  const trimmed = star.trim();
+  if (STAR_TAMIL_MAP[trimmed]) return STAR_TAMIL_MAP[trimmed];
+  const key = Object.keys(STAR_TAMIL_MAP).find(
+    (k) => k.toLowerCase() === trimmed.toLowerCase()
+  );
+  return key ? STAR_TAMIL_MAP[key] : "";
+};
+
+const getRasiTamil = (val?: string) => {
+  if (!val) return "";
+  const trimmed = val.trim();
+  if (RASI_TAMIL_MAP[trimmed]) return RASI_TAMIL_MAP[trimmed];
+  const key = Object.keys(RASI_TAMIL_MAP).find((k) =>
+    trimmed.toLowerCase().includes(k.toLowerCase())
+  );
+  return key ? RASI_TAMIL_MAP[key] : "";
+};
+
+const getDoshamTamil = (dosham?: string) => {
+  if (!dosham) return "";
+  const lower = dosham.toLowerCase();
+  if (lower.includes("no") || lower.includes("none")) return "தோஷமில்லை";
+  if (lower.includes("chevvai")) return "செவ்வாய் தோஷம்";
+  if (lower.includes("rahu")) return "ராகு கேது தோஷம்";
+  if (lower.includes("naga")) return "நாக தோஷம்";
+  return dosham;
+};
+
+const getPobTamil = (pob?: string) => {
+  if (!pob) return "";
+  const matched = districts.find(
+    (d) => d.name.toLowerCase() === pob.trim().toLowerCase()
+  );
+  return matched ? matched.tamil : "";
+};
+
+const getTobTamil = (tob?: string) => {
+  if (!tob) return "";
+  const lower = tob.toLowerCase();
+  if (lower.includes("am")) {
+    const hourMatch = lower.match(/^(\d{1,2})/);
+    const hour = hourMatch ? parseInt(hourMatch[1], 10) : 6;
+    if (hour >= 4 && hour <= 7) return "அதிகாலை";
+    return "காலை";
+  }
+  if (lower.includes("pm")) return "மாலை / இரவு";
+  return "";
+};
+
+const getHoroVal = (profile: any, formData: any, key: string, fallback: string = "") => {
+  if (formData[key] !== undefined) return formData[key];
+  if (profile?.horoscopeDetails?.[key] !== undefined) return profile.horoscopeDetails[key];
+  if (profile?.[key] !== undefined) return profile[key];
+  return fallback;
+};
+
+const BLOOD_GROUPS = [
+  "A+ve",
+  "A-ve",
+  "B+ve",
+  "B-ve",
+  "O+ve",
+  "O-ve",
+  "AB+ve",
+  "AB-ve",
+  "A1+ve",
+  "A1-ve",
+  "A2+ve",
+  "A2-ve",
+  "A1B+ve",
+  "A1B-ve",
+  "A2B+ve",
+  "A2B-ve",
+  "Bombay Blood Group",
+];
+
+const EDUCATION_OPTIONS = [
+  "10th / SSLC",
+  "12th / HSC",
+  "Diploma",
+  "UG Degree",
+  "B.E / B.Tech",
+  "B.Sc / B.Com / B.A",
+  "BBA / BCA",
+  "PG Degree",
+  "M.E / M.Tech",
+  "MBA / PGDM",
+  "M.Sc / M.Com / M.A",
+  "MCA",
+  "Doctorate (PhD)",
+  "Medical (MBBS / MD / MS)",
+  "Legal (LLB / LLM)",
+  "CA / CS / ICWA",
+  "Other",
+];
+
+const PROFESSION_OPTIONS = [
+  "Software / IT",
+  "Doctor",
+  "Engineer",
+  "Teacher / Academic",
+  "Govt. Employee",
+  "Business Owner",
+  "Lawyer",
+  "Chartered Accountant",
+  "Banking / Finance",
+  "Defense / Police",
+  "Healthcare / Nursing",
+  "Agriculture",
+  "Student",
+  "Homemaker",
+  "Other",
+];
+
+const INCOME_OPTIONS = [
+  "Prefer not to say",
+  "Below 3 LPA",
+  "3–6 LPA",
+  "6–10 LPA",
+  "10–15 LPA",
+  "15–25 LPA",
+  "25–50 LPA",
+  "50 LPA+",
+];
+
+const RELIGION_OPTIONS = [
+  "Hindu",
+  "Muslim",
+  "Christian",
+  "Jain",
+  "Buddhist",
+  "Sikh",
+  "Inter-Religion",
+  "Other",
+];
+
+const CASTE_OPTIONS = [
+  "BC",
+  "MBC",
+  "FC / OC",
+  "SC",
+  "ST",
+  "Vanniyar",
+  "Gounder",
+  "Thevar / Mukkulathor",
+  "Nadar",
+  "Chettiar",
+  "Pillai",
+  "Mudaliar",
+  "Iyer",
+  "Iyengar",
+  "Naidu",
+  "Reddy",
+  "Yadav",
+  "Viswakarma",
+  "Don't want to specify",
+  "Other",
+];
+
+const MOTHER_TONGUE_OPTIONS = [
+  "Tamil",
+  "Telugu",
+  "Kannada",
+  "Malayalam",
+  "Hindi",
+  "Gujarati",
+  "Marathi",
+  "Bengali",
+  "Punjabi",
+  "Urdu",
+  "English",
+  "Other",
+];
+
+const PREF_AGE_RANGE_OPTIONS = [
+  "18 – 23 yrs",
+  "21 – 26 yrs",
+  "24 – 29 yrs",
+  "27 – 33 yrs",
+  "30 – 36 yrs",
+  "33 – 40 yrs",
+  "38 – 45 yrs",
+  "42 – 50 yrs",
+  "50+ yrs",
+  "Flexible",
+];
+
+const PREF_HEIGHT_OPTIONS = [
+  "Any height",
+  "4'10\" and above",
+  "5'0\" and above",
+  "5'2\" and above",
+  "5'4\" and above",
+  "5'6\" and above",
+  "5'7\" and above",
+  "5'8\" and above",
+  "5'10\" and above",
+  "6'0\" and above",
+];
+
+const PREF_MARITAL_OPTIONS = [
+  "Never Married preferred",
+  "Never Married only",
+  "Divorced preferred",
+  "Widowed preferred",
+  "Awaiting Divorce preferred",
+  "Open to all",
+];
+
+const PREF_DIET_OPTIONS = [
+  "Vegetarian only",
+  "Strict Vegetarian",
+  "Non-Vegetarian preferred",
+  "Eggetarian",
+  "Vegan",
+  "No preference",
+];
+
+const PREF_SMOKING_OPTIONS = [
+  "Non-Smoker",
+  "Non-Smoker preferred",
+  "Occasional Smoker ok",
+  "No preference",
+];
+
+const PREF_DRINKING_OPTIONS = [
+  "Non-Drinker preferred",
+  "Non-Drinker only",
+  "Social Drinker ok",
+  "No preference",
+];
+
+const PREF_EDUCATION_OPTIONS = [
+  "Graduate & above",
+  "Post Graduate & above",
+  "Doctorate / PhD",
+  "Professional Degree (Engg/MBBS/MBA/CA)",
+  "10th / 12th / Diploma & above",
+  "No preference",
+];
+
+const PREF_OCCUPATION_OPTIONS = [
+  "Any professional field",
+  "Software / IT",
+  "Doctor / Medical",
+  "Engineering / Tech",
+  "Govt. / PSU Job",
+  "Business / Entrepreneur",
+  "Teaching / Academics",
+  "Finance / Banking",
+  "No preference",
+];
+
+const PREF_INCOME_OPTIONS = [
+  "Any income",
+  "₹3L+ per year",
+  "₹5L+ per year",
+  "₹8L+ per year",
+  "₹12L+ per year",
+  "₹15L+ per year",
+  "₹25L+ per year",
+  "₹50L+ per year",
+];
+
+const PREF_RELIGION_OPTIONS = [
+  "Hindu preferred",
+  "Hindu only",
+  "Muslim preferred",
+  "Christian preferred",
+  "Jain preferred",
+  "Sikh preferred",
+  "Any religion",
+];
+
+const PREF_CASTE_OPTIONS = [
+  "Tamil Brahmin preferred",
+  "BC preferred",
+  "MBC preferred",
+  "FC / OC preferred",
+  "SC / ST preferred",
+  "Vanniyar preferred",
+  "Gounder preferred",
+  "Thevar preferred",
+  "Nadar preferred",
+  "Chettiar preferred",
+  "Pillai preferred",
+  "Mudaliar preferred",
+  "Naidu preferred",
+  "Reddy preferred",
+  "Same caste preferred",
+  "Caste no bar / Open",
+];
+
+const PREF_LOCATION_OPTIONS = [
+  "Tamil Nadu or willing to relocate",
+  "Chennai preferred",
+  "Coimbatore preferred",
+  "Madurai preferred",
+  "Bangalore / Karnataka preferred",
+  "Anywhere in South India",
+  "Anywhere in India",
+  "Abroad / NRI preferred",
+  "Open to all locations",
+];
 
 const NAKSHATRAS = [
   "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
@@ -215,37 +592,42 @@ export default function ProfilePage() {
         photos: casualPhotos,
         family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : (profile?.family_photos || []),
         horoscopeDetails: {
-          dob: formData.dob || profile?.horoscopeDetails?.dob || profile?.dob || "",
-          star: formData.star || profile?.horoscopeDetails?.star || profile?.star || "",
-          rasi: formData.rasi || profile?.horoscopeDetails?.rasi || profile?.rasi || "",
-          lagnam: formData.lagnam || profile?.horoscopeDetails?.lagnam || profile?.lagnam || "",
-          gothram: formData.gothram || profile?.horoscopeDetails?.gothram || profile?.gothram || "",
-          tob: formData.tob || profile?.horoscopeDetails?.tob || profile?.tob || "",
-          pob: formData.pob || profile?.horoscopeDetails?.pob || profile?.pob || "",
-          dosham: formData.dosham || profile?.horoscopeDetails?.dosham || profile?.dosham || "No Dosham",
-          manglik: formData.manglik || profile?.horoscopeDetails?.manglik || profile?.manglik || "No",
-          chevvai_dosham: formData.chevvai_dosham || profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No",
-          rahu_ketu_dosham: formData.rahu_ketu_dosham || profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral",
+          dob: formData.dob !== undefined ? formData.dob : (profile?.horoscopeDetails?.dob || profile?.dob || ""),
+          star: formData.star !== undefined ? formData.star : (profile?.horoscopeDetails?.star || profile?.star || ""),
+          rasi: formData.rasi !== undefined ? formData.rasi : (profile?.horoscopeDetails?.rasi || profile?.rasi || ""),
+          lagnam: formData.lagnam !== undefined ? formData.lagnam : (profile?.horoscopeDetails?.lagnam || profile?.lagnam || ""),
+          gothram: formData.gothram !== undefined ? formData.gothram : (profile?.horoscopeDetails?.gothram || profile?.gothram || ""),
+          tob: formData.tob !== undefined ? formData.tob : (profile?.horoscopeDetails?.tob || profile?.tob || ""),
+          pob: formData.pob !== undefined ? formData.pob : (profile?.horoscopeDetails?.pob || profile?.pob || ""),
+          dosham: formData.dosham !== undefined ? formData.dosham : (profile?.horoscopeDetails?.dosham || profile?.dosham || "No Dosham"),
+          manglik: formData.manglik !== undefined ? formData.manglik : (profile?.horoscopeDetails?.manglik || profile?.manglik || "No"),
+          chevvai_dosham: formData.chevvai_dosham !== undefined ? formData.chevvai_dosham : (profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No"),
+          rahu_ketu_dosham: formData.rahu_ketu_dosham !== undefined ? formData.rahu_ketu_dosham : (profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral"),
           jathagam: profile?.horoscopeDetails?.jathagam || profile?.jathagam || null,
         },
         familyBackground: {
           ...(profile?.familyBackground || {}),
-          father_name: formData.father_name || profile?.familyBackground?.father_name || profile?.father_name || "",
-          father_occupation: formData.father_occupation || profile?.familyBackground?.father_occupation || profile?.father_occupation || "",
-          mother_name: formData.mother_name || profile?.familyBackground?.mother_name || profile?.mother_name || "",
-          mother_occupation: formData.mother_occupation || profile?.familyBackground?.mother_occupation || profile?.mother_occupation || "",
-          siblings: formData.siblings || profile?.familyBackground?.siblings || profile?.siblings || "",
-          siblings_details: formData.siblings_details || profile?.familyBackground?.siblings_details || profile?.siblings_details || "",
-          family_type: formData.family_type || profile?.familyBackground?.family_type || profile?.family_type || "",
-          family_type_details: formData.family_type_details || profile?.familyBackground?.family_type_details || profile?.family_type_details || "",
-          family_status: formData.family_status || profile?.familyBackground?.family_status || profile?.family_status || "",
-          family_status_details: formData.family_status_details || profile?.familyBackground?.family_status_details || profile?.family_status_details || "",
-          family_address: formData.family_address || profile?.familyBackground?.family_address || profile?.family_address || "",
-          family_values: formData.family_values || profile?.familyBackground?.family_values || profile?.family_values || "",
-          family_values_details: formData.family_values_details || profile?.familyBackground?.family_values_details || profile?.family_values_details || "",
-          about_family: formData.about_family || profile?.familyBackground?.about_family || profile?.about_family || "",
-          about_family_tamil: formData.about_family_tamil || profile?.familyBackground?.about_family_tamil || profile?.about_family_tamil || "",
+          father_name: formData.father_name !== undefined ? formData.father_name : (profile?.familyBackground?.father_name || profile?.father_name || ""),
+          father_occupation: formData.father_occupation !== undefined ? formData.father_occupation : (profile?.familyBackground?.father_occupation || profile?.father_occupation || ""),
+          mother_name: formData.mother_name !== undefined ? formData.mother_name : (profile?.familyBackground?.mother_name || profile?.mother_name || ""),
+          mother_occupation: formData.mother_occupation !== undefined ? formData.mother_occupation : (profile?.familyBackground?.mother_occupation || profile?.mother_occupation || ""),
+          siblings_list: formData.siblings_list !== undefined ? formData.siblings_list : (profile?.familyBackground?.siblings_list || profile?.siblings_list || []),
+          siblings: formData.siblings !== undefined ? formData.siblings : (profile?.familyBackground?.siblings || profile?.siblings || ""),
+          siblings_details: formData.siblings_details !== undefined ? formData.siblings_details : (profile?.familyBackground?.siblings_details || profile?.siblings_details || ""),
+          family_type: formData.family_type !== undefined ? formData.family_type : (profile?.familyBackground?.family_type || profile?.family_type || ""),
+          family_type_details: formData.family_type_details !== undefined ? formData.family_type_details : (profile?.familyBackground?.family_type_details || profile?.family_type_details || ""),
+          family_status: formData.family_status !== undefined ? formData.family_status : (profile?.familyBackground?.family_status || profile?.family_status || ""),
+          family_status_details: formData.family_status_details !== undefined ? formData.family_status_details : (profile?.familyBackground?.family_status_details || profile?.family_address || ""),
+          family_address: formData.family_address !== undefined ? formData.family_address : (profile?.familyBackground?.family_address || profile?.family_address || ""),
+          family_values: formData.family_values !== undefined ? formData.family_values : (profile?.familyBackground?.family_values || profile?.family_values || ""),
+          family_values_details: formData.family_values_details !== undefined ? formData.family_values_details : (profile?.familyBackground?.family_values_details || profile?.family_values_details || ""),
+          about_family: formData.about_family !== undefined ? formData.about_family : (profile?.familyBackground?.about_family || profile?.about_family || ""),
+          about_family_tamil: formData.about_family_tamil !== undefined ? formData.about_family_tamil : (profile?.familyBackground?.about_family_tamil || profile?.about_family_tamil || ""),
         },
+        native_place: formData.native_place !== undefined ? formData.native_place : (profile?.native_place || ""),
+        current_city: formData.current_city !== undefined ? formData.current_city : (profile?.current_city || ""),
+        native_place_tamil: formData.native_place_tamil !== undefined ? formData.native_place_tamil : (profile?.native_place_tamil || ""),
+        grew_up_in: formData.grew_up_in !== undefined ? formData.grew_up_in : (profile?.grew_up_in || ""),
         lifeStyle: {
           ...(profile?.lifeStyle || {}),
           diet: formData.diet !== undefined ? formData.diet : (profile?.lifeStyle?.diet || profile?.diet || "Strict Vegetarian"),
@@ -831,42 +1213,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* INLINE EDIT MODE BANNER */}
-      {isCustomer && isEditing && (
-        <div className="max-w-[1100px] mx-auto px-6 mt-4 mb-2">
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm animate-in fade-in">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">✏️</span>
-              <div>
-                <h4 className="font-bold text-xs uppercase tracking-wider text-amber-900">
-                  Profile Editing Mode Active
-                </h4>
-                <p className="text-xs text-amber-700 mt-0.5">
-                  Update your details directly on the page below and click Save Changes when finished.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveInlineProfile}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition"
-              >
-                ✓ Save Changes
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  if (profile) setFormData({ ...profile });
-                }}
-                className="px-3 py-2 bg-white text-slate-700 hover:bg-slate-100 font-semibold text-xs rounded-xl border border-slate-200 transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="profile-layout">
         {/* LEFT COLUMN */}
         <div className="profile-left">
@@ -1110,20 +1456,26 @@ export default function ProfilePage() {
                     `${profile?.religion || "N/A"}${profile?.caste ? ` (${profile.caste})` : ""}`
                   ) : (
                     <div className="flex gap-1 w-full">
-                      <input
-                        type="text"
-                        placeholder="Religion"
-                        value={formData.religion || ""}
+                      <select
+                        value={formData.religion || profile?.religion || ""}
                         onChange={(e) => handleChange("religion", e.target.value)}
-                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Caste"
-                        value={formData.caste || ""}
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded font-semibold text-slate-800"
+                      >
+                        <option value="">Religion</option>
+                        {RELIGION_OPTIONS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={formData.caste || profile?.caste || ""}
                         onChange={(e) => handleChange("caste", e.target.value)}
-                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
-                      />
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded font-semibold text-slate-800"
+                      >
+                        <option value="">Caste</option>
+                        {CASTE_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
                 </div>
@@ -1135,13 +1487,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.profession || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Profession"
-                      value={formData.profession || ""}
+                    <select
+                      value={formData.profession || profile?.profession || ""}
                       onChange={(e) => handleChange("profession", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Profession</option>
+                      {PROFESSION_OPTIONS.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1152,13 +1507,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.education || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Education"
-                      value={formData.education || ""}
+                    <select
+                      value={formData.education || profile?.education || ""}
                       onChange={(e) => handleChange("education", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Education</option>
+                      {EDUCATION_OPTIONS.map((eOpt) => (
+                        <option key={eOpt} value={eOpt}>{eOpt}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1169,13 +1527,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.annual_income || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Annual Income"
-                      value={formData.annual_income || ""}
+                    <select
+                      value={formData.annual_income || profile?.annual_income || ""}
                       onChange={(e) => handleChange("annual_income", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Income</option>
+                      {INCOME_OPTIONS.map((inc) => (
+                        <option key={inc} value={inc}>{inc}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1186,13 +1547,18 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.district || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="District"
-                      value={formData.district || ""}
+                    <select
+                      value={formData.district || profile?.district || ""}
                       onChange={(e) => handleChange("district", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select District</option>
+                      {districts.map((d) => (
+                        <option key={d.id} value={d.name}>
+                          {d.name} ({d.tamil})
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1203,13 +1569,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.mother_tongue || "Tamil"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Mother Tongue / Languages"
-                      value={formData.mother_tongue || ""}
+                    <select
+                      value={formData.mother_tongue || profile?.mother_tongue || ""}
                       onChange={(e) => handleChange("mother_tongue", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Language</option>
+                      {MOTHER_TONGUE_OPTIONS.map((mt) => (
+                        <option key={mt} value={mt}>{mt}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1266,6 +1635,42 @@ export default function ProfilePage() {
 
         {/* RIGHT COLUMN */}
         <div className="profile-right">
+          {/* INLINE EDIT MODE BANNER */}
+          {isCustomer && isEditing && (
+            <div className="mb-4">
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm animate-in fade-in">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">✏️</span>
+                  <div>
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-amber-900">
+                      Profile Editing Mode Active
+                    </h4>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Update your details directly on the page below and click Save Changes when finished.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={handleSaveInlineProfile}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition"
+                  >
+                    ✓ Save Changes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      if (profile) setFormData({ ...profile });
+                    }}
+                    className="px-3 py-2 bg-white text-slate-700 hover:bg-slate-100 font-semibold text-xs rounded-xl border border-slate-200 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tab Bar */}
           <div
             className={`profile-tabs-bar reveal ${isLoaded ? "visible" : ""}`}
@@ -1410,13 +1815,18 @@ export default function ProfilePage() {
                         {profile?.blood_group || "N/A"}
                       </span>
                     ) : (
-                      <input
-                        type="text"
-                        placeholder="e.g. O+ve"
-                        value={formData.blood_group || ""}
+                      <select
+                        value={formData.blood_group || profile?.blood_group || ""}
                         onChange={(e) => handleChange("blood_group", e.target.value)}
-                        className="px-2.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                      />
+                        className="px-2.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                      >
+                        <option value="">Select Blood Group</option>
+                        {BLOOD_GROUPS.map((bg) => (
+                          <option key={bg} value={bg}>
+                            {bg}
+                          </option>
+                        ))}
+                      </select>
                     )}
                   </div>
                   
@@ -1929,12 +2339,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.education || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.education || ""}
+                      <select
+                        value={formData.education || profile?.education || ""}
                         onChange={(e) => handleChange("education", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Highest Degree / Education</option>
+                        {EDUCATION_OPTIONS.map((eOpt) => (
+                          <option key={eOpt} value={eOpt}>{eOpt}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -1944,12 +2358,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.profession || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.profession || ""}
+                      <select
+                        value={formData.profession || profile?.profession || ""}
                         onChange={(e) => handleChange("profession", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Occupation / Profession</option>
+                        {PROFESSION_OPTIONS.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -1959,12 +2377,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.annual_income || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.annual_income || ""}
+                      <select
+                        value={formData.annual_income || profile?.annual_income || ""}
                         onChange={(e) => handleChange("annual_income", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Annual Income</option>
+                        {INCOME_OPTIONS.map((inc) => (
+                          <option key={inc} value={inc}>{inc}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -1989,12 +2411,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.religion || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.religion || ""}
+                      <select
+                        value={formData.religion || profile?.religion || ""}
                         onChange={(e) => handleChange("religion", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Religion</option>
+                        {RELIGION_OPTIONS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2004,12 +2430,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.caste || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.caste || ""}
+                      <select
+                        value={formData.caste || profile?.caste || ""}
                         onChange={(e) => handleChange("caste", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Caste</option>
+                        {CASTE_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2019,12 +2449,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.mother_tongue || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.mother_tongue || ""}
+                      <select
+                        value={formData.mother_tongue || profile?.mother_tongue || ""}
                         onChange={(e) => handleChange("mother_tongue", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Mother Tongue</option>
+                        {MOTHER_TONGUE_OPTIONS.map((mt) => (
+                          <option key={mt} value={mt}>{mt}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2150,119 +2584,520 @@ export default function ProfilePage() {
           >
             {(() => {
               const fam = profile?.familyBackground || {};
-              const fatherName = fam.father_name || profile?.father_name || "Dr. R. Krishnamurthy";
-              const fatherOcc = fam.father_occupation || profile?.father_occupation || "Retired · IIT Madras Professor";
-              const motherName = fam.mother_name || profile?.mother_name || "Smt. Meenakshi K.";
-              const motherOcc = fam.mother_occupation || profile?.mother_occupation || "Homemaker";
-              const siblings = fam.siblings || profile?.siblings || "1 Elder Brother";
-              const siblingsDetails = fam.siblings_details || profile?.siblings_details || "Married · Software Engineer, Bengaluru";
-              const famType = fam.family_type || profile?.family_type || "Nuclear Family";
-              const famTypeDetails = fam.family_type_details || profile?.family_type_details || "Extended family in Mylapore";
-              const famStatus = fam.family_status || profile?.family_status || "Upper Middle Class";
-              const famStatusDetails = fam.family_status_details || fam.family_address || profile?.family_status_details || profile?.family_address || "Own house in Mylapore, Chennai";
-              const famValues = fam.family_values || profile?.family_values || "Traditional";
-              const famValuesDetails = fam.family_values_details || profile?.family_values_details || "Conservative with modern outlook";
+              const fatherName = formData.father_name !== undefined ? formData.father_name : (fam.father_name || profile?.father_name || "");
+              const fatherOcc = formData.father_occupation !== undefined ? formData.father_occupation : (fam.father_occupation || profile?.father_occupation || "");
+              const motherName = formData.mother_name !== undefined ? formData.mother_name : (fam.mother_name || profile?.mother_name || "");
+              const motherOcc = formData.mother_occupation !== undefined ? formData.mother_occupation : (fam.mother_occupation || profile?.mother_occupation || "");
+              const siblings = formData.siblings !== undefined ? formData.siblings : (fam.siblings || profile?.siblings || "");
+              const siblingsDetails = formData.siblings_details !== undefined ? formData.siblings_details : (fam.siblings_details || profile?.siblings_details || "");
+              const famType = formData.family_type !== undefined ? formData.family_type : (fam.family_type || profile?.family_type || "");
+              const famTypeDetails = formData.family_type_details !== undefined ? formData.family_type_details : (fam.family_type_details || profile?.family_type_details || "");
+              const famStatus = formData.family_status !== undefined ? formData.family_status : (fam.family_status || profile?.family_status || "");
+              const famStatusDetails = formData.family_status_details !== undefined ? formData.family_status_details : (fam.family_status_details || fam.family_address || profile?.family_status_details || profile?.family_address || "");
+              const famValues = formData.family_values !== undefined ? formData.family_values : (fam.family_values || profile?.family_values || "");
+              const famValuesDetails = formData.family_values_details !== undefined ? formData.family_values_details : (fam.family_values_details || profile?.family_values_details || "");
+
+              const nativePlace = formData.native_place !== undefined ? formData.native_place : (profile?.native_place || profile?.district || "");
+              const currentCity = formData.current_city !== undefined ? formData.current_city : (profile?.current_city || profile?.city || "");
+              const nativeTamil = formData.native_place_tamil !== undefined ? formData.native_place_tamil : (profile?.native_place_tamil || "");
+              const grewUpIn = formData.grew_up_in !== undefined ? formData.grew_up_in : (profile?.grew_up_in || "");
+
+              const aboutFamily = formData.about_family !== undefined ? formData.about_family : (fam.about_family || profile?.about_family || "");
+              const aboutFamilyTamil = formData.about_family_tamil !== undefined ? formData.about_family_tamil : (fam.about_family_tamil || profile?.about_family_tamil || "");
+
+              // Multi-sibling helper state resolution
+              let rawSibList = formData.siblings_list !== undefined
+                ? formData.siblings_list
+                : (fam.siblings_list || profile?.siblings_list);
+
+              if (!rawSibList && (siblings || siblingsDetails)) {
+                rawSibList = [
+                  {
+                    id: "1",
+                    type: siblings || "Elder Brother",
+                    marital_status: siblingsDetails?.includes("Unmarried") ? "Unmarried" : "Married",
+                    occupation: siblingsDetails || "",
+                  },
+                ];
+              }
+
+              const currentSiblingsList: any[] = Array.isArray(rawSibList) ? rawSibList : [];
+
+              const updateSiblingsState = (newList: any[]) => {
+                const formatSummary = (list: any[]) => {
+                  if (!list || list.length === 0) return "No Siblings";
+                  const counts: { [key: string]: number } = {};
+                  list.forEach((item) => {
+                    const key = item.type || "Sibling";
+                    counts[key] = (counts[key] || 0) + 1;
+                  });
+                  return Object.entries(counts)
+                    .map(([type, count]) => {
+                      if (count === 1) return `1 ${type}`;
+                      if (type.includes("Brother")) return `${count} ${type.replace("Brother", "Brothers")}`;
+                      if (type.includes("Sister")) return `${count} ${type.replace("Sister", "Sisters")}`;
+                      return `${count} ${type}s`;
+                    })
+                    .join(", ");
+                };
+
+                const formatDetails = (list: any[]) => {
+                  if (!list || list.length === 0) return "";
+                  return list
+                    .map((item) => {
+                      const parts = [];
+                      if (item.type) parts.push(item.type);
+                      if (item.marital_status) parts.push(item.marital_status);
+                      if (item.occupation) parts.push(item.occupation);
+                      return parts.join(" · ");
+                    })
+                    .join(" | ");
+                };
+
+                handleChange("siblings_list", newList);
+                handleChange("siblings", formatSummary(newList));
+                handleChange("siblings_details", formatDetails(newList));
+              };
+
+              const handleAddSibling = () => {
+                const newList = [
+                  ...currentSiblingsList,
+                  {
+                    id: String(Date.now()),
+                    type: "Elder Brother",
+                    marital_status: "Unmarried",
+                    occupation: "",
+                  },
+                ];
+                updateSiblingsState(newList);
+              };
+
+              const handleUpdateSibling = (idx: number, field: string, value: string) => {
+                const newList = currentSiblingsList.map((sib, i) =>
+                  i === idx ? { ...sib, [field]: value } : sib
+                );
+                updateSiblingsState(newList);
+              };
+
+              const handleRemoveSibling = (idx: number) => {
+                const newList = currentSiblingsList.filter((_, i) => i !== idx);
+                updateSiblingsState(newList);
+              };
 
               return (
-                <div className="content-card reveal visible">
-                  <div className="content-card-title">
-                    <div className="ctitle-icon">🏠</div>Family Background
+                <>
+                  {/* Family Background */}
+                  <div className="content-card reveal visible">
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">🏠</div>Family Background
+                    </div>
+                    <div className="family-grid">
+                      {/* FATHER */}
+                      <div className="family-item">
+                        <div className="family-item-icon">👨</div>
+                        <div className="family-item-label">FATHER</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{fatherName || "-"}</div>
+                            {fatherOcc && <div className="family-item-sub">{fatherOcc}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <input
+                              type="text"
+                              placeholder="Father Name"
+                              value={fatherName}
+                              onChange={(e) => handleChange("father_name", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Occupation / Status"
+                              value={fatherOcc}
+                              onChange={(e) => handleChange("father_occupation", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* MOTHER */}
+                      <div className="family-item">
+                        <div className="family-item-icon">👩</div>
+                        <div className="family-item-label">MOTHER</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{motherName || "-"}</div>
+                            {motherOcc && <div className="family-item-sub">{motherOcc}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <input
+                              type="text"
+                              placeholder="Mother Name"
+                              value={motherName}
+                              onChange={(e) => handleChange("mother_name", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Occupation / Status"
+                              value={motherOcc}
+                              onChange={(e) => handleChange("mother_occupation", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SIBLINGS (Supports Multiple) */}
+                      <div className="family-item">
+                        <div className="family-item-icon">👦👧</div>
+                        <div className="family-item-label flex items-center justify-between w-full">
+                          <span>SIBLINGS</span>
+                          {isEditing && (
+                            <span className="text-[10px] font-bold text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded">
+                              {currentSiblingsList.length} Added
+                            </span>
+                          )}
+                        </div>
+                        {!isEditing ? (
+                          <>
+                            {currentSiblingsList.length > 0 ? (
+                              <div className="flex flex-col gap-1.5 mt-1">
+                                {currentSiblingsList.map((sib: any, idx: number) => (
+                                  <div
+                                    key={sib.id || idx}
+                                    className="bg-violet-50/70 border border-violet-200 p-1.5 rounded-lg text-xs flex items-center gap-2"
+                                  >
+                                    <span className="text-sm">
+                                      {sib.type?.includes("Sister") ? "👧" : "👦"}
+                                    </span>
+                                    <div>
+                                      <div className="font-semibold text-slate-800 text-[11px]">
+                                        {sib.type || "Sibling"}
+                                      </div>
+                                      <div className="text-[10px] text-slate-500 font-medium">
+                                        {[sib.marital_status, sib.occupation]
+                                          .filter(Boolean)
+                                          .join(" · ")}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="family-item-value">{siblings || "No Siblings"}</div>
+                                {siblingsDetails && (
+                                  <div className="family-item-sub">{siblingsDetails}</div>
+                                )}
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-2 mt-1.5 w-full">
+                            {currentSiblingsList.length === 0 ? (
+                              <div className="text-[11px] text-slate-400 text-center py-2 bg-slate-50 rounded border border-dashed border-slate-200">
+                                No siblings added yet.
+                              </div>
+                            ) : (
+                              currentSiblingsList.map((sib: any, index: number) => (
+                                <div
+                                  key={sib.id || index}
+                                  className="p-2 bg-violet-50/90 border border-violet-200 rounded-lg flex flex-col gap-1.5 relative group"
+                                >
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[10px] font-bold text-violet-700 uppercase tracking-wider">
+                                      Sibling #{index + 1}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveSibling(index)}
+                                      className="text-rose-600 hover:text-rose-800 text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-50 hover:bg-rose-100 transition-colors"
+                                      title="Remove Sibling"
+                                    >
+                                      ✕ Delete
+                                    </button>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-1">
+                                    <select
+                                      value={sib.type || "Elder Brother"}
+                                      onChange={(e) =>
+                                        handleUpdateSibling(index, "type", e.target.value)
+                                      }
+                                      className="w-full px-1.5 py-1 text-[11px] font-semibold bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                                    >
+                                      <option value="Elder Brother">Elder Brother</option>
+                                      <option value="Younger Brother">Younger Brother</option>
+                                      <option value="Elder Sister">Elder Sister</option>
+                                      <option value="Younger Sister">Younger Sister</option>
+                                    </select>
+                                    <select
+                                      value={sib.marital_status || "Unmarried"}
+                                      onChange={(e) =>
+                                        handleUpdateSibling(index, "marital_status", e.target.value)
+                                      }
+                                      className="w-full px-1.5 py-1 text-[11px] font-semibold bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                                    >
+                                      <option value="Unmarried">Unmarried</option>
+                                      <option value="Married">Married</option>
+                                    </select>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    placeholder="Occupation / Details"
+                                    value={sib.occupation || ""}
+                                    onChange={(e) =>
+                                      handleUpdateSibling(index, "occupation", e.target.value)
+                                    }
+                                    className="w-full px-2 py-0.5 text-[11px] bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-700"
+                                  />
+                                </div>
+                              ))
+                            )}
+                            <button
+                              type="button"
+                              onClick={handleAddSibling}
+                              className="w-full py-1 text-xs font-semibold text-violet-700 bg-violet-100/80 hover:bg-violet-200 border border-dashed border-violet-300 rounded-lg transition-colors flex items-center justify-center gap-1 mt-0.5"
+                            >
+                              <span>+</span> Add Sibling
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* FAMILY TYPE */}
+                      <div className="family-item">
+                        <div className="family-item-icon">🏡</div>
+                        <div className="family-item-label">FAMILY TYPE</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{famType || "-"}</div>
+                            {famTypeDetails && <div className="family-item-sub">{famTypeDetails}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <select
+                              value={famType}
+                              onChange={(e) => handleChange("family_type", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            >
+                              <option value="">Select Family Type</option>
+                              <option value="Nuclear Family">Nuclear Family</option>
+                              <option value="Joint Family">Joint Family</option>
+                              <option value="Extended Family">Extended Family</option>
+                            </select>
+                            <input
+                              type="text"
+                              placeholder="Family Type Details"
+                              value={famTypeDetails}
+                              onChange={(e) => handleChange("family_type_details", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* FAMILY STATUS */}
+                      <div className="family-item">
+                        <div className="family-item-icon">💎</div>
+                        <div className="family-item-label">FAMILY STATUS</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{famStatus || "-"}</div>
+                            {famStatusDetails && <div className="family-item-sub">{famStatusDetails}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <select
+                              value={famStatus}
+                              onChange={(e) => handleChange("family_status", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            >
+                              <option value="">Select Family Status</option>
+                              <option value="Upper Middle Class">Upper Middle Class</option>
+                              <option value="Middle Class">Middle Class</option>
+                              <option value="Upper Class / Wealthy">Upper Class / Wealthy</option>
+                              <option value="Affluent">Affluent</option>
+                            </select>
+                            <input
+                              type="text"
+                              placeholder="Location / House Details"
+                              value={famStatusDetails}
+                              onChange={(e) => handleChange("family_status_details", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* FAMILY VALUES */}
+                      <div className="family-item">
+                        <div className="family-item-icon">🙏</div>
+                        <div className="family-item-label">FAMILY VALUES</div>
+                        {!isEditing ? (
+                          <>
+                            <div className="family-item-value">{famValues || "-"}</div>
+                            {famValuesDetails && <div className="family-item-sub">{famValuesDetails}</div>}
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <select
+                              value={famValues}
+                              onChange={(e) => handleChange("family_values", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            >
+                              <option value="">Select Family Values</option>
+                              <option value="Traditional">Traditional</option>
+                              <option value="Moderate">Moderate</option>
+                              <option value="Liberal">Liberal</option>
+                              <option value="Conservative">Conservative</option>
+                            </select>
+                            <input
+                              type="text"
+                              placeholder="Family Values Details"
+                              value={famValuesDetails}
+                              onChange={(e) => handleChange("family_values_details", e.target.value)}
+                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="family-grid">
-                    <div className="family-item">
-                      <div className="family-item-icon">👨</div>
-                      <div className="family-item-label">FATHER</div>
-                      <div className="family-item-value">{fatherName}</div>
-                      <div className="family-item-sub">{fatherOcc}</div>
+
+                  {/* Location & Native */}
+                  <div
+                    className="content-card reveal visible"
+                    style={{ transitionDelay: ".1s" }}
+                  >
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">📍</div>Location & Native
                     </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">👩</div>
-                      <div className="family-item-label">MOTHER</div>
-                      <div className="family-item-value">{motherName}</div>
-                      <div className="family-item-sub">{motherOcc}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">👦</div>
-                      <div className="family-item-label">SIBLINGS</div>
-                      <div className="family-item-value">{siblings}</div>
-                      <div className="family-item-sub">{siblingsDetails}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">🏡</div>
-                      <div className="family-item-label">FAMILY TYPE</div>
-                      <div className="family-item-value">{famType}</div>
-                      <div className="family-item-sub">{famTypeDetails}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">💎</div>
-                      <div className="family-item-label">FAMILY STATUS</div>
-                      <div className="family-item-value">{famStatus}</div>
-                      <div className="family-item-sub">{famStatusDetails}</div>
-                    </div>
-                    <div className="family-item">
-                      <div className="family-item-icon">🙏</div>
-                      <div className="family-item-label">FAMILY VALUES</div>
-                      <div className="family-item-value">{famValues}</div>
-                      <div className="family-item-sub">{famValuesDetails}</div>
+                    <div className="details-grid">
+                      <div className="detail-item">
+                        <div className="detail-label">Native Place</div>
+                        <div className="detail-value">
+                          {!isEditing ? (
+                            nativePlace || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Native Place"
+                              value={nativePlace}
+                              onChange={(e) => handleChange("native_place", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <div className="detail-label">Current City</div>
+                        <div className="detail-value">
+                          {!isEditing ? (
+                            currentCity || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Current City"
+                              value={currentCity}
+                              onChange={(e) => handleChange("current_city", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <div className="detail-label">Native (Tamil)</div>
+                        <div
+                          className="detail-value"
+                          style={{ fontFamily: "var(--font-tamil)" }}
+                        >
+                          {!isEditing ? (
+                            nativeTamil || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Native Place (Tamil)"
+                              value={nativeTamil}
+                              onChange={(e) => handleChange("native_place_tamil", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              style={{ fontFamily: "var(--font-tamil)" }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <div className="detail-label">Grew Up In</div>
+                        <div className="detail-value">
+                          {!isEditing ? (
+                            grewUpIn || "-"
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Grew Up In"
+                              value={grewUpIn}
+                              onChange={(e) => handleChange("grew_up_in", e.target.value)}
+                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* About the Family */}
+                  <div
+                    className="content-card reveal visible"
+                    style={{ transitionDelay: ".2s" }}
+                  >
+                    <div className="content-card-title">
+                      <div className="ctitle-icon">💌</div>About the Family
+                    </div>
+                    {!isEditing ? (
+                      <>
+                        {aboutFamily && <p className="about-text">{aboutFamily}</p>}
+                        {aboutFamilyTamil && (
+                          <p className="about-text-tamil">{aboutFamilyTamil}</p>
+                        )}
+                        {!aboutFamily && !aboutFamilyTamil && (
+                          <p className="text-xs text-slate-400 font-medium">-</p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                            About Family (English)
+                          </label>
+                          <textarea
+                            rows={3}
+                            placeholder="Write about your family..."
+                            value={aboutFamily}
+                            onChange={(e) => handleChange("about_family", e.target.value)}
+                            className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800 font-medium"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                            About Family (Tamil)
+                          </label>
+                          <textarea
+                            rows={3}
+                            placeholder="உங்கள் குடும்பத்தைப் பற்றி தமிழில் எழுதுங்கள்..."
+                            value={aboutFamilyTamil}
+                            onChange={(e) => handleChange("about_family_tamil", e.target.value)}
+                            className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800 font-medium"
+                            style={{ fontFamily: "var(--font-tamil)" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
               );
             })()}
-
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".1s" }}
-            >
-              <div className="content-card-title">
-                <div className="ctitle-icon">📍</div>Location & Native
-              </div>
-              <div className="details-grid">
-                <div className="detail-item">
-                  <div className="detail-label">Native Place</div>
-                  <div className="detail-value">Kumbakonam, Thanjavur</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Current City</div>
-                  <div className="detail-value">Chennai, Tamil Nadu</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Native (Tamil)</div>
-                  <div
-                    className="detail-value"
-                    style={{ fontFamily: "var(--font-tamil)" }}
-                  >
-                    கும்பகோணம், தஞ்சாவூர்
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Grew Up In</div>
-                  <div className="detail-value">Mylapore, Chennai</div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".2s" }}
-            >
-              <div className="content-card-title">
-                <div className="ctitle-icon">💌</div>About the Family
-              </div>
-              <p className="about-text">
-                We are a close-knit Tamil Brahmin family from Kumbakonam, now
-                settled in Mylapore, Chennai. My father was a professor at IIT
-                Madras; my brother is an engineer in Bengaluru. We believe in
-                education, simplicity, and respect — both for each other and for
-                our traditions. The family actively participates in community
-                and temple events.
-              </p>
-              <p className="about-text-tamil">
-                எங்கள் குடும்பம் தஞ்சாவூர் மாவட்டத்தை சார்ந்தது. தற்போது சென்னை
-                மயிலாப்பூரில் குடியிருக்கிறோம். கல்வி மற்றும் ஆன்மீகம் எங்கள்
-                குடும்பத்தின் முக்கிய மதிப்புகள்.
-              </p>
-            </div>
           </div>
 
           {/* PARTNER PREFS TAB PANEL */}
@@ -2309,12 +3144,16 @@ export default function ProfilePage() {
                             {ageFlex && <span className="pref-flex">{ageFlex}</span>}
                           </>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_age_range || ""}
+                          <select
+                            value={formData.pref_age_range || pref.age_range || profile?.pref_age_range || ""}
                             onChange={(e) => handleChange("pref_age_range", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Age Range</option>
+                            {PREF_AGE_RANGE_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2325,12 +3164,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           <span className="pref-pill">{height}</span>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_height || ""}
+                          <select
+                            value={formData.pref_height || pref.height || profile?.pref_height || ""}
                             onChange={(e) => handleChange("pref_height", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Height Expectation</option>
+                            {PREF_HEIGHT_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2341,12 +3184,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           marital
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_marital_status || ""}
+                          <select
+                            value={formData.pref_marital_status || pref.marital_status || profile?.pref_marital_status || ""}
                             onChange={(e) => handleChange("pref_marital_status", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Marital Preference</option>
+                            {PREF_MARITAL_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2357,12 +3204,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           diet
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_diet || ""}
+                          <select
+                            value={formData.pref_diet || pref.diet || profile?.pref_diet || ""}
                             onChange={(e) => handleChange("pref_diet", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Diet Preference</option>
+                            {PREF_DIET_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2373,12 +3224,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           smoking
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_smoking || ""}
+                          <select
+                            value={formData.pref_smoking || pref.smoking || profile?.pref_smoking || ""}
                             onChange={(e) => handleChange("pref_smoking", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Smoking Preference</option>
+                            {PREF_SMOKING_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2392,12 +3247,16 @@ export default function ProfilePage() {
                             {drinkingFlex && <span className="pref-flex">{drinkingFlex}</span>}
                           </>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_drinking || ""}
+                          <select
+                            value={formData.pref_drinking || pref.drinking || profile?.pref_drinking || ""}
                             onChange={(e) => handleChange("pref_drinking", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Drinking Preference</option>
+                            {PREF_DRINKING_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2410,12 +3269,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           edu
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_education || ""}
+                          <select
+                            value={formData.pref_education || pref.education || profile?.pref_education || ""}
                             onChange={(e) => handleChange("pref_education", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Education Preference</option>
+                            {PREF_EDUCATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2426,12 +3289,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           occ
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_occupation || ""}
+                          <select
+                            value={formData.pref_occupation || pref.occupation || profile?.pref_occupation || ""}
                             onChange={(e) => handleChange("pref_occupation", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Occupation Preference</option>
+                            {PREF_OCCUPATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2442,12 +3309,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           <span className="pref-pill">{income}</span>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_income || ""}
+                          <select
+                            value={formData.pref_income || pref.income || profile?.pref_income || ""}
                             onChange={(e) => handleChange("pref_income", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Income Preference</option>
+                            {PREF_INCOME_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2460,12 +3331,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           religion
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_religion || ""}
+                          <select
+                            value={formData.pref_religion || pref.religion || profile?.pref_religion || ""}
                             onChange={(e) => handleChange("pref_religion", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Religion Preference</option>
+                            {PREF_RELIGION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2479,12 +3354,16 @@ export default function ProfilePage() {
                             {casteOpen && <span className="pref-flex">{casteOpen}</span>}
                           </>
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_caste || ""}
+                          <select
+                            value={formData.pref_caste || pref.caste || profile?.pref_caste || ""}
                             onChange={(e) => handleChange("pref_caste", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Caste Preference</option>
+                            {PREF_CASTE_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2495,12 +3374,16 @@ export default function ProfilePage() {
                         {!isEditing ? (
                           location
                         ) : (
-                          <input
-                            type="text"
-                            value={formData.pref_location || ""}
+                          <select
+                            value={formData.pref_location || pref.location || profile?.pref_location || ""}
                             onChange={(e) => handleChange("pref_location", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                          />
+                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          >
+                            <option value="">Select Location Preference</option>
+                            {PREF_LOCATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
@@ -2830,13 +3713,17 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.star || profile?.star || formData.star || "Rohini"}
+                        {getHoroVal(profile, formData, "star") || "-"}
                       </div>
-                      <div className="horo-value-tamil">ரோகிணி</div>
+                      {getStarTamil(getHoroVal(profile, formData, "star")) && (
+                        <div className="horo-value-tamil">
+                          {getStarTamil(getHoroVal(profile, formData, "star"))}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
-                      value={formData.star || profile?.horoscopeDetails?.star || ""}
+                      value={formData.star !== undefined ? formData.star : (profile?.horoscopeDetails?.star || profile?.star || "")}
                       onChange={(e) => handleChange("star", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2854,13 +3741,17 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi || "Rishabam (Taurus)"}
+                        {getHoroVal(profile, formData, "rasi") || "-"}
                       </div>
-                      <div className="horo-value-tamil">ரிஷபம்</div>
+                      {getRasiTamil(getHoroVal(profile, formData, "rasi")) && (
+                        <div className="horo-value-tamil">
+                          {getRasiTamil(getHoroVal(profile, formData, "rasi"))}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
-                      value={formData.rasi || profile?.horoscopeDetails?.rasi || ""}
+                      value={formData.rasi !== undefined ? formData.rasi : (profile?.horoscopeDetails?.rasi || profile?.rasi || "")}
                       onChange={(e) => handleChange("rasi", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2878,13 +3769,17 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam || "Mithunam (Gemini)"}
+                        {getHoroVal(profile, formData, "lagnam") || "-"}
                       </div>
-                      <div className="horo-value-tamil">மிதுனம்</div>
+                      {getRasiTamil(getHoroVal(profile, formData, "lagnam")) && (
+                        <div className="horo-value-tamil">
+                          {getRasiTamil(getHoroVal(profile, formData, "lagnam"))}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
-                      value={formData.lagnam || profile?.horoscopeDetails?.lagnam || ""}
+                      value={formData.lagnam !== undefined ? formData.lagnam : (profile?.horoscopeDetails?.lagnam || profile?.lagnam || "")}
                       onChange={(e) => handleChange("lagnam", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2902,14 +3797,13 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.gothram || profile?.gothram || formData.gothram || "Vatsa Gothram"}
+                        {getHoroVal(profile, formData, "gothram") || "-"}
                       </div>
-                      <div className="horo-value-tamil">வத்ஸ கோத்ரம்</div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.gothram || profile?.horoscopeDetails?.gothram || ""}
+                      value={formData.gothram !== undefined ? formData.gothram : (profile?.horoscopeDetails?.gothram || profile?.gothram || "")}
                       onChange={(e) => handleChange("gothram", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Gothram"
@@ -2920,12 +3814,12 @@ export default function ProfilePage() {
                   <div className="horo-label">Date of Birth</div>
                   {!isEditing ? (
                     <div className="horo-value">
-                      {profile?.horoscopeDetails?.dob || profile?.dob || formData.dob || "1989-02-22"}
+                      {getHoroVal(profile, formData, "dob") || "-"}
                     </div>
                   ) : (
                     <input
                       type="date"
-                      value={formData.dob || profile?.horoscopeDetails?.dob || ""}
+                      value={formData.dob !== undefined ? formData.dob : (profile?.horoscopeDetails?.dob || profile?.dob || "")}
                       onChange={(e) => handleChange("dob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     />
@@ -2936,14 +3830,18 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.tob || profile?.tob || formData.tob || "06:34 AM"}
+                        {getHoroVal(profile, formData, "tob") || "-"}
                       </div>
-                      <div className="horo-value-tamil">அதிகாலை</div>
+                      {getTobTamil(getHoroVal(profile, formData, "tob")) && (
+                        <div className="horo-value-tamil">
+                          {getTobTamil(getHoroVal(profile, formData, "tob"))}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.tob || profile?.horoscopeDetails?.tob || ""}
+                      value={formData.tob !== undefined ? formData.tob : (profile?.horoscopeDetails?.tob || profile?.tob || "")}
                       onChange={(e) => handleChange("tob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="e.g. 06:34 AM"
@@ -2955,14 +3853,18 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.pob || profile?.pob || formData.pob || "Kumbakonam"}
+                        {getHoroVal(profile, formData, "pob") || "-"}
                       </div>
-                      <div className="horo-value-tamil">கும்பகோணம்</div>
+                      {getPobTamil(getHoroVal(profile, formData, "pob")) && (
+                        <div className="horo-value-tamil">
+                          {getPobTamil(getHoroVal(profile, formData, "pob"))}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.pob || profile?.horoscopeDetails?.pob || ""}
+                      value={formData.pob !== undefined ? formData.pob : (profile?.horoscopeDetails?.pob || profile?.pob || "")}
                       onChange={(e) => handleChange("pob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Place of Birth"
@@ -2974,18 +3876,20 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value" style={{ color: "var(--sage)" }}>
-                        {profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham || "No Dosham"}
+                        {getHoroVal(profile, formData, "dosham", "No Dosham") || "No Dosham"}
                       </div>
-                      <div
-                        className="horo-value-tamil"
-                        style={{ color: "var(--sage)" }}
-                      >
-                        தோஷமில்லை
-                      </div>
+                      {getDoshamTamil(getHoroVal(profile, formData, "dosham")) && (
+                        <div
+                          className="horo-value-tamil"
+                          style={{ color: "var(--sage)" }}
+                        >
+                          {getDoshamTamil(getHoroVal(profile, formData, "dosham"))}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <select
-                      value={formData.dosham || profile?.horoscopeDetails?.dosham || ""}
+                      value={formData.dosham !== undefined ? formData.dosham : (profile?.horoscopeDetails?.dosham || profile?.dosham || "")}
                       onChange={(e) => handleChange("dosham", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
