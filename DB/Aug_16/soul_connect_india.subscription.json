@@ -1,0 +1,161 @@
+[{
+  "_id": {
+    "$oid": "6a34f8e0f742fdf3998088ec"
+  },
+  "type": "premium",
+  "name": "Premium Match",
+  "price": "2499",
+  "currency_type": "₹",
+  "plan": {
+    "period_type": "month",
+    "period_value": 3
+  },
+  "feature": [
+    {
+      "key": "unlimited_profile",
+      "value": "View direct contact details"
+    },
+    {
+      "key": "",
+      "value": "Unlimited candidate views"
+    },
+    {
+      "key": "",
+      "value": "Psychology compatibility index"
+    },
+    {
+      "key": "",
+      "value": "Highlight profile in searches"
+    },
+    {
+      "key": "",
+      "value": "Advanced education/job filters"
+    }
+  ],
+  "most_popluar": false,
+  "active": true
+},
+{
+  "_id": {
+    "$oid": "6a34fa85f742fdf3998088ee"
+  },
+  "type": "free",
+  "name": "Free Entry",
+  "price": "0",
+  "currency_type": "₹",
+  "plan": {
+    "period_type": "month",
+    "period_value": 1
+  },
+  "feature": [
+    {
+      "key": "unlimited_profile",
+      "value": "Create profile (Tamil & English"
+    },
+    {
+      "key": "",
+      "value": "Basic district filters"
+    },
+    {
+      "key": "",
+      "value": "Aadhaar verification request"
+    },
+    {
+      "key": "",
+      "value": "Receive match suggestions"
+    }
+  ],
+  "most_popluar": false,
+  "active": true
+},
+{
+  "_id": {
+    "$oid": "6a5385e94542979714b8f97f"
+  },
+  "type": "elite",
+  "name": "Elite Circle",
+  "price": "4999",
+  "currency_type": "₹",
+  "plan": {
+    "period_type": "month",
+    "period_value": 6
+  },
+  "feature": [
+    {
+      "key": "unlimited_profile",
+      "value": "All Premium features included"
+    },
+    {
+      "key": "",
+      "value": "Dedicated relationship manager"
+    },
+    {
+      "key": "",
+      "value": "1 Free pre-marital counselling session"
+    },
+    {
+      "key": "",
+      "value": "Featured badge next to name"
+    },
+    {
+      "key": "",
+      "value": "Enhanced privacy control options"
+    }
+  ],
+  "most_popluar": true,
+  "active": true
+},
+{
+  "_id": {
+    "$oid": "6a5385fa4542979714b8f980"
+  },
+  "type": "gold",
+  "name": "Gold VIP",
+  "price": "9999",
+  "currency_type": "₹",
+  "plan": {
+    "period_type": "year",
+    "period_value": 1
+  },
+  "feature": [
+    {
+      "key": "unlimited_profile",
+      "value": "Dedicated relationship manager"
+    },
+    {
+      "key": "",
+      "value": "Direct family-to-family meetings"
+    },
+    {
+      "key": "",
+      "value": "Background verification audit"
+    },
+    {
+      "key": "",
+      "value": "Unlimited counselling reviews"
+    },
+    {
+      "key": "",
+      "value": "Premium boosting algorithms"
+    }
+  ],
+  "most_popluar": false,
+  "active": true
+},
+{
+  "_id": {
+    "$oid": "6a6506b60e0cebeda2252146"
+  },
+  "type": "VIP",
+  "name": "VIP",
+  "price": "999",
+  "currency_type": "₹",
+  "plan": {
+    "period_value": 4,
+    "period_type": "month"
+  },
+  "feature": [],
+  "most_popluar": false,
+  "active": false,
+  "__v": 0
+}]

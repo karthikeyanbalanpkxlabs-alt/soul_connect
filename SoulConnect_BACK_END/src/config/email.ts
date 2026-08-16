@@ -23,19 +23,22 @@ export const sendGridEmail = async (mailData: SendGridMailData) => {
 
   const defaultFrom = {
     email: process.env.SENDGRID_FROM_EMAIL || "karthimailu@gmail.com",
-    name: "Soul Connect",
+    name: process.env.SENDGRID_FROM_NAME || "Soul Connect",
   };
 
-  const defaultCc = process.env.SENDGRID_CC_EMAIL || "karthikeyanbalan.pkxlabs@gmail.com";
-
-  const msg = {
+  const msg: any = {
     to: mailData.to,
     from: mailData.from || defaultFrom,
-    cc: mailData.cc !== undefined ? mailData.cc : defaultCc,
     subject: mailData.subject,
     text: mailData.text || "",
     html: mailData.html || "",
   };
+
+  if (mailData.cc) {
+    msg.cc = mailData.cc;
+  } else if (process.env.SENDGRID_CC_EMAIL) {
+    msg.cc = process.env.SENDGRID_CC_EMAIL;
+  }
 
   console.log("====================================");
   console.log("📨 [SendGrid] Dispatching Email");

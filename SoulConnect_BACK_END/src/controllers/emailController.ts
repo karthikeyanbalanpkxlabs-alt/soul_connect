@@ -12,11 +12,12 @@ export async function handleSendEmail(req: Request, res: Response) {
     let textContent = "";
 
     if (message) {
-      textContent = message;
-
       if (message.trim().startsWith("<")) {
         htmlContent = message;
+        // Strip HTML tags for clean plain-text fallback
+        textContent = message.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim();
       } else {
+        textContent = message;
         htmlContent = `
         <div style="font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
                     line-height:1.6;
@@ -55,16 +56,17 @@ export async function handleSendEmail(req: Request, res: Response) {
         `;
       }
     } else {
-      textContent = "Hello,\nThis is a test email sent from SendGrid API.";
+      textContent = "Hello,\nThis is a notification from Soul Connect.";
       htmlContent = `
         <h2>Hello</h2>
-        <p>This is a test email sent from SendGrid API.</p>
+        <p>This is a notification from Soul Connect.</p>
       `;
     }
 
+    const { cc } = req.body;
     const response = await sendGridEmail({
       to: emailTo,
-      cc: "karthikeyanbalan.pkxlabs@gmail.com",
+      ...(cc ? { cc } : {}),
       subject: emailSubject,
       text: textContent,
       html: htmlContent,

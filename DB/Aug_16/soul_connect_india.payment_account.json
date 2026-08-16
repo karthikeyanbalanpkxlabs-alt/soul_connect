@@ -1,0 +1,138 @@
+[{
+  "_id": {
+    "$oid": "6a34fd47f742fdf3998088fa"
+  },
+  "account_name": "razor",
+  "provider": "razorpay",
+  "config": {
+    "key_id": "rzp_test_xxxxxxxxxxxxx",
+    "key_secret": "xxxxxxxxxxxxxxxxxxxxxxxx",
+    "webhook_secret": "xxxxxxxxxxxxxxxxxxxxxxxx",
+    "environment": "test",
+    "currency": "INR",
+    "capture_payment": true,
+    "payment_method": "all",
+    "webhook": {
+      "enabled": true,
+      "url": "https://api.example.com/api/payment/razorpay/webhook",
+      "events": [
+        "payment.authorized",
+        "payment.captured",
+        "payment.failed",
+        "order.paid",
+        "refund.created",
+        "refund.processed",
+        "refund.failed"
+      ]
+    },
+    "order": {
+      "receipt_prefix": "ORD"
+    },
+    "refund": {
+      "enabled": true
+    },
+    "retry": {
+      "enabled": true,
+      "max_attempts": 3
+    }
+  },
+  "is_active": true,
+  "created_at": {
+    "$date": "2026-08-08T00:00:00.000Z"
+  },
+  "updated_at": {
+    "$date": "2026-08-08T07:41:03.879Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6a76d8d779b28a300c8d0f94"
+  },
+  "account_name": "goPayment",
+  "provider": "goPayment",
+  "config": {
+    "key_id": "goPayment_test_xxxxxxxxxxxxx",
+    "key_secret": "xxxxxxxxxxxxxxxxxxxxxxxx",
+    "webhook_secret": "xxxxxxxxxxxxxxxxxxxxxxxx",
+    "environment": "test",
+    "currency": "INR",
+    "capture_payment": true,
+    "payment_method": "all",
+    "webhook": {
+      "enabled": true,
+      "url": "https://api.example.com/api/payment/goPayment/webhook",
+      "events": [
+        "payment.authorized",
+        "payment.captured",
+        "payment.failed",
+        "order.paid",
+        "refund.created",
+        "refund.processed",
+        "refund.failed"
+      ]
+    },
+    "order": {
+      "receipt_prefix": "ORD"
+    },
+    "refund": {
+      "enabled": true
+    },
+    "retry": {
+      "enabled": true,
+      "max_attempts": 3
+    }
+  },
+  "is_active": false,
+  "created_at": {
+    "$date": "2026-08-02T00:00:00.000Z"
+  },
+  "updated_at": {
+    "$date": "2026-08-08T07:37:33.671Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6a76dcb079b28a300c8d0f95"
+  },
+  "account_name": "beePayment",
+  "provider": "beePayment",
+  "config": {
+    "key_id": "beePayment_test_xxxxxxxxxxxxx",
+    "key_secret": "xxxxxxxxxxxxxxxxxxxxxxxx",
+    "webhook_secret": "xxxxxxxxxxxxxxxxxxxxxxxx",
+    "environment": "test",
+    "currency": "INR",
+    "capture_payment": true,
+    "payment_method": "all",
+    "webhook": {
+      "enabled": true,
+      "url": "https://api.example.com/api/payment/beePayment/webhook",
+      "events": [
+        "payment.authorized",
+        "payment.captured",
+        "payment.failed",
+        "order.paid",
+        "refund.created",
+        "refund.processed",
+        "refund.failed"
+      ]
+    },
+    "order": {
+      "receipt_prefix": "ORD"
+    },
+    "refund": {
+      "enabled": true
+    },
+    "retry": {
+      "enabled": true,
+      "max_attempts": 3
+    }
+  },
+  "is_active": false,
+  "created_at": {
+    "$date": "2026-08-02T00:00:00.000Z"
+  },
+  "updated_at": {
+    "$date": "2026-08-08T07:41:01.262Z"
+  }
+}]

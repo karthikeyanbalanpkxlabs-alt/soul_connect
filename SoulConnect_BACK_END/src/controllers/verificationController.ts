@@ -46,7 +46,6 @@ export async function handleSendOTP(req: Request, res: Response) {
       try {
         await sendGridEmail({
           to: email,
-          cc: "karthikeyanbalan.pkxlabs@gmail.com",
           subject: "Verify Your Email Address - Soul Connect",
           text: `Your Soul Connect verification code is: ${otp}. This code is valid for 5 minutes.`,
           html: `
