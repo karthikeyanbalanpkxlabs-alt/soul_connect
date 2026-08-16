@@ -611,6 +611,7 @@ export default function ProfilePage() {
           father_occupation: formData.father_occupation !== undefined ? formData.father_occupation : (profile?.familyBackground?.father_occupation || profile?.father_occupation || ""),
           mother_name: formData.mother_name !== undefined ? formData.mother_name : (profile?.familyBackground?.mother_name || profile?.mother_name || ""),
           mother_occupation: formData.mother_occupation !== undefined ? formData.mother_occupation : (profile?.familyBackground?.mother_occupation || profile?.mother_occupation || ""),
+          siblings_list: formData.siblings_list !== undefined ? formData.siblings_list : (profile?.familyBackground?.siblings_list || profile?.siblings_list || []),
           siblings: formData.siblings !== undefined ? formData.siblings : (profile?.familyBackground?.siblings || profile?.siblings || ""),
           siblings_details: formData.siblings_details !== undefined ? formData.siblings_details : (profile?.familyBackground?.siblings_details || profile?.siblings_details || ""),
           family_type: formData.family_type !== undefined ? formData.family_type : (profile?.familyBackground?.family_type || profile?.family_type || ""),
@@ -2604,6 +2605,85 @@ export default function ProfilePage() {
               const aboutFamily = formData.about_family !== undefined ? formData.about_family : (fam.about_family || profile?.about_family || "");
               const aboutFamilyTamil = formData.about_family_tamil !== undefined ? formData.about_family_tamil : (fam.about_family_tamil || profile?.about_family_tamil || "");
 
+              // Multi-sibling helper state resolution
+              let rawSibList = formData.siblings_list !== undefined
+                ? formData.siblings_list
+                : (fam.siblings_list || profile?.siblings_list);
+
+              if (!rawSibList && (siblings || siblingsDetails)) {
+                rawSibList = [
+                  {
+                    id: "1",
+                    type: siblings || "Elder Brother",
+                    marital_status: siblingsDetails?.includes("Unmarried") ? "Unmarried" : "Married",
+                    occupation: siblingsDetails || "",
+                  },
+                ];
+              }
+
+              const currentSiblingsList: any[] = Array.isArray(rawSibList) ? rawSibList : [];
+
+              const updateSiblingsState = (newList: any[]) => {
+                const formatSummary = (list: any[]) => {
+                  if (!list || list.length === 0) return "No Siblings";
+                  const counts: { [key: string]: number } = {};
+                  list.forEach((item) => {
+                    const key = item.type || "Sibling";
+                    counts[key] = (counts[key] || 0) + 1;
+                  });
+                  return Object.entries(counts)
+                    .map(([type, count]) => {
+                      if (count === 1) return `1 ${type}`;
+                      if (type.includes("Brother")) return `${count} ${type.replace("Brother", "Brothers")}`;
+                      if (type.includes("Sister")) return `${count} ${type.replace("Sister", "Sisters")}`;
+                      return `${count} ${type}s`;
+                    })
+                    .join(", ");
+                };
+
+                const formatDetails = (list: any[]) => {
+                  if (!list || list.length === 0) return "";
+                  return list
+                    .map((item) => {
+                      const parts = [];
+                      if (item.type) parts.push(item.type);
+                      if (item.marital_status) parts.push(item.marital_status);
+                      if (item.occupation) parts.push(item.occupation);
+                      return parts.join(" · ");
+                    })
+                    .join(" | ");
+                };
+
+                handleChange("siblings_list", newList);
+                handleChange("siblings", formatSummary(newList));
+                handleChange("siblings_details", formatDetails(newList));
+              };
+
+              const handleAddSibling = () => {
+                const newList = [
+                  ...currentSiblingsList,
+                  {
+                    id: String(Date.now()),
+                    type: "Elder Brother",
+                    marital_status: "Unmarried",
+                    occupation: "",
+                  },
+                ];
+                updateSiblingsState(newList);
+              };
+
+              const handleUpdateSibling = (idx: number, field: string, value: string) => {
+                const newList = currentSiblingsList.map((sib, i) =>
+                  i === idx ? { ...sib, [field]: value } : sib
+                );
+                updateSiblingsState(newList);
+              };
+
+              const handleRemoveSibling = (idx: number) => {
+                const newList = currentSiblingsList.filter((_, i) => i !== idx);
+                updateSiblingsState(newList);
+              };
+
               return (
                 <>
                   {/* Family Background */}
@@ -2670,31 +2750,119 @@ export default function ProfilePage() {
                         )}
                       </div>
 
-                      {/* SIBLINGS */}
+                      {/* SIBLINGS (Supports Multiple) */}
                       <div className="family-item">
-                        <div className="family-item-icon">👦</div>
-                        <div className="family-item-label">SIBLINGS</div>
+                        <div className="family-item-icon">👦👧</div>
+                        <div className="family-item-label flex items-center justify-between w-full">
+                          <span>SIBLINGS</span>
+                          {isEditing && (
+                            <span className="text-[10px] font-bold text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded">
+                              {currentSiblingsList.length} Added
+                            </span>
+                          )}
+                        </div>
                         {!isEditing ? (
                           <>
-                            <div className="family-item-value">{siblings || "-"}</div>
-                            {siblingsDetails && <div className="family-item-sub">{siblingsDetails}</div>}
+                            {currentSiblingsList.length > 0 ? (
+                              <div className="flex flex-col gap-1.5 mt-1">
+                                {currentSiblingsList.map((sib: any, idx: number) => (
+                                  <div
+                                    key={sib.id || idx}
+                                    className="bg-violet-50/70 border border-violet-200 p-1.5 rounded-lg text-xs flex items-center gap-2"
+                                  >
+                                    <span className="text-sm">
+                                      {sib.type?.includes("Sister") ? "👧" : "👦"}
+                                    </span>
+                                    <div>
+                                      <div className="font-semibold text-slate-800 text-[11px]">
+                                        {sib.type || "Sibling"}
+                                      </div>
+                                      <div className="text-[10px] text-slate-500 font-medium">
+                                        {[sib.marital_status, sib.occupation]
+                                          .filter(Boolean)
+                                          .join(" · ")}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="family-item-value">{siblings || "No Siblings"}</div>
+                                {siblingsDetails && (
+                                  <div className="family-item-sub">{siblingsDetails}</div>
+                                )}
+                              </>
+                            )}
                           </>
                         ) : (
-                          <div className="flex flex-col gap-1.5 mt-1">
-                            <input
-                              type="text"
-                              placeholder="e.g. 1 Elder Brother"
-                              value={siblings}
-                              onChange={(e) => handleChange("siblings", e.target.value)}
-                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Siblings Details"
-                              value={siblingsDetails}
-                              onChange={(e) => handleChange("siblings_details", e.target.value)}
-                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
-                            />
+                          <div className="flex flex-col gap-2 mt-1.5 w-full">
+                            {currentSiblingsList.length === 0 ? (
+                              <div className="text-[11px] text-slate-400 text-center py-2 bg-slate-50 rounded border border-dashed border-slate-200">
+                                No siblings added yet.
+                              </div>
+                            ) : (
+                              currentSiblingsList.map((sib: any, index: number) => (
+                                <div
+                                  key={sib.id || index}
+                                  className="p-2 bg-violet-50/90 border border-violet-200 rounded-lg flex flex-col gap-1.5 relative group"
+                                >
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[10px] font-bold text-violet-700 uppercase tracking-wider">
+                                      Sibling #{index + 1}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveSibling(index)}
+                                      className="text-rose-600 hover:text-rose-800 text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-50 hover:bg-rose-100 transition-colors"
+                                      title="Remove Sibling"
+                                    >
+                                      ✕ Delete
+                                    </button>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-1">
+                                    <select
+                                      value={sib.type || "Elder Brother"}
+                                      onChange={(e) =>
+                                        handleUpdateSibling(index, "type", e.target.value)
+                                      }
+                                      className="w-full px-1.5 py-1 text-[11px] font-semibold bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                                    >
+                                      <option value="Elder Brother">Elder Brother</option>
+                                      <option value="Younger Brother">Younger Brother</option>
+                                      <option value="Elder Sister">Elder Sister</option>
+                                      <option value="Younger Sister">Younger Sister</option>
+                                    </select>
+                                    <select
+                                      value={sib.marital_status || "Unmarried"}
+                                      onChange={(e) =>
+                                        handleUpdateSibling(index, "marital_status", e.target.value)
+                                      }
+                                      className="w-full px-1.5 py-1 text-[11px] font-semibold bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                                    >
+                                      <option value="Unmarried">Unmarried</option>
+                                      <option value="Married">Married</option>
+                                    </select>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    placeholder="Occupation / Details"
+                                    value={sib.occupation || ""}
+                                    onChange={(e) =>
+                                      handleUpdateSibling(index, "occupation", e.target.value)
+                                    }
+                                    className="w-full px-2 py-0.5 text-[11px] bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-700"
+                                  />
+                                </div>
+                              ))
+                            )}
+                            <button
+                              type="button"
+                              onClick={handleAddSibling}
+                              className="w-full py-1 text-xs font-semibold text-violet-700 bg-violet-100/80 hover:bg-violet-200 border border-dashed border-violet-300 rounded-lg transition-colors flex items-center justify-center gap-1 mt-0.5"
+                            >
+                              <span>+</span> Add Sibling
+                            </button>
                           </div>
                         )}
                       </div>
