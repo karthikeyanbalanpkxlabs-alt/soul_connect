@@ -156,6 +156,13 @@ const getTobTamil = (tob?: string) => {
   return "";
 };
 
+const getHoroVal = (profile: any, formData: any, key: string, fallback: string = "") => {
+  if (formData[key] !== undefined) return formData[key];
+  if (profile?.horoscopeDetails?.[key] !== undefined) return profile.horoscopeDetails[key];
+  if (profile?.[key] !== undefined) return profile[key];
+  return fallback;
+};
+
 const NAKSHATRAS = [
   "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
   "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
@@ -336,17 +343,17 @@ export default function ProfilePage() {
         photos: casualPhotos,
         family_photos: familyPhotos.length > 0 ? [{ url: familyPhotos[0] }] : (profile?.family_photos || []),
         horoscopeDetails: {
-          dob: formData.dob || profile?.horoscopeDetails?.dob || profile?.dob || "",
-          star: formData.star || profile?.horoscopeDetails?.star || profile?.star || "",
-          rasi: formData.rasi || profile?.horoscopeDetails?.rasi || profile?.rasi || "",
-          lagnam: formData.lagnam || profile?.horoscopeDetails?.lagnam || profile?.lagnam || "",
-          gothram: formData.gothram || profile?.horoscopeDetails?.gothram || profile?.gothram || "",
-          tob: formData.tob || profile?.horoscopeDetails?.tob || profile?.tob || "",
-          pob: formData.pob || profile?.horoscopeDetails?.pob || profile?.pob || "",
-          dosham: formData.dosham || profile?.horoscopeDetails?.dosham || profile?.dosham || "No Dosham",
-          manglik: formData.manglik || profile?.horoscopeDetails?.manglik || profile?.manglik || "No",
-          chevvai_dosham: formData.chevvai_dosham || profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No",
-          rahu_ketu_dosham: formData.rahu_ketu_dosham || profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral",
+          dob: formData.dob !== undefined ? formData.dob : (profile?.horoscopeDetails?.dob || profile?.dob || ""),
+          star: formData.star !== undefined ? formData.star : (profile?.horoscopeDetails?.star || profile?.star || ""),
+          rasi: formData.rasi !== undefined ? formData.rasi : (profile?.horoscopeDetails?.rasi || profile?.rasi || ""),
+          lagnam: formData.lagnam !== undefined ? formData.lagnam : (profile?.horoscopeDetails?.lagnam || profile?.lagnam || ""),
+          gothram: formData.gothram !== undefined ? formData.gothram : (profile?.horoscopeDetails?.gothram || profile?.gothram || ""),
+          tob: formData.tob !== undefined ? formData.tob : (profile?.horoscopeDetails?.tob || profile?.tob || ""),
+          pob: formData.pob !== undefined ? formData.pob : (profile?.horoscopeDetails?.pob || profile?.pob || ""),
+          dosham: formData.dosham !== undefined ? formData.dosham : (profile?.horoscopeDetails?.dosham || profile?.dosham || "No Dosham"),
+          manglik: formData.manglik !== undefined ? formData.manglik : (profile?.horoscopeDetails?.manglik || profile?.manglik || "No"),
+          chevvai_dosham: formData.chevvai_dosham !== undefined ? formData.chevvai_dosham : (profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || "No"),
+          rahu_ketu_dosham: formData.rahu_ketu_dosham !== undefined ? formData.rahu_ketu_dosham : (profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || "Neutral"),
           jathagam: profile?.horoscopeDetails?.jathagam || profile?.jathagam || null,
         },
         familyBackground: {
@@ -2951,17 +2958,17 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.star || profile?.star || formData.star || "-"}
+                        {getHoroVal(profile, formData, "star") || "-"}
                       </div>
-                      {getStarTamil(profile?.horoscopeDetails?.star || profile?.star || formData.star) && (
+                      {getStarTamil(getHoroVal(profile, formData, "star")) && (
                         <div className="horo-value-tamil">
-                          {getStarTamil(profile?.horoscopeDetails?.star || profile?.star || formData.star)}
+                          {getStarTamil(getHoroVal(profile, formData, "star"))}
                         </div>
                       )}
                     </>
                   ) : (
                     <select
-                      value={formData.star || profile?.horoscopeDetails?.star || ""}
+                      value={formData.star !== undefined ? formData.star : (profile?.horoscopeDetails?.star || profile?.star || "")}
                       onChange={(e) => handleChange("star", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -2979,17 +2986,17 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi || "-"}
+                        {getHoroVal(profile, formData, "rasi") || "-"}
                       </div>
-                      {getRasiTamil(profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi) && (
+                      {getRasiTamil(getHoroVal(profile, formData, "rasi")) && (
                         <div className="horo-value-tamil">
-                          {getRasiTamil(profile?.horoscopeDetails?.rasi || profile?.rasi || formData.rasi)}
+                          {getRasiTamil(getHoroVal(profile, formData, "rasi"))}
                         </div>
                       )}
                     </>
                   ) : (
                     <select
-                      value={formData.rasi || profile?.horoscopeDetails?.rasi || ""}
+                      value={formData.rasi !== undefined ? formData.rasi : (profile?.horoscopeDetails?.rasi || profile?.rasi || "")}
                       onChange={(e) => handleChange("rasi", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -3007,17 +3014,17 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam || "-"}
+                        {getHoroVal(profile, formData, "lagnam") || "-"}
                       </div>
-                      {getRasiTamil(profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam) && (
+                      {getRasiTamil(getHoroVal(profile, formData, "lagnam")) && (
                         <div className="horo-value-tamil">
-                          {getRasiTamil(profile?.horoscopeDetails?.lagnam || profile?.lagnam || formData.lagnam)}
+                          {getRasiTamil(getHoroVal(profile, formData, "lagnam"))}
                         </div>
                       )}
                     </>
                   ) : (
                     <select
-                      value={formData.lagnam || profile?.horoscopeDetails?.lagnam || ""}
+                      value={formData.lagnam !== undefined ? formData.lagnam : (profile?.horoscopeDetails?.lagnam || profile?.lagnam || "")}
                       onChange={(e) => handleChange("lagnam", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
@@ -3035,13 +3042,13 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.gothram || profile?.gothram || formData.gothram || "-"}
+                        {getHoroVal(profile, formData, "gothram") || "-"}
                       </div>
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.gothram || profile?.horoscopeDetails?.gothram || ""}
+                      value={formData.gothram !== undefined ? formData.gothram : (profile?.horoscopeDetails?.gothram || profile?.gothram || "")}
                       onChange={(e) => handleChange("gothram", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Gothram"
@@ -3052,12 +3059,12 @@ export default function ProfilePage() {
                   <div className="horo-label">Date of Birth</div>
                   {!isEditing ? (
                     <div className="horo-value">
-                      {profile?.horoscopeDetails?.dob || profile?.dob || formData.dob || "-"}
+                      {getHoroVal(profile, formData, "dob") || "-"}
                     </div>
                   ) : (
                     <input
                       type="date"
-                      value={formData.dob || profile?.horoscopeDetails?.dob || ""}
+                      value={formData.dob !== undefined ? formData.dob : (profile?.horoscopeDetails?.dob || profile?.dob || "")}
                       onChange={(e) => handleChange("dob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     />
@@ -3068,18 +3075,18 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.tob || profile?.tob || formData.tob || "-"}
+                        {getHoroVal(profile, formData, "tob") || "-"}
                       </div>
-                      {getTobTamil(profile?.horoscopeDetails?.tob || profile?.tob || formData.tob) && (
+                      {getTobTamil(getHoroVal(profile, formData, "tob")) && (
                         <div className="horo-value-tamil">
-                          {getTobTamil(profile?.horoscopeDetails?.tob || profile?.tob || formData.tob)}
+                          {getTobTamil(getHoroVal(profile, formData, "tob"))}
                         </div>
                       )}
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.tob || profile?.horoscopeDetails?.tob || ""}
+                      value={formData.tob !== undefined ? formData.tob : (profile?.horoscopeDetails?.tob || profile?.tob || "")}
                       onChange={(e) => handleChange("tob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="e.g. 06:34 AM"
@@ -3091,18 +3098,18 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value">
-                        {profile?.horoscopeDetails?.pob || profile?.pob || formData.pob || "-"}
+                        {getHoroVal(profile, formData, "pob") || "-"}
                       </div>
-                      {getPobTamil(profile?.horoscopeDetails?.pob || profile?.pob || formData.pob) && (
+                      {getPobTamil(getHoroVal(profile, formData, "pob")) && (
                         <div className="horo-value-tamil">
-                          {getPobTamil(profile?.horoscopeDetails?.pob || profile?.pob || formData.pob)}
+                          {getPobTamil(getHoroVal(profile, formData, "pob"))}
                         </div>
                       )}
                     </>
                   ) : (
                     <input
                       type="text"
-                      value={formData.pob || profile?.horoscopeDetails?.pob || ""}
+                      value={formData.pob !== undefined ? formData.pob : (profile?.horoscopeDetails?.pob || profile?.pob || "")}
                       onChange={(e) => handleChange("pob", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                       placeholder="Place of Birth"
@@ -3114,20 +3121,20 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     <>
                       <div className="horo-value" style={{ color: "var(--sage)" }}>
-                        {profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham || "No Dosham"}
+                        {getHoroVal(profile, formData, "dosham", "No Dosham") || "No Dosham"}
                       </div>
-                      {getDoshamTamil(profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham) && (
+                      {getDoshamTamil(getHoroVal(profile, formData, "dosham")) && (
                         <div
                           className="horo-value-tamil"
                           style={{ color: "var(--sage)" }}
                         >
-                          {getDoshamTamil(profile?.horoscopeDetails?.dosham || profile?.dosham || formData.dosham)}
+                          {getDoshamTamil(getHoroVal(profile, formData, "dosham"))}
                         </div>
                       )}
                     </>
                   ) : (
                     <select
-                      value={formData.dosham || profile?.horoscopeDetails?.dosham || ""}
+                      value={formData.dosham !== undefined ? formData.dosham : (profile?.horoscopeDetails?.dosham || profile?.dosham || "")}
                       onChange={(e) => handleChange("dosham", e.target.value)}
                       className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
                     >
