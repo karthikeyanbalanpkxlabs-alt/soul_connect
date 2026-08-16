@@ -183,6 +183,104 @@ const BLOOD_GROUPS = [
   "Bombay Blood Group",
 ];
 
+const EDUCATION_OPTIONS = [
+  "10th / SSLC",
+  "12th / HSC",
+  "Diploma",
+  "UG Degree",
+  "B.E / B.Tech",
+  "B.Sc / B.Com / B.A",
+  "BBA / BCA",
+  "PG Degree",
+  "M.E / M.Tech",
+  "MBA / PGDM",
+  "M.Sc / M.Com / M.A",
+  "MCA",
+  "Doctorate (PhD)",
+  "Medical (MBBS / MD / MS)",
+  "Legal (LLB / LLM)",
+  "CA / CS / ICWA",
+  "Other",
+];
+
+const PROFESSION_OPTIONS = [
+  "Software / IT",
+  "Doctor",
+  "Engineer",
+  "Teacher / Academic",
+  "Govt. Employee",
+  "Business Owner",
+  "Lawyer",
+  "Chartered Accountant",
+  "Banking / Finance",
+  "Defense / Police",
+  "Healthcare / Nursing",
+  "Agriculture",
+  "Student",
+  "Homemaker",
+  "Other",
+];
+
+const INCOME_OPTIONS = [
+  "Prefer not to say",
+  "Below 3 LPA",
+  "3–6 LPA",
+  "6–10 LPA",
+  "10–15 LPA",
+  "15–25 LPA",
+  "25–50 LPA",
+  "50 LPA+",
+];
+
+const RELIGION_OPTIONS = [
+  "Hindu",
+  "Muslim",
+  "Christian",
+  "Jain",
+  "Buddhist",
+  "Sikh",
+  "Inter-Religion",
+  "Other",
+];
+
+const CASTE_OPTIONS = [
+  "BC",
+  "MBC",
+  "FC / OC",
+  "SC",
+  "ST",
+  "Vanniyar",
+  "Gounder",
+  "Thevar / Mukkulathor",
+  "Nadar",
+  "Chettiar",
+  "Pillai",
+  "Mudaliar",
+  "Iyer",
+  "Iyengar",
+  "Naidu",
+  "Reddy",
+  "Yadav",
+  "Viswakarma",
+  "Don't want to specify",
+  "Other",
+];
+
+const MOTHER_TONGUE_OPTIONS = [
+  "Tamil",
+  "Telugu",
+  "Kannada",
+  "Malayalam",
+  "Hindi",
+  "Gujarati",
+  "Marathi",
+  "Bengali",
+  "Punjabi",
+  "Urdu",
+  "English",
+  "Other",
+];
+
 const NAKSHATRAS = [
   "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashirsha", "Ardra",
   "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
@@ -1222,20 +1320,26 @@ export default function ProfilePage() {
                     `${profile?.religion || "N/A"}${profile?.caste ? ` (${profile.caste})` : ""}`
                   ) : (
                     <div className="flex gap-1 w-full">
-                      <input
-                        type="text"
-                        placeholder="Religion"
-                        value={formData.religion || ""}
+                      <select
+                        value={formData.religion || profile?.religion || ""}
                         onChange={(e) => handleChange("religion", e.target.value)}
-                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Caste"
-                        value={formData.caste || ""}
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded font-semibold text-slate-800"
+                      >
+                        <option value="">Religion</option>
+                        {RELIGION_OPTIONS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={formData.caste || profile?.caste || ""}
                         onChange={(e) => handleChange("caste", e.target.value)}
-                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded"
-                      />
+                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded font-semibold text-slate-800"
+                      >
+                        <option value="">Caste</option>
+                        {CASTE_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
                 </div>
@@ -1247,13 +1351,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.profession || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Profession"
-                      value={formData.profession || ""}
+                    <select
+                      value={formData.profession || profile?.profession || ""}
                       onChange={(e) => handleChange("profession", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Profession</option>
+                      {PROFESSION_OPTIONS.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1264,13 +1371,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.education || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Education"
-                      value={formData.education || ""}
+                    <select
+                      value={formData.education || profile?.education || ""}
                       onChange={(e) => handleChange("education", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Education</option>
+                      {EDUCATION_OPTIONS.map((eOpt) => (
+                        <option key={eOpt} value={eOpt}>{eOpt}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1281,13 +1391,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.annual_income || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Annual Income"
-                      value={formData.annual_income || ""}
+                    <select
+                      value={formData.annual_income || profile?.annual_income || ""}
                       onChange={(e) => handleChange("annual_income", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Income</option>
+                      {INCOME_OPTIONS.map((inc) => (
+                        <option key={inc} value={inc}>{inc}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1298,13 +1411,18 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.district || "N/A"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="District"
-                      value={formData.district || ""}
+                    <select
+                      value={formData.district || profile?.district || ""}
                       onChange={(e) => handleChange("district", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select District</option>
+                      {districts.map((d) => (
+                        <option key={d.id} value={d.name}>
+                          {d.name} ({d.tamil})
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -1315,13 +1433,16 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     profile?.mother_tongue || "Tamil"
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Mother Tongue / Languages"
-                      value={formData.mother_tongue || ""}
+                    <select
+                      value={formData.mother_tongue || profile?.mother_tongue || ""}
                       onChange={(e) => handleChange("mother_tongue", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
-                    />
+                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                    >
+                      <option value="">Select Language</option>
+                      {MOTHER_TONGUE_OPTIONS.map((mt) => (
+                        <option key={mt} value={mt}>{mt}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
@@ -2082,12 +2203,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.education || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.education || ""}
+                      <select
+                        value={formData.education || profile?.education || ""}
                         onChange={(e) => handleChange("education", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Highest Degree / Education</option>
+                        {EDUCATION_OPTIONS.map((eOpt) => (
+                          <option key={eOpt} value={eOpt}>{eOpt}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2097,12 +2222,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.profession || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.profession || ""}
+                      <select
+                        value={formData.profession || profile?.profession || ""}
                         onChange={(e) => handleChange("profession", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Occupation / Profession</option>
+                        {PROFESSION_OPTIONS.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2112,12 +2241,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.annual_income || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.annual_income || ""}
+                      <select
+                        value={formData.annual_income || profile?.annual_income || ""}
                         onChange={(e) => handleChange("annual_income", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Annual Income</option>
+                        {INCOME_OPTIONS.map((inc) => (
+                          <option key={inc} value={inc}>{inc}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2142,12 +2275,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.religion || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.religion || ""}
+                      <select
+                        value={formData.religion || profile?.religion || ""}
                         onChange={(e) => handleChange("religion", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Religion</option>
+                        {RELIGION_OPTIONS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2157,12 +2294,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.caste || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.caste || ""}
+                      <select
+                        value={formData.caste || profile?.caste || ""}
                         onChange={(e) => handleChange("caste", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Caste</option>
+                        {CASTE_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
@@ -2172,12 +2313,16 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       profile?.mother_tongue || "N/A"
                     ) : (
-                      <input
-                        type="text"
-                        value={formData.mother_tongue || ""}
+                      <select
+                        value={formData.mother_tongue || profile?.mother_tongue || ""}
                         onChange={(e) => handleChange("mother_tongue", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
-                      />
+                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                      >
+                        <option value="">Select Mother Tongue</option>
+                        {MOTHER_TONGUE_OPTIONS.map((mt) => (
+                          <option key={mt} value={mt}>{mt}</option>
+                        ))}
+                      </select>
                     )}
                   </div>
                 </div>
