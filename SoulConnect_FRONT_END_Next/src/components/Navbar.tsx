@@ -3,7 +3,7 @@
 import keycloak from "../lib/keycloak";
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import { useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Flame, User, UserCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function Navbar(props: any) {
@@ -41,32 +41,25 @@ export default function Navbar(props: any) {
     return (
       <>
         {name?.length > 0 ? (
-          <div style={{ display: "flex" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
             <p
               style={{
                 display: "flex",
-                marginRight: 10,
+                alignItems: "center",
+                marginRight: 12,
                 textTransform: "capitalize",
+                color: "var(--ink-80)",
+                fontWeight: 600,
+                fontSize: ".875rem",
               }}
             >
-              <svg
-                width={"15px"}
-                height={"15px"}
-                viewBox="0 0 24 24"
-                fill="none"
-                style={{ marginRight: 5 }}
-              >
-                <path
-                  d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-                  stroke="#000000"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <UserCircle
+                size={18}
+                style={{ marginRight: 6, color: "var(--rose, #e11d48)" }}
+              />
               <span
                 style={{
-                  width: 90,
+                  maxWidth: 100,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -74,7 +67,6 @@ export default function Navbar(props: any) {
               >
                 {name}
               </span>
-              {/* <span>{" |"}</span> */}
             </p>
             <div
               style={{
@@ -96,7 +88,7 @@ export default function Navbar(props: any) {
               }}
             >
               <LogOut size={16} />
-              <span style={{ marginLeft: 8 }}>Logout</span>
+              <span style={{ marginLeft: 6 }}>Logout</span>
             </div>
           </div>
         ) : (
