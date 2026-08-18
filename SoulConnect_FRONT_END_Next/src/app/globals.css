@@ -233,6 +233,37 @@ section { padding: 96px 5vw; }
 .form-group select { cursor: pointer; }
 .form-group textarea { resize: vertical; min-height: 80px; }
 
+/* Unified Sleek Profile Edit Mode Input & Select Styling */
+.profile-edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: #f9f9fb !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1e293b;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  outline: none !important;
+}
+
+.profile-edit-input:focus {
+  background-color: #ffffff !important;
+  border-color: #c28b70 !important;
+  box-shadow: 0 0 0 3px rgba(194, 139, 112, 0.15) !important;
+}
+
+.profile-edit-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+select.profile-edit-input {
+  cursor: pointer;
+  appearance: auto;
+}
+
 .phone-input-container {
   display: flex !important;
   flex-direction: row !important;
