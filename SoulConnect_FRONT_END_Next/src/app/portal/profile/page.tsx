@@ -984,8 +984,8 @@ export default function ProfilePage() {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      if (casualPhotos.length >= 5) {
-        showToast("Maximum of 5 profile photos allowed", "error");
+      if (casualPhotos.length >= 3) {
+        showToast("Maximum of 3 profile photos allowed", "error");
         return;
       }
       const file = e.target.files[0];
@@ -1255,14 +1255,14 @@ export default function ProfilePage() {
                       placeholder="First Name"
                       value={formData.first_name || ""}
                       onChange={(e) => handleChange("first_name", e.target.value)}
-                      className="w-1/2 px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                      className="profile-edit-input text-center font-semibold w-1/2"
                     />
                     <input
                       type="text"
                       placeholder="Last Name"
                       value={formData.last_name || ""}
                       onChange={(e) => handleChange("last_name", e.target.value)}
-                      className="w-1/2 px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                      className="profile-edit-input text-center font-semibold w-1/2"
                     />
                   </div>
                 </div>
@@ -1303,7 +1303,7 @@ export default function ProfilePage() {
                     placeholder="Short Headline / About self..."
                     value={formData.about_self || ""}
                     onChange={(e) => handleChange("about_self", e.target.value)}
-                    className="w-full p-2 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 text-center"
+                    className="profile-edit-input text-center"
                   />
                 </div>
               )}
@@ -1426,7 +1426,7 @@ export default function ProfilePage() {
                       type="date"
                       value={formData.dob || ""}
                       onChange={(e) => handleChange("dob", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                      className="profile-edit-input font-semibold"
                     />
                   )}
                 </div>
@@ -1443,7 +1443,7 @@ export default function ProfilePage() {
                       placeholder="Height (e.g. 5'8&quot;)"
                       value={formData.height || ""}
                       onChange={(e) => handleChange("height", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold"
+                      className="profile-edit-input font-semibold"
                     />
                   )}
                 </div>
@@ -1455,11 +1455,11 @@ export default function ProfilePage() {
                   {!isEditing ? (
                     `${profile?.religion || "N/A"}${profile?.caste ? ` (${profile.caste})` : ""}`
                   ) : (
-                    <div className="flex gap-1 w-full">
+                    <div className="flex gap-1.5 w-full">
                       <select
                         value={formData.religion || profile?.religion || ""}
                         onChange={(e) => handleChange("religion", e.target.value)}
-                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded font-semibold text-slate-800"
+                        className="profile-edit-input font-semibold w-1/2"
                       >
                         <option value="">Religion</option>
                         {RELIGION_OPTIONS.map((r) => (
@@ -1469,7 +1469,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.caste || profile?.caste || ""}
                         onChange={(e) => handleChange("caste", e.target.value)}
-                        className="w-1/2 px-1.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded font-semibold text-slate-800"
+                        className="profile-edit-input font-semibold w-1/2"
                       >
                         <option value="">Caste</option>
                         {CASTE_OPTIONS.map((c) => (
@@ -1490,7 +1490,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.profession || profile?.profession || ""}
                       onChange={(e) => handleChange("profession", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                      className="profile-edit-input font-semibold"
                     >
                       <option value="">Select Profession</option>
                       {PROFESSION_OPTIONS.map((p) => (
@@ -1510,7 +1510,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.education || profile?.education || ""}
                       onChange={(e) => handleChange("education", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                      className="profile-edit-input font-semibold"
                     >
                       <option value="">Select Education</option>
                       {EDUCATION_OPTIONS.map((eOpt) => (
@@ -1530,7 +1530,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.annual_income || profile?.annual_income || ""}
                       onChange={(e) => handleChange("annual_income", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                      className="profile-edit-input font-semibold"
                     >
                       <option value="">Select Income</option>
                       {INCOME_OPTIONS.map((inc) => (
@@ -1550,7 +1550,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.district || profile?.district || ""}
                       onChange={(e) => handleChange("district", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                      className="profile-edit-input font-semibold"
                     >
                       <option value="">Select District</option>
                       {districts.map((d) => (
@@ -1572,7 +1572,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.mother_tongue || profile?.mother_tongue || ""}
                       onChange={(e) => handleChange("mother_tongue", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                      className="profile-edit-input font-semibold"
                     >
                       <option value="">Select Language</option>
                       {MOTHER_TONGUE_OPTIONS.map((mt) => (
@@ -1743,7 +1743,7 @@ export default function ProfilePage() {
                     rows={4}
                     value={formData.about_self || ""}
                     onChange={(e) => handleChange("about_self", e.target.value)}
-                    className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                    className="profile-edit-input leading-relaxed font-sans"
                     placeholder="Write a warm description about your values, personality, and hobbies..."
                   />
                 </div>
@@ -1789,7 +1789,7 @@ export default function ProfilePage() {
                       rows={3}
                       value={formData.ambition || ""}
                       onChange={(e) => handleChange("ambition", e.target.value)}
-                      className="w-full p-3 text-sm bg-violet-50/70 border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 leading-relaxed font-sans"
+                      className="profile-edit-input leading-relaxed font-sans"
                       placeholder="Describe your personal or career goals..."
                     />
                   </div>
@@ -1818,7 +1818,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.blood_group || profile?.blood_group || ""}
                         onChange={(e) => handleChange("blood_group", e.target.value)}
-                        className="px-2.5 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold text-slate-800"
+                        className="profile-edit-input font-semibold"
                       >
                         <option value="">Select Blood Group</option>
                         {BLOOD_GROUPS.map((bg) => (
@@ -1844,7 +1844,7 @@ export default function ProfilePage() {
                           rows={2}
                           value={formData.additional_report_info || ""}
                           onChange={(e) => handleChange("additional_report_info", e.target.value)}
-                          className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                          className="profile-edit-input font-medium"
                           placeholder="Additional health details..."
                         />
                       )}
@@ -2123,14 +2123,14 @@ export default function ProfilePage() {
                           placeholder="First Name"
                           value={formData.first_name || ""}
                           onChange={(e) => handleChange("first_name", e.target.value)}
-                          className="w-1/2 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          className="profile-edit-input font-semibold w-1/2"
                         />
                         <input
                           type="text"
                           placeholder="Last Name"
                           value={formData.last_name || ""}
                           onChange={(e) => handleChange("last_name", e.target.value)}
-                          className="w-1/2 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                          className="profile-edit-input font-semibold w-1/2"
                         />
                       </div>
                     )}
@@ -2146,7 +2146,7 @@ export default function ProfilePage() {
                         type="date"
                         value={formData.dob || ""}
                         onChange={(e) => handleChange("dob", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2164,7 +2164,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.gender || ""}
                         onChange={(e) => handleChange("gender", e.target.value)}
-                        className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       >
                         <option value="">Select Gender</option>
                         <option value="Male">Male</option>
@@ -2183,7 +2183,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.height || ""}
                         onChange={(e) => handleChange("height", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2197,7 +2197,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.maritial_status || ""}
                         onChange={(e) => handleChange("maritial_status", e.target.value)}
-                        className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       >
                         <option value="">Select Status</option>
                         <option value="Never Married">Never Married</option>
@@ -2218,7 +2218,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.mother_tongue || ""}
                         onChange={(e) => handleChange("mother_tongue", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2277,7 +2277,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.district || ""}
                         onChange={(e) => handleChange("district", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2292,7 +2292,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.taluk_town || ""}
                         onChange={(e) => handleChange("taluk_town", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2303,20 +2303,20 @@ export default function ProfilePage() {
                     {!isEditing ? (
                       `${profile?.state || "N/A"} ${profile?.zipcode ? `(${profile.zipcode})` : ""}`
                     ) : (
-                      <div className="flex gap-1 w-full">
+                      <div className="flex gap-1.5 w-full">
                         <input
                           type="text"
                           placeholder="State"
                           value={formData.state || ""}
                           onChange={(e) => handleChange("state", e.target.value)}
-                          className="w-2/3 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg"
+                          className="profile-edit-input font-medium w-2/3"
                         />
                         <input
                           type="text"
                           placeholder="Zipcode"
                           value={formData.zipcode || ""}
                           onChange={(e) => handleChange("zipcode", e.target.value)}
-                          className="w-1/3 px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg"
+                          className="profile-edit-input font-medium w-1/3"
                         />
                       </div>
                     )}
@@ -2342,7 +2342,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.education || profile?.education || ""}
                         onChange={(e) => handleChange("education", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                        className="profile-edit-input font-semibold"
                       >
                         <option value="">Select Highest Degree / Education</option>
                         {EDUCATION_OPTIONS.map((eOpt) => (
@@ -2361,7 +2361,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.profession || profile?.profession || ""}
                         onChange={(e) => handleChange("profession", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                        className="profile-edit-input font-semibold"
                       >
                         <option value="">Select Occupation / Profession</option>
                         {PROFESSION_OPTIONS.map((p) => (
@@ -2380,7 +2380,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.annual_income || profile?.annual_income || ""}
                         onChange={(e) => handleChange("annual_income", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                        className="profile-edit-input font-semibold"
                       >
                         <option value="">Select Annual Income</option>
                         {INCOME_OPTIONS.map((inc) => (
@@ -2414,7 +2414,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.religion || profile?.religion || ""}
                         onChange={(e) => handleChange("religion", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                        className="profile-edit-input font-semibold"
                       >
                         <option value="">Select Religion</option>
                         {RELIGION_OPTIONS.map((r) => (
@@ -2433,7 +2433,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.caste || profile?.caste || ""}
                         onChange={(e) => handleChange("caste", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                        className="profile-edit-input font-semibold"
                       >
                         <option value="">Select Caste</option>
                         {CASTE_OPTIONS.map((c) => (
@@ -2452,7 +2452,7 @@ export default function ProfilePage() {
                       <select
                         value={formData.mother_tongue || profile?.mother_tongue || ""}
                         onChange={(e) => handleChange("mother_tongue", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                        className="profile-edit-input font-semibold"
                       >
                         <option value="">Select Mother Tongue</option>
                         {MOTHER_TONGUE_OPTIONS.map((mt) => (
@@ -2494,7 +2494,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.diet || ""}
                         onChange={(e) => handleChange("diet", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2509,7 +2509,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.smoking || ""}
                         onChange={(e) => handleChange("smoking", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2524,7 +2524,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.drinking || ""}
                         onChange={(e) => handleChange("drinking", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2539,7 +2539,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.living_with || ""}
                         onChange={(e) => handleChange("living_with", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2554,7 +2554,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.willing_to_relocate || ""}
                         onChange={(e) => handleChange("willing_to_relocate", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2569,7 +2569,7 @@ export default function ProfilePage() {
                         type="text"
                         value={formData.interests || ""}
                         onChange={(e) => handleChange("interests", e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                        className="profile-edit-input font-medium"
                       />
                     )}
                   </div>
@@ -2708,14 +2708,14 @@ export default function ProfilePage() {
                               placeholder="Father Name"
                               value={fatherName}
                               onChange={(e) => handleChange("father_name", e.target.value)}
-                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             />
                             <input
                               type="text"
                               placeholder="Occupation / Status"
                               value={fatherOcc}
                               onChange={(e) => handleChange("father_occupation", e.target.value)}
-                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                              className="profile-edit-input font-medium text-slate-600"
                             />
                           </div>
                         )}
@@ -2737,14 +2737,14 @@ export default function ProfilePage() {
                               placeholder="Mother Name"
                               value={motherName}
                               onChange={(e) => handleChange("mother_name", e.target.value)}
-                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             />
                             <input
                               type="text"
                               placeholder="Occupation / Status"
                               value={motherOcc}
                               onChange={(e) => handleChange("mother_occupation", e.target.value)}
-                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                              className="profile-edit-input font-medium text-slate-600"
                             />
                           </div>
                         )}
@@ -2826,7 +2826,7 @@ export default function ProfilePage() {
                                       onChange={(e) =>
                                         handleUpdateSibling(index, "type", e.target.value)
                                       }
-                                      className="w-full px-1.5 py-1 text-[11px] font-semibold bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                                      className="profile-edit-input font-semibold !p-1 text-[11px]"
                                     >
                                       <option value="Elder Brother">Elder Brother</option>
                                       <option value="Younger Brother">Younger Brother</option>
@@ -2838,7 +2838,7 @@ export default function ProfilePage() {
                                       onChange={(e) =>
                                         handleUpdateSibling(index, "marital_status", e.target.value)
                                       }
-                                      className="w-full px-1.5 py-1 text-[11px] font-semibold bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                                      className="profile-edit-input font-semibold !p-1 text-[11px]"
                                     >
                                       <option value="Unmarried">Unmarried</option>
                                       <option value="Married">Married</option>
@@ -2851,7 +2851,7 @@ export default function ProfilePage() {
                                     onChange={(e) =>
                                       handleUpdateSibling(index, "occupation", e.target.value)
                                     }
-                                    className="w-full px-2 py-0.5 text-[11px] bg-white border border-violet-300 rounded focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-700"
+                                    className="profile-edit-input font-medium !p-1 text-[11px]"
                                   />
                                 </div>
                               ))
@@ -2881,7 +2881,7 @@ export default function ProfilePage() {
                             <select
                               value={famType}
                               onChange={(e) => handleChange("family_type", e.target.value)}
-                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             >
                               <option value="">Select Family Type</option>
                               <option value="Nuclear Family">Nuclear Family</option>
@@ -2893,7 +2893,7 @@ export default function ProfilePage() {
                               placeholder="Family Type Details"
                               value={famTypeDetails}
                               onChange={(e) => handleChange("family_type_details", e.target.value)}
-                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                              className="profile-edit-input font-medium text-slate-600"
                             />
                           </div>
                         )}
@@ -2913,7 +2913,7 @@ export default function ProfilePage() {
                             <select
                               value={famStatus}
                               onChange={(e) => handleChange("family_status", e.target.value)}
-                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             >
                               <option value="">Select Family Status</option>
                               <option value="Upper Middle Class">Upper Middle Class</option>
@@ -2926,7 +2926,7 @@ export default function ProfilePage() {
                               placeholder="Location / House Details"
                               value={famStatusDetails}
                               onChange={(e) => handleChange("family_status_details", e.target.value)}
-                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                              className="profile-edit-input font-medium text-slate-600"
                             />
                           </div>
                         )}
@@ -2946,7 +2946,7 @@ export default function ProfilePage() {
                             <select
                               value={famValues}
                               onChange={(e) => handleChange("family_values", e.target.value)}
-                              className="w-full px-2 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             >
                               <option value="">Select Family Values</option>
                               <option value="Traditional">Traditional</option>
@@ -2959,7 +2959,7 @@ export default function ProfilePage() {
                               placeholder="Family Values Details"
                               value={famValuesDetails}
                               onChange={(e) => handleChange("family_values_details", e.target.value)}
-                              className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-600"
+                              className="profile-edit-input font-medium text-slate-600"
                             />
                           </div>
                         )}
@@ -2987,7 +2987,7 @@ export default function ProfilePage() {
                               placeholder="Native Place"
                               value={nativePlace}
                               onChange={(e) => handleChange("native_place", e.target.value)}
-                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             />
                           )}
                         </div>
@@ -3003,7 +3003,7 @@ export default function ProfilePage() {
                               placeholder="Current City"
                               value={currentCity}
                               onChange={(e) => handleChange("current_city", e.target.value)}
-                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             />
                           )}
                         </div>
@@ -3022,7 +3022,7 @@ export default function ProfilePage() {
                               placeholder="Native Place (Tamil)"
                               value={nativeTamil}
                               onChange={(e) => handleChange("native_place_tamil", e.target.value)}
-                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                               style={{ fontFamily: "var(--font-tamil)" }}
                             />
                           )}
@@ -3039,7 +3039,7 @@ export default function ProfilePage() {
                               placeholder="Grew Up In"
                               value={grewUpIn}
                               onChange={(e) => handleChange("grew_up_in", e.target.value)}
-                              className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                              className="profile-edit-input font-semibold"
                             />
                           )}
                         </div>
@@ -3076,7 +3076,7 @@ export default function ProfilePage() {
                             placeholder="Write about your family..."
                             value={aboutFamily}
                             onChange={(e) => handleChange("about_family", e.target.value)}
-                            className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800 font-medium"
+                            className="profile-edit-input font-medium"
                           />
                         </div>
                         <div>
@@ -3088,7 +3088,7 @@ export default function ProfilePage() {
                             placeholder="உங்கள் குடும்பத்தைப் பற்றி தமிழில் எழுதுங்கள்..."
                             value={aboutFamilyTamil}
                             onChange={(e) => handleChange("about_family_tamil", e.target.value)}
-                            className="w-full p-2.5 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800 font-medium"
+                            className="profile-edit-input font-medium"
                             style={{ fontFamily: "var(--font-tamil)" }}
                           />
                         </div>
@@ -3147,7 +3147,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_age_range || pref.age_range || profile?.pref_age_range || ""}
                             onChange={(e) => handleChange("pref_age_range", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Age Range</option>
                             {PREF_AGE_RANGE_OPTIONS.map((opt) => (
@@ -3167,7 +3167,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_height || pref.height || profile?.pref_height || ""}
                             onChange={(e) => handleChange("pref_height", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Height Expectation</option>
                             {PREF_HEIGHT_OPTIONS.map((opt) => (
@@ -3187,7 +3187,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_marital_status || pref.marital_status || profile?.pref_marital_status || ""}
                             onChange={(e) => handleChange("pref_marital_status", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Marital Preference</option>
                             {PREF_MARITAL_OPTIONS.map((opt) => (
@@ -3207,7 +3207,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_diet || pref.diet || profile?.pref_diet || ""}
                             onChange={(e) => handleChange("pref_diet", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Diet Preference</option>
                             {PREF_DIET_OPTIONS.map((opt) => (
@@ -3227,7 +3227,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_smoking || pref.smoking || profile?.pref_smoking || ""}
                             onChange={(e) => handleChange("pref_smoking", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Smoking Preference</option>
                             {PREF_SMOKING_OPTIONS.map((opt) => (
@@ -3250,7 +3250,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_drinking || pref.drinking || profile?.pref_drinking || ""}
                             onChange={(e) => handleChange("pref_drinking", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Drinking Preference</option>
                             {PREF_DRINKING_OPTIONS.map((opt) => (
@@ -3272,7 +3272,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_education || pref.education || profile?.pref_education || ""}
                             onChange={(e) => handleChange("pref_education", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Education Preference</option>
                             {PREF_EDUCATION_OPTIONS.map((opt) => (
@@ -3292,7 +3292,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_occupation || pref.occupation || profile?.pref_occupation || ""}
                             onChange={(e) => handleChange("pref_occupation", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Occupation Preference</option>
                             {PREF_OCCUPATION_OPTIONS.map((opt) => (
@@ -3312,7 +3312,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_income || pref.income || profile?.pref_income || ""}
                             onChange={(e) => handleChange("pref_income", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Income Preference</option>
                             {PREF_INCOME_OPTIONS.map((opt) => (
@@ -3334,7 +3334,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_religion || pref.religion || profile?.pref_religion || ""}
                             onChange={(e) => handleChange("pref_religion", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Religion Preference</option>
                             {PREF_RELIGION_OPTIONS.map((opt) => (
@@ -3357,7 +3357,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_caste || pref.caste || profile?.pref_caste || ""}
                             onChange={(e) => handleChange("pref_caste", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Caste Preference</option>
                             {PREF_CASTE_OPTIONS.map((opt) => (
@@ -3377,7 +3377,7 @@ export default function ProfilePage() {
                           <select
                             value={formData.pref_location || pref.location || profile?.pref_location || ""}
                             onChange={(e) => handleChange("pref_location", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-semibold bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-500 text-slate-800"
+                            className="profile-edit-input font-semibold"
                           >
                             <option value="">Select Location Preference</option>
                             {PREF_LOCATION_OPTIONS.map((opt) => (
@@ -3400,7 +3400,7 @@ export default function ProfilePage() {
                             type="text"
                             value={formData.pref_living_setup || ""}
                             onChange={(e) => handleChange("pref_living_setup", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                            className="profile-edit-input font-medium"
                           />
                         )}
                       </div>
@@ -3416,7 +3416,7 @@ export default function ProfilePage() {
                             type="text"
                             value={formData.pref_values || ""}
                             onChange={(e) => handleChange("pref_values", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                            className="profile-edit-input font-medium"
                           />
                         )}
                       </div>
@@ -3432,7 +3432,7 @@ export default function ProfilePage() {
                             type="text"
                             value={formData.pref_personality || ""}
                             onChange={(e) => handleChange("pref_personality", e.target.value)}
-                            className="w-full px-2.5 py-1 text-xs font-medium bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none"
+                            className="profile-edit-input font-medium"
                           />
                         )}
                       </div>
@@ -3493,7 +3493,7 @@ export default function ProfilePage() {
                   <div className="ctitle-icon">📷</div>Profile Photos
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400 font-medium">Max 5 photos</span>
+                  <span className="text-xs text-slate-400 font-medium">Max 3 photos</span>
                   <button
                     onClick={handleSaveInlineProfile}
                     className="px-4 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm active:scale-95 transition flex items-center gap-1.5"
@@ -3552,8 +3552,8 @@ export default function ProfilePage() {
                   </div>
                 ))}
 
-                {/* Add Photo Button Slot - Up to 5 photos max */}
-                {casualPhotos.length < 5 && (
+                {/* Add Photo Button Slot - Up to 3 photos max */}
+                {casualPhotos.length < 3 && (
                   <div
                     className="photo-slot photo-slot-add border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50/50 hover:bg-violet-50 transition cursor-pointer"
                     onClick={triggerPhotoUpload}
@@ -3567,7 +3567,7 @@ export default function ProfilePage() {
               <div className="photos-note">
                 <div className="photos-note-icon">💡</div>
                 <p>
-                  You can upload up to 5 profile photos. High quality photos get 3× more connection requests. Click <strong>Save Photo Changes</strong> after uploading.
+                  You can upload up to 3 profile photos. High quality photos get 3× more connection requests. Click <strong>Save Photo Changes</strong> after uploading.
                 </p>
               </div>
             </div>
@@ -3725,7 +3725,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.star !== undefined ? formData.star : (profile?.horoscopeDetails?.star || profile?.star || "")}
                       onChange={(e) => handleChange("star", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                     >
                       <option value="">Select Star (Nakshatra)</option>
                       {NAKSHATRAS.map((star) => (
@@ -3753,7 +3753,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.rasi !== undefined ? formData.rasi : (profile?.horoscopeDetails?.rasi || profile?.rasi || "")}
                       onChange={(e) => handleChange("rasi", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                     >
                       <option value="">Select Rasi (Moon Sign)</option>
                       {RASIS.map((rasi) => (
@@ -3781,7 +3781,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.lagnam !== undefined ? formData.lagnam : (profile?.horoscopeDetails?.lagnam || profile?.lagnam || "")}
                       onChange={(e) => handleChange("lagnam", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                     >
                       <option value="">Select Lagnam (Ascendant)</option>
                       {LAGNAMS.map((lagnam) => (
@@ -3805,7 +3805,7 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.gothram !== undefined ? formData.gothram : (profile?.horoscopeDetails?.gothram || profile?.gothram || "")}
                       onChange={(e) => handleChange("gothram", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                       placeholder="Gothram"
                     />
                   )}
@@ -3821,7 +3821,7 @@ export default function ProfilePage() {
                       type="date"
                       value={formData.dob !== undefined ? formData.dob : (profile?.horoscopeDetails?.dob || profile?.dob || "")}
                       onChange={(e) => handleChange("dob", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                     />
                   )}
                 </div>
@@ -3843,7 +3843,7 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.tob !== undefined ? formData.tob : (profile?.horoscopeDetails?.tob || profile?.tob || "")}
                       onChange={(e) => handleChange("tob", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                       placeholder="e.g. 06:34 AM"
                     />
                   )}
@@ -3866,7 +3866,7 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.pob !== undefined ? formData.pob : (profile?.horoscopeDetails?.pob || profile?.pob || "")}
                       onChange={(e) => handleChange("pob", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                       placeholder="Place of Birth"
                     />
                   )}
@@ -3891,7 +3891,7 @@ export default function ProfilePage() {
                     <select
                       value={formData.dosham !== undefined ? formData.dosham : (profile?.horoscopeDetails?.dosham || profile?.dosham || "")}
                       onChange={(e) => handleChange("dosham", e.target.value)}
-                      className="w-full px-2 py-1 text-xs bg-violet-50/80 border border-violet-300 rounded-lg focus:outline-none mt-1 font-semibold"
+                      className="profile-edit-input font-semibold mt-1"
                     >
                       <option value="">Select Dosham</option>
                       <option value="No Dosham">No Dosham</option>
