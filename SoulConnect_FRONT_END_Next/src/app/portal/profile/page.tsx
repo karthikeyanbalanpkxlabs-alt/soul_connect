@@ -984,8 +984,8 @@ export default function ProfilePage() {
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      if (casualPhotos.length >= 5) {
-        showToast("Maximum of 5 profile photos allowed", "error");
+      if (casualPhotos.length >= 3) {
+        showToast("Maximum of 3 profile photos allowed", "error");
         return;
       }
       const file = e.target.files[0];
@@ -3493,7 +3493,7 @@ export default function ProfilePage() {
                   <div className="ctitle-icon">📷</div>Profile Photos
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400 font-medium">Max 5 photos</span>
+                  <span className="text-xs text-slate-400 font-medium">Max 3 photos</span>
                   <button
                     onClick={handleSaveInlineProfile}
                     className="px-4 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm active:scale-95 transition flex items-center gap-1.5"
@@ -3552,8 +3552,8 @@ export default function ProfilePage() {
                   </div>
                 ))}
 
-                {/* Add Photo Button Slot - Up to 5 photos max */}
-                {casualPhotos.length < 5 && (
+                {/* Add Photo Button Slot - Up to 3 photos max */}
+                {casualPhotos.length < 3 && (
                   <div
                     className="photo-slot photo-slot-add border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50/50 hover:bg-violet-50 transition cursor-pointer"
                     onClick={triggerPhotoUpload}
@@ -3567,7 +3567,7 @@ export default function ProfilePage() {
               <div className="photos-note">
                 <div className="photos-note-icon">💡</div>
                 <p>
-                  You can upload up to 5 profile photos. High quality photos get 3× more connection requests. Click <strong>Save Photo Changes</strong> after uploading.
+                  You can upload up to 3 profile photos. High quality photos get 3× more connection requests. Click <strong>Save Photo Changes</strong> after uploading.
                 </p>
               </div>
             </div>
