@@ -3,9 +3,12 @@ import fs from "fs";
 import path from "path";
 import { Customers } from "../models/customer";
 
-const MONGODB_URL =
-  process.env.MONGODB_URL ||
-  "mongodb+srv://karthimailu_db_user:Rma1zgLmDktUJ3yD@soulconnectcluster.uszzhth.mongodb.net/soul_connect_india";
+// const localDB =
+//   "mongodb+srv://karthimailu_db_user:Rma1zgLmDktUJ3yD@soulconnectcluster.uszzhth.mongodb.net/soul_connect_india";
+const localDB =
+  "mongodb+srv://supportsoulconect_db_user:0OXWZtz07Q7syfv5@soulconectcluster.f023bmk.mongodb.net/soul_connect_india";
+
+const MONGODB_URL = process.env.MONGODB_URL || localDB;
 
 // Seeding function from sample_customer.json if database is empty
 const seedCustomers = async () => {
@@ -22,7 +25,10 @@ const seedCustomers = async () => {
         path.join(__dirname, "../src/sample_customer.json"),
         path.join(process.cwd(), "src/sample_customer.json"),
         path.join(process.cwd(), "sample_customer.json"),
-        path.join(process.cwd(), "SoulConnect_BACK_END/src/sample_customer.json"),
+        path.join(
+          process.cwd(),
+          "SoulConnect_BACK_END/src/sample_customer.json",
+        ),
       ];
       let filePath = "";
       for (const p of pathsToTry) {

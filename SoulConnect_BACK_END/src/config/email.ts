@@ -15,27 +15,32 @@ export interface SendGridMailData {
  * Send email using SendGrid Mail API.
  */
 export const sendGridEmail = async (mailData: SendGridMailData) => {
-  const apiKey = process.env.SENDGRID_API_KEY || "";
+  const apiKey = process.env.S_API_KEY || "";
   if (!apiKey || apiKey === "SG.your_sendgrid_api_key_here") {
-    console.warn("⚠️ SendGrid API key is not configured or using placeholder value in .env!");
+    console.warn(
+      "⚠️ SendGrid API key is not configured or using placeholder value in .env!",
+    );
   }
   sgMail.setApiKey(apiKey);
 
   const defaultFrom = {
-    email: process.env.SENDGRID_FROM_EMAIL || "karthimailu@gmail.com",
-    name: "Soul Connect",
+    email: process.env.SENDGRID_FROM_EMAIL || "supportsoulconect@gmail.com",
+    name: process.env.SENDGRID_FROM_NAME || "Soul Connect",
   };
 
-  const defaultCc = process.env.SENDGRID_CC_EMAIL || "karthikeyanbalan.pkxlabs@gmail.com";
-
-  const msg = {
+  const msg: any = {
     to: mailData.to,
     from: mailData.from || defaultFrom,
-    cc: mailData.cc !== undefined ? mailData.cc : defaultCc,
     subject: mailData.subject,
     text: mailData.text || "",
     html: mailData.html || "",
   };
+
+  if (mailData.cc) {
+    msg.cc = mailData.cc;
+  } else if (process.env.SENDGRID_CC_EMAIL) {
+    msg.cc = process.env.SENDGRID_CC_EMAIL;
+  }
 
   console.log("====================================");
   console.log("📨 [SendGrid] Dispatching Email");
@@ -51,18 +56,19 @@ export const sendGridEmail = async (mailData: SendGridMailData) => {
   } catch (error: any) {
     if (error.code === 401 || error.response?.statusCode === 401) {
       console.error(
-        "❌ [SendGrid 401 Unauthorized] The SENDGRID_API_KEY in .env is invalid, expired, or revoked."
+        "❌ [SendGrid 401 Unauthorized] The S_API_KEY in .env is invalid, expired, or revoked.",
       );
       console.error(
-        "👉 Please generate a new API key in SendGrid Dashboard (https://app.sendgrid.com/settings/api_keys) with 'Mail Send' permissions and update SENDGRID_API_KEY in your backend .env file."
+        "👉 Please generate a new API key in SendGrid Dashboard (https://app.sendgrid.com/settings/api_keys) with 'Mail Send' permissions and update S_API_KEY in your backend .env file.",
       );
     } else if (error.code === 403 || error.response?.statusCode === 403) {
-      const senderEmail = typeof msg.from === "string" ? msg.from : msg.from.email;
+      const senderEmail =
+        typeof msg.from === "string" ? msg.from : msg.from.email;
       console.error(
-        `❌ [SendGrid 403 Forbidden] The sender address '${senderEmail}' is not a verified Sender Identity.`
+        `❌ [SendGrid 403 Forbidden] The sender address '${senderEmail}' is not a verified Sender Identity.`,
       );
       console.error(
-        "👉 Please verify this email in SendGrid Dashboard (https://app.sendgrid.com/settings/sender_auth) or update SENDGRID_FROM_EMAIL in .env to a verified sender email."
+        "👉 Please verify this email in SendGrid Dashboard (https://app.sendgrid.com/settings/sender_auth) or update SENDGRID_FROM_EMAIL in .env to a verified sender email.",
       );
     }
     throw error;

@@ -490,7 +490,7 @@ function usePortalCustomerPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: "karthimailu@gmail.com",
+          to: "supportsoulconect@gmail.com",
           subject: "Hello BK!",
           message: "this email is sent from SoulConect Portal",
         }),
