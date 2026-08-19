@@ -825,19 +825,16 @@ export default function ProfilePage() {
   };
 
   const handleSendOtp = async () => {
-    if (!profile?.email || !verifyingType) return;
+    if (!verifyingType || (!profile?.email && !profile?.phone_number)) return;
     setSendingOtp(true);
     try {
       const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
       const payload: any = {
-        email: profile.email,
+        email: profile?.email || "",
         type: verifyingType,
+        phone_number: profile?.phone_number || "",
+        phone_code: profile?.phone_code || "+91",
       };
-
-      if (verifyingType === "phone") {
-        payload.phone_number = profile.phone_number;
-        payload.phone_code = profile.phone_code || "+91";
-      }
 
       const res = await fetch(`${apiUrl}/api/public/verification/send-otp`, {
         method: "POST",
@@ -868,9 +865,19 @@ export default function ProfilePage() {
 
       if (verifyingType === "phone") {
         if (data.otp) {
-          showToast(`WhatsApp OTP generated for ${profile.phone_number || "number"}! (Code: ${data.otp})`, "success");
+          // Pre-fill otp code or provide instant feedback
+          showToast(`WhatsApp OTP: ${data.otp} prepared for ${data.recipient_phone || profile?.phone_number}!`, "success");
         } else {
           showToast("WhatsApp verification code prepared for your mobile number!", "success");
+        }
+
+        // Automatically open WhatsApp Web / App with the prefilled message
+        if (data.direct_link && typeof window !== "undefined") {
+          try {
+            window.open(data.direct_link, "_blank", "noopener,noreferrer");
+          } catch (e) {
+            console.error("Popup was blocked:", e);
+          }
         }
       } else {
         showToast("Verification code sent to your email successfully!", "success");
@@ -884,7 +891,7 @@ export default function ProfilePage() {
   };
 
   const handleConfirmOtp = async () => {
-    if (!profile?.email || !verifyingType || !otpCode) return;
+    if (!verifyingType || !otpCode) return;
     setVerifyingOtp(true);
     try {
       const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
@@ -894,7 +901,8 @@ export default function ProfilePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: profile.email,
+          email: profile?.email || "",
+          phone_number: profile?.phone_number || "",
           type: verifyingType,
           otp: otpCode,
         }),

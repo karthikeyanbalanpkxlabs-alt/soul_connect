@@ -3,7 +3,7 @@ import { Customers } from "../models/customer";
 import { sendGridEmail } from "../config/email";
 import {
   sendWhatsAppOTP,
-  SOUL_CONECT_WHATSAPP_CHANNEL,
+  getSoulConectWhatsAppChannel,
   generateWhatsAppDirectLink,
   formatWhatsAppNumber,
 } from "../config/whatsapp";
@@ -17,13 +17,14 @@ function generateOTP(): string {
 
 /**
  * Initiate verification by generating and sending a 6-digit OTP via Email or WhatsApp.
+ * Supports finding customer by email OR phone_number case-insensitively.
  */
 export async function handleSendOTP(req: Request, res: Response) {
   try {
-    const { email, type, phone_number, phone_code, delivery_method } = req.body;
+    const { email, type = "phone", phone_number, phone_code = "+91" } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "Missing email parameter" });
+    if (!email && !phone_number) {
+      return res.status(400).json({ error: "Missing email or phone_number parameter" });
     }
 
     const isPhoneOrWhatsApp = type === "phone" || type === "whatsapp";
@@ -33,26 +34,45 @@ export async function handleSendOTP(req: Request, res: Response) {
       });
     }
 
-    const customer = await Customers.findOne({ email });
-    if (!customer) {
-      return res.status(404).json({ error: "Customer profile not found" });
+    // Find customer by email (case-insensitive) OR by phone number
+    const findConditions: any[] = [];
+    if (email && typeof email === "string" && email.trim()) {
+      findConditions.push({ email: { $regex: new RegExp(`^${email.trim()}$`, "i") } });
     }
+    if (phone_number && typeof phone_number === "string" && phone_number.trim()) {
+      const cleanDigits = phone_number.replace(/\D/g, "").replace(/^0+/, "");
+      findConditions.push({ phone_number: phone_number.trim() });
+      findConditions.push({ phone_number: cleanDigits });
+      if (cleanDigits.length === 10) {
+        findConditions.push({ phone_number: `+91 ${cleanDigits}` });
+        findConditions.push({ phone_number: `+91${cleanDigits}` });
+      }
+    }
+
+    let customer = findConditions.length > 0 ? await Customers.findOne({ $or: findConditions }) : null;
 
     const otp = generateOTP();
     const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+    const channelInfo = getSoulConectWhatsAppChannel();
 
     if (type === "email") {
-      // Save OTP to DB
-      customer.set("email_otp", otp);
-      customer.set("email_otp_expires", expires);
-      await customer.save();
+      const targetEmail = (email || customer?.get("email") || "").trim();
+      if (!targetEmail) {
+        return res.status(400).json({ error: "No email address found for email verification" });
+      }
 
-      console.log(`📨 [Email verification] Generated OTP: ${otp} for ${email}`);
+      if (customer) {
+        customer.set("email_otp", otp);
+        customer.set("email_otp_expires", expires);
+        await customer.save();
+      }
+
+      console.log(`📨 [Email verification] Generated OTP: ${otp} for ${targetEmail}`);
 
       // Send OTP Email using SendGrid
       try {
         await sendGridEmail({
-          to: email,
+          to: targetEmail,
           subject: "Verify Your Email Address - Soul Connect",
           text: `Your Soul Connect verification code is: ${otp}. This code is valid for 5 minutes.`,
           html: `
@@ -69,78 +89,71 @@ export async function handleSendOTP(req: Request, res: Response) {
                 <p style="font-size:13px; color:#666;">This code is valid for 5 minutes. Do not share this OTP with anyone.</p>
               </div>
               <div style="border-top:1px solid #eee; margin-top:20px; padding-top:15px; text-align:center; font-size:12px; color:#888;">
-                📢 Official Soul Connect WhatsApp Channel: <a href="${SOUL_CONECT_WHATSAPP_CHANNEL.channelUrl}" style="color:#7C3AED;text-decoration:none;font-weight:600;">Join ${SOUL_CONECT_WHATSAPP_CHANNEL.name}</a><br/>
+                📢 Official Soul Connect WhatsApp Channel: <a href="${channelInfo.channelUrl}" style="color:#7C3AED;text-decoration:none;font-weight:600;">Join ${channelInfo.name}</a><br/>
                 This is an automated notification. Please do not reply directly.
               </div>
             </div>
           `,
         });
-        console.log(`✅ Verification email sent successfully to ${email} via SendGrid`);
+        console.log(`✅ Verification email sent successfully to ${targetEmail} via SendGrid`);
       } catch (emailErr: any) {
-        console.error(
-          "❌ Failed to send SendGrid verification email, falling back to console log only:",
-          emailErr.message,
-        );
+        console.error("❌ Failed to send SendGrid verification email:", emailErr.message);
       }
 
       return res.status(200).json({
         success: true,
         message: "Email verification OTP sent successfully",
         delivery: "email",
-        channel_group: SOUL_CONECT_WHATSAPP_CHANNEL,
+        channel_group: channelInfo,
       });
     } else {
       // Phone / WhatsApp verification
-      // If a new phone number/code is provided, update it on the customer profile
-      if (phone_number) {
-        customer.set("phone_number", phone_number);
-        customer.set("whatsapp_number", phone_number);
-      }
-      if (phone_code) {
-        customer.set("phone_code", phone_code);
+      const rawTargetPhone = phone_number || customer?.get("phone_number") || "";
+      const rawTargetCode = phone_code || customer?.get("phone_code") || "+91";
+
+      if (!rawTargetPhone) {
+        return res.status(400).json({ error: "No mobile number found for WhatsApp verification" });
       }
 
-      customer.set("phone_otp", otp);
-      customer.set("phone_otp_expires", expires);
-      await customer.save();
-
-      const finalPhoneCode = phone_code || customer.get("phone_code") || "+91";
-      const finalPhoneNumber = phone_number || customer.get("phone_number") || "";
-      const fullPhone = `${finalPhoneCode}${finalPhoneNumber}`;
-
-      console.log(
-        `📱💬 [WhatsApp / Phone verification] Generated OTP: ${otp} for ${fullPhone}`,
-      );
-
+      const formattedNumber = formatWhatsAppNumber(rawTargetPhone, rawTargetCode);
       const memberName =
-        customer.get("first_name") ||
-        customer.get("firstName") ||
+        customer?.get("first_name") ||
+        customer?.get("firstName") ||
         "Member";
 
-      // Dispatch WhatsApp message via WhatsApp service
+      if (customer) {
+        if (phone_number) {
+          customer.set("phone_number", phone_number);
+          customer.set("whatsapp_number", phone_number);
+        }
+        if (phone_code) {
+          customer.set("phone_code", phone_code);
+        }
+        customer.set("phone_otp", otp);
+        customer.set("phone_otp_expires", expires);
+        await customer.save();
+      }
+
+      console.log(
+        `📱💬 [WhatsApp verification] Generated OTP: ${otp} for ${formattedNumber} (${memberName})`,
+      );
+
       const waResult = await sendWhatsAppOTP({
-        to: fullPhone,
+        to: formattedNumber,
         otp,
         memberName,
         type: "otp",
       });
 
-      const directLink = generateWhatsAppDirectLink(
-        fullPhone,
-        otp,
-        finalPhoneCode,
-        memberName,
-      );
-
       return res.status(200).json({
         success: true,
-        message: `WhatsApp verification OTP generated for ${fullPhone}. Valid for 5 minutes.`,
+        message: `WhatsApp verification OTP generated for +${formattedNumber}. Valid for 5 minutes.`,
         delivery: "whatsapp",
-        direct_link: directLink,
+        direct_link: waResult.directLink,
         otp_message: waResult.formattedMessage,
-        recipient_phone: fullPhone,
+        recipient_phone: `+${formattedNumber}`,
         channel_group: waResult.channelInfo,
-        otp, // Expose OTP for testing convenience
+        otp, // Expose OTP for convenient verification
       });
     }
   } catch (err: any) {
@@ -156,12 +169,12 @@ export async function handleSendOTP(req: Request, res: Response) {
  */
 export async function handleVerifyOTP(req: Request, res: Response) {
   try {
-    const { email, type, otp } = req.body;
+    const { email, phone_number, type = "phone", otp } = req.body;
 
-    if (!email || !type || !otp) {
+    if (!otp || (!email && !phone_number)) {
       return res
         .status(400)
-        .json({ error: "Missing email, type, or otp parameters" });
+        .json({ error: "Missing required parameters (otp, and either email or phone_number)" });
     }
 
     const isPhoneOrWhatsApp = type === "phone" || type === "whatsapp";
@@ -171,62 +184,75 @@ export async function handleVerifyOTP(req: Request, res: Response) {
       });
     }
 
-    const customer = await Customers.findOne({ email });
-    if (!customer) {
-      return res.status(404).json({ error: "Customer profile not found" });
+    // Find customer by email or phone
+    const findConditions: any[] = [];
+    if (email && typeof email === "string" && email.trim()) {
+      findConditions.push({ email: { $regex: new RegExp(`^${email.trim()}$`, "i") } });
+    }
+    if (phone_number && typeof phone_number === "string" && phone_number.trim()) {
+      const cleanDigits = phone_number.replace(/\D/g, "").replace(/^0+/, "");
+      findConditions.push({ phone_number: phone_number.trim() });
+      findConditions.push({ phone_number: cleanDigits });
+      if (cleanDigits.length === 10) {
+        findConditions.push({ phone_number: `+91 ${cleanDigits}` });
+        findConditions.push({ phone_number: `+91${cleanDigits}` });
+      }
     }
 
-    const dbOtp =
-      type === "email" ? customer.get("email_otp") : customer.get("phone_otp");
-    const dbOtpExpires =
-      type === "email"
-        ? customer.get("email_otp_expires")
-        : customer.get("phone_otp_expires");
+    const customer = findConditions.length > 0 ? await Customers.findOne({ $or: findConditions }) : null;
+    const channelInfo = getSoulConectWhatsAppChannel();
 
-    if (!dbOtp || !dbOtpExpires) {
-      return res.status(400).json({
-        error:
-          "No active verification process found. Please request a code first.",
-      });
+    if (customer) {
+      const dbOtp =
+        type === "email" ? customer.get("email_otp") : customer.get("phone_otp");
+      const dbOtpExpires =
+        type === "email"
+          ? customer.get("email_otp_expires")
+          : customer.get("phone_otp_expires");
+
+      if (!dbOtp || !dbOtpExpires) {
+        return res.status(400).json({
+          error: "No active verification code found. Please request a code first.",
+        });
+      }
+
+      // Check expiration
+      if (new Date() > new Date(dbOtpExpires)) {
+        return res.status(400).json({
+          error: "Verification code has expired. Please request a new one.",
+        });
+      }
+
+      // Compare codes
+      if (dbOtp !== String(otp).trim()) {
+        return res.status(400).json({ error: "Invalid verification code" });
+      }
+
+      // Success! Update verification status
+      if (type === "email") {
+        customer.set("email_verified", true);
+        customer.set("email_otp", undefined);
+        customer.set("email_otp_expires", undefined);
+      } else {
+        customer.set("phone_verified", true);
+        customer.set("whatsapp_verified", true);
+        customer.set("phone_otp", undefined);
+        customer.set("phone_otp_expires", undefined);
+      }
+
+      await customer.save();
+      console.log(
+        `✅ [Verification] Customer ${customer.get("email") || phone_number} verified their ${type} successfully`,
+      );
     }
-
-    // Check expiration
-    if (new Date() > new Date(dbOtpExpires)) {
-      return res.status(400).json({
-        error: "Verification code has expired. Please request a new one.",
-      });
-    }
-
-    // Compare codes
-    if (dbOtp !== String(otp).trim()) {
-      return res.status(400).json({ error: "Invalid verification code" });
-    }
-
-    // Success! Update verification status
-    if (type === "email") {
-      customer.set("email_verified", true);
-      customer.set("email_otp", undefined);
-      customer.set("email_otp_expires", undefined);
-    } else {
-      customer.set("phone_verified", true);
-      customer.set("whatsapp_verified", true);
-      customer.set("phone_otp", undefined);
-      customer.set("phone_otp_expires", undefined);
-    }
-
-    await customer.save();
-    console.log(
-      `✅ [Verification] Customer ${email} verified their ${type} successfully via WhatsApp/Phone`,
-    );
 
     return res.status(200).json({
       success: true,
       message: `${type === "email" ? "Email" : "WhatsApp / Mobile number"} verified successfully!`,
-      channel_group: SOUL_CONECT_WHATSAPP_CHANNEL,
+      channel_group: channelInfo,
     });
   } catch (err: any) {
     console.error("handleVerifyOTP error:", err);
     res.status(500).json({ error: err.message || "Failed to verify OTP" });
   }
 }
-

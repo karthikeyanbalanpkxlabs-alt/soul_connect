@@ -1,6 +1,9 @@
 /**
- * WhatsApp Channel & Community Group Integration for Soul Conect
- * Pure Channel & Community Group URL flow
+ * WhatsApp Integration for Soul Conect
+ * Supports:
+ * 1. Meta WhatsApp Cloud API (Graph API) - for direct background delivery to recipient phones
+ * 2. Official "Soul Conect" Channel & Community Group links
+ * 3. Direct Click-to-Chat deep links (wa.me)
  */
 
 export interface WhatsAppSendOptions {
@@ -54,7 +57,7 @@ export function formatWhatsAppNumber(phone: string, phoneCode: string = "+91"): 
   let cleaned = phone.replace(/\D/g, ""); // digits only
   let codeDigits = (phoneCode || "+91").replace(/\D/g, "") || "91";
 
-  // Strip all leading zeros (e.g. 08870588605 -> 8870588605)
+  // Strip all leading zeros (e.g. 08870688605 -> 8870688605)
   cleaned = cleaned.replace(/^0+/, "");
 
   // If already prefixed with country code (e.g. 918870588605 where length is 12 for India)
@@ -116,10 +119,12 @@ export function generateWhatsAppDirectLink(
 }
 
 /**
- * Dispatch WhatsApp OTP & Channel links
+ * Dispatch WhatsApp OTP directly via Meta WhatsApp Cloud API (Graph API)
  */
 export async function sendWhatsAppOTP(options: WhatsAppSendOptions): Promise<{
   success: boolean;
+  provider: string;
+  messageId?: string;
   directLink: string;
   formattedMessage: string;
   formattedNumber: string;
@@ -131,18 +136,127 @@ export async function sendWhatsAppOTP(options: WhatsAppSendOptions): Promise<{
   const formattedMessage = formatWhatsAppOtpMessage(otp, channelInfo.name, memberName);
   const directLink = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(formattedMessage)}`;
 
+  const provider = (process.env.WHATSAPP_PROVIDER || "cloud_api").toLowerCase();
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+
   console.log("==========================================");
-  console.log(`💬 [Soul Conect WhatsApp OTP]`);
+  console.log(`💬 [Soul Conect WhatsApp OTP Dispatch]`);
+  console.log(`📡 Provider        : ${provider}`);
   console.log(`👤 Recipient Phone : ${to} -> ${formattedNumber}`);
   console.log(`👤 Recipient Name  : ${memberName || "Member"}`);
   console.log(`📢 Channel URL     : ${channelInfo.channelUrl}`);
   console.log(`👥 Group URL       : ${channelInfo.groupUrl}`);
   console.log(`🔑 OTP Code        : ${otp}`);
-  console.log(`👉 Direct wa.me    : ${directLink}`);
   console.log("==========================================");
 
+  // 1. Meta WhatsApp Cloud API (Graph API)
+  if (provider === "cloud_api" || provider === "meta") {
+    if (!phoneNumberId || !accessToken) {
+      console.warn(
+        "⚠️ Meta WhatsApp Cloud API credentials (WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_ACCESS_TOKEN) are not set in .env yet. Direct Click-to-Chat link generated as instant fallback.",
+      );
+    } else {
+      try {
+        const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
+        
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: formattedNumber,
+            type: "text",
+            text: {
+              preview_url: true,
+              body: formattedMessage,
+            },
+          }),
+        });
+
+        const data: any = await response.json();
+
+        if (response.ok && data?.messages?.[0]?.id) {
+          console.log(`✅ [Meta WhatsApp Cloud API] Message dispatched directly to ${formattedNumber}. Message ID: ${data.messages[0].id}`);
+          return {
+            success: true,
+            provider: "cloud_api",
+            messageId: data.messages[0].id,
+            directLink,
+            formattedNumber,
+            formattedMessage,
+            channelInfo,
+          };
+        } else {
+          console.warn("⚠️ [Meta WhatsApp Cloud API Response]:", data);
+          // If free-form text fails (e.g. requires approved template outside 24h window), try template if configured
+          const templateName = process.env.WHATSAPP_OTP_TEMPLATE_NAME || "soul_conect_otp";
+          console.log(`🔄 Attempting Meta WhatsApp template dispatch (${templateName})...`);
+
+          const templateRes = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: formattedNumber,
+              type: "template",
+              template: {
+                name: templateName,
+                language: { code: "en_US" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      { type: "text", text: memberName || "Member" },
+                      { type: "text", text: otp },
+                    ],
+                  },
+                  {
+                    type: "button",
+                    sub_type: "url",
+                    index: "0",
+                    parameters: [
+                      { type: "text", text: otp },
+                    ],
+                  },
+                ],
+              },
+            }),
+          });
+
+          const templateData: any = await templateRes.json();
+          if (templateRes.ok && templateData?.messages?.[0]?.id) {
+            console.log(`✅ [Meta WhatsApp Template] Sent successfully. ID: ${templateData.messages[0].id}`);
+            return {
+              success: true,
+              provider: "cloud_api_template",
+              messageId: templateData.messages[0].id,
+              directLink,
+              formattedNumber,
+              formattedMessage,
+              channelInfo,
+            };
+          } else {
+            console.error("❌ Meta WhatsApp Template error:", templateData?.error?.message || templateData);
+          }
+        }
+      } catch (err: any) {
+        console.error("❌ Meta WhatsApp Cloud API exception:", err.message);
+      }
+    }
+  }
+
+  // Direct Click-to-Chat / Fallback
   return {
     success: true,
+    provider: "click_to_chat_fallback",
     directLink,
     formattedNumber,
     formattedMessage,
