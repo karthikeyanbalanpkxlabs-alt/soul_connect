@@ -2,6 +2,7 @@
 
 export default function Footer() {
   const socialLinks = [
+    { label: "💬 WA Channel", url: "https://whatsapp.com/channel/0029VbDJafbG8l5C1LnfEh0X", isWhatsApp: true },
     { label: "FB", url: "#" },
     { label: "IG", url: "#" },
     { label: "LN", url: "#" },
@@ -21,9 +22,15 @@ export default function Footer() {
           <p className="footer-tagline-tamil">
             அனைத்து 38 மாவட்டங்களிலும் உங்கள் வாழ்க்கை துணையை கண்டுபிடியுங்கள்.
           </p>
-          <div className="footer-socials mt-4">
+          <div className="footer-socials mt-4 flex flex-wrap gap-2">
             {socialLinks.map((s, idx) => (
-              <a key={idx} href={s.url} className="social-btn">
+              <a
+                key={idx}
+                href={s.url}
+                target={s.isWhatsApp ? "_blank" : "_self"}
+                rel={s.isWhatsApp ? "noopener noreferrer" : ""}
+                className={`social-btn ${s.isWhatsApp ? "!bg-emerald-600 !text-white !font-bold !px-3 !w-auto !rounded-full shadow-sm hover:!bg-emerald-700" : ""}`}
+              >
                 {s.label}
               </a>
             ))}

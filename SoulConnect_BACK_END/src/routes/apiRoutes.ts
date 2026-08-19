@@ -176,10 +176,21 @@ router.get("/public", (req, res) => {
 
 router.post("/send-email", handleSendEmail);
 
+import {
+  handleGetWhatsAppChannelInfo,
+  handleSendWhatsAppInvite,
+} from "../controllers/whatsappController";
+
 // --- VERIFICATION ROUTES ---
 router.post("/verification/send-otp", keycloak.protect(), handleSendOTP);
 router.post("/verification/verify-otp", keycloak.protect(), handleVerifyOTP);
 router.post("/public/verification/send-otp", handleSendOTP);
 router.post("/public/verification/verify-otp", handleVerifyOTP);
+
+// --- WHATSAPP CHANNEL & GROUP ROUTES ---
+router.get("/whatsapp-channel", keycloak.protect(), handleGetWhatsAppChannelInfo);
+router.get("/public/whatsapp-channel", handleGetWhatsAppChannelInfo);
+router.post("/whatsapp-invite", keycloak.protect(), handleSendWhatsAppInvite);
+router.post("/public/whatsapp-invite", handleSendWhatsAppInvite);
 
 export default router;

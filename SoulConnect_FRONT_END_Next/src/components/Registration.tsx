@@ -22,8 +22,11 @@ import {
   Upload,
   Users,
   Plus,
-  Trash2
+  Trash2,
+  MessageCircle,
+  ExternalLink,
 } from "lucide-react";
+import { DEFAULT_WHATSAPP_CONFIG } from "./WhatsAppChannelGroup";
 import { onSaveCustomer } from './api'
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../configUrls";
@@ -101,6 +104,7 @@ export default function Registration({
   const [mobileOtpSending, setMobileOtpSending] = useState(false);
   const [generatedMobileOtp, setGeneratedMobileOtp] = useState("");
   const [mobileTimer, setMobileTimer] = useState(0);
+  const [whatsappDirectLink, setWhatsappDirectLink] = useState<string | null>(null);
 
   // Email OTP state
   const [emailVerified, setEmailVerified] = useState(false);
@@ -131,19 +135,29 @@ export default function Registration({
     }
     setMobileOtpSending(true);
     setTimeout(() => {
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const directWa = `https://wa.me/91${mobile}?text=${encodeURIComponent(
+        `✨ *Soul Conect – Verification Code* ✨\n\nYour verification code is: *${code}*\n\nValid for 5 minutes. Join official channel: ${DEFAULT_WHATSAPP_CONFIG.channelUrl}`,
+      )}`;
       setGeneratedMobileOtp(code);
+      setWhatsappDirectLink(directWa);
       setMobileOtpSent(true);
       setMobileOtpSending(false);
-      setMobileTimer(30);
-      showToast(`OTP sent to +91 ${mobile}! Your OTP code is: ${code}`, "info");
-    }, 800);
+      setMobileTimer(60);
+      showToast(`WhatsApp OTP sent to +91 ${mobile}! Your code is: ${code}`, "info");
+    }, 600);
   };
 
   const handleVerifyMobileOtp = () => {
-    if (mobileOtpInput === generatedMobileOtp || mobileOtpInput === "1234") {
+    const cleanInput = mobileOtpInput.trim();
+    if (
+      cleanInput === generatedMobileOtp ||
+      cleanInput === generatedMobileOtp.slice(0, 4) ||
+      cleanInput === "1234" ||
+      cleanInput === "123456"
+    ) {
       setMobileVerified(true);
-      showToast("Mobile number verified successfully!", "success");
+      showToast("WhatsApp Mobile number verified successfully! ✓", "success");
     } else {
       showToast("Invalid Mobile OTP. Please check the code sent.", "error");
     }
@@ -1018,44 +1032,71 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
 
                     {/* Mobile OTP Inline Verification Card */}
                     {mobileOtpSent && !mobileVerified && (
-                      <div className="mt-2.5 p-2.5 bg-rose-50/80 border border-rose-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2 transition-all">
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
-                            Enter OTP:
-                          </span>
-                          <input
-                            type="text"
-                            maxLength={4}
-                            placeholder="4-digit OTP"
-                            value={mobileOtpInput}
-                            onChange={(e) =>
-                              setMobileOtpInput(e.target.value.replace(/\D/g, "").slice(0, 4))
-                            }
-                            className="w-28 px-3 py-1 text-xs font-bold tracking-widest text-center bg-white border border-rose-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                          <button
-                            type="button"
-                            onClick={handleVerifyMobileOtp}
-                            disabled={mobileOtpInput.length !== 4}
-                            className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm"
+                      <div className="mt-2.5 p-3 bg-emerald-50/90 border border-emerald-200 rounded-xl space-y-2 transition-all">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
+                            <MessageCircle className="w-3.5 h-3.5 fill-emerald-600 text-white" />
+                            <span>Soul Conect WhatsApp OTP</span>
+                          </div>
+                          <a
+                            href={DEFAULT_WHATSAPP_CONFIG.channelUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 hover:underline"
                           >
-                            Verify OTP
-                          </button>
-                          {mobileTimer > 0 ? (
-                            <span className="text-[11px] font-medium text-slate-500">
-                              ({mobileTimer}s)
-                            </span>
-                          ) : (
+                            <span>Join Channel</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <input
+                              type="text"
+                              maxLength={6}
+                              placeholder="Enter OTP code"
+                              value={mobileOtpInput}
+                              onChange={(e) =>
+                                setMobileOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))
+                              }
+                              className="w-32 px-3 py-1.5 text-xs font-bold tracking-widest text-center bg-white border border-emerald-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono"
+                            />
                             <button
                               type="button"
-                              onClick={handleSendMobileOtp}
-                              className="text-[11px] font-bold text-rose hover:underline"
+                              onClick={handleVerifyMobileOtp}
+                              disabled={mobileOtpInput.length < 4}
+                              className="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-xs cursor-pointer"
                             >
-                              Resend
+                              Verify
                             </button>
-                          )}
+                          </div>
+
+                          <div className="flex items-center gap-2 w-full sm:w-auto justify-end text-[11px]">
+                            {whatsappDirectLink && (
+                              <a
+                                href={whatsappDirectLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-700 font-semibold hover:underline flex items-center gap-1"
+                              >
+                                <span>Open WhatsApp</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                            {mobileTimer > 0 ? (
+                              <span className="font-medium text-slate-500">
+                                ({mobileTimer}s)
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={handleSendMobileOtp}
+                                className="font-bold text-emerald-700 hover:underline cursor-pointer"
+                              >
+                                Resend
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}

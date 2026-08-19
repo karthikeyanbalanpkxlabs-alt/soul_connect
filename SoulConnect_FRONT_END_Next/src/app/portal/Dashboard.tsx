@@ -17,6 +17,7 @@ import {
   Heart,
   ShieldCheck,
 } from "lucide-react";
+import { WhatsAppChannelBanner, DEFAULT_WHATSAPP_CONFIG } from "@/components/WhatsAppChannelGroup";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -158,6 +159,13 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Official Soul Conect WhatsApp Channel Banner */}
+      <WhatsAppChannelBanner
+        channelName="Soul Conect"
+        channelUrl={DEFAULT_WHATSAPP_CONFIG.channelUrl}
+        groupUrl={DEFAULT_WHATSAPP_CONFIG.groupUrl}
+      />
 
       {/* Primary KPI Metrics */}
       {loading ? (

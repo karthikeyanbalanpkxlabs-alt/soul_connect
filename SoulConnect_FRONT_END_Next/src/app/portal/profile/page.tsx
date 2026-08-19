@@ -30,7 +30,15 @@ import {
   Users,
   Plus,
   Star,
+  MessageCircle,
+  ExternalLink,
+  Send,
+  Copy,
 } from "lucide-react";
+import {
+  WhatsAppChannelFloatingWidget,
+  DEFAULT_WHATSAPP_CONFIG,
+} from "@/components/WhatsAppChannelGroup";
 
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../../../configUrls";
@@ -783,17 +791,37 @@ export default function ProfilePage() {
     "pending" | "submitted" | "verified"
   >("pending");
 
-  // Email and Phone Inline Verification states
+  // Email and Phone/WhatsApp Inline Verification states
   const [verifyingType, setVerifyingType] = useState<"email" | "phone" | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [whatsappDirectLink, setWhatsappDirectLink] = useState<string | null>(null);
+  const [otpMessage, setOtpMessage] = useState<string | null>(null);
+  const [copiedOtp, setCopiedOtp] = useState(false);
+  const [channelGroup, setChannelGroup] = useState<any>(DEFAULT_WHATSAPP_CONFIG);
+  const [countdownSeconds, setCountdownSeconds] = useState(0);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (countdownSeconds > 0) {
+      countdownTimerRef.current = setTimeout(() => {
+        setCountdownSeconds((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (countdownTimerRef.current) clearTimeout(countdownTimerRef.current);
+    };
+  }, [countdownSeconds]);
 
   const handleStartVerify = (type: "email" | "phone") => {
     setVerifyingType(type);
     setOtpSent(false);
     setOtpCode("");
+    setWhatsappDirectLink(null);
+    setOtpMessage(null);
+    setCopiedOtp(false);
   };
 
   const handleSendOtp = async () => {
@@ -826,10 +854,26 @@ export default function ProfilePage() {
 
       const data = await res.json();
       setOtpSent(true);
-      if (verifyingType === "phone" && data.otp) {
-        showToast(`OTP Code sent (simulated): ${data.otp}`, "success");
+      setCountdownSeconds(60);
+
+      if (data.channel_group) {
+        setChannelGroup(data.channel_group);
+      }
+      if (data.direct_link) {
+        setWhatsappDirectLink(data.direct_link);
+      }
+      if (data.otp_message) {
+        setOtpMessage(data.otp_message);
+      }
+
+      if (verifyingType === "phone") {
+        if (data.otp) {
+          showToast(`WhatsApp OTP generated for ${profile.phone_number || "number"}! (Code: ${data.otp})`, "success");
+        } else {
+          showToast("WhatsApp verification code prepared for your mobile number!", "success");
+        }
       } else {
-        showToast("Verification code sent successfully!", "success");
+        showToast("Verification code sent to your email successfully!", "success");
       }
     } catch (err: any) {
       console.error(err);
@@ -861,11 +905,15 @@ export default function ProfilePage() {
         throw new Error(errorData.error || "Verification failed");
       }
 
-      showToast(`${verifyingType === "email" ? "Email" : "Phone number"} verified successfully!`, "success");
+      showToast(
+        `${verifyingType === "email" ? "Email" : "WhatsApp / Mobile number"} verified successfully!`,
+        "success",
+      );
       setVerifyingType(null);
       setOtpSent(false);
       setOtpCode("");
-      
+      setWhatsappDirectLink(null);
+
       if (refreshProfile) {
         await refreshProfile();
       }
@@ -878,54 +926,193 @@ export default function ProfilePage() {
   };
 
   const renderInlineVerification = (type: "email" | "phone") => {
+    const isWhatsApp = type === "phone";
+    const recipientPhone = `${profile?.phone_code || "+91"} ${profile?.phone_number || ""}`.trim();
+
+    const handleCopyMessage = () => {
+      if (otpMessage) {
+        navigator.clipboard.writeText(otpMessage);
+        setCopiedOtp(true);
+        showToast("WhatsApp OTP message copied to clipboard! 📋", "success");
+        setTimeout(() => setCopiedOtp(false), 3000);
+      }
+    };
+
     return (
-      <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200 w-full">
-        <div className="text-xs text-slate-500 font-medium">
-          {otpSent 
-            ? `We sent a 6-digit code to your ${type === "email" ? "email address" : "phone number"}.` 
-            : `Click "Send Code" to verify your ${type === "email" ? "email" : "phone number"}.`}
+      <div
+        className={`mt-3 p-3.5 rounded-xl border space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 w-full ${
+          isWhatsApp
+            ? "bg-emerald-50/80 border-emerald-200"
+            : "bg-slate-50 border-slate-200"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {isWhatsApp ? (
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                <MessageCircle className="w-3.5 h-3.5 fill-white text-emerald-500" />
+              </div>
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-xs">
+                <span className="text-xs">✉</span>
+              </div>
+            )}
+            <span className="text-xs font-bold text-slate-800">
+              {isWhatsApp
+                ? "Individual WhatsApp Mobile Verification"
+                : "Email Verification"}
+            </span>
+          </div>
+
+          {isWhatsApp && (
+            <a
+              href={channelGroup?.channelUrl || DEFAULT_WHATSAPP_CONFIG.channelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
+            >
+              <span>{channelGroup?.name || "Soul Conect"} Channel</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
         </div>
-        
+
+        <div className="text-xs text-slate-600 font-medium">
+          {otpSent
+            ? isWhatsApp
+              ? `Individual verification OTP prepared for WhatsApp (${recipientPhone}).`
+              : `We sent a 6-digit code to your email address (${profile?.email}).`
+            : isWhatsApp
+            ? `Click "Send OTP" to create the individual WhatsApp verification message for (${recipientPhone}).`
+            : `Click "Send Code" to verify your email address.`}
+        </div>
+
         {otpSent ? (
-          <div className="flex gap-2 items-center">
-            <input
-              type="text"
-              placeholder="Enter 6-digit code"
-              maxLength={6}
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-              className="flex-1 px-3 py-1.5 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-violet-500 font-mono tracking-widest text-center"
-            />
-            <button
-              onClick={handleConfirmOtp}
-              disabled={verifyingOtp || otpCode.length !== 6}
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {verifyingOtp ? "Verifying..." : "Confirm"}
-            </button>
-            <button
-              onClick={() => {
-                setVerifyingType(null);
-                setOtpSent(false);
-                setOtpCode("");
-              }}
-              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
+          <div className="space-y-3">
+            {/* WhatsApp Quick Share & Copy Actions */}
+            {isWhatsApp && (
+              <div className="p-3 bg-white rounded-xl border border-emerald-200/80 space-y-2.5 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold text-emerald-900 flex items-center gap-1.5">
+                    <MessageCircle className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
+                    <span>Direct WhatsApp Message ({recipientPhone})</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {otpMessage && (
+                      <button
+                        type="button"
+                        onClick={handleCopyMessage}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{copiedOtp ? "Copied ✓" : "Copy Message"}</span>
+                      </button>
+                    )}
+
+                    {whatsappDirectLink && (
+                      <a
+                        href={whatsappDirectLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-xs transition-colors"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 fill-white text-emerald-600" />
+                        <span>Share on WhatsApp</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* Individual OTP Message Preview Box */}
+                {otpMessage && (
+                  <div className="p-2.5 bg-emerald-50/50 rounded-lg border border-emerald-100/80 text-[11px] text-slate-700 whitespace-pre-line font-sans leading-relaxed">
+                    {otpMessage}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* OTP Code Entry Row */}
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                placeholder="Enter 6-digit OTP"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500 font-mono tracking-widest text-center shadow-xs font-bold"
+              />
+              <button
+                onClick={handleConfirmOtp}
+                disabled={verifyingOtp || otpCode.length !== 6}
+                className={`px-4 py-2 text-xs font-bold text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xs cursor-pointer ${
+                  isWhatsApp
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-violet-600 hover:bg-violet-700"
+                }`}
+              >
+                {verifyingOtp ? "Verifying..." : "Verify & Confirm"}
+              </button>
+              <button
+                onClick={() => {
+                  setVerifyingType(null);
+                  setOtpSent(false);
+                  setOtpCode("");
+                  setWhatsappDirectLink(null);
+                  setOtpMessage(null);
+                }}
+                className="px-2.5 py-2 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
+              <div className="flex items-center gap-1.5">
+                {countdownSeconds > 0 ? (
+                  <span>Resend in <strong className="text-slate-700 font-mono">{countdownSeconds}s</strong></span>
+                ) : (
+                  <button
+                    onClick={handleSendOtp}
+                    disabled={sendingOtp}
+                    className="text-emerald-700 font-semibold hover:underline cursor-pointer"
+                  >
+                    {sendingOtp ? "Sending..." : "Resend OTP"}
+                  </button>
+                )}
+              </div>
+
+              {isWhatsApp && channelGroup?.groupUrl && (
+                <a
+                  href={channelGroup.groupUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-700 hover:text-emerald-900 font-medium"
+                >
+                  Join Community Group →
+                </a>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleSendOtp}
               disabled={sendingOtp}
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-lg disabled:opacity-50 transition-colors"
+              className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white rounded-lg disabled:opacity-50 transition-all shadow-xs cursor-pointer ${
+                isWhatsApp
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-violet-600 hover:bg-violet-700"
+              }`}
             >
-              {sendingOtp ? "Sending..." : "Send Code"}
+              {isWhatsApp && <MessageCircle className="w-3.5 h-3.5 fill-white text-emerald-600" />}
+              <span>{sendingOtp ? "Generating OTP..." : isWhatsApp ? "Send & Share WhatsApp OTP" : "Send Email OTP"}</span>
             </button>
             <button
               onClick={() => setVerifyingType(null)}
-              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
+              className="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -1958,11 +2145,11 @@ export default function ProfilePage() {
               </div>
               <div className="verify-badges">
                 <div className={`vbadge ${profile?.phone_verified ? "" : "pending"}`}>
-                  <div className="vbadge-icon">📱</div>
+                  <div className="vbadge-icon">💬</div>
                   <div className="vbadge-text">
-                    <strong>Mobile</strong>
+                    <strong>WhatsApp Mobile</strong>
                     <small className={profile?.phone_verified ? "text-sage" : "text-amber"}>
-                      {profile?.phone_verified ? "✓ Verified" : "⏳ Pending verification"}
+                      {profile?.phone_verified ? "✓ Verified" : "⏳ Pending WhatsApp OTP"}
                     </small>
                   </div>
                 </div>
@@ -4144,6 +4331,13 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* WHATSAPP CHANNEL FLOATING WIDGET */}
+      <WhatsAppChannelFloatingWidget
+        channelName={channelGroup?.name || "Soul Conect"}
+        channelUrl={channelGroup?.channelUrl || DEFAULT_WHATSAPP_CONFIG.channelUrl}
+        groupUrl={channelGroup?.groupUrl || DEFAULT_WHATSAPP_CONFIG.groupUrl}
+      />
 
       {/* TOAST SYSTEM */}
       {toast && (
