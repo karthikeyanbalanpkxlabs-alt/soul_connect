@@ -81,7 +81,7 @@
             <div class="form-group">
               <div class="form-label-row">
                 <label class="form-label" for="loginPwd">Password</label>
-                <a href="#" class="forgot-link">Forgot password?</a>
+                <a href="https://dev.soulconect.com/forgot_password" class="forgot-link">Forgot password?</a>
               </div>
               <div class="form-input-wrap">
                 <span class="form-input-icon">🔒</span>
@@ -130,9 +130,7 @@
           <div class="form-group">
             <div class="form-label-row">
               <label class="form-label" for="idPwd">Password</label>
-              <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
-            ? 'http://localhost:5174/forgot_password'
-            : 'https://devsoulconect.com/forgot_password'); return false;" class="forgot-link">Forgot password?</a>
+              <a href="https://dev.soulconect.com/forgot_password" class="forgot-link">Forgot password?</a>
             </div>
             <div class="form-input-wrap">
               <span class="form-input-icon">🔒</span>
