@@ -81,7 +81,9 @@
             <div class="form-group">
               <div class="form-label-row">
                 <label class="form-label" for="loginPwd">Password</label>
-                <a href="#" class="forgot-link">Forgot password?</a>
+                <#if realm.resetPasswordAllowed>
+                  <a href="${url.loginResetCredentialsUrl}" class="forgot-link">Forgot password?</a>
+                </#if>
               </div>
               <div class="form-input-wrap">
                 <span class="form-input-icon">🔒</span>
@@ -128,7 +130,9 @@
           <div class="form-group">
             <div class="form-label-row">
               <label class="form-label" for="idPwd">Password</label>
-              <a href="#" class="forgot-link">Forgot password?</a>
+              <#if realm.resetPasswordAllowed>
+                <a href="${url.loginResetCredentialsUrl}" class="forgot-link">Forgot password?</a>
+              </#if>
             </div>
             <div class="form-input-wrap">
               <span class="form-input-icon">🔒</span>
