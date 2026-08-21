@@ -72,7 +72,8 @@ export default function ForgotPassword() {
       if (!res.ok || !data.success) {
         // Negative flow: Error response
         const message =
-          data.message || "Failed to send password reset email. Please try again.";
+          data.message ||
+          "Failed to send password reset email. Please try again.";
         setErrorMsg(message);
         setLoading(false);
         return;
@@ -85,7 +86,7 @@ export default function ForgotPassword() {
     } catch (err: any) {
       console.error("Forgot password request failed:", err);
       setErrorMsg(
-        "Network connection error. Please check your internet connection and try again."
+        "Network connection error. Please check your internet connection and try again.",
       );
     } finally {
       setLoading(false);
@@ -100,8 +101,8 @@ export default function ForgotPassword() {
   const getLoginUrl = () => {
     return typeof window !== "undefined" &&
       ["localhost", "127.0.0.1"].includes(window.location.hostname)
-      ? "http://localhost:5174/#login"
-      : "https://auth.soulconect.com";
+      ? "http://localhost:5174/portal"
+      : "https://dev.soulconect.com/portal";
   };
 
   return (
@@ -255,8 +256,8 @@ export default function ForgotPassword() {
                       marginBottom: 0,
                     }}
                   >
-                    Please check your inbox (and spam folder). Click the link in the
-                    email to reset your password.
+                    Please check your inbox (and spam folder). Click the link in
+                    the email to reset your password.
                   </p>
                 </div>
 
@@ -267,14 +268,15 @@ export default function ForgotPassword() {
                   disabled={countdown > 0 || loading}
                   style={{
                     opacity: countdown > 0 || loading ? 0.65 : 1,
-                    cursor: countdown > 0 || loading ? "not-allowed" : "pointer",
+                    cursor:
+                      countdown > 0 || loading ? "not-allowed" : "pointer",
                   }}
                 >
                   {loading
                     ? "Sending..."
                     : countdown > 0
-                    ? `Resend Email in ${countdown}s`
-                    : "Resend Reset Instructions ✦"}
+                      ? `Resend Email in ${countdown}s`
+                      : "Resend Reset Instructions ✦"}
                 </button>
 
                 <div className="sc-auth-already" style={{ marginTop: "20px" }}>
@@ -345,7 +347,9 @@ export default function ForgotPassword() {
                     cursor: loading ? "wait" : "pointer",
                   }}
                 >
-                  {loading ? "Sending Instructions..." : "Send Reset Instructions ✦"}
+                  {loading
+                    ? "Sending Instructions..."
+                    : "Send Reset Instructions ✦"}
                 </button>
 
                 <div className="sc-auth-already" style={{ marginTop: "24px" }}>
@@ -471,7 +475,9 @@ export default function ForgotPassword() {
             <div className="sc-deco-subtitle">
               Sign in to see who's interested in you, respond to messages, and
               discover daily compatible profiles.
-              <span className="sc-tamil">உங்கள் பொருத்தங்கள் காத்திருக்கின்றன</span>
+              <span className="sc-tamil">
+                உங்கள் பொருத்தங்கள் காத்திருக்கின்றன
+              </span>
             </div>
 
             <div className="sc-deco-stats">
@@ -614,7 +620,9 @@ export default function ForgotPassword() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          transition: transform 0.15s, box-shadow 0.15s;
+          transition:
+            transform 0.15s,
+            box-shadow 0.15s;
         }
         .sc-btn-nav:hover {
           transform: translateY(-1px);
@@ -680,11 +688,7 @@ export default function ForgotPassword() {
           position: absolute;
           inset: 0;
           opacity: 0.05;
-          background-image: radial-gradient(
-            circle,
-            white 1px,
-            transparent 1px
-          );
+          background-image: radial-gradient(circle, white 1px, transparent 1px);
           background-size: 28px 28px;
           pointer-events: none;
         }
@@ -849,7 +853,9 @@ export default function ForgotPassword() {
           font-size: 0.9rem;
           font-family: var(--font-body);
           color: var(--ink);
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition:
+            border-color 0.2s,
+            box-shadow 0.2s;
           outline: none;
           box-shadow: var(--shadow-card);
           box-sizing: border-box;
@@ -857,7 +863,9 @@ export default function ForgotPassword() {
 
         .sc-form-input:focus {
           border-color: var(--plum);
-          box-shadow: 0 0 0 3px var(--plum-light), var(--shadow-card);
+          box-shadow:
+            0 0 0 3px var(--plum-light),
+            var(--shadow-card);
         }
 
         .sc-form-input::placeholder {
@@ -893,7 +901,9 @@ export default function ForgotPassword() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          transition: transform 0.2s, box-shadow 0.2s;
+          transition:
+            transform 0.2s,
+            box-shadow 0.2s;
         }
 
         .sc-btn-submit:hover:not(:disabled) {

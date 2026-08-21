@@ -22,7 +22,9 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setErrorMsg("Invalid or missing reset token. Please request a new password reset link.");
+      setErrorMsg(
+        "Invalid or missing reset token. Please request a new password reset link.",
+      );
     }
   }, [token]);
 
@@ -30,7 +32,9 @@ function ResetPasswordForm() {
     e.preventDefault();
 
     if (!token) {
-      setErrorMsg("Invalid or missing reset token. Please request a new password reset link.");
+      setErrorMsg(
+        "Invalid or missing reset token. Please request a new password reset link.",
+      );
       return;
     }
 
@@ -66,7 +70,8 @@ function ResetPasswordForm() {
       if (!res.ok || !data.success) {
         // Negative flow
         setErrorMsg(
-          data.message || "Failed to reset password. The link may have expired."
+          data.message ||
+            "Failed to reset password. The link may have expired.",
         );
         setLoading(false);
         return;
@@ -77,7 +82,7 @@ function ResetPasswordForm() {
     } catch (err: any) {
       console.error("Reset password request failed:", err);
       setErrorMsg(
-        "Network connection error. Please check your connection and try again."
+        "Network connection error. Please check your connection and try again.",
       );
     } finally {
       setLoading(false);
@@ -87,8 +92,8 @@ function ResetPasswordForm() {
   const getLoginUrl = () => {
     return typeof window !== "undefined" &&
       ["localhost", "127.0.0.1"].includes(window.location.hostname)
-      ? "http://localhost:5174/#login"
-      : "https://auth.soulconect.com";
+      ? "http://localhost:5174/portal"
+      : "https://dev.soulconect.com/portal";
   };
 
   return (
@@ -182,7 +187,8 @@ function ResetPasswordForm() {
                 margin: 0,
               }}
             >
-              Your password has been updated in Keycloak. You can now sign in with your new credentials.
+              Your password has been updated in Keycloak. You can now sign in
+              with your new credentials.
             </p>
           </div>
 
@@ -478,7 +484,9 @@ export default function ResetPassword() {
             <div className="sc-deco-subtitle">
               Sign in to see who's interested in you, respond to messages, and
               discover daily compatible profiles.
-              <span className="sc-tamil">உங்கள் பொருத்தங்கள் காத்திருக்கின்றன</span>
+              <span className="sc-tamil">
+                உங்கள் பொருத்தங்கள் காத்திருக்கின்றன
+              </span>
             </div>
 
             <div className="sc-deco-stats">
@@ -621,7 +629,9 @@ export default function ResetPassword() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          transition: transform 0.15s, box-shadow 0.15s;
+          transition:
+            transform 0.15s,
+            box-shadow 0.15s;
         }
         .sc-btn-nav:hover {
           transform: translateY(-1px);
@@ -687,11 +697,7 @@ export default function ResetPassword() {
           position: absolute;
           inset: 0;
           opacity: 0.05;
-          background-image: radial-gradient(
-            circle,
-            white 1px,
-            transparent 1px
-          );
+          background-image: radial-gradient(circle, white 1px, transparent 1px);
           background-size: 28px 28px;
           pointer-events: none;
         }
@@ -856,7 +862,9 @@ export default function ResetPassword() {
           font-size: 0.9rem;
           font-family: var(--font-body);
           color: var(--ink);
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition:
+            border-color 0.2s,
+            box-shadow 0.2s;
           outline: none;
           box-shadow: var(--shadow-card);
           box-sizing: border-box;
@@ -864,7 +872,9 @@ export default function ResetPassword() {
 
         .sc-form-input:focus {
           border-color: var(--plum);
-          box-shadow: 0 0 0 3px var(--plum-light), var(--shadow-card);
+          box-shadow:
+            0 0 0 3px var(--plum-light),
+            var(--shadow-card);
         }
 
         .sc-form-input::placeholder {
@@ -911,7 +921,9 @@ export default function ResetPassword() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          transition: transform 0.2s, box-shadow 0.2s;
+          transition:
+            transform 0.2s,
+            box-shadow 0.2s;
         }
 
         .sc-btn-submit:hover:not(:disabled) {
