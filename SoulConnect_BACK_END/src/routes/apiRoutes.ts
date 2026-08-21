@@ -39,6 +39,7 @@ import {
   handleCreateRazorpayOrder,
   handleRazorpayWebhook,
 } from "../controllers/paymentController";
+import { handleForgotPassword, handleResetPassword } from "../controllers/authController";
 
 const router = Router();
 
@@ -181,5 +182,11 @@ router.post("/verification/send-otp", keycloak.protect(), handleSendOTP);
 router.post("/verification/verify-otp", keycloak.protect(), handleVerifyOTP);
 router.post("/public/verification/send-otp", handleSendOTP);
 router.post("/public/verification/verify-otp", handleVerifyOTP);
+
+// --- FORGOT & RESET PASSWORD ROUTES ---
+router.post("/public/forgot-password", handleForgotPassword);
+router.post("/forgot-password", handleForgotPassword);
+router.post("/public/reset-password", handleResetPassword);
+router.post("/reset-password", handleResetPassword);
 
 export default router;

@@ -81,7 +81,9 @@
             <div class="form-group">
               <div class="form-label-row">
                 <label class="form-label" for="loginPwd">Password</label>
-                <a href="#" class="forgot-link">Forgot password?</a>
+                <#if realm.resetPasswordAllowed>
+                  <a href="${url.loginResetCredentialsUrl}" class="forgot-link">Forgot password?</a>
+                </#if>
               </div>
               <div class="form-input-wrap">
                 <span class="form-input-icon">🔒</span>
@@ -125,14 +127,12 @@
               <input id="profileId" type="text" class="form-input" placeholder="e.g. SC-TN-2024-08142">
             </div>
           </div>
-
-         
           <div class="form-group">
             <div class="form-label-row">
               <label class="form-label" for="idPwd">Password</label>
-              <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
-            ? 'http://localhost:5174/forgot_password'
-            : 'https://devsoulconect.com/forgot_password'); return false;" class="forgot-link">Forgot password?</a>
+              <#if realm.resetPasswordAllowed>
+                <a href="${url.loginResetCredentialsUrl}" class="forgot-link">Forgot password?</a>
+              </#if>
             </div>
             <div class="form-input-wrap">
               <span class="form-input-icon">🔒</span>
@@ -171,7 +171,7 @@
       <div class="auth-already reveal" style="transition-delay:.3s">
         New to Soul Connect? <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/#register'
-            : 'https://devsoulconect.com/#register'); return false;"
+            : 'https://soulconect.com/#register'); return false;"
             >Create a free profile →</a>
       </div>
 
