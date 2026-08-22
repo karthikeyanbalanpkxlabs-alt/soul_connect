@@ -87,6 +87,7 @@ export default function Registration({
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   
   // Manual Form States
+  const [registerFor, setRegisterFor] = useState("For myself");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState("");
@@ -475,17 +476,9 @@ export default function Registration({
       showToast("Please verify your Email Address using OTP before proceeding.", "error");
       return;
     }
-    if (images.length === 0) {
-      showToast("Please upload at least 1 profile image.", "error");
-      return;
-    }
-    if (familyPhotos.length === 0) {
-      showToast("Please upload a family photo.", "error");
-      return;
-    }
     // Transition to Step 2
     setRegStep(2);
-    showToast("Profile drafted successfully! Please choose a plan and verify your ID.", "success");
+    showToast("Profile drafted successfully! Please choose a plan, upload photos, and verify your ID.", "success");
     // Scroll to section top
     const regSection = document.getElementById("register");
     if (regSection) {
@@ -500,6 +493,14 @@ export default function Registration({
   // Final step submit
   const handleFinalSubmit = async(e: React.MouseEvent) => {
     e.preventDefault();
+    if (images.length === 0) {
+      showToast("Please upload at least 1 profile image.", "error");
+      return;
+    }
+    if (familyPhotos.length === 0) {
+      showToast("Please upload a family photo.", "error");
+      return;
+    }
     if (!uploadedFile) {
       showToast("Please upload a scanned copy of your ID document to complete verification.", "error");
       return;
@@ -512,6 +513,7 @@ export default function Registration({
     let dataGenerateId = generateId();
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: registerFor,
       first_name: firstName,
       last_name: lastName,
       email: email,
@@ -719,7 +721,8 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       </h2>
       <p className="section-sub">
         {regStep === 1
-          ? "Choose manual registration for full control, or let our AI assist you for a faster experience."
+          // ? "Choose manual registration for full control, or let our AI assist you for a faster experience."
+          ? ""
           : "Secure your match compatibility ratings and access active communication features by finishing setup."}
       </p>
 
@@ -755,20 +758,20 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       {/* STEP 1: REGISTRATION TABS & PANEL */}
       {regStep === 1 && (
         <>
-          <div className="reg-tabs-bar">
+          {/* <div className="reg-tabs-bar">
             <button
               className={`reg-tab ${activeTab === "manual" ? "active" : ""}`}
               onClick={() => setActiveTab("manual")}
             >
               ✍️ Manual Registration
             </button>
-            {/* <button
+            <button
               className={`reg-tab ${activeTab === "auto" ? "active" : ""}`}
               onClick={() => setActiveTab("auto")}
             >
               ⚡ AI-Assisted
-            </button> */}
-          </div>
+            </button>
+          </div> */}
 
           {/* MANUAL PANEL */}
           <div className={`reg-panel ${activeTab === "manual" ? "active" : ""}`}>
@@ -779,155 +782,42 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   Fill in your details. Takes about 10 minutes. All fields are private by default.
                 </div>
 
-                {/* Profile Images Card Component */}
-                <div className="mb-8 p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm text-left">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
-                        <Camera size={20} />
-                      </div>
-                      <h4 className="text-lg font-bold text-slate-800 tracking-tight">
-                        Profile Images <span className="text-red-500">*</span>
-                      </h4>
-                    </div>
-                    <span className="text-xs font-medium text-slate-400">
-                      Max 3 photos
-                    </span>
-                  </div>
+                <div className="form-section-label">Personal Information</div>
 
-                  <div className="flex flex-wrap gap-4">
-                    {images
-                      .filter((img: any) => img.url)
-                      .map((img: any, index: number) => (
-                        <div
-                          key={index}
-                          className={`relative w-44 h-60 rounded-2xl border-2 overflow-hidden group bg-slate-50 shadow-sm transition-all ${
-                            img.default
-                              ? "border-amber-400 ring-2 ring-amber-400/30"
-                              : "border-slate-200"
+                {/* I AM REGISTERING SELECTION */}
+                <div className="mb-6 text-left">
+                  <label className="block text-sm font-bold text-slate-800 mb-2.5">
+                    I am registering <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {[
+                      { id: "myself", label: "For myself", icon: "🙋‍♂️" },
+                      { id: "son", label: "For my son", icon: "👦", gender: "Male" },
+                      { id: "daughter", label: "For my daughter", icon: "👧", gender: "Female" },
+                    ].map((opt) => {
+                      const isSelected = registerFor === opt.label;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setRegisterFor(opt.label);
+                            if (opt.gender) setGender(opt.gender);
+                          }}
+                          className={`flex items-center gap-2 px-5 py-3 rounded-2xl border-2 font-semibold text-sm transition-all shadow-sm ${
+                            isSelected
+                              ? "border-violet-600 bg-violet-50/80 text-violet-700 font-bold shadow-violet-100 ring-2 ring-violet-400/20"
+                              : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                           }`}
                         >
-                          {img.default && (
-                            <div className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md z-10 flex items-center gap-1">
-                              <span>★ Default</span>
-                            </div>
-                          )}
-                          <img
-                            src={img.url}
-                            alt={`Profile Image ${index + 1}`}
-                            className="w-full h-full object-cover rounded-2xl"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity p-2">
-                            <button
-                              type="button"
-                              onClick={() => setAsDefaultImage(index)}
-                              className={`text-xs px-3 py-1.5 rounded-lg text-white font-semibold transition-colors shadow flex items-center gap-1 ${
-                                img.default
-                                  ? "bg-amber-500 hover:bg-amber-600"
-                                  : "bg-slate-700 hover:bg-amber-500"
-                              }`}
-                            >
-                              ★ {img.default ? "Default Image" : "Set Default"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeImage(index)}
-                              className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 font-semibold shadow transition-colors flex items-center gap-1"
-                            >
-                              <Trash2 size={14} /> Remove Photo
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-
-                    {images.filter((img: any) => img.url).length < 3 && (
-                      <label className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group">
-                        <Plus
-                          size={28}
-                          className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
-                        />
-                        <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
-                          Add Image
-                        </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageUpload}
-                        />
-                      </label>
-                    )}
+                          <span className="text-base">{opt.icon}</span>
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Family Photos Card Component */}
-                <div className="mb-8 p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
-                        <Users size={20} />
-                      </div>
-                      <h4 className="text-lg font-bold text-slate-800 tracking-tight">
-                        Family Photos <span className="text-red-500">*</span>
-                      </h4>
-                    </div>
-                    <span className="text-xs font-medium text-slate-400">
-                      Max 1 photo
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-4">
-                    {(() => {
-                      const validFP = familyPhotos.filter((img: any) =>
-                        typeof img === "string" ? img : img?.url,
-                      );
-                      const firstFP = validFP[0];
-                      const fpUrl =
-                        typeof firstFP === "string" ? firstFP : firstFP?.url;
-
-                      if (fpUrl) {
-                        return (
-                          <div className="relative w-44 h-60 rounded-2xl border-2 border-slate-200 overflow-hidden group bg-slate-50 shadow-sm">
-                            <img
-                              src={fpUrl}
-                              alt="Family Photo"
-                              className="w-full h-full object-cover rounded-2xl"
-                            />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
-                              <button
-                                type="button"
-                                onClick={removeFamilyPhoto}
-                                className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 font-semibold shadow transition-colors flex items-center gap-1"
-                              >
-                                <Trash2 size={14} /> Remove Photo
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <label className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group">
-                          <Plus
-                            size={28}
-                            className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
-                          />
-                          <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
-                            Add Family Photo
-                          </span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleFamilyPhotoUpload}
-                          />
-                        </label>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                <div className="form-section-label">Personal Information</div>
                 <div className="form-row">
                   <div className="form-group">
                     <label>First Name</label>
@@ -992,6 +882,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           value={mobile}
                           maxLength={10}
                           disabled={mobileVerified}
+                          className="!pr-24"
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setMobile(val);
@@ -1074,20 +965,24 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       )}
                     </div>
                     <div className="relative flex items-center">
-                      <input
-                        type="email"
-                        placeholder="name@email.com"
-                        value={email}
-                        disabled={emailVerified}
-                        className={`w-full pr-24 ${
+                      <div
+                        className={`phone-input-container w-full ${
                           emailVerified ? "!border-emerald-500 bg-emerald-50/20" : ""
                         }`}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (emailVerified) setEmailVerified(false);
-                          if (emailOtpSent) setEmailOtpSent(false);
-                        }}
-                      />
+                      >
+                        <input
+                          type="email"
+                          placeholder="name@email.com"
+                          value={email}
+                          disabled={emailVerified}
+                          className="!pr-24"
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (emailVerified) setEmailVerified(false);
+                            if (emailOtpSent) setEmailOtpSent(false);
+                          }}
+                        />
+                      </div>
                       {!emailVerified && (
                         <button
                           type="button"
@@ -1579,8 +1474,166 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       {/* STEP 2: MEMBERSHIP & DOCUMENT VERIFICATION */}
       {regStep === 2 && (
         <div className="mx-auto max-w-[1100px] text-center text-white reveal visible animate-in fade-in duration-300">
+          {/* Photo Upload Section */}
+          <div className="mb-12 text-left">
+            <div className="mb-6 text-center">
+              <h3 className="font-display text-xl font-bold mb-2 text-white">1. Upload Profile & Family Photos</h3>
+              <p className="text-sm text-gray-400">Add high quality photos to make your profile stand out and gain verified responses.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Profile Images Card Component */}
+              <div className="p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm text-left">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
+                      <Camera size={20} />
+                    </div>
+                    <h4 className="text-lg font-bold text-slate-800 tracking-tight">
+                      Profile Images <span className="text-red-500">*</span>
+                    </h4>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">
+                    Max 3 photos
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  {images
+                    .filter((img: any) => img.url)
+                    .map((img: any, index: number) => (
+                      <div
+                        key={index}
+                        className={`relative w-44 h-60 rounded-2xl border-2 overflow-hidden group bg-slate-50 shadow-sm transition-all ${
+                          img.default
+                            ? "border-amber-400 ring-2 ring-amber-400/30"
+                            : "border-slate-200"
+                        }`}
+                      >
+                        {img.default && (
+                          <div className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md z-10 flex items-center gap-1">
+                            <span>★ Default</span>
+                          </div>
+                        )}
+                        <img
+                          src={img.url}
+                          alt={`Profile Image ${index + 1}`}
+                          className="w-full h-full object-cover rounded-2xl"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity p-2">
+                          <button
+                            type="button"
+                            onClick={() => setAsDefaultImage(index)}
+                            className={`text-xs px-3 py-1.5 rounded-lg text-white font-semibold transition-colors shadow flex items-center gap-1 ${
+                              img.default
+                                ? "bg-amber-500 hover:bg-amber-600"
+                                : "bg-slate-700 hover:bg-amber-500"
+                            }`}
+                          >
+                            ★ {img.default ? "Default Image" : "Set Default"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 font-semibold shadow transition-colors flex items-center gap-1"
+                          >
+                            <Trash2 size={14} /> Remove Photo
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                  {images.filter((img: any) => img.url).length < 3 && (
+                    <label className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group">
+                      <Plus
+                        size={28}
+                        className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
+                      />
+                      <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
+                        Add Image
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Family Photos Card Component */}
+              <div className="p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm text-left">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-600 flex items-center justify-center font-semibold">
+                      <Users size={20} />
+                    </div>
+                    <h4 className="text-lg font-bold text-slate-800 tracking-tight">
+                      Family Photos <span className="text-red-500">*</span>
+                    </h4>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">
+                    Max 1 photo
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  {(() => {
+                    const validFP = familyPhotos.filter((img: any) =>
+                      typeof img === "string" ? img : img?.url,
+                    );
+                    const firstFP = validFP[0];
+                    const fpUrl =
+                      typeof firstFP === "string" ? firstFP : firstFP?.url;
+
+                    if (fpUrl) {
+                      return (
+                        <div className="relative w-44 h-60 rounded-2xl border-2 border-slate-200 overflow-hidden group bg-slate-50 shadow-sm">
+                          <img
+                            src={fpUrl}
+                            alt="Family Photo"
+                            className="w-full h-full object-cover rounded-2xl"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center gap-2 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={removeFamilyPhoto}
+                              className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 font-semibold shadow transition-colors flex items-center gap-1"
+                            >
+                              <Trash2 size={14} /> Remove Photo
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <label className="w-44 h-60 rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-500 flex flex-col items-center justify-center text-slate-400 hover:text-violet-600 cursor-pointer transition-all bg-slate-50/50 hover:bg-violet-50/20 group">
+                        <Plus
+                          size={28}
+                          className="mb-2 text-slate-400 group-hover:text-violet-600 transition-colors"
+                        />
+                        <span className="text-xs font-semibold text-slate-400 group-hover:text-violet-600 transition-colors">
+                          Add Family Photo
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFamilyPhotoUpload}
+                        />
+                      </label>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="mb-8">
-            <h3 className="font-display text-xl font-bold mb-2">1. Select Membership Plan</h3>
+            <h3 className="font-display text-xl font-bold mb-2">2. Select Membership Plan</h3>
             <p className="text-sm text-gray-400">Choose the membership level that suits your matchmaking goals.</p>
           </div>
 
