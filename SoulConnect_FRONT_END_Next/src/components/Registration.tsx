@@ -87,6 +87,7 @@ export default function Registration({
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   
   // Manual Form States
+  const [registerFor, setRegisterFor] = useState("For myself");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState("");
@@ -512,6 +513,7 @@ export default function Registration({
     let dataGenerateId = generateId();
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: registerFor,
       first_name: firstName,
       last_name: lastName,
       email: email,
@@ -780,6 +782,41 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 </div>
 
                 <div className="form-section-label">Personal Information</div>
+
+                {/* I AM REGISTERING SELECTION */}
+                <div className="mb-6 text-left">
+                  <label className="block text-sm font-bold text-slate-800 mb-2.5">
+                    I am registering <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {[
+                      { id: "myself", label: "For myself", icon: "🙋‍♂️" },
+                      { id: "son", label: "For my son", icon: "👦", gender: "Male" },
+                      { id: "daughter", label: "For my daughter", icon: "👧", gender: "Female" },
+                    ].map((opt) => {
+                      const isSelected = registerFor === opt.label;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setRegisterFor(opt.label);
+                            if (opt.gender) setGender(opt.gender);
+                          }}
+                          className={`flex items-center gap-2 px-5 py-3 rounded-2xl border-2 font-semibold text-sm transition-all shadow-sm ${
+                            isSelected
+                              ? "border-violet-600 bg-violet-50/80 text-violet-700 font-bold shadow-violet-100 ring-2 ring-violet-400/20"
+                              : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="text-base">{opt.icon}</span>
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>First Name</label>
