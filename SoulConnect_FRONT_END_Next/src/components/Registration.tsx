@@ -721,7 +721,8 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       </h2>
       <p className="section-sub">
         {regStep === 1
-          ? "Choose manual registration for full control, or let our AI assist you for a faster experience."
+          // ? "Choose manual registration for full control, or let our AI assist you for a faster experience."
+          ? ""
           : "Secure your match compatibility ratings and access active communication features by finishing setup."}
       </p>
 
@@ -757,20 +758,20 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       {/* STEP 1: REGISTRATION TABS & PANEL */}
       {regStep === 1 && (
         <>
-          <div className="reg-tabs-bar">
+          {/* <div className="reg-tabs-bar">
             <button
               className={`reg-tab ${activeTab === "manual" ? "active" : ""}`}
               onClick={() => setActiveTab("manual")}
             >
               ✍️ Manual Registration
             </button>
-            {/* <button
+            <button
               className={`reg-tab ${activeTab === "auto" ? "active" : ""}`}
               onClick={() => setActiveTab("auto")}
             >
               ⚡ AI-Assisted
-            </button> */}
-          </div>
+            </button>
+          </div> */}
 
           {/* MANUAL PANEL */}
           <div className={`reg-panel ${activeTab === "manual" ? "active" : ""}`}>
