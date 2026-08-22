@@ -844,6 +844,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           value={mobile}
                           maxLength={10}
                           disabled={mobileVerified}
+                          className="!pr-24"
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                             setMobile(val);
@@ -926,20 +927,24 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       )}
                     </div>
                     <div className="relative flex items-center">
-                      <input
-                        type="email"
-                        placeholder="name@email.com"
-                        value={email}
-                        disabled={emailVerified}
-                        className={`w-full pr-24 ${
+                      <div
+                        className={`phone-input-container w-full ${
                           emailVerified ? "!border-emerald-500 bg-emerald-50/20" : ""
                         }`}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (emailVerified) setEmailVerified(false);
-                          if (emailOtpSent) setEmailOtpSent(false);
-                        }}
-                      />
+                      >
+                        <input
+                          type="email"
+                          placeholder="name@email.com"
+                          value={email}
+                          disabled={emailVerified}
+                          className="!pr-24"
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (emailVerified) setEmailVerified(false);
+                            if (emailOtpSent) setEmailOtpSent(false);
+                          }}
+                        />
+                      </div>
                       {!emailVerified && (
                         <button
                           type="button"
