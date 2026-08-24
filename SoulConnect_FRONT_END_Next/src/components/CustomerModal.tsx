@@ -34,6 +34,7 @@ const LAGNAMS = [
 
 const defaultFormData = {
   customer_id: "",
+  whoiam_register: "For myself",
   first_name: "",
   last_name: "",
   email: "",
@@ -132,6 +133,7 @@ const defaultFormData = {
 };
 
 const customerValidationSchema = Yup.object().shape({
+  whoiam_register: Yup.string().required("Please select who you are registering for"),
   first_name: Yup.string().trim().required("First name is required"),
   last_name: Yup.string().trim().required("Last name is required"),
   email: Yup.string()
@@ -228,6 +230,10 @@ export default function CustomerModal({
       ? {
           ...defaultFormData,
           ...initialData,
+          whoiam_register:
+            initialData.whoiam_register ||
+            initialData.profile_created_for ||
+            defaultFormData.whoiam_register,
           horoscopeDetails: {
             ...defaultFormData.horoscopeDetails,
             ...(initialData.horoscopeDetails || {}),
@@ -818,6 +824,43 @@ export default function CustomerModal({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
+              {/* I AM REGISTERING SELECTION */}
+              <div className="sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5 mb-2">
+                <label className="block text-sm font-bold text-gray-800 mb-2.5">
+                  I am registering <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { id: "myself", label: "For myself", icon: "🙋" },
+                    { id: "son", label: "For my son", icon: "👦", gender: "Male" },
+                    { id: "daughter", label: "For my daughter", icon: "👧", gender: "Female" },
+                  ].map((opt) => {
+                    const isSelected = formik.values.whoiam_register === opt.label;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          formik.setFieldValue("whoiam_register", opt.label);
+                          if (opt.gender) {
+                            formik.setFieldValue("gender", opt.gender);
+                          }
+                        }}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-2xl border-2 font-semibold text-sm transition-all shadow-sm ${
+                          isSelected
+                            ? "border-violet-600 bg-violet-50/80 text-violet-700 font-bold shadow-violet-100 ring-2 ring-violet-400/20"
+                            : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="text-base">{opt.icon}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {renderFieldError("whoiam_register")}
+              </div>
+
               {/* Basic Details */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">

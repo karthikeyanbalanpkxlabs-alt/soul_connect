@@ -514,6 +514,7 @@ export default function Registration({
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
       profile_created_for: registerFor,
+      whoiam_register: registerFor,
       first_name: firstName,
       last_name: lastName,
       email: email,

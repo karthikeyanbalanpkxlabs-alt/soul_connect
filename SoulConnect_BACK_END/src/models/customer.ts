@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const customerSchema = new mongoose.Schema(
   {
     keycloakId: { type: String, unique: true, sparse: true },
+    whoiam_register: String,
+    profile_created_for: String,
     firstName: String,
     lastName: String,
     first_name: String,

@@ -1609,9 +1609,14 @@ export async function handleCustomerCreate(req: Request, res: Response) {
     const tokenContent = (req as any).kauth?.grant?.access_token?.content;
     const loggedInEmail = tokenContent?.email;
 
+    const whoiam_register =
+      req.body.whoiam_register || req.body.profile_created_for || "For myself";
+
     const newCustomer = new Customers({
       customer_id,
       keycloakId,
+      whoiam_register,
+      profile_created_for: whoiam_register,
       firstName: first,
       lastName: last,
       first_name: first,

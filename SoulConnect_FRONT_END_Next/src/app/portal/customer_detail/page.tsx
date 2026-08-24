@@ -253,6 +253,12 @@ function CustomerDetailContent() {
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-slate-500">Registered For</span>
+                    <span className="font-medium text-slate-800">
+                      {customer.whoiam_register || customer.profile_created_for || "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-slate-500">Marital Status</span>
                     <span className="font-medium capitalize text-slate-800">
                       {customer.maritial_status || "-"}
