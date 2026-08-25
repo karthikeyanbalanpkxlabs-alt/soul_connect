@@ -7,6 +7,8 @@ import usePortalPage from "./usePortalCustomerPage";
 import Toast from "../../../components/Toast";
 import { Plus, UserPlus, ShieldPlus, Users } from "lucide-react";
 
+import ConfirmModal from "../../../components/ConfirmModal";
+
 function ListPage() {
   const stateProps = usePortalPage();
 
@@ -89,6 +91,18 @@ function ListPage() {
           subscriptionList={stateProps?.subscriptions}
         />
       )}
+
+      {/* DELETE CONFIRMATION POPUP MODAL */}
+      <ConfirmModal
+        isOpen={!!stateProps?.deleteConfirmId}
+        title="Delete Customer"
+        message="Are you sure want to delete?"
+        confirmText="Yes"
+        cancelText="No"
+        loading={stateProps?.isDeleting}
+        onConfirm={stateProps?.onConfirmDelete}
+        onCancel={stateProps?.onCancelDelete}
+      />
 
       {/* TOAST */}
       {stateProps?.toast && (

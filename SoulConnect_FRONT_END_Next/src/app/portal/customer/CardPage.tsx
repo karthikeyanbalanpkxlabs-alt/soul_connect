@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import CustomerModal from "../../../components/CustomerModal";
+import ConfirmModal from "../../../components/ConfirmModal";
 import usePortalPage from "./usePortalCustomerPage";
 import FilterSidebar from "./FilterSidebar";
 import ProfileCard from "./ProfileCard";
@@ -748,6 +749,16 @@ function CardPage() {
               subscriptionList={stateProps?.subscriptions}
             />
           )}
+          <ConfirmModal
+            isOpen={!!stateProps?.deleteConfirmId}
+            title="Delete Customer"
+            message="Are you sure want to delete"
+            confirmText="Yes"
+            cancelText="No"
+            loading={stateProps?.isDeleting}
+            onConfirm={stateProps?.onConfirmDelete}
+            onCancel={stateProps?.onCancelDelete}
+          />
         </div>
       ) : (
         <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 p-6">
