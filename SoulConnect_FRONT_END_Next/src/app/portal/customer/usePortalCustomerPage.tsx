@@ -30,6 +30,8 @@ function usePortalCustomerPage() {
   const [filters, setFilters] = React.useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<any>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
   const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
   const [toast, setToast] = React.useState<{
     message: string;
@@ -128,10 +130,13 @@ function usePortalCustomerPage() {
       });
   };
 
-  const onDeleteCustomer = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this customer?"))
-      return;
+  const onDeleteCustomer = (id: string) => {
+    setDeleteConfirmId(id);
+  };
 
+  const onConfirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    setIsDeleting(true);
     try {
       if (keycloak) {
         await keycloak.updateToken(30);
@@ -146,10 +151,12 @@ function usePortalCustomerPage() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: deleteConfirmId }),
     })
       .then((r) => r.json())
       .then((data) => {
+        setIsDeleting(false);
+        setDeleteConfirmId(null);
         console.log("customer_delete response:", data);
         if (data.error) {
           showToast(data.error, "error");
@@ -159,9 +166,15 @@ function usePortalCustomerPage() {
         }
       })
       .catch((e) => {
+        setIsDeleting(false);
+        setDeleteConfirmId(null);
         console.error("Error deleting customer:", e);
         showToast(e.message || "Failed to delete customer", "error");
       });
+  };
+
+  const onCancelDelete = () => {
+    setDeleteConfirmId(null);
   };
 
   const onHandleClickCreateManager = () => {
@@ -970,6 +983,11 @@ function usePortalCustomerPage() {
     onHandleEditCustomer,
     onSaveCustomer,
     onDeleteCustomer,
+    deleteConfirmId,
+    setDeleteConfirmId,
+    isDeleting,
+    onConfirmDelete,
+    onCancelDelete,
     onHandleClickCreateManager,
     subscriptions,
     getSubscriptionListAPI,
