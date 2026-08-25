@@ -1,7 +1,7 @@
 import keycloak from "../../../lib/keycloak";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2, Pencil, Mail, User, CheckCircle2, Clock, XCircle, Sparkles } from "lucide-react";
 import configUrls from "../../../../configUrls";
 import { useKeycloak } from "@/providers/KeycloakProvider";
 const generateId = () => {
@@ -752,89 +752,147 @@ function usePortalCustomerPage() {
       key: "first_name",
       label: "First Name",
       isFilterable: true,
+      render: (row: any) => {
+        const initial = (row.first_name || "C").charAt(0).toUpperCase();
+        return (
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-500 text-white font-semibold text-xs flex items-center justify-center shadow-xs">
+              {initial}
+            </div>
+            <span className="font-semibold text-slate-800">{row.first_name || "-"}</span>
+          </div>
+        );
+      },
     },
     {
       key: "last_name",
       label: "Last Name",
       isFilterable: true,
+      render: (row: any) => (
+        <span className="font-medium text-slate-700">{row.last_name || "-"}</span>
+      ),
     },
     {
       key: "gender",
       label: "Gender",
       isFilterable: true,
+      render: (row: any) => {
+        const g = (row.gender || "").toLowerCase();
+        const isFemale = g === "female";
+        const isMale = g === "male" || g === "maile";
+        return (
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+              isFemale
+                ? "bg-rose-50 text-rose-700 border-rose-200/70"
+                : isMale
+                ? "bg-blue-50 text-blue-700 border-blue-200/70"
+                : "bg-slate-50 text-slate-700 border-slate-200"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                isFemale ? "bg-rose-500" : isMale ? "bg-blue-500" : "bg-slate-400"
+              }`}
+            ></span>
+            {row.gender ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1) : "-"}
+          </span>
+        );
+      },
     },
     {
       key: "email",
       label: "Email",
       isFilterable: true,
+      render: (row: any) => (
+        <div className="flex items-center gap-1.5 text-slate-600 font-mono text-xs">
+          <Mail size={13} className="text-slate-400 shrink-0" />
+          <span>{row.email || "-"}</span>
+        </div>
+      ),
     },
     {
       key: "approvalStatus",
       label: "Approval Status",
-      isFilterable: !true,
+      isFilterable: false,
+      render: (row: any) => {
+        const status = (row.approvalStatus || row.status || "Approved").toLowerCase();
+        const isApproved = status.includes("approve") || status === "active";
+        const isPending = status.includes("pend");
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+              isApproved
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                : isPending
+                ? "bg-amber-50 text-amber-700 border-amber-200/80"
+                : "bg-rose-50 text-rose-700 border-rose-200/80"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                isApproved ? "bg-emerald-500" : isPending ? "bg-amber-500" : "bg-rose-500"
+              }`}
+            ></span>
+            {row.approvalStatus || "Approved"}
+          </span>
+        );
+      },
     },
     {
       key: "subscription_type",
       label: "Subscription Type",
       isFilterable: true,
+      render: (row: any) => {
+        const sub = (row.subscription_type || "guest").toLowerCase();
+        const isPremium = sub !== "guest" && sub !== "";
+        return (
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+              isPremium
+                ? "bg-purple-50 text-purple-700 border-purple-200/80"
+                : "bg-slate-100 text-slate-700 border-slate-200"
+            }`}
+          >
+            {isPremium && <Sparkles size={11} className="text-purple-600" />}
+            {row.subscription_type || "guest"}
+          </span>
+        );
+      },
     },
     {
       key: "action",
       label: "Action",
       isFilterable: false,
       render: (row: any) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => onHandleEditCustomer(row)}
-            className="text-violet-600 hover:text-violet-800 font-medium"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-violet-50 text-violet-700 hover:bg-violet-100 font-semibold text-xs transition-colors cursor-pointer"
             title="Edit Customer"
           >
-            Edit
+            <Pencil size={13} />
+            <span>Edit</span>
           </button>
           <button
             onClick={() => router.push(`/portal/customer_detail?id=${row._id}`)}
-            className="text-gray-500 hover:text-gray-800"
+            className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors cursor-pointer"
             title="View Details"
           >
-            <Eye size={20} />
+            <Eye size={15} />
           </button>
           {getRoles?.includes("manager") && (
             <button
               onClick={() => onDeleteCustomer(row._id)}
-              className="text-red-500 hover:text-red-700"
+              className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-800 transition-colors cursor-pointer"
               title="Delete Customer"
             >
-              <Trash2 size={20} />
+              <Trash2 size={15} />
             </button>
           )}
         </div>
       ),
     },
-    // {
-    //   key: "id",
-    //   label: "ID",
-    // },
-    // {
-    //   key: "name",
-    //   label: "Name",
-    //   isFilterable: true,
-    // },
-
-    // {
-    //   key: "status",
-    //   label: "Status",
-    //   render: (row) => (
-    //     <span
-    //       className={`rounded px-2 py-1 text-xs ${
-    //         row.status === "ACTIVE"
-    //           ? "bg-green-100 text-green-700"
-    //           : "bg-red-100 text-red-700"
-    //       }`}
-    //     >
-    //       {row.status}
-    //     </span>
-    //   ),
-    // },
   ];
 
   const loadCustomers = async () => {
