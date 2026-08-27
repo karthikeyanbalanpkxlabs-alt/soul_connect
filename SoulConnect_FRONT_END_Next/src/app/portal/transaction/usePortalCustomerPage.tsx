@@ -102,6 +102,9 @@ function usePortalCustomerPage() {
       formData.keycloakId = formData.keycloakId || dataGenerateId;
     }
 
+    formData.whoiam_register = formData.whoiam_register || formData.profile_created_for || "For myself";
+    formData.profile_created_for = formData.profile_created_for || formData.whoiam_register || "For myself";
+
     fetch(endpoint, {
       method: "POST",
       headers: {

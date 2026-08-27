@@ -35,6 +35,7 @@ const LAGNAMS = [
 const defaultFormData = {
   customer_id: "",
   whoiam_register: "For myself",
+  profile_created_for: "For myself",
   first_name: "",
   last_name: "",
   email: "",
@@ -290,8 +291,11 @@ export default function CustomerModal({
     enableReinitialize: true,
     validationSchema: customerValidationSchema,
     onSubmit: (values) => {
+      const selectedWho = values.whoiam_register || values.profile_created_for || "For myself";
       onSave({
         ...values,
+        whoiam_register: selectedWho,
+        profile_created_for: selectedWho,
         role: values.role || "customer_g",
       });
     },

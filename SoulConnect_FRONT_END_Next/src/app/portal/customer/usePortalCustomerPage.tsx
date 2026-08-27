@@ -97,6 +97,9 @@ function usePortalCustomerPage() {
       formData.keycloakId = formData.keycloakId || dataGenerateId;
     }
 
+    formData.whoiam_register = formData.whoiam_register || formData.profile_created_for || "For myself";
+    formData.profile_created_for = formData.profile_created_for || formData.whoiam_register || "For myself";
+
     fetch(endpoint, {
       method: "POST",
       headers: {
@@ -183,6 +186,8 @@ function usePortalCustomerPage() {
 
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: "For myself",
+      whoiam_register: "For myself",
       first_name: "karthikeyan" + dataGenerateId,
       last_name: "Jobalanhn" + dataGenerateId,
       email: `karthikeyanbalan.${dataGenerateId}@gmail.com`,
@@ -340,6 +345,8 @@ function usePortalCustomerPage() {
     //dataGenerateId
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: "For myself",
+      whoiam_register: "For myself",
       first_name: "faheko2987",
       last_name: "faheko2987",
       // email: `gisipi5319@davopa.com`,
@@ -497,6 +504,8 @@ function usePortalCustomerPage() {
 
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: "For myself",
+      whoiam_register: "For myself",
       first_name: "karthikeyan" + dataGenerateId,
       last_name: "Jobalanhn" + dataGenerateId,
       email: `karthikeyanbalan.${dataGenerateId}@gmail.com`,
