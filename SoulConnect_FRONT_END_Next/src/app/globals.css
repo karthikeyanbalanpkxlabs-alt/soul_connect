@@ -595,13 +595,21 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
   .fc:nth-child(3) { top: auto; bottom: 18%; right: 2%; }
   .hero-stats { gap: 1.5rem; }
   .stat-div { display: none; }
+  .profile-layout { grid-template-columns: 1fr; padding: 0 16px 60px; gap: 20px; }
+  .profile-left { margin-top: -60px; }
+  .profile-right { margin-top: 0; }
+  .profile-hero { height: 180px; }
 }
 
 @media (max-width: 600px) {
-  section { padding: 72px 5vw; }
+  section { padding: 56px 4vw; }
   .footer-grid { grid-template-columns: 1fr; }
-  .payment-methods { grid-template-columns: repeat(3, 1fr); }
+  .payment-methods { grid-template-columns: repeat(2, 1fr); }
   .app-phones { flex-direction: column; align-items: center; }
+  .profile-hero { height: 160px; }
+  .profile-left { margin-top: -50px; }
+  .btn-row { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2.2rem; }
 }
 
 /* ─── PROFILE PAGE STYLES ─── */
