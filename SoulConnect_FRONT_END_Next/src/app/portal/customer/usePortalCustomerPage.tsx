@@ -108,24 +108,24 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(formData),
     })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
+        }
         console.log(
           isEdit ? "customer_update response:" : "customer_create response:",
           data,
         );
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast(
-            isEdit
-              ? "Customer updated successfully!"
-              : "Customer created successfully!",
-            "success",
-          );
-          setIsModalOpen(false);
-          loadCustomers();
-        }
+        showToast(
+          isEdit
+            ? "Customer updated successfully!"
+            : "Customer created successfully!",
+          "success",
+        );
+        setIsModalOpen(false);
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error saving customer:", e);
@@ -156,17 +156,17 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify({ id: deleteConfirmId }),
     })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
         setIsDeleting(false);
         setDeleteConfirmId(null);
-        console.log("customer_delete response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Customer deleted successfully!", "success");
-          loadCustomers();
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_delete response:", data);
+        showToast("Customer deleted successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         setIsDeleting(false);
@@ -323,15 +323,15 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(createFixture),
     })
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("customer_create response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Manager created successfully!", "success");
-          loadCustomers();
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_create response:", data);
+        showToast("Manager created successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error creating customer:", e);
@@ -483,15 +483,15 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(createFixture),
     })
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("customer_create response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Client created successfully!", "success");
-          loadCustomers();
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_create response:", data);
+        showToast("Client created successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error creating customer:", e);
@@ -640,15 +640,15 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(createFixture),
     })
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("customer_create response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Public client created successfully!", "success");
-          loadCustomers();
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_create response:", data);
+        showToast("Public client created successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error creating customer:", e);

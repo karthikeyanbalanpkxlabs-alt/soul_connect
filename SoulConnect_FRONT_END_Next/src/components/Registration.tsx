@@ -548,28 +548,38 @@ export default function Registration({
       keycloakId: dataGenerateId,
     };
 
-    const customerResp = await onSaveCustomer(createFixture);
-    console.log("customerResp--------->",customerResp)
+    try {
+      const customerResp = await onSaveCustomer(createFixture);
+      console.log("customerResp--------->", customerResp);
 
-    // Trigger membership payment checkout modal if a paid plan is selected
-    if (selectedPlanData && selectedPlanData.price !== "₹0") {
-      console.log("selectedPlanData",selectedPlanData)
-      showToast(`Registration completed successfully on the ${selectedPlanData?.id} tier! Redirecting to login...`, "success");
-       /**
-       * @Payment_Related_POPUP
-       */
-      onOpenPayment(
-        selectedPlanData.name,
-        selectedPlanData.price,
-        selectedPlanData.features
-      );
-    } else {
-      showToast("Registration completed successfully on the Free tier! Redirecting to login...", "success");
-      setTimeout(() => {
-        if (typeof window !== "undefined") {
-          window.location.href = window.location.origin + "/portal";
-        }
-      }, 2000);
+      if (!customerResp || customerResp.error) {
+        showToast(customerResp?.error || customerResp?.message || "Failed to save customer data.", "error");
+        return;
+      }
+
+      // Trigger membership payment checkout modal if a paid plan is selected
+      if (selectedPlanData && selectedPlanData.price !== "₹0") {
+        console.log("selectedPlanData", selectedPlanData);
+        showToast(`Registration completed successfully on the ${selectedPlanData?.id} tier! Redirecting to login...`, "success");
+         /**
+         * @Payment_Related_POPUP
+         */
+        onOpenPayment(
+          selectedPlanData.name,
+          selectedPlanData.price,
+          selectedPlanData.features
+        );
+      } else {
+        showToast("Registration completed successfully on the Free tier! Redirecting to login...", "success");
+        setTimeout(() => {
+          if (typeof window !== "undefined") {
+            window.location.href = window.location.origin + "/portal";
+          }
+        }, 2000);
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      showToast(error?.message || "Failed to create customer profile. Please try again.", "error");
     }
   };
 

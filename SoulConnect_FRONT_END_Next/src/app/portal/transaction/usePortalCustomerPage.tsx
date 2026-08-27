@@ -113,24 +113,24 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(formData),
     })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
+        }
         console.log(
           isEdit ? "customer_update response:" : "customer_create response:",
           data,
         );
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast(
-            isEdit
-              ? "Customer updated successfully!"
-              : "Customer created successfully!",
-            "success",
-          );
-          setIsModalOpen(false);
-          loadCustomers();
-        }
+        showToast(
+          isEdit
+            ? "Customer updated successfully!"
+            : "Customer created successfully!",
+          "success",
+        );
+        setIsModalOpen(false);
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error saving customer:", e);
