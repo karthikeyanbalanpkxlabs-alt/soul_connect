@@ -115,9 +115,9 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-6 md:p-8 space-y-8">
+    <div className="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 max-w-full overflow-x-hidden">
       {/* Top Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-900 via-indigo-900 to-rose-900 text-white p-6 md:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-900 via-indigo-900 to-rose-900 text-white p-5 sm:p-6 md:p-8 shadow-xl">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-rose-500/20 blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-1/3 -mb-16 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl pointer-events-none"></div>
 
@@ -137,7 +137,7 @@ const Dashboard = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => router.push("/portal/customer")}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-purple-950 hover:bg-rose-50 font-semibold text-sm transition-all shadow-md active:scale-95 cursor-pointer"
@@ -161,154 +161,154 @@ const Dashboard = () => {
 
       {/* Primary KPI Metrics */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="h-32 rounded-2xl bg-white p-6 shadow-sm border border-slate-100 animate-pulse flex items-center justify-between"
+              className="h-32 rounded-2xl bg-white p-5 shadow-sm border border-slate-100 animate-pulse flex items-center justify-between"
             >
-              <div className="space-y-3 flex-1">
+              <div className="space-y-3 flex-1 min-w-0">
                 <div className="h-4 w-24 bg-slate-200 rounded"></div>
                 <div className="h-8 w-16 bg-slate-300 rounded"></div>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-slate-200"></div>
+              <div className="w-10 h-10 rounded-xl bg-slate-200 shrink-0"></div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-6">
           {/* Card 1: Total Profiles */}
-          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="group bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate" title="Total Profiles">
                 Total Profiles
               </span>
-              <div className="p-3 rounded-xl bg-rose-50 text-rose-600 group-hover:scale-110 transition-transform">
-                <Users className="w-6 h-6" />
+              <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600 group-hover:scale-110 transition-transform shrink-0">
+                <Users className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900">
+            <div className="mt-4 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900">
                 {stats?.totalCustomers ?? 0}
               </span>
-              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0">
                 Active Cluster
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2 truncate">
               Registered customers in database
             </p>
           </div>
 
           {/* Card 2: Approved Profiles */}
-          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="group bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate" title="Verified & Approved">
                 Verified & Approved
               </span>
-              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform">
-                <CheckCircle className="w-6 h-6" />
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform shrink-0">
+                <CheckCircle className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900">
+            <div className="mt-4 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900">
                 {stats?.approvedCustomers ?? 0}
               </span>
-              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0">
                 {approvalRate}% rate
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2 truncate">
               Publicly verified & published
             </p>
           </div>
 
           {/* Card 3: Pending Approvals */}
-          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="group bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate" title="Pending Approval">
                 Pending Approval
               </span>
-              <div className="p-3 rounded-xl bg-amber-50 text-amber-600 group-hover:scale-110 transition-transform">
-                <Clock className="w-6 h-6" />
+              <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 group-hover:scale-110 transition-transform shrink-0">
+                <Clock className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-amber-600">
+            <div className="mt-4 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-amber-600">
                 {stats?.pendingCustomers ?? 0}
               </span>
-              <span className="inline-flex items-center text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md shrink-0">
                 Action Req.
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">Awaiting admin review</p>
+            <p className="text-xs text-slate-500 mt-2 truncate">Awaiting admin review</p>
           </div>
 
           {/* Card 4: Staff & Managers */}
-          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="group bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate" title="Active Managers">
                 Active Managers
               </span>
-              <div className="p-3 rounded-xl bg-purple-50 text-purple-600 group-hover:scale-110 transition-transform">
-                <ShieldCheck className="w-6 h-6" />
+              <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 group-hover:scale-110 transition-transform shrink-0">
+                <ShieldCheck className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900">
+            <div className="mt-4 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900">
                 {stats?.managerCount ?? 0}
               </span>
-              <span className="inline-flex items-center text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md shrink-0">
                 Staff Tier
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2 truncate">
               Portal management accounts
             </p>
           </div>
 
           {/* Card 5: Total Transactions */}
-          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="group bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate" title="Total Transactions">
                 Total Transactions
               </span>
-              <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform">
-                <CreditCard className="w-6 h-6" />
+              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform shrink-0">
+                <CreditCard className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900">
+            <div className="mt-4 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900">
                 {stats?.totalTransactions ?? 0}
               </span>
-              <span className="inline-flex items-center text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0">
                 Purchase Logs
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2 truncate">
               Completed plans purchase history
             </p>
           </div>
 
           {/* Card 6: Revenue Earnings */}
-          <div className="group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="group bg-white rounded-2xl p-4 sm:p-5 lg:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate" title="Revenue Earnings">
                 Revenue Earnings
               </span>
-              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform">
-                <Sparkles className="w-6 h-6 font-bold" />
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform shrink-0">
+                <Sparkles className="w-5 h-5 font-bold" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-emerald-600">
+            <div className="mt-4 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-emerald-600">
                 ₹{stats?.totalRevenue ?? 0}
               </span>
-              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0">
                 Total Revenue
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2 truncate">
               Gross earnings from memberships
             </p>
           </div>
@@ -316,7 +316,7 @@ const Dashboard = () => {
       )}
 
       {/* Analytics Breakdown Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
         {/* Gender Distribution */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
           <div className="flex items-center justify-between">

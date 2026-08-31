@@ -305,7 +305,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       </aside>
 
       {/* Page Content */}
-      <div className="flex-1 overflow-y-auto">{children}</div>
+      <div className="flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">{children}</div>
     </div>
   );
 }
