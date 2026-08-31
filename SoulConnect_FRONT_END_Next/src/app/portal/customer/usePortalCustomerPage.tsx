@@ -97,6 +97,9 @@ function usePortalCustomerPage() {
       formData.keycloakId = formData.keycloakId || dataGenerateId;
     }
 
+    formData.whoiam_register = formData.whoiam_register || formData.profile_created_for || "For myself";
+    formData.profile_created_for = formData.profile_created_for || formData.whoiam_register || "For myself";
+
     fetch(endpoint, {
       method: "POST",
       headers: {
@@ -105,24 +108,24 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(formData),
     })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
+        }
         console.log(
           isEdit ? "customer_update response:" : "customer_create response:",
           data,
         );
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast(
-            isEdit
-              ? "Customer updated successfully!"
-              : "Customer created successfully!",
-            "success",
-          );
-          setIsModalOpen(false);
-          loadCustomers();
-        }
+        showToast(
+          isEdit
+            ? "Customer updated successfully!"
+            : "Customer created successfully!",
+          "success",
+        );
+        setIsModalOpen(false);
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error saving customer:", e);
@@ -153,17 +156,17 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify({ id: deleteConfirmId }),
     })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
         setIsDeleting(false);
         setDeleteConfirmId(null);
-        console.log("customer_delete response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Customer deleted successfully!", "success");
-          loadCustomers();
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_delete response:", data);
+        showToast("Customer deleted successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         setIsDeleting(false);
@@ -183,6 +186,8 @@ function usePortalCustomerPage() {
 
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: "For myself",
+      whoiam_register: "For myself",
       first_name: "karthikeyan" + dataGenerateId,
       last_name: "Jobalanhn" + dataGenerateId,
       email: `karthikeyanbalan.${dataGenerateId}@gmail.com`,
@@ -318,15 +323,15 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(createFixture),
     })
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("customer_create response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Manager created successfully!", "success");
-          loadCustomers();
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_create response:", data);
+        showToast("Manager created successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error creating customer:", e);
@@ -340,6 +345,8 @@ function usePortalCustomerPage() {
     //dataGenerateId
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: "For myself",
+      whoiam_register: "For myself",
       first_name: "faheko2987",
       last_name: "faheko2987",
       // email: `gisipi5319@davopa.com`,
@@ -476,15 +483,15 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(createFixture),
     })
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("customer_create response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Client created successfully!", "success");
-          loadCustomers();
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_create response:", data);
+        showToast("Client created successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error creating customer:", e);
@@ -497,6 +504,8 @@ function usePortalCustomerPage() {
 
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
+      profile_created_for: "For myself",
+      whoiam_register: "For myself",
       first_name: "karthikeyan" + dataGenerateId,
       last_name: "Jobalanhn" + dataGenerateId,
       email: `karthikeyanbalan.${dataGenerateId}@gmail.com`,
@@ -631,15 +640,15 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(createFixture),
     })
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("customer_create response:", data);
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast("Public client created successfully!", "success");
-          loadCustomers();
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
         }
+        console.log("customer_create response:", data);
+        showToast("Public client created successfully!", "success");
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error creating customer:", e);

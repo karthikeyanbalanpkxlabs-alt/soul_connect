@@ -104,26 +104,26 @@ function usePortalCustomerPage() {
       },
       body: JSON.stringify(payload),
     })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) {
+          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          throw new Error(errorMsg);
+        }
         console.log(
           isEdit
             ? "subscription_edit response:"
             : "subscription_create response:",
           data,
         );
-        if (data.error) {
-          showToast(data.error, "error");
-        } else {
-          showToast(
-            isEdit
-              ? "Subscription updated successfully!"
-              : "Subscription created successfully!",
-            "success",
-          );
-          setIsModalOpen(false);
-          loadCustomers();
-        }
+        showToast(
+          isEdit
+            ? "Subscription updated successfully!"
+            : "Subscription created successfully!",
+          "success",
+        );
+        setIsModalOpen(false);
+        loadCustomers();
       })
       .catch((e) => {
         console.error("Error saving subscription:", e);
