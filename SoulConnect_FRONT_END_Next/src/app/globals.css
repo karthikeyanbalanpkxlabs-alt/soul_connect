@@ -582,35 +582,7 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
 .btn-pay { width: 100%; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, var(--rose), var(--plum)); color: white; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: all .2s; }
 .btn-pay:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,58,237,.3); }
 
-/* ─── RESPONSIVE ─── */
-@media (max-width: 900px) {
-  .nav-links { display: none; }
-  .hamburger { display: flex; }
-  .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 68px; left: 0; right: 0; background: white; padding: 24px 5vw; border-bottom: 1px solid var(--border-soft); box-shadow: 0 8px 24px rgba(0,0,0,.08); gap: 1.25rem; z-index: 199; }
-  .reg-layout, .vibe-layout, .verify-layout, .app-layout { grid-template-columns: 1fr; }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
-  .form-row { grid-template-columns: 1fr; }
-  .fc:nth-child(2), .fc:nth-child(4) { display: none; }
-  .fc:nth-child(1) { top: auto; bottom: 18%; left: 2%; }
-  .fc:nth-child(3) { top: auto; bottom: 18%; right: 2%; }
-  .hero-stats { gap: 1.5rem; }
-  .stat-div { display: none; }
-  .profile-layout { grid-template-columns: 1fr; padding: 0 16px 60px; gap: 20px; }
-  .profile-left { margin-top: -60px; }
-  .profile-right { margin-top: 0; }
-  .profile-hero { height: 180px; }
-}
 
-@media (max-width: 600px) {
-  section { padding: 56px 4vw; }
-  .footer-grid { grid-template-columns: 1fr; }
-  .payment-methods { grid-template-columns: repeat(2, 1fr); }
-  .app-phones { flex-direction: column; align-items: center; }
-  .profile-hero { height: 160px; }
-  .profile-left { margin-top: -50px; }
-  .btn-row { grid-template-columns: 1fr; }
-  .hero h1 { font-size: 2.2rem; }
-}
 
 /* ─── PROFILE PAGE STYLES ─── */
 
@@ -1185,21 +1157,173 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
   color: var(--sage);
 }
 
+/* ─── RESPONSIVE OVERRIDES ─── */
 @media (max-width: 900px) {
-  .plans-step-grid {
-    grid-template-columns: 1fr 1fr;
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 68px; left: 0; right: 0; background: white; padding: 24px 5vw; border-bottom: 1px solid var(--border-soft); box-shadow: 0 8px 24px rgba(0,0,0,.08); gap: 1.25rem; z-index: 199; }
+  .reg-layout, .vibe-layout, .verify-layout, .app-layout { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .fc:nth-child(2), .fc:nth-child(4) { display: none; }
+  .fc:nth-child(1) { top: auto; bottom: 18%; left: 2%; }
+  .fc:nth-child(3) { top: auto; bottom: 18%; right: 2%; }
+  .hero-stats { gap: 1.5rem; }
+  .stat-div { display: none; }
+  .profile-layout { grid-template-columns: 1fr !important; padding: 0 16px 60px !important; gap: 20px !important; }
+  .profile-left { margin-top: -60px !important; }
+  .profile-right { margin-top: 0 !important; }
+  .profile-hero { height: 180px; }
+  .plans-step-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .profile-hero {
+    height: auto !important;
+    min-height: 150px !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+  .profile-back-btn {
+    position: static !important;
+    margin-bottom: 12px !important;
+    align-self: flex-start !important;
+  }
+  .profile-hero-actions {
+    position: static !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+  }
+  .hero-action-btn {
+    height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .detail-item {
+    padding: 10px 0 !important;
+    border-right: none !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    border-bottom: 1px solid var(--border-soft) !important;
+  }
+  .detail-item:last-child {
+    border-bottom: none !important;
+  }
+
+  .family-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .horoscope-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .pref-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    padding: 10px 0 !important;
+  }
+  .pref-label {
+    min-width: auto !important;
+    font-weight: 700 !important;
+  }
+
+  .photos-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .photo-slot-main {
+    grid-column: span 2 !important;
+    min-height: 220px !important;
+  }
+
+  .content-card {
+    padding: 18px 16px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .profile-tabs-bar {
+    padding: 4px !important;
+    gap: 2px !important;
+  }
+  .ptab {
+    padding: 8px 12px !important;
+    font-size: 0.75rem !important;
   }
 }
 
 @media (max-width: 600px) {
-  .plans-step-grid {
-    grid-template-columns: 1fr;
+  section { padding: 56px 4vw !important; }
+  .footer-grid { grid-template-columns: 1fr !important; }
+  .payment-methods { grid-template-columns: repeat(2, 1fr) !important; }
+  .app-phones { flex-direction: column !items-center !important; }
+  .profile-hero { height: auto !important; min-height: 140px !important; }
+  .profile-left { margin-top: -40px !important; }
+  .btn-row { grid-template-columns: 1fr !important; }
+  .hero h1 { font-size: 2.2rem !important; }
+  .plans-step-grid { grid-template-columns: 1fr !important; }
+  .doc-pills { margin-left: 0 !important; }
+  .drag-drop-zone { margin-left: 0 !important; }
+}
+
+@media (max-width: 480px) {
+  .profile-layout {
+    padding: 0 10px 50px !important;
+    gap: 14px !important;
   }
-  .doc-pills {
-    margin-left: 0;
+  .profile-avatar {
+    width: 84px !important;
+    height: 84px !important;
+    font-size: 2rem !important;
   }
-  .drag-drop-zone {
-    margin-left: 0;
+  .profile-name {
+    font-size: 1.25rem !important;
+  }
+  .profile-tagline {
+    font-size: 0.8rem !important;
+    max-width: 100% !important;
+  }
+  .match-score-wrap {
+    padding: 14px 16px !important;
+    gap: 10px !important;
+  }
+  .match-score-ring {
+    width: 56px !important;
+    height: 56px !important;
+  }
+  .match-score-inner {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .match-score-num {
+    font-size: 0.95rem !important;
+  }
+  .profile-actions {
+    padding: 14px 16px !important;
+  }
+  .quick-facts {
+    padding: 14px 16px !important;
+  }
+  .fact-row {
+    padding: 8px 0 !important;
+    font-size: 0.8rem !important;
+  }
+  .photos-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .photo-slot-main {
+    grid-column: span 1 !important;
+    min-height: 200px !important;
   }
 }
 
