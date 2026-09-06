@@ -107,7 +107,11 @@ function usePortalCustomerPage() {
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok || data.error) {
-          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          const errorMsg =
+            data.error ||
+            data.message ||
+            data.detail ||
+            `Request failed (${r.status})`;
           throw new Error(errorMsg);
         }
         console.log(
@@ -431,7 +435,7 @@ function usePortalCustomerPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: "supportsoulconect@gmail.com",
+          to: "support@soulconect.com",
           subject: "Hello BK!",
           message: "this email is sent from SoulConect Portal",
         }),

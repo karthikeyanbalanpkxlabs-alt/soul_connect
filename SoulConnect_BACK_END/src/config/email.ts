@@ -25,7 +25,7 @@ export const sendGridEmail = async (mailData: SendGridMailData) => {
   sgMail.setApiKey(apiKey);
 
   const defaultFrom = {
-    email: process.env.SENDGRID_FROM_EMAIL || "supportsoulconect@gmail.com",
+    email: process.env.SENDGRID_FROM_EMAIL || "support@soulconect.com",
     name: process.env.SENDGRID_FROM_NAME || "Soul Connect",
   };
 

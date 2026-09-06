@@ -1,7 +1,17 @@
 import keycloak from "../../../lib/keycloak";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Trash2, Pencil, Mail, User, CheckCircle2, Clock, XCircle, Sparkles } from "lucide-react";
+import {
+  Eye,
+  Trash2,
+  Pencil,
+  Mail,
+  User,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Sparkles,
+} from "lucide-react";
 import configUrls from "../../../../configUrls";
 import { useKeycloak } from "@/providers/KeycloakProvider";
 const generateId = () => {
@@ -30,7 +40,9 @@ function usePortalCustomerPage() {
   const [filters, setFilters] = React.useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<any>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
   const [toast, setToast] = React.useState<{
@@ -97,8 +109,10 @@ function usePortalCustomerPage() {
       formData.keycloakId = formData.keycloakId || dataGenerateId;
     }
 
-    formData.whoiam_register = formData.whoiam_register || formData.profile_created_for || "For myself";
-    formData.profile_created_for = formData.profile_created_for || formData.whoiam_register || "For myself";
+    formData.whoiam_register =
+      formData.whoiam_register || formData.profile_created_for || "For myself";
+    formData.profile_created_for =
+      formData.profile_created_for || formData.whoiam_register || "For myself";
 
     fetch(endpoint, {
       method: "POST",
@@ -111,7 +125,11 @@ function usePortalCustomerPage() {
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok || data.error) {
-          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          const errorMsg =
+            data.error ||
+            data.message ||
+            data.detail ||
+            `Request failed (${r.status})`;
           throw new Error(errorMsg);
         }
         console.log(
@@ -161,7 +179,11 @@ function usePortalCustomerPage() {
         setIsDeleting(false);
         setDeleteConfirmId(null);
         if (!r.ok || data.error) {
-          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          const errorMsg =
+            data.error ||
+            data.message ||
+            data.detail ||
+            `Request failed (${r.status})`;
           throw new Error(errorMsg);
         }
         console.log("customer_delete response:", data);
@@ -326,7 +348,11 @@ function usePortalCustomerPage() {
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok || data.error) {
-          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          const errorMsg =
+            data.error ||
+            data.message ||
+            data.detail ||
+            `Request failed (${r.status})`;
           throw new Error(errorMsg);
         }
         console.log("customer_create response:", data);
@@ -486,7 +512,11 @@ function usePortalCustomerPage() {
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok || data.error) {
-          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          const errorMsg =
+            data.error ||
+            data.message ||
+            data.detail ||
+            `Request failed (${r.status})`;
           throw new Error(errorMsg);
         }
         console.log("customer_create response:", data);
@@ -643,7 +673,11 @@ function usePortalCustomerPage() {
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok || data.error) {
-          const errorMsg = data.error || data.message || data.detail || `Request failed (${r.status})`;
+          const errorMsg =
+            data.error ||
+            data.message ||
+            data.detail ||
+            `Request failed (${r.status})`;
           throw new Error(errorMsg);
         }
         console.log("customer_create response:", data);
@@ -744,7 +778,7 @@ function usePortalCustomerPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: "supportsoulconect@gmail.com",
+          to: "support@soulconect.com",
           subject: "Hello BK!",
           message: "this email is sent from SoulConect Portal",
         }),
@@ -781,7 +815,9 @@ function usePortalCustomerPage() {
             <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-500 text-white font-semibold text-xs flex items-center justify-center shadow-xs">
               {initial}
             </div>
-            <span className="font-semibold text-slate-800">{row.first_name || "-"}</span>
+            <span className="font-semibold text-slate-800">
+              {row.first_name || "-"}
+            </span>
           </div>
         );
       },
@@ -791,7 +827,9 @@ function usePortalCustomerPage() {
       label: "Last Name",
       isFilterable: true,
       render: (row: any) => (
-        <span className="font-medium text-slate-700">{row.last_name || "-"}</span>
+        <span className="font-medium text-slate-700">
+          {row.last_name || "-"}
+        </span>
       ),
     },
     {
@@ -808,16 +846,22 @@ function usePortalCustomerPage() {
               isFemale
                 ? "bg-rose-50 text-rose-700 border-rose-200/70"
                 : isMale
-                ? "bg-blue-50 text-blue-700 border-blue-200/70"
-                : "bg-slate-50 text-slate-700 border-slate-200"
+                  ? "bg-blue-50 text-blue-700 border-blue-200/70"
+                  : "bg-slate-50 text-slate-700 border-slate-200"
             }`}
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${
-                isFemale ? "bg-rose-500" : isMale ? "bg-blue-500" : "bg-slate-400"
+                isFemale
+                  ? "bg-rose-500"
+                  : isMale
+                    ? "bg-blue-500"
+                    : "bg-slate-400"
               }`}
             ></span>
-            {row.gender ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1) : "-"}
+            {row.gender
+              ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1)
+              : "-"}
           </span>
         );
       },
@@ -838,7 +882,11 @@ function usePortalCustomerPage() {
       label: "Approval Status",
       isFilterable: false,
       render: (row: any) => {
-        const status = (row.approvalStatus || row.status || "Approved").toLowerCase();
+        const status = (
+          row.approvalStatus ||
+          row.status ||
+          "Approved"
+        ).toLowerCase();
         const isApproved = status.includes("approve") || status === "active";
         const isPending = status.includes("pend");
         return (
@@ -847,13 +895,17 @@ function usePortalCustomerPage() {
               isApproved
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
                 : isPending
-                ? "bg-amber-50 text-amber-700 border-amber-200/80"
-                : "bg-rose-50 text-rose-700 border-rose-200/80"
+                  ? "bg-amber-50 text-amber-700 border-amber-200/80"
+                  : "bg-rose-50 text-rose-700 border-rose-200/80"
             }`}
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${
-                isApproved ? "bg-emerald-500" : isPending ? "bg-amber-500" : "bg-rose-500"
+                isApproved
+                  ? "bg-emerald-500"
+                  : isPending
+                    ? "bg-amber-500"
+                    : "bg-rose-500"
               }`}
             ></span>
             {row.approvalStatus || "Approved"}
