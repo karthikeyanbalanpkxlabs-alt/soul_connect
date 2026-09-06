@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Customers } from "../models/customer";
 import { sendGridEmail } from "../config/email";
+import { send2FactorOTP } from "../config/sms";
 
 /**
  * Generate a random 6-digit OTP.
@@ -90,18 +91,42 @@ export async function handleSendOTP(req: Request, res: Response) {
         customer.set("phone_code", phone_code);
       }
 
+      const targetPhoneCode = phone_code || customer.get("phone_code") || "+91";
+      const targetPhoneNumber = phone_number || customer.get("phone_number");
+
+      if (!targetPhoneNumber) {
+        return res.status(400).json({
+          error: "Phone number is required for phone OTP verification",
+        });
+      }
+
       customer.set("phone_otp", otp);
       customer.set("phone_otp_expires", expires);
       await customer.save();
 
+      const fullPhoneNumber = `${targetPhoneCode}${targetPhoneNumber}`;
       console.log(
-        `📱 [Phone verification] Generated OTP: ${otp} for ${phone_code || "+91"}${phone_number || customer.get("phone_number")}`,
+        `📱 [Phone verification] Generated OTP: ${otp} for ${fullPhoneNumber}`,
       );
+
+      // Dispatch SMS using 2Factor.in
+      const smsResult = await send2FactorOTP({
+        phone: fullPhoneNumber,
+        otp,
+      });
+
+      if (!smsResult.success) {
+        console.warn(
+          `⚠️ 2Factor SMS dispatch warning for ${fullPhoneNumber}: ${smsResult.error}`,
+        );
+      }
 
       return res.status(200).json({
         success: true,
-        message: `Phone verification OTP simulated and printed to terminal console. (OTP: ${otp})`,
-        otp, // Expose OTP for testing convenience on simulated phone number verification
+        message: smsResult.success
+          ? "Phone verification OTP sent successfully via SMS"
+          : `Phone verification OTP generated. (SMS Notice: ${smsResult.error})`,
+        sessionId: smsResult.sessionId,
       });
     }
   } catch (err: any) {
