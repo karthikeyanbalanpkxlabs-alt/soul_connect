@@ -49,19 +49,18 @@ export async function send2FactorOTP(
   }
 
   const cleanedPhone = sanitizePhoneNumber(options.phone);
-  const template = options.templateName || process.env.TWOFACTOR_TEMPLATE_NAME;
+  const template =
+    options.templateName || process.env.TWOFACTOR_TEMPLATE_NAME || "SMS";
 
-  // Build 2Factor API URL
-  let url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanedPhone}/${options.otp}`;
-  if (template) {
-    url += `/${encodeURIComponent(template)}`;
-  }
+  // Build 2Factor API URL strictly specifying the SMS template/channel
+  const url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanedPhone}/${options.otp}/${encodeURIComponent(template)}`;
 
   console.log("====================================");
-  console.log("📱 [2Factor.in] Dispatching SMS OTP");
+  console.log("📱 [2Factor.in] Dispatching SMS OTP (SMS Channel Only)");
   console.log("Recipient :", cleanedPhone);
   console.log("OTP       :", options.otp);
-  console.log("Template  :", template || "Default");
+  console.log("Channel   : SMS Text Message (No Voice Call)");
+  console.log("Template  :", template || "Default SMS");
   console.log("====================================");
 
   try {

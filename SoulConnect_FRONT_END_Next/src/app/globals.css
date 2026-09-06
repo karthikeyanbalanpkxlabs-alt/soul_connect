@@ -1266,7 +1266,7 @@ footer { background: var(--ink); padding: 56px 5vw 32px; border-top: 1px solid r
   section { padding: 56px 4vw !important; }
   .footer-grid { grid-template-columns: 1fr !important; }
   .payment-methods { grid-template-columns: repeat(2, 1fr) !important; }
-  .app-phones { flex-direction: column !items-center !important; }
+  .app-phones { flex-direction: column !important; }
   .profile-hero { height: auto !important; min-height: 140px !important; }
   .profile-left { margin-top: -40px !important; }
   .btn-row { grid-template-columns: 1fr !important; }

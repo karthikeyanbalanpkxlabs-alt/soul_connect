@@ -123,10 +123,7 @@ export async function handleSendOTP(req: Request, res: Response) {
 
       return res.status(200).json({
         success: true,
-        message: smsResult.success
-          ? "Phone verification OTP sent successfully via SMS"
-          : `Phone verification OTP generated. (SMS Notice: ${smsResult.error})`,
-        sessionId: smsResult.sessionId,
+        message: "Phone verification OTP sent successfully",
       });
     }
   } catch (err: any) {
