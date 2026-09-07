@@ -11,14 +11,14 @@
 <body>
 
 <nav>
-  <a href="#" onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3000/' : 'https://soulconect.com/'); return false;" class="nav-logo">
+  <a href="#" onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3000/' : 'https://dev.soulconect.com/'); return false;" class="nav-logo">
     <img src="${url.resourcesPath}/img/company_logo.png" width="120" height="40" alt="company_logo" style="max-height: 40px; width: auto;" />
   </a>
   <div class="nav-right">
     <a href="#" class="nav-link">Browse Profiles</a>
     <a href="#" onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/#register'
-            : 'https://soulconect.com/#register'); return false;" class="btn-nav">Join Free ✦</a>
+            : 'https://dev.soulconect.com/#register'); return false;" class="btn-nav">Join Free ✦</a>
   </div>
 </nav>
 
