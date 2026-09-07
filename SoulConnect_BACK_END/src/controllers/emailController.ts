@@ -64,7 +64,7 @@ export async function handleSendEmail(req: Request, res: Response) {
     }
 
     const { cc } = req.body;
-    const response = await sendGridEmail({
+    const response: any = await sendGridEmail({
       to: emailTo,
       ...(cc ? { cc } : {}),
       subject: emailSubject,
@@ -72,16 +72,19 @@ export async function handleSendEmail(req: Request, res: Response) {
       html: htmlContent,
     });
 
+    const statusCode = Array.isArray(response) ? response[0]?.statusCode : response?.statusCode || 200;
+    const headers = Array.isArray(response) ? response[0]?.headers : response?.headers;
+
     console.log("====================================");
     console.log("✅ SendGrid Email Sent Successfully");
-    console.log("Response Status Code:", response[0]?.statusCode);
+    console.log("Response Status Code:", statusCode);
     console.log("====================================");
 
     return res.status(200).json({
       success: true,
       message: "Email sent successfully via SendGrid API",
-      statusCode: response[0]?.statusCode,
-      headers: response[0]?.headers,
+      statusCode,
+      headers,
     });
   } catch (error: any) {
     console.error("====================================");
