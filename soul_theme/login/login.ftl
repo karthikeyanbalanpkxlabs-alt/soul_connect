@@ -31,7 +31,7 @@
         class="auth-back reveal"
         onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/'
-            : 'https://soulconect.com/'); return false;">
+            : 'https://dev.soulconect.com/'); return false;">
         ← Back to home
         </a>
 
