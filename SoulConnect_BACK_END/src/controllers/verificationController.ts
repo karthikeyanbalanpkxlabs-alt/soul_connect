@@ -64,7 +64,8 @@ export async function handleSendOTP(req: Request, res: Response) {
           html: `
             <div style="font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; line-height:1.6; color:#333; max-width:600px; margin:0 auto; padding:20px; border:1px solid #f0f0f0; border-radius:8px; background:#ffffff;">
               <div style="background:linear-gradient(135deg,#F2688C,#7C3AED); padding:20px; text-align:center; border-radius:6px 6px 0 0;">
-                <h2 style="margin:0;color:#fff;">Soul Connect Verification</h2>
+                <img src="https://api.soulconect.com/public/company_logo.png" alt="Soul Connect Logo" width="150" style="max-width:160px; height:auto; display:inline-block; margin-bottom:8px;" />
+                <h2 style="margin:0;color:#fff;font-size:20px;">Soul Connect Verification</h2>
               </div>
               <div style="padding:24px; font-size:15px; text-align:center;">
                 <p>Hello,</p>

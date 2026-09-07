@@ -11,7 +11,9 @@
 <body>
 
 <nav>
-  <#-- <a href="index.html" class="nav-logo"><img src="img/logo.png" width="251" height="63" alt=""/></a> -->
+  <a href="#" onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3000/' : 'https://soulconect.com/'); return false;" class="nav-logo">
+    <img src="${url.resourcesPath}/img/company_logo.png" width="120" height="40" alt="company_logo" style="max-height: 40px; width: auto;" />
+  </a>
   <div class="nav-right">
     <a href="#" class="nav-link">Browse Profiles</a>
     <a href="#" onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)

@@ -33,6 +33,7 @@ export async function handleSendEmail(req: Request, res: Response) {
                       padding:20px;
                       text-align:center;
                       border-radius:6px 6px 0 0;">
+            <img src="https://api.soulconect.com/public/company_logo.png" alt="Soul Connect Logo" width="150" style="max-width:160px; height:auto; display:inline-block; margin-bottom:8px;" />
             <h2 style="margin:0;color:#fff;">
               Soul Connect
             </h2>

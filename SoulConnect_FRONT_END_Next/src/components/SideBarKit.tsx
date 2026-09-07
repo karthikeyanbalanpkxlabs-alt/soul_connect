@@ -18,6 +18,7 @@ import {
 
 import keycloak from "../lib/keycloak";
 import { useKeycloak } from "@/providers/KeycloakProvider";
+import company_logo from "./company_logo.png";
 
 interface SideBarKitProps {
   children: React.ReactNode;
@@ -109,8 +110,16 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           className="nav-logo"
           style={{ textDecoration: "none" }}
         >
-          Soul<span>Conect</span>
-          <div className="logo-dot"></div>
+          <img
+            width={120}
+            height={40}
+            src={
+              typeof company_logo === "string"
+                ? company_logo
+                : (company_logo as any)?.src || company_logo
+            }
+            alt="company_logo"
+          />
         </Link>
         <button
           type="button"
@@ -158,8 +167,16 @@ export default function SideBarKit({ children }: SideBarKitProps) {
                 className="nav-logo"
                 style={{ textDecoration: "none" }}
               >
-                Soul<span>Conect</span>
-                <div className="logo-dot"></div>
+                <img
+                  width={120}
+                  height={40}
+                  src={
+                    typeof company_logo === "string"
+                      ? company_logo
+                      : (company_logo as any)?.src || company_logo
+                  }
+                  alt="company_logo"
+                />
               </Link>
               <button
                 type="button"
@@ -305,8 +322,9 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       </aside>
 
       {/* Page Content */}
-      <div className="flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">{children}</div>
+      <div className="flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">
+        {children}
+      </div>
     </div>
   );
 }
-
