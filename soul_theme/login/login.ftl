@@ -171,7 +171,7 @@
       <div class="auth-already reveal" style="transition-delay:.3s">
         New to Soul Connect? <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/#register'
-            : 'https://devsoulconect.com/#register'); return false;"
+            : 'https://dev.soulconect.com/#register'); return false;"
             >Create a free profile →</a>
       </div>
 
