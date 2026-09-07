@@ -341,6 +341,9 @@ export default function Registration({
     setImages(newImages);
   };
 
+  // Feature flag to temporarily turn off Face Recognition (Set to true to re-enable)
+  const ENABLE_FACE_RECOGNITION = false;
+
   // Live Face Match Simulation States
   const [faceMatchStatus, setFaceMatchStatus] = useState<"pending" | "scanning" | "matched">("pending");
   const [showCameraModal, setShowCameraModal] = useState(false);
@@ -769,6 +772,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
 
   // Mock Camera verification simulator
   const startCameraVerification = () => {
+    if (!ENABLE_FACE_RECOGNITION) return;
     setShowCameraModal(true);
     setFaceMatchStatus("scanning");
     setScanningProgress(0);
@@ -1862,28 +1866,30 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 </span>
               </div>
 
-              <div className="trust-meter-row">
-                <span className="meter-label">Level 3: Live Face Match</span>
-                <div className="meter-track">
-                  <div className="meter-fill" style={{ width: faceMatchStatus === "matched" ? "100%" : "0%" }}></div>
+              {ENABLE_FACE_RECOGNITION && (
+                <div className="trust-meter-row">
+                  <span className="meter-label">Level 3: Live Face Match</span>
+                  <div className="meter-track">
+                    <div className="meter-fill" style={{ width: faceMatchStatus === "matched" ? "100%" : "0%" }}></div>
+                  </div>
+                  {faceMatchStatus === "pending" && uploadedFile ? (
+                    <button 
+                      onClick={startCameraVerification}
+                      className="text-xs bg-violet-600 hover:bg-violet-700 text-white font-bold px-3 py-1 rounded-lg transition"
+                    >
+                      Start Match
+                    </button>
+                  ) : (
+                    <span className={`trust-badge font-bold ${
+                      faceMatchStatus === "matched" 
+                        ? "text-emerald-500 approved" 
+                        : "text-slate-400 pending"
+                    }`}>
+                      {faceMatchStatus === "matched" ? "Matched" : "Pending"}
+                    </span>
+                  )}
                 </div>
-                {faceMatchStatus === "pending" && uploadedFile ? (
-                  <button 
-                    onClick={startCameraVerification}
-                    className="text-xs bg-violet-600 hover:bg-violet-700 text-white font-bold px-3 py-1 rounded-lg transition"
-                  >
-                    Start Match
-                  </button>
-                ) : (
-                  <span className={`trust-badge font-bold ${
-                    faceMatchStatus === "matched" 
-                      ? "text-emerald-500 approved" 
-                      : "text-slate-400 pending"
-                  }`}>
-                    {faceMatchStatus === "matched" ? "Matched" : "Pending"}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
@@ -1900,7 +1906,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       )}
 
       {/* CAMERA SCANNERS SIMULATOR MODAL */}
-      {showCameraModal && (
+      {ENABLE_FACE_RECOGNITION && showCameraModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-white/10 p-6 shadow-2xl text-center text-white">
             <h3 className="font-display text-lg font-bold mb-1">Face Recognition Simulator</h3>
