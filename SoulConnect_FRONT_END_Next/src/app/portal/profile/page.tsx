@@ -432,6 +432,50 @@ const LAGNAMS = [
   "Dhanusu (Sagittarius)", "Makaram (Capricorn)", "Kumbam (Aquarius)", "Meenam (Pisces)"
 ];
 
+const getSubscriptionPlanName = (prof: any, subList: any[]) => {
+  if (!prof) return "";
+
+  const directName =
+    prof.subscription_name ||
+    prof.subscription_details?.name ||
+    prof.subscription_details?.title ||
+    prof.subscription_details?.type ||
+    prof.subscription_plan?.name ||
+    prof.plan_name ||
+    prof.subscription_type_name;
+
+  if (
+    directName &&
+    typeof directName === "string" &&
+    !/^[0-9a-fA-F]{24}$/.test(directName.trim())
+  ) {
+    return directName;
+  }
+
+  const subVal =
+    prof.subscription_type || prof.subscription_id || prof.subscription;
+  if (!subVal || typeof subVal !== "string") return directName || "";
+
+  const matched = subList.find(
+    (s: any) =>
+      (s._id && String(s._id) === String(subVal)) ||
+      (s.id && String(s.id) === String(subVal)) ||
+      (s.type && String(s.type).toLowerCase() === String(subVal).toLowerCase()) ||
+      (s.name && String(s.name).toLowerCase() === String(subVal).toLowerCase())
+  );
+
+  if (matched) {
+    return matched.name || matched.title || matched.plan_name || matched.type || subVal;
+  }
+
+  if (/^[0-9a-fA-F]{24}$/.test(subVal.trim())) {
+    if (directName) return directName;
+    return "Standard";
+  }
+
+  return subVal;
+};
+
 export default function ProfilePage() {
   const router = useRouter();
   const { profile, loadingProfile, profileError, refreshProfile, roles } =
@@ -444,6 +488,33 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        const endpoint = keycloak?.authenticated
+          ? "/api/subscriptions"
+          : "/api/public/subscriptions";
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (keycloak?.authenticated && keycloak?.token) {
+          headers["Authorization"] = `Bearer ${keycloak.token}`;
+        }
+        const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+        const res = await fetch(apiUrl + endpoint, { method: "GET", headers });
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data?.data || [];
+          setSubscriptions(list);
+        }
+      } catch (err) {
+        console.error("Failed to fetch subscriptions in ProfilePage:", err);
+      }
+    };
+    fetchSubscriptions();
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -1268,24 +1339,31 @@ export default function ProfilePage() {
                 </div>
               )}
               <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2">
-                {profile?.subscription_type && (
-                  <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                    {profile.subscription_type} Plan
-                  </div>
-                )}
+                {(() => {
+                  const planName = getSubscriptionPlanName(profile, subscriptions);
+                  return planName ? (
+                    <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                      {planName} Plan
+                    </div>
+                  ) : null;
+                })()}
                 {profile?.public_verify ? (
                   <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                     <span>✓</span> Publicly Verified
                   </div>
                 ) : (
-                  <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                    <span>⏳</span> Verification Pending
-                  </div>
-                )}
-                {profile?.approvalStatus && (
-                  <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                    {profile.approvalStatus}
-                  </div>
+                  <>
+                    <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                      <span>⏳</span> Verification Pending
+                    </div>
+                    {profile?.approvalStatus &&
+                      profile.approvalStatus !== "Wait for approval" &&
+                      profile.approvalStatus !== "Approved" && (
+                        <div className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                          {profile.approvalStatus}
+                        </div>
+                      )}
+                  </>
                 )}
               </div>
               {!isEditing ? (

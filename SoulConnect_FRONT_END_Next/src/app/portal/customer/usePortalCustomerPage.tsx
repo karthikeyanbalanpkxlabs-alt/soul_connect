@@ -918,8 +918,49 @@ function usePortalCustomerPage() {
       label: "Subscription Type",
       isFilterable: true,
       render: (row: any) => {
-        const sub = (row.subscription_type || "guest").toLowerCase();
-        const isPremium = sub !== "guest" && sub !== "";
+        const directName =
+          row.subscription_type_name ||
+          row.subscription_name ||
+          row.subscription_details?.name ||
+          row.subscription_details?.title ||
+          row.subscription_details?.type ||
+          row.subscription_plan?.name ||
+          row.plan_name;
+
+        const rawVal =
+          row.subscription_type || row.subscription_id || row.subscription || "guest";
+
+        let subName = "guest";
+
+        if (
+          directName &&
+          typeof directName === "string" &&
+          !/^[0-9a-fA-F]{24}$/.test(directName.trim())
+        ) {
+          subName = directName;
+        } else if (typeof rawVal === "string") {
+          const matched = subscriptions.find(
+            (s: any) =>
+              (s._id && String(s._id) === String(rawVal)) ||
+              (s.id && String(s.id) === String(rawVal)) ||
+              (s.type && String(s.type).toLowerCase() === String(rawVal).toLowerCase()) ||
+              (s.name && String(s.name).toLowerCase() === String(rawVal).toLowerCase())
+          );
+
+          if (matched) {
+            subName =
+              matched.name ||
+              matched.title ||
+              matched.plan_name ||
+              matched.type ||
+              rawVal;
+          } else if (!/^[0-9a-fA-F]{24}$/.test(rawVal.trim())) {
+            subName = rawVal;
+          }
+        }
+
+        const subLower = subName.toLowerCase();
+        const isPremium = subLower !== "guest" && subLower !== "" && subLower !== "free";
         return (
           <span
             className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
@@ -929,7 +970,7 @@ function usePortalCustomerPage() {
             }`}
           >
             {isPremium && <Sparkles size={11} className="text-purple-600" />}
-            {row.subscription_type || "guest"}
+            {subName}
           </span>
         );
       },
