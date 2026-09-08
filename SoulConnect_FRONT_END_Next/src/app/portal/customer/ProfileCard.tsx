@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Heart, User, Pencil, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Heart, User, Pencil, Trash2, Loader2 } from "lucide-react";
+import configUrls from "../../../../configUrls";
 
 interface ProfileCardProps {
   customer: any;
@@ -18,16 +19,110 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   onSendInterest,
   canDelete,
 }) => {
-  const [isInterested, setIsInterested] = useState(
-    customer?.interestSent === true || customer?.isInterested === true,
-  );
+  const customerId = customer?._id || customer?.id || customer?.customer_id;
+  const [isInterested, setIsInterested] = useState(false);
+  const [isSavingInterest, setIsSavingInterest] = useState(false);
 
-  const handleInterestClick = (e: React.MouseEvent) => {
+  useEffect(() => {
+    let initialInterested =
+      customer?.interestSent === true ||
+      customer?.isInterested === true ||
+      customer?.interest_sent === true;
+
+    if (!initialInterested && typeof window !== "undefined" && customerId) {
+      try {
+        const stored = JSON.parse(
+          localStorage.getItem("interested_profile_ids") || "[]"
+        );
+        if (Array.isArray(stored) && stored.includes(String(customerId))) {
+          initialInterested = true;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    setIsInterested(initialInterested);
+  }, [customer, customerId]);
+
+  const handleInterestClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isSavingInterest) return;
+
     const newState = !isInterested;
     setIsInterested(newState);
-    if (onSendInterest) {
-      onSendInterest(customer);
+    setIsSavingInterest(true);
+
+    // Save to localStorage for instant local persistence
+    if (typeof window !== "undefined" && customerId) {
+      try {
+        const stored = JSON.parse(
+          localStorage.getItem("interested_profile_ids") || "[]"
+        );
+        let updated = Array.isArray(stored) ? [...stored] : [];
+        const cidStr = String(customerId);
+        if (newState) {
+          if (!updated.includes(cidStr)) updated.push(cidStr);
+        } else {
+          updated = updated.filter((id: string) => id !== cidStr);
+        }
+        localStorage.setItem("interested_profile_ids", JSON.stringify(updated));
+      } catch (err) {
+        console.error("Failed to save interest to localStorage", err);
+      }
+    }
+
+    // Persist to backend database via API
+    try {
+      const apiUrl = configUrls?.apiUrl || "";
+      const token =
+        typeof window !== "undefined"
+          ? sessionStorage.getItem("token") || localStorage.getItem("token")
+          : null;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const payload = {
+        customer_id: customerId,
+        target_customer_id: customerId,
+        isInterested: newState,
+        interestSent: newState,
+        interest_sent: newState,
+        status: newState ? "Interested" : "Not Interested",
+      };
+
+      // Primary call to /api/send_interest
+      const res = await fetch(`${apiUrl}/api/send_interest`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      }).catch(() => null);
+
+      // Fallback call to /api/customer_edit if /api/send_interest is not available
+      if (!res || !res.ok) {
+        await fetch(`${apiUrl}/api/customer_edit`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            _id: customerId,
+            customer_id: customerId,
+            isInterested: newState,
+            interestSent: newState,
+            interest_sent: newState,
+          }),
+        }).catch(() => null);
+      }
+    } catch (error) {
+      console.error("Error storing interest in database:", error);
+    } finally {
+      setIsSavingInterest(false);
+      if (onSendInterest) {
+        onSendInterest(customer);
+      }
     }
   };
 
