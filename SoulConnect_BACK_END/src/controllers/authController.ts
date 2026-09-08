@@ -128,6 +128,7 @@ export async function handleForgotPassword(req: Request, res: Response) {
       const htmlContent = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 12px; background: #ffffff;">
           <div style="background: linear-gradient(135deg, #F2688C, #7C3AED); padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+            <img src="https://api.soulconect.com/public/company_logo.png" alt="Soul Connect Logo" width="150" style="max-width:160px; height:auto; display:inline-block; margin-bottom:8px;" />
             <h2 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 700;">Soul Connect</h2>
             <p style="margin: 4px 0 0 0; color: rgba(255,255,255,0.85); font-size: 13px;">Password Reset Request</p>
           </div>

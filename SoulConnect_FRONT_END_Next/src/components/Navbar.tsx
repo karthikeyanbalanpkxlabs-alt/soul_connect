@@ -5,6 +5,7 @@ import { useKeycloak } from "@/providers/KeycloakProvider";
 import { useState } from "react";
 import { LogOut, Flame, User, UserCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import company_logo from "./company_logo.png";
 
 export default function Navbar(props: any) {
   const router = useRouter();
@@ -180,8 +181,16 @@ export default function Navbar(props: any) {
     <>
       <nav>
         <a {...logoObj} className="nav-logo">
-          Soul<span>Conect</span>
-          <div className="logo-dot"></div>
+          <img
+            width={120}
+            height={40}
+            src={
+              typeof company_logo === "string"
+                ? company_logo
+                : (company_logo as any)?.src || company_logo
+            }
+            alt="company_logo"
+          />
         </a>
 
         <div className={`nav-links ${isOpen ? "open" : ""}`} id="navLinks">

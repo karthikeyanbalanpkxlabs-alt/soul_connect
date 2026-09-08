@@ -33,6 +33,7 @@ export async function handleSendEmail(req: Request, res: Response) {
                       padding:20px;
                       text-align:center;
                       border-radius:6px 6px 0 0;">
+            <img src="https://api.soulconect.com/public/company_logo.png" alt="Soul Connect Logo" width="150" style="max-width:160px; height:auto; display:inline-block; margin-bottom:8px;" />
             <h2 style="margin:0;color:#fff;">
               Soul Connect
             </h2>
@@ -64,7 +65,7 @@ export async function handleSendEmail(req: Request, res: Response) {
     }
 
     const { cc } = req.body;
-    const response = await sendGridEmail({
+    const response: any = await sendGridEmail({
       to: emailTo,
       ...(cc ? { cc } : {}),
       subject: emailSubject,
@@ -72,16 +73,19 @@ export async function handleSendEmail(req: Request, res: Response) {
       html: htmlContent,
     });
 
+    const statusCode = Array.isArray(response) ? response[0]?.statusCode : response?.statusCode || 200;
+    const headers = Array.isArray(response) ? response[0]?.headers : response?.headers;
+
     console.log("====================================");
     console.log("✅ SendGrid Email Sent Successfully");
-    console.log("Response Status Code:", response[0]?.statusCode);
+    console.log("Response Status Code:", statusCode);
     console.log("====================================");
 
     return res.status(200).json({
       success: true,
       message: "Email sent successfully via SendGrid API",
-      statusCode: response[0]?.statusCode,
-      headers: response[0]?.headers,
+      statusCode,
+      headers,
     });
   } catch (error: any) {
     console.error("====================================");

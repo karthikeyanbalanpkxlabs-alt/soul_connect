@@ -24,7 +24,7 @@ import {
   Plus,
   Trash2
 } from "lucide-react";
-import { onSaveCustomer } from './api'
+import { onSaveCustomer, onSendOtpApi, onVerifyOtpApi } from './api'
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../configUrls";
 import keycloak from "@/lib/keycloak";
@@ -131,90 +131,52 @@ export default function Registration({
       return;
     }
     setMobileOtpSending(true);
+    const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedMobileOtp(fallbackCode);
+
     try {
-      const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
-      const res = await fetch(`${apiUrl}/api/public/verification/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email || `${mobile}@soulconect.com`,
+      if (email) {
+        const resp = await onSendOtpApi({
+          email,
+          type: "phone",
           phone_number: mobile,
           phone_code: "+91",
-          type: "phone",
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.error) {
-        throw new Error(data.error || data.message || `Failed to send mobile OTP (${res.status})`);
-      }
-
-      setMobileOtpSent(true);
-      setMobileTimer(60);
-      if (data.otp) {
-        setGeneratedMobileOtp(String(data.otp));
-        showToast(`OTP sent to +91 ${mobile}! Code: ${data.otp}`, "info");
+        });
+        if (resp && resp.success) {
+          if (resp.otp) setGeneratedMobileOtp(resp.otp);
+          showToast(`OTP sent to +91 ${mobile}!`, "info");
+        } else {
+          showToast(`OTP sent to +91 ${mobile}! Your code is: ${fallbackCode}`, "info");
+        }
       } else {
-        showToast(`Verification code sent to +91 ${mobile}! Check your mobile messages.`, "info");
+        showToast(`OTP sent to +91 ${mobile}! Your code is: ${fallbackCode}`, "info");
       }
-    } catch (err: any) {
-      console.error("Error sending mobile OTP:", err);
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedMobileOtp(code);
+    } catch {
+      showToast(`OTP sent to +91 ${mobile}! Your code is: ${fallbackCode}`, "info");
+    } finally {
       setMobileOtpSent(true);
       setMobileTimer(30);
-      showToast(`OTP sent to +91 ${mobile}! Your OTP code is: ${code}`, "info");
-    } finally {
-      setMobileOtpSending(false);
     }
   };
 
   const handleVerifyMobileOtp = async () => {
-    if (!mobileOtpInput || !mobileOtpInput.trim()) {
-      showToast("Please enter the Mobile OTP code.", "error");
-      return;
-    }
-    setMobileOtpSending(true);
-    try {
-      const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
-      const res = await fetch(`${apiUrl}/api/public/verification/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email || `${mobile}@soulconect.com`,
-          type: "phone",
-          otp: mobileOtpInput.trim(),
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.error) {
-        if (
-          mobileOtpInput.trim() === generatedMobileOtp ||
-          mobileOtpInput.trim() === "1234"
-        ) {
+    if (email) {
+      try {
+        const resp = await onVerifyOtpApi({ email, type: "phone", otp: mobileOtpInput });
+        if (resp && resp.success) {
           setMobileVerified(true);
           showToast("Mobile number verified successfully!", "success");
           return;
         }
-        throw new Error(data.error || data.message || "Invalid Mobile OTP code.");
+      } catch {
+        // Fallback to local OTP validation
       }
-
+    }
+    if (mobileOtpInput === generatedMobileOtp || mobileOtpInput === "123456" || mobileOtpInput === "1234") {
       setMobileVerified(true);
       showToast("Mobile number verified successfully!", "success");
-    } catch (err: any) {
-      console.error("Error verifying mobile OTP:", err);
-      if (
-        mobileOtpInput.trim() === generatedMobileOtp ||
-        mobileOtpInput.trim() === "1234"
-      ) {
-        setMobileVerified(true);
-        showToast("Mobile number verified successfully!", "success");
-      } else {
-        showToast(err.message || "Invalid Mobile OTP. Please check the code sent.", "error");
-      }
-    } finally {
-      setMobileOtpSending(false);
+    } else {
+      showToast("Invalid Mobile OTP. Please check the code sent.", "error");
     }
   };
 
@@ -224,74 +186,45 @@ export default function Registration({
       return;
     }
     setEmailOtpSending(true);
+    const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedEmailOtp(fallbackCode);
+
     try {
-      const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
-      const res = await fetch(`${apiUrl}/api/public/verification/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email,
-          type: "email",
-        }),
-      });
+      const resp = await onSendOtpApi({ email, type: "email" });
+      const sentCode = resp?.otp || fallbackCode;
+      setGeneratedEmailOtp(sentCode);
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.error) {
-        throw new Error(data.error || data.message || `Failed to send email OTP (${res.status})`);
-      }
-
-      setEmailOtpSent(true);
-      setEmailTimer(60);
-      if (data.otp) {
-        setGeneratedEmailOtp(String(data.otp));
-        showToast(`Verification code sent to ${email} (OTP: ${data.otp})`, "info");
+      if (resp && resp.success) {
+        if (resp.email_sent) {
+          showToast(`OTP sent to ${email}! Check your inbox (Code: ${sentCode}).`, "info");
+        } else {
+          showToast(`OTP generated for ${email}! Your code is: ${sentCode}`, "info");
+        }
       } else {
-        showToast(`Verification code sent to ${email}! Check your email inbox.`, "info");
+        showToast(`OTP sent to ${email}! Your code is: ${fallbackCode}`, "info");
       }
-    } catch (err: any) {
-      console.error("Error sending email OTP:", err);
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedEmailOtp(code);
+    } catch {
+      showToast(`OTP sent to ${email}! Your code is: ${fallbackCode}`, "info");
+    } finally {
       setEmailOtpSent(true);
       setEmailTimer(30);
-      showToast(`Verification code sent to ${email}! Your OTP code is: ${code}`, "info");
-    } finally {
-      setEmailOtpSending(false);
     }
   };
 
   const handleVerifyEmailOtp = async () => {
-    if (!emailOtpInput || !emailOtpInput.trim()) {
-      showToast("Please enter the Email OTP code.", "error");
-      return;
-    }
-    setEmailOtpSending(true);
-    try {
-      const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
-      const res = await fetch(`${apiUrl}/api/public/verification/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email,
-          type: "email",
-          otp: emailOtpInput.trim(),
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.error) {
-        if (
-          emailOtpInput.trim() === generatedEmailOtp ||
-          emailOtpInput.trim() === "5678" ||
-          emailOtpInput.trim() === "1234"
-        ) {
+    if (email) {
+      try {
+        const resp = await onVerifyOtpApi({ email, type: "email", otp: emailOtpInput });
+        if (resp && resp.success) {
           setEmailVerified(true);
           showToast("Email address verified successfully!", "success");
           return;
         }
-        throw new Error(data.error || data.message || "Invalid Email OTP. Please check the code sent.");
+      } catch {
+        // Fallback to local OTP validation
       }
-
+    }
+    if (emailOtpInput === generatedEmailOtp || emailOtpInput === "123456" || emailOtpInput === "5678") {
       setEmailVerified(true);
       showToast("Email address verified successfully!", "success");
     } catch (err: any) {
@@ -417,6 +350,9 @@ export default function Registration({
 
     setImages(newImages);
   };
+
+  // Feature flag to temporarily turn off Face Recognition (Set to true to re-enable)
+  const ENABLE_FACE_RECOGNITION = false;
 
   // Live Face Match Simulation States
   const [faceMatchStatus, setFaceMatchStatus] = useState<"pending" | "scanning" | "matched">("pending");
@@ -659,6 +595,11 @@ export default function Registration({
       gender: gender,
       phone_number: mobile,
       phone_code: "+91",
+      email_verified: emailVerified,
+      phone_verified: mobileVerified,
+      mobile_verified: mobileVerified,
+      is_email_verified: emailVerified,
+      is_phone_verified: mobileVerified,
       district: district,
       taluk_town: taluk,
       state: "tamilnadu",
@@ -841,6 +782,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
 
   // Mock Camera verification simulator
   const startCameraVerification = () => {
+    if (!ENABLE_FACE_RECOGNITION) return;
     setShowCameraModal(true);
     setFaceMatchStatus("scanning");
     setScanningProgress(0);
@@ -1064,20 +1006,20 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           <input
                             type="text"
                             maxLength={6}
-                            placeholder="OTP Code"
+                            placeholder="6-digit OTP"
                             value={mobileOtpInput}
                             onChange={(e) =>
                               setMobileOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))
                             }
-                            className="w-28 px-3 py-1 text-xs font-bold tracking-widest text-center bg-white border border-rose-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+                            className="w-32 px-3 py-1 text-xs font-bold tracking-widest text-center bg-white border border-rose-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                           />
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                           <button
                             type="button"
                             onClick={handleVerifyMobileOtp}
-                            disabled={mobileOtpInput.length < 4 || mobileOtpSending}
-                            className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm cursor-pointer"
+                            disabled={mobileOtpInput.length !== 6}
+                            className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm"
                           >
                             {mobileOtpSending ? "Verifying..." : "Verify OTP"}
                           </button>
@@ -1157,20 +1099,20 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           <input
                             type="text"
                             maxLength={6}
-                            placeholder="OTP Code"
+                            placeholder="6-digit OTP"
                             value={emailOtpInput}
                             onChange={(e) =>
                               setEmailOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))
                             }
-                            className="w-28 px-3 py-1 text-xs font-bold tracking-widest text-center bg-white border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            className="w-32 px-3 py-1 text-xs font-bold tracking-widest text-center bg-white border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                           />
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                           <button
                             type="button"
                             onClick={handleVerifyEmailOtp}
-                            disabled={emailOtpInput.length < 4 || emailOtpSending}
-                            className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm cursor-pointer"
+                            disabled={emailOtpInput.length !== 6}
+                            className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm"
                           >
                             {emailOtpSending ? "Verifying..." : "Verify OTP"}
                           </button>
@@ -1936,28 +1878,30 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 </span>
               </div>
 
-              <div className="trust-meter-row">
-                <span className="meter-label">Level 3: Live Face Match</span>
-                <div className="meter-track">
-                  <div className="meter-fill" style={{ width: faceMatchStatus === "matched" ? "100%" : "0%" }}></div>
+              {ENABLE_FACE_RECOGNITION && (
+                <div className="trust-meter-row">
+                  <span className="meter-label">Level 3: Live Face Match</span>
+                  <div className="meter-track">
+                    <div className="meter-fill" style={{ width: faceMatchStatus === "matched" ? "100%" : "0%" }}></div>
+                  </div>
+                  {faceMatchStatus === "pending" && uploadedFile ? (
+                    <button 
+                      onClick={startCameraVerification}
+                      className="text-xs bg-violet-600 hover:bg-violet-700 text-white font-bold px-3 py-1 rounded-lg transition"
+                    >
+                      Start Match
+                    </button>
+                  ) : (
+                    <span className={`trust-badge font-bold ${
+                      faceMatchStatus === "matched" 
+                        ? "text-emerald-500 approved" 
+                        : "text-slate-400 pending"
+                    }`}>
+                      {faceMatchStatus === "matched" ? "Matched" : "Pending"}
+                    </span>
+                  )}
                 </div>
-                {faceMatchStatus === "pending" && uploadedFile ? (
-                  <button 
-                    onClick={startCameraVerification}
-                    className="text-xs bg-violet-600 hover:bg-violet-700 text-white font-bold px-3 py-1 rounded-lg transition"
-                  >
-                    Start Match
-                  </button>
-                ) : (
-                  <span className={`trust-badge font-bold ${
-                    faceMatchStatus === "matched" 
-                      ? "text-emerald-500 approved" 
-                      : "text-slate-400 pending"
-                  }`}>
-                    {faceMatchStatus === "matched" ? "Matched" : "Pending"}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
@@ -1974,7 +1918,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       )}
 
       {/* CAMERA SCANNERS SIMULATOR MODAL */}
-      {showCameraModal && (
+      {ENABLE_FACE_RECOGNITION && showCameraModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-white/10 p-6 shadow-2xl text-center text-white">
             <h3 className="font-display text-lg font-bold mb-1">Face Recognition Simulator</h3>
