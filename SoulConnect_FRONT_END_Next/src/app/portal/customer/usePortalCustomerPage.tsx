@@ -11,6 +11,9 @@ import {
   Clock,
   XCircle,
   Sparkles,
+  Check,
+  Loader2,
+  ChevronDown,
 } from "lucide-react";
 import configUrls from "../../../../configUrls";
 import { useKeycloak } from "@/providers/KeycloakProvider";
@@ -45,6 +48,9 @@ function usePortalCustomerPage() {
   );
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
+  const [updatingVerifyId, setUpdatingVerifyId] = React.useState<string | null>(
+    null,
+  );
   const [toast, setToast] = React.useState<{
     message: string;
     type: "success" | "info" | "error";
@@ -200,6 +206,82 @@ function usePortalCustomerPage() {
 
   const onCancelDelete = () => {
     setDeleteConfirmId(null);
+  };
+
+  const onChangeCustomerApprovalStatus = async (
+    customer: any,
+    newStatus: "Approved" | "Wait for approval" | "Rejected",
+  ) => {
+    if (!customer) return;
+    const targetId = customer._id || customer.id || customer.customer_id;
+    const isApproved = newStatus === "Approved";
+
+    setUpdatingVerifyId(targetId);
+
+    try {
+      if (keycloak) {
+        await keycloak.updateToken(30);
+      }
+    } catch (error) {
+      console.error("Failed to refresh token before updating approval:", error);
+    }
+    const token = keycloak?.token;
+
+    const payload = {
+      ...customer,
+      public_verify: isApproved,
+      approvalStatus: newStatus,
+      public_verify_command_helper:
+        newStatus === "Approved"
+          ? "Verified & Approved by Manager"
+          : newStatus === "Rejected"
+            ? "Rejected by Manager"
+            : "Pending approval",
+    };
+
+    fetch(configUrls?.apiUrl + "/api/customer_edit", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        setUpdatingVerifyId(null);
+        if (!r.ok || data.error) {
+          const errorMsg =
+            data.error ||
+            data.message ||
+            data.detail ||
+            `Request failed (${r.status})`;
+          throw new Error(errorMsg);
+        }
+        showToast(
+          newStatus === "Approved"
+            ? `Customer "${customer.first_name || ""}" approved & publicly verified!`
+            : newStatus === "Rejected"
+              ? `Customer "${customer.first_name || ""}" rejected.`
+              : `Customer "${customer.first_name || ""}" moved to waiting for approval.`,
+          newStatus === "Approved"
+            ? "success"
+            : newStatus === "Rejected"
+              ? "error"
+              : "info",
+        );
+        loadCustomers();
+      })
+      .catch((e) => {
+        setUpdatingVerifyId(null);
+        console.error("Error updating approval status:", e);
+        showToast(e.message || "Failed to update approval status", "error");
+      });
+  };
+
+  const onToggleApproveCustomer = async (customer: any) => {
+    const nextStatus = customer?.public_verify === true ? "Wait for approval" : "Approved";
+    return onChangeCustomerApprovalStatus(customer, nextStatus);
   };
 
   const onHandleClickCreateManager = () => {
@@ -740,10 +822,21 @@ function usePortalCustomerPage() {
 
           let dataKit = data?.data;
           dataKit = dataKit.map((itm: any) => {
+            let status = "Wait for approval";
+            if (itm?.public_verify === true || itm?.approvalStatus === "Approved") {
+              status = "Approved";
+            } else if (
+              itm?.approvalStatus === "Rejected" ||
+              itm?.approval_status === "Rejected" ||
+              itm?.public_verify_command_helper?.toLowerCase()?.includes("reject")
+            ) {
+              status = "Rejected";
+            } else if (itm?.approvalStatus) {
+              status = itm.approvalStatus;
+            }
             return {
               ...itm,
-              approvalStatus:
-                itm?.public_verify === true ? "Approved" : "Wait for approval",
+              approvalStatus: status,
             };
           });
           setRows(dataKit);
@@ -842,7 +935,7 @@ function usePortalCustomerPage() {
         const isMale = g === "male" || g === "maile";
         return (
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
               isFemale
                 ? "bg-rose-50 text-rose-700 border-rose-200/70"
                 : isMale
@@ -882,33 +975,113 @@ function usePortalCustomerPage() {
       label: "Approval Status",
       isFilterable: false,
       render: (row: any) => {
-        const status = (
+        let status =
           row.approvalStatus ||
-          row.status ||
-          "Approved"
-        ).toLowerCase();
-        const isApproved = status.includes("approve") || status === "active";
-        const isPending = status.includes("pend");
+          (row.public_verify === true ? "Approved" : "Wait for approval");
+        if (
+          row.public_verify === false &&
+          (row.approvalStatus === "Rejected" ||
+            row.public_verify_command_helper?.toLowerCase()?.includes("reject"))
+        ) {
+          status = "Rejected";
+        }
+
+        const isApproved = status === "Approved" || row.public_verify === true;
+        const isRejected = status === "Rejected";
+        const isPending = !isApproved && !isRejected;
+
+        const rowId = row._id || row.id || row.customer_id;
+        const isUpdating = updatingVerifyId === rowId;
+
+        if (isUpdating) {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 animate-pulse">
+              <Loader2 size={13} className="animate-spin text-slate-500 shrink-0" />
+              <span>Updating...</span>
+            </span>
+          );
+        }
+
+        const isManager = getRoles?.includes("manager");
+
+        if (isManager) {
+          const currentVal = isApproved
+            ? "Approved"
+            : isRejected
+              ? "Rejected"
+              : "Wait for approval";
+
+          return (
+            <div className="relative inline-flex items-center">
+              <select
+                value={currentVal}
+                onChange={(e) =>
+                  onChangeCustomerApprovalStatus(
+                    row,
+                    e.target.value as "Approved" | "Wait for approval" | "Rejected",
+                  )
+                }
+                title="Change Approval Status"
+                className={`appearance-none outline-none font-semibold text-xs rounded-lg px-2.5 py-1 pr-7 border transition-all cursor-pointer shadow-2xs ${
+                  isApproved
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                    : isRejected
+                      ? "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
+                      : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                }`}
+              >
+                <option
+                  value="Approved"
+                  className="bg-white text-emerald-700 font-semibold py-1"
+                >
+                  ✓ Approved
+                </option>
+                <option
+                  value="Wait for approval"
+                  className="bg-white text-amber-700 font-semibold py-1"
+                >
+                  ⏳ Waiting for approval
+                </option>
+                <option
+                  value="Rejected"
+                  className="bg-white text-rose-700 font-semibold py-1"
+                >
+                  ✕ Rejected
+                </option>
+              </select>
+              <ChevronDown
+                size={13}
+                className={`absolute right-2.5 pointer-events-none ${
+                  isApproved
+                    ? "text-emerald-600"
+                    : isRejected
+                      ? "text-rose-600"
+                      : "text-amber-600"
+                }`}
+              />
+            </div>
+          );
+        }
+
+        {/* NON-MANAGER VIEW */}
         return (
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
               isApproved
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
-                : isPending
-                  ? "bg-amber-50 text-amber-700 border-amber-200/80"
-                  : "bg-rose-50 text-rose-700 border-rose-200/80"
+                : isRejected
+                  ? "bg-rose-50 text-rose-700 border-rose-200/80"
+                  : "bg-amber-50 text-amber-700 border-amber-200/80"
             }`}
           >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                isApproved
-                  ? "bg-emerald-500"
-                  : isPending
-                    ? "bg-amber-500"
-                    : "bg-rose-500"
-              }`}
-            ></span>
-            {row.approvalStatus || "Approved"}
+            {isApproved ? (
+              <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+            ) : isRejected ? (
+              <XCircle size={13} className="text-rose-500 shrink-0" />
+            ) : (
+              <Clock size={13} className="text-amber-500 shrink-0" />
+            )}
+            {status}
           </span>
         );
       },
@@ -963,7 +1136,7 @@ function usePortalCustomerPage() {
         const isPremium = subLower !== "guest" && subLower !== "" && subLower !== "free";
         return (
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
               isPremium
                 ? "bg-purple-50 text-purple-700 border-purple-200/80"
                 : "bg-slate-100 text-slate-700 border-slate-200"
@@ -1101,6 +1274,9 @@ function usePortalCustomerPage() {
     handleFilterChange,
     onHandleClickCreateClient,
     onHandleClickCreateClientPublic,
+    onToggleApproveCustomer,
+    onChangeCustomerApprovalStatus,
+    updatingVerifyId,
     toast,
     setToast,
   };
