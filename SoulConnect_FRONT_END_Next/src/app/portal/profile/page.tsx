@@ -491,6 +491,8 @@ export default function ProfilePage() {
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [interestedPeople, setInterestedPeople] = useState<any[]>([]);
   const [loadingInterested, setLoadingInterested] = useState(false);
+  const [interestedPage, setInterestedPage] = useState(1);
+  const interestedPerPage = 6;
 
   useEffect(() => {
     const profileInterested =
@@ -2209,75 +2211,135 @@ export default function ProfilePage() {
                   Loading interested people...
                 </div>
               ) : interestedPeople.length > 0 ? (
-                <div className="similar-grid">
-                  {interestedPeople.slice(0, 6).map((person: any, idx: number) => {
-                    const personName =
-                      `${person.first_name || person.firstName || person.name || "Member"}`.trim();
-                    const ageNum = calculateAge(person.dob) || person.age;
-                    const ageStr = ageNum ? `, ${ageNum}` : "";
-                    const displayName = `${personName}${ageStr}`;
-                    const locationVal =
-                      person.district || person.city || person.state || "Tamil Nadu";
-                    const profVal =
-                      person.profession || person.occupation || person.education || "Member";
-                    const infoText = `${locationVal} · ${profVal}`;
+                <>
+                  <div className="similar-grid">
+                    {interestedPeople
+                      .slice(
+                        (interestedPage - 1) * interestedPerPage,
+                        interestedPage * interestedPerPage
+                      )
+                      .map((person: any, idx: number) => {
+                        const personName =
+                          `${person.first_name || person.firstName || person.name || "Member"}`.trim();
+                        const ageNum = calculateAge(person.dob) || person.age;
+                        const ageStr = ageNum ? `, ${ageNum}` : "";
+                        const displayName = `${personName}${ageStr}`;
+                        const locationVal =
+                          person.district || person.city || person.state || "Tamil Nadu";
+                        const profVal =
+                          person.profession || person.occupation || person.education || "Member";
+                        const infoText = `${locationVal} · ${profVal}`;
 
-                    const imgUrl = Array.isArray(person.image) && person.image.length > 0
-                      ? (typeof person.image[0] === "string" ? person.image[0] : person.image[0]?.url)
-                      : (typeof person.image === "string" ? person.image : null);
+                        const imgUrl = Array.isArray(person.image) && person.image.length > 0
+                          ? (typeof person.image[0] === "string" ? person.image[0] : person.image[0]?.url)
+                          : (typeof person.image === "string" ? person.image : null);
 
-                    const initial = (personName || "C").charAt(0).toUpperCase();
+                        const initial = (personName || "C").charAt(0).toUpperCase();
 
-                    const gradients = [
-                      "linear-gradient(135deg,#F2688C,#7C3AED)",
-                      "linear-gradient(135deg,#059669,#0D9488)",
-                      "linear-gradient(135deg,#F59E0B,#D97706)",
-                      "linear-gradient(135deg,#3B82F6,#1D4ED8)",
-                      "linear-gradient(135deg,#EC4899,#8B5CF6)",
-                    ];
-                    const bgGradient = gradients[idx % gradients.length];
-                    const personId = person._id || person.id || person.customer_id;
+                        const gradients = [
+                          "linear-gradient(135deg,#F2688C,#7C3AED)",
+                          "linear-gradient(135deg,#059669,#0D9488)",
+                          "linear-gradient(135deg,#F59E0B,#D97706)",
+                          "linear-gradient(135deg,#3B82F6,#1D4ED8)",
+                          "linear-gradient(135deg,#EC4899,#8B5CF6)",
+                        ];
+                        const bgGradient = gradients[idx % gradients.length];
+                        const personId = person._id || person.id || person.customer_id;
 
-                    return (
-                      <div
-                        key={personId || idx}
-                        className="sim-card cursor-pointer hover:shadow-md transition-all duration-200"
-                        onClick={() => {
-                          if (personId) {
-                            router.push(`/portal/customer_detail?id=${personId}`);
-                          } else {
-                            showToast(`Opening ${personName}'s profile...`, "info");
-                          }
-                        }}
-                      >
-                        {imgUrl ? (
-                          <div className="sim-av overflow-hidden">
-                            <img
-                              src={imgUrl}
-                              alt={personName}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display = "none";
-                              }}
-                            />
-                          </div>
-                        ) : (
+                        return (
                           <div
-                            className="sim-av font-bold text-white flex items-center justify-center"
-                            style={{ background: bgGradient }}
+                            key={personId || idx}
+                            className="sim-card cursor-pointer hover:shadow-md transition-all duration-200"
+                            onClick={() => {
+                              if (personId) {
+                                router.push(`/portal/customer_detail?id=${personId}`);
+                              } else {
+                                showToast(`Opening ${personName}'s profile...`, "info");
+                              }
+                            }}
                           >
-                            {initial}
+                            {imgUrl ? (
+                              <div className="sim-av overflow-hidden">
+                                <img
+                                  src={imgUrl}
+                                  alt={personName}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                className="sim-av font-bold text-white flex items-center justify-center"
+                                style={{ background: bgGradient }}
+                              >
+                                {initial}
+                              </div>
+                            )}
+                            <div className="sim-name font-bold text-slate-800">{displayName}</div>
+                            <div className="sim-info text-xs text-slate-500">{infoText}</div>
+                            <div className="sim-match flex items-center gap-1 text-xs font-semibold text-rose-600">
+                              <span>💖</span> Interested
+                            </div>
                           </div>
-                        )}
-                        <div className="sim-name font-bold text-slate-800">{displayName}</div>
-                        <div className="sim-info text-xs text-slate-500">{infoText}</div>
-                        <div className="sim-match flex items-center gap-1 text-xs font-semibold text-rose-600">
-                          <span>💖</span> Interested
-                        </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {Math.ceil(interestedPeople.length / interestedPerPage) > 1 && (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                      <span className="text-xs text-slate-500 font-medium">
+                        Showing {((interestedPage - 1) * interestedPerPage) + 1} -{" "}
+                        {Math.min(interestedPage * interestedPerPage, interestedPeople.length)} of{" "}
+                        {interestedPeople.length} interested profiles
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setInterestedPage((p) => Math.max(1, p - 1))}
+                          disabled={interestedPage === 1}
+                          className="px-2.5 py-1 text-xs rounded-lg font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        >
+                          ← Prev
+                        </button>
+                        {Array.from(
+                          { length: Math.ceil(interestedPeople.length / interestedPerPage) },
+                          (_, i) => i + 1
+                        ).map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setInterestedPage(pageNum)}
+                            className={`w-7 h-7 text-xs rounded-lg font-bold transition-all cursor-pointer ${
+                              interestedPage === pageNum
+                                ? "bg-rose-500 text-white shadow-xs"
+                                : "text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() =>
+                            setInterestedPage((p) =>
+                              Math.min(
+                                Math.ceil(interestedPeople.length / interestedPerPage),
+                                p + 1
+                              )
+                            )
+                          }
+                          disabled={
+                            interestedPage ===
+                            Math.ceil(interestedPeople.length / interestedPerPage)
+                          }
+                          className="px-2.5 py-1 text-xs rounded-lg font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        >
+                          Next →
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="py-8 text-center bg-rose-50/40 rounded-2xl border border-rose-100 p-6">
                   <div className="text-2xl mb-1">💌</div>
