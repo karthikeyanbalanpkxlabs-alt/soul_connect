@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Heart, User, Pencil, Trash2 } from "lucide-react";
 
 interface ProfileCardProps {
@@ -6,6 +6,7 @@ interface ProfileCardProps {
   onEdit?: (customer: any) => void;
   onDelete?: (id: string) => void;
   onView?: (id: string) => void;
+  onSendInterest?: (customer: any) => void;
   canDelete?: boolean;
 }
 
@@ -14,8 +15,22 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   onEdit,
   onDelete,
   onView,
+  onSendInterest,
   canDelete,
 }) => {
+  const [isInterested, setIsInterested] = useState(
+    customer?.interestSent === true || customer?.isInterested === true,
+  );
+
+  const handleInterestClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newState = !isInterested;
+    setIsInterested(newState);
+    if (onSendInterest) {
+      onSendInterest(customer);
+    }
+  };
+
   // Extract data with fallbacks
   const imageUrl =
     customer?.image?.[0]?.url ||
@@ -24,9 +39,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     `${customer?.first_name || "Unknown"} ${customer?.last_name || ""}`.trim();
   const calculateAge = (dobStr?: string) => {
     if (!dobStr) return "N/A";
-    let day = 0,
-      month = 0,
-      year = 0;
+    let day = 0, month = 0, year = 0;
     if (dobStr.includes("-")) {
       const parts = dobStr.split("-");
       if (parts[0].length === 4) {
@@ -105,7 +118,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       <div className="flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <Heart className="w-5 h-5 text-pink-500 cursor-pointer hover:fill-pink-500 transition-colors" />
+            <Heart
+              onClick={handleInterestClick}
+              className={`w-5 h-5 cursor-pointer transition-colors ${isInterested
+                  ? "fill-pink-500 text-pink-500"
+                  : "text-pink-500 hover:fill-pink-500"
+                }`}
+            />
             <h3 className="text-xl font-bold text-gray-800">{name}</h3>
           </div>
 
@@ -143,17 +162,46 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
-            // onClick={() => onView?.(customer._id)}
-            onClick={() => onView?.(customer._id)}
-            className="bg-[#15203c] text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-[#0d1428] transition-colors flex items-center gap-2"
+            onClick={() => onView?.(customer._id || customer.id)}
+            className="bg-[#15203c] text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-[#0d1428] transition-colors flex items-center gap-2 cursor-pointer"
           >
             <User className="w-4 h-4" /> View Full Profile
+          </button>
+
+          <button
+            onClick={handleInterestClick}
+            disabled={isSavingInterest}
+            className={`px-5 py-2.5 rounded text-sm font-medium transition-all flex items-center gap-2 cursor-pointer shadow-2xs active:scale-95 disabled:opacity-70 ${
+              isInterested
+                ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
+                : "bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white"
+            }`}
+            title={isInterested ? "Interest Sent" : "Send Interest to this profile"}
+          >
+            {isSavingInterest ? (
+              <Loader2 className="w-4 h-4 animate-spin text-current" />
+            ) : (
+              <Heart
+                className={`w-4 h-4 ${
+                  isInterested
+                    ? "fill-rose-600 text-rose-600"
+                    : "fill-white text-white"
+                }`}
+              />
+            )}
+            <span>
+              {isSavingInterest
+                ? "Saving..."
+                : isInterested
+                  ? "Interest Sent"
+                  : "Send Interest"}
+            </span>
           </button>
 
           {canDelete && (
             <button
               onClick={() => onEdit?.(customer)}
-              className="border border-violet-200 text-violet-600 hover:bg-violet-50 px-4 py-2.5 rounded text-sm font-medium transition-colors flex items-center gap-2"
+              className="border border-violet-200 text-violet-600 hover:bg-violet-50 px-4 py-2.5 rounded text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer"
               title="Edit Customer"
             >
               <Pencil className="w-4 h-4" /> Edit
@@ -162,8 +210,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
           {canDelete && (
             <button
-              onClick={() => onDelete?.(customer._id)}
-              className="border border-red-200 text-red-600 hover:bg-red-50 px-4 py-2.5 rounded text-sm font-medium transition-colors flex items-center gap-2"
+              onClick={() => onDelete?.(customer._id || customer.id)}
+              className="border border-red-200 text-red-600 hover:bg-red-50 px-4 py-2.5 rounded text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer"
               title="Delete Customer"
             >
               <Trash2 className="w-4 h-4" /> Delete
@@ -174,51 +222,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
       {/* Right: Description & Socials */}
       <div className="w-full md:w-72 flex-shrink-0 flex flex-col justify-between">
-        {/* <p className="text-sm text-gray-500 leading-relaxed mb-6">
-          {description}
-        </p> */}
-
-        <div>
-          {/* <div className="flex gap-2 mb-6">
-            <a
-              href="#"
-              className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded font-bold text-xs hover:bg-blue-700 transition-colors"
-            >
-              f
-            </a>
-            <a
-              href="#"
-              className="w-8 h-8 flex items-center justify-center bg-green-600 text-white rounded font-bold text-xs hover:bg-green-700 transition-colors"
-            >
-              ig
-            </a>
-            <a
-              href="#"
-              className="w-8 h-8 flex items-center justify-center bg-yellow-500 text-white rounded font-bold text-xs hover:bg-yellow-600 transition-colors"
-            >
-              in
-            </a>
-            <a
-              href="#"
-              className="w-8 h-8 flex items-center justify-center bg-cyan-400 text-white rounded font-bold text-xs hover:bg-cyan-500 transition-colors"
-            >
-              t
-            </a>
-            <a
-              href="#"
-              className="w-8 h-8 flex items-center justify-center bg-red-600 text-white rounded font-bold text-xs hover:bg-red-700 transition-colors"
-            >
-              yt
-            </a>
-          </div> */}
-
-          {/* <button 
-            onClick={() => onView?.(customer._id)}
-            className="bg-[#c28b70] text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors flex items-center gap-2"
-          >
-            <User className="w-4 h-4" /> View Detail
-          </button> */}
-        </div>
+        <div></div>
       </div>
     </div>
   );
