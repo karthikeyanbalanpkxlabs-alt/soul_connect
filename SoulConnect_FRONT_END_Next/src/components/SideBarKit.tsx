@@ -77,11 +77,11 @@ export default function SideBarKit({ children }: SideBarKitProps) {
           },
         ]
       : []),
-    {
-      name: "Profile",
-      icon: Settings,
-      router: "/portal/profile",
-    },
+    // {
+    //   name: "Profile",
+    //   icon: Settings,
+    //   router: "/portal/profile",
+    // },
   ];
 
   const isPortalUser =

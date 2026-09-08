@@ -489,6 +489,92 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [interestedPeople, setInterestedPeople] = useState<any[]>([]);
+  const [loadingInterested, setLoadingInterested] = useState(false);
+  const [interestedPage, setInterestedPage] = useState(1);
+  const interestedPerPage = 6;
+
+  useEffect(() => {
+    const profileInterested =
+      profile?.interested_people ||
+      profile?.interested_profiles ||
+      profile?.interests_received ||
+      profile?.interested_by ||
+      profile?.interest_list ||
+      profile?.expressed_interests ||
+      profile?.connection_requests;
+
+    if (Array.isArray(profileInterested) && profileInterested.length > 0) {
+      setInterestedPeople(profileInterested);
+      return;
+    }
+
+    const fetchInterestedPeople = async () => {
+      setLoadingInterested(true);
+      try {
+        const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (keycloak?.authenticated && keycloak?.token) {
+          headers["Authorization"] = `Bearer ${keycloak.token}`;
+        }
+
+        const res = await fetch(`${apiUrl}/api/customer_list`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            skip: 0,
+            limit: 10,
+            filters: {},
+          }),
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          const list: any[] = result?.data || (Array.isArray(result) ? result : []);
+
+          const currentUserGender = (profile?.gender || "").toLowerCase();
+          const targetGender =
+            currentUserGender === "male" || currentUserGender === "maile"
+              ? "female"
+              : currentUserGender === "female"
+              ? "male"
+              : "";
+
+          const filtered = list.filter((itm: any) => {
+            const isSelf =
+              (itm.keycloakId && itm.keycloakId === profile?.keycloakId) ||
+              (itm._id && itm._id === profile?._id) ||
+              (itm.email && itm.email === profile?.email);
+            if (isSelf) return false;
+
+            if (targetGender && itm.gender) {
+              const g = String(itm.gender).toLowerCase();
+              if (targetGender === "female" && g !== "female") return false;
+              if (targetGender === "male" && g !== "male" && g !== "maile")
+                return false;
+            }
+            return true;
+          });
+
+          setInterestedPeople(
+            filtered.length > 0
+              ? filtered
+              : list.filter((itm: any) => itm.email !== profile?.email)
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch interested candidates:", err);
+      } finally {
+        setLoadingInterested(false);
+      }
+    };
+
+    if (profile) {
+      fetchInterestedPeople();
+    }
+  }, [profile]);
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
@@ -2108,65 +2194,161 @@ export default function ProfilePage() {
               className={`content-card reveal ${isLoaded ? "visible" : ""}`}
               style={{ transitionDelay: ".4s" }}
             >
-              <div className="content-card-title">
-                <div className="ctitle-icon">💞</div>Profiles You May Like
+              <div className="content-card-title flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="ctitle-icon">💖</div>
+                  <span>Interested People</span>
+                </div>
+                {interestedPeople.length > 0 && (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 font-bold border border-rose-200">
+                    {interestedPeople.length} interested
+                  </span>
+                )}
               </div>
-              <div className="similar-grid">
-                <div
-                  className="sim-card"
-                  onClick={() =>
-                    showToast("Opening Ananya's profile...", "info")
-                  }
-                >
-                  <div
-                    className="sim-av"
-                    style={{
-                      background: "linear-gradient(135deg,#F2688C,#7C3AED)",
-                    }}
-                  >
-                    A
-                  </div>
-                  <div className="sim-name">Ananya, 26</div>
-                  <div className="sim-info">Chennai · Software Eng.</div>
-                  <div className="sim-match">✓ 94% match</div>
+
+              {loadingInterested ? (
+                <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                  Loading interested people...
                 </div>
-                <div
-                  className="sim-card"
-                  onClick={() =>
-                    showToast("Opening Deepika's profile...", "info")
-                  }
-                >
-                  <div
-                    className="sim-av"
-                    style={{
-                      background: "linear-gradient(135deg,#059669,#0D9488)",
-                    }}
-                  >
-                    D
+              ) : interestedPeople.length > 0 ? (
+                <>
+                  <div className="similar-grid">
+                    {interestedPeople
+                      .slice(
+                        (interestedPage - 1) * interestedPerPage,
+                        interestedPage * interestedPerPage
+                      )
+                      .map((person: any, idx: number) => {
+                        const personName =
+                          `${person.first_name || person.firstName || person.name || "Member"}`.trim();
+                        const ageNum = calculateAge(person.dob) || person.age;
+                        const ageStr = ageNum ? `, ${ageNum}` : "";
+                        const displayName = `${personName}${ageStr}`;
+                        const locationVal =
+                          person.district || person.city || person.state || "Tamil Nadu";
+                        const profVal =
+                          person.profession || person.occupation || person.education || "Member";
+                        const infoText = `${locationVal} · ${profVal}`;
+
+                        const imgUrl = Array.isArray(person.image) && person.image.length > 0
+                          ? (typeof person.image[0] === "string" ? person.image[0] : person.image[0]?.url)
+                          : (typeof person.image === "string" ? person.image : null);
+
+                        const initial = (personName || "C").charAt(0).toUpperCase();
+
+                        const gradients = [
+                          "linear-gradient(135deg,#F2688C,#7C3AED)",
+                          "linear-gradient(135deg,#059669,#0D9488)",
+                          "linear-gradient(135deg,#F59E0B,#D97706)",
+                          "linear-gradient(135deg,#3B82F6,#1D4ED8)",
+                          "linear-gradient(135deg,#EC4899,#8B5CF6)",
+                        ];
+                        const bgGradient = gradients[idx % gradients.length];
+                        const personId = person._id || person.id || person.customer_id;
+
+                        return (
+                          <div
+                            key={personId || idx}
+                            className="sim-card cursor-pointer hover:shadow-md transition-all duration-200"
+                            onClick={() => {
+                              if (personId) {
+                                router.push(`/portal/customer_detail?id=${personId}`);
+                              } else {
+                                showToast(`Opening ${personName}'s profile...`, "info");
+                              }
+                            }}
+                          >
+                            {imgUrl ? (
+                              <div className="sim-av overflow-hidden">
+                                <img
+                                  src={imgUrl}
+                                  alt={personName}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                className="sim-av font-bold text-white flex items-center justify-center"
+                                style={{ background: bgGradient }}
+                              >
+                                {initial}
+                              </div>
+                            )}
+                            <div className="sim-name font-bold text-slate-800">{displayName}</div>
+                            <div className="sim-info text-xs text-slate-500">{infoText}</div>
+                            <div className="sim-match flex items-center gap-1 text-xs font-semibold text-rose-600">
+                              <span>💖</span> Interested
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
-                  <div className="sim-name">Deepika, 28</div>
-                  <div className="sim-info">Coimbatore · Doctor</div>
-                  <div className="sim-match">✓ 90% match</div>
+
+                  {/* Pagination Controls */}
+                  {Math.ceil(interestedPeople.length / interestedPerPage) > 1 && (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                      <span className="text-xs text-slate-500 font-medium">
+                        Showing {((interestedPage - 1) * interestedPerPage) + 1} -{" "}
+                        {Math.min(interestedPage * interestedPerPage, interestedPeople.length)} of{" "}
+                        {interestedPeople.length} interested profiles
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setInterestedPage((p) => Math.max(1, p - 1))}
+                          disabled={interestedPage === 1}
+                          className="px-2.5 py-1 text-xs rounded-lg font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        >
+                          ← Prev
+                        </button>
+                        {Array.from(
+                          { length: Math.ceil(interestedPeople.length / interestedPerPage) },
+                          (_, i) => i + 1
+                        ).map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setInterestedPage(pageNum)}
+                            className={`w-7 h-7 text-xs rounded-lg font-bold transition-all cursor-pointer ${
+                              interestedPage === pageNum
+                                ? "bg-rose-500 text-white shadow-xs"
+                                : "text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() =>
+                            setInterestedPage((p) =>
+                              Math.min(
+                                Math.ceil(interestedPeople.length / interestedPerPage),
+                                p + 1
+                              )
+                            )
+                          }
+                          disabled={
+                            interestedPage ===
+                            Math.ceil(interestedPeople.length / interestedPerPage)
+                          }
+                          className="px-2.5 py-1 text-xs rounded-lg font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="py-8 text-center bg-rose-50/40 rounded-2xl border border-rose-100 p-6">
+                  <div className="text-2xl mb-1">💌</div>
+                  <p className="text-sm font-semibold text-slate-700">No Interested Profiles Yet</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Profiles who express interest in your profile will appear here.
+                  </p>
                 </div>
-                <div
-                  className="sim-card"
-                  onClick={() =>
-                    showToast("Opening Ranjani's profile...", "info")
-                  }
-                >
-                  <div
-                    className="sim-av"
-                    style={{
-                      background: "linear-gradient(135deg,#F59E0B,#D97706)",
-                    }}
-                  >
-                    R
-                  </div>
-                  <div className="sim-name">Ranjani, 25</div>
-                  <div className="sim-info">Madurai · Architect</div>
-                  <div className="sim-match">✓ 87% match</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
