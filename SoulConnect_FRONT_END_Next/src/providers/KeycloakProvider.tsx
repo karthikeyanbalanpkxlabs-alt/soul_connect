@@ -83,24 +83,48 @@ export default function KeycloakProvider({
       const keycloakId = tokenParsed?.sub;
       const email = tokenParsed?.email;
 
-      const res = await fetch(`${apiUrl}/api/profile_detail`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${keycloak.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          keycloakId,
-          email,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Profile fetch status: ${res.status}`);
+      const payload = { keycloakId, email };
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (keycloak.token) {
+        headers["Authorization"] = `Bearer ${keycloak.token}`;
       }
 
-      const data = await res.json();
-      setProfile(data);
+      // 1. Primary endpoint
+      let res = await fetch(`${apiUrl}/api/profile_detail`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      }).catch(() => null);
+
+      // 2. Public endpoint fallback
+      if (!res || !res.ok) {
+        res = await fetch(`${apiUrl}/api/public/profile_detail`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).catch(() => null);
+      }
+
+      // 3. Localhost fallback
+      if (!res || !res.ok) {
+        res = await fetch(`http://localhost:3000/api/public/profile_detail`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const data = await res.json();
+        setProfile(data);
+      } else {
+        const statusMsg = res ? `Profile not found (status ${res.status})` : "Network error";
+        console.warn(`Profile fetch: ${statusMsg}`);
+        setProfileError(statusMsg);
+        setProfile(null);
+      }
     } catch (err: any) {
       console.error("Failed to fetch profile details:", err);
       setProfileError(err.message || "Failed to load profile details");

@@ -49,6 +49,9 @@
         </div>
       </#if>
 
+      <div id="urlErrorAlert" class="alert alert-error reveal" style="display: none; transition-delay:.12s; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 14px; text-align: center; border: 1px solid #f87171;">
+      </div>
+
       <!-- SOCIAL AUTH -->
       <div class="social-auth reveal" style="display:none; transition-delay:.15s">
         <button class="btn-social">G Continue with Google</button>
@@ -279,6 +282,24 @@ function togglePwd(id) {
   const inp = document.getElementById(id);
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
+
+(function() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var err = params.get('error') || params.get('errorMessage') || params.get('error_description');
+    if (err) {
+      var alertBox = document.getElementById('urlErrorAlert');
+      if (alertBox) {
+        if (err === 'user_not_found' || err.toLowerCase().indexOf('not found') !== -1) {
+          alertBox.innerText = "User profile not found in system. Please register or check your credentials.";
+        } else {
+          alertBox.innerText = decodeURIComponent(err);
+        }
+        alertBox.style.display = 'block';
+      }
+    }
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>

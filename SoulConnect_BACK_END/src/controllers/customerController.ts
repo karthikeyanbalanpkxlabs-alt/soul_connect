@@ -334,7 +334,7 @@ export async function handleCustomerDetailGet(req: Request, res: Response) {
 
 export async function handleProfileDetail(req: Request, res: Response) {
   try {
-    const { email } = {
+    const { email, keycloakId, id, _id } = {
       ...req.query,
       ...req.body,
     };
@@ -342,14 +342,23 @@ export async function handleProfileDetail(req: Request, res: Response) {
     const targetEmail =
       (email as string) ||
       (req as any).kauth?.grant?.access_token?.content?.email;
+    const targetKeycloakId =
+      (keycloakId as string) ||
+      (req as any).kauth?.grant?.access_token?.content?.sub;
 
-    if (!targetEmail) {
+    const queryOr: any[] = [];
+    if (targetKeycloakId) queryOr.push({ keycloakId: targetKeycloakId });
+    if (targetEmail) queryOr.push({ email: targetEmail });
+    if (id) queryOr.push({ customer_id: id }, { id: id });
+    if (_id && mongoose.Types.ObjectId.isValid(_id)) queryOr.push({ _id: _id });
+
+    if (queryOr.length === 0) {
       return res.status(400).json({
-        error: "Missing email parameter in request",
+        error: "Missing email, keycloakId, or id parameter in request",
       });
     }
 
-    const profile = await Customers.findOne({ email: targetEmail });
+    const profile = await Customers.findOne({ $or: queryOr });
     if (!profile) {
       return res.status(404).json({ error: "Profile not found" });
     }
