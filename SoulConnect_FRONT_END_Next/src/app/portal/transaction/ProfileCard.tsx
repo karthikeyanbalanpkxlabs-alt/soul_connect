@@ -20,27 +20,49 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   canDelete,
 }) => {
   const customerId = customer?._id || customer?.id || customer?.customer_id;
+  const allCustomerIds = Array.from(
+    new Set(
+      [
+        customer?._id,
+        customer?.id,
+        customer?.customer_id,
+        customer?.keycloakId,
+        customer?.email,
+      ]
+        .map(String)
+        .filter(Boolean),
+    ),
+  );
+
   const [isInterested, setIsInterested] = useState(false);
   const [isSavingInterest, setIsSavingInterest] = useState(false);
 
   useEffect(() => {
-    let initialInterested =
-      customer?.interestSent === true ||
-      customer?.isInterested === true ||
-      customer?.interest_sent === true;
+    let initialInterested = false;
 
-    if (!initialInterested && typeof window !== "undefined" && customerId) {
+    if (typeof window !== "undefined") {
       try {
         const stored = JSON.parse(
-          localStorage.getItem("interested_profile_ids") || "[]"
+          localStorage.getItem("interested_profile_ids") || "[]",
         );
-        if (Array.isArray(stored) && stored.includes(String(customerId))) {
+        if (
+          Array.isArray(stored) &&
+          allCustomerIds.some((id) => stored.includes(id))
+        ) {
           initialInterested = true;
         }
       } catch (e) {
         console.error(e);
       }
     }
+
+    if (!initialInterested) {
+      initialInterested =
+        customer?.interestSent === true ||
+        customer?.isInterested === true ||
+        customer?.interest_sent === true;
+    }
+
     setIsInterested(initialInterested);
   }, [customer, customerId]);
 
@@ -53,17 +75,18 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     setIsSavingInterest(true);
 
     // Save to localStorage for instant local persistence
-    if (typeof window !== "undefined" && customerId) {
+    if (typeof window !== "undefined") {
       try {
         const stored = JSON.parse(
-          localStorage.getItem("interested_profile_ids") || "[]"
+          localStorage.getItem("interested_profile_ids") || "[]",
         );
         let updated = Array.isArray(stored) ? [...stored] : [];
-        const cidStr = String(customerId);
         if (newState) {
-          if (!updated.includes(cidStr)) updated.push(cidStr);
+          allCustomerIds.forEach((cidStr) => {
+            if (!updated.includes(cidStr)) updated.push(cidStr);
+          });
         } else {
-          updated = updated.filter((id: string) => id !== cidStr);
+          updated = updated.filter((id: string) => !allCustomerIds.includes(id));
         }
         localStorage.setItem("interested_profile_ids", JSON.stringify(updated));
       } catch (err) {
@@ -120,6 +143,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       console.error("Error storing interest in database:", error);
     } finally {
       setIsSavingInterest(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("interestUpdated"));
+      }
       if (onSendInterest) {
         onSendInterest(customer);
       }

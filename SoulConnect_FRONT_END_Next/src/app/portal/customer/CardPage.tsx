@@ -608,11 +608,19 @@ function CardPage() {
                     ) : stateProps?.rows && stateProps.rows.length > 0 ? (
                       stateProps.rows.map((row: any) => (
                         <ProfileCard
-                          key={row.customer_id || row.id}
+                          key={row._id || row.customer_id || row.id}
                           customer={row}
                           onEdit={stateProps?.onHandleEditCustomer}
                           onDelete={stateProps?.onDeleteCustomer}
                           onView={handleView}
+                          onSendInterest={async () => {
+                            if (refreshProfile) {
+                              await refreshProfile().catch(() => null);
+                            }
+                            if (typeof window !== "undefined") {
+                              window.dispatchEvent(new Event("interestUpdated"));
+                            }
+                          }}
                           canDelete={stateProps?.getRoles?.includes("manager")}
                         />
                       ))

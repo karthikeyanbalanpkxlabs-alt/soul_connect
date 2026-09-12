@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import Toast from "@/components/Toast";
@@ -494,56 +494,84 @@ export default function ProfilePage() {
   const [interestedPage, setInterestedPage] = useState(1);
   const interestedPerPage = 6;
 
-  useEffect(() => {
-    const fetchInterestedPeople = async () => {
-      setLoadingInterested(true);
-      try {
-        const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (keycloak?.authenticated && keycloak?.token) {
-          headers["Authorization"] = `Bearer ${keycloak.token}`;
-        }
+  const fetchInterestedPeople = useCallback(async () => {
+    setLoadingInterested(true);
+    try {
+      const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (keycloak?.authenticated && keycloak?.token) {
+        headers["Authorization"] = `Bearer ${keycloak.token}`;
+      }
 
-        let localInterestedIds: string[] = [];
-        if (typeof window !== "undefined") {
-          try {
-            localInterestedIds = JSON.parse(
-              localStorage.getItem("interested_profile_ids") || "[]"
-            );
-          } catch (e) {
-            console.error(e);
+      let localInterestedIds: string[] = [];
+      if (typeof window !== "undefined") {
+        try {
+          localInterestedIds = JSON.parse(
+            localStorage.getItem("interested_profile_ids") || "[]",
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      const payload = {
+        keycloakId: profile?.keycloakId,
+        email: profile?.email,
+        customer_id: profile?.customer_id || profile?._id,
+        id: profile?._id || profile?.id,
+        localInterestedIds,
+      };
+
+      const res = await fetch(`${apiUrl}/api/interested_list`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      }).catch(() => null);
+
+      let interestedList: any[] = [];
+      if (res && res.ok) {
+        const data = await res.json();
+        const received = data.receivedInterests || [];
+        const sent = data.sentInterests || [];
+        const combined = [...received, ...sent];
+        const seen = new Set();
+        interestedList = combined.filter((itm: any) => {
+          const pid = typeof itm === "string" ? itm : (itm._id || itm.id || itm.customer_id);
+          if (!pid || seen.has(pid)) return false;
+          if (
+            typeof itm === "object" &&
+            (itm.email === profile?.email ||
+              (itm.keycloakId && itm.keycloakId === profile?.keycloakId) ||
+              (itm._id && String(itm._id) === String(profile?._id)))
+          ) {
+            return false;
           }
-        }
-
-        const payload = {
-          keycloakId: profile?.keycloakId,
-          email: profile?.email,
-          customer_id: profile?.customer_id || profile?._id,
-          id: profile?._id || profile?.id,
-          localInterestedIds,
-        };
-
-        const res = await fetch(`${apiUrl}/api/interested_list`, {
+          seen.add(pid);
+          return true;
+        });
+      } else {
+        const pubRes = await fetch(`${apiUrl}/api/public/interested_list`, {
           method: "POST",
-          headers,
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }).catch(() => null);
 
-        let interestedList: any[] = [];
-        if (res && res.ok) {
-          const data = await res.json();
-          const received = data.receivedInterests || [];
-          const sent = data.sentInterests || [];
+        if (pubRes && pubRes.ok) {
+          const pubData = await pubRes.json();
+          const received = pubData.receivedInterests || [];
+          const sent = pubData.sentInterests || [];
           const combined = [...received, ...sent];
           const seen = new Set();
           interestedList = combined.filter((itm: any) => {
-            const pid = itm._id || itm.id || itm.customer_id;
+            const pid = typeof itm === "string" ? itm : (itm._id || itm.id || itm.customer_id);
             if (!pid || seen.has(pid)) return false;
             if (
-              itm.email === profile?.email ||
-              (itm.keycloakId && itm.keycloakId === profile?.keycloakId)
+              typeof itm === "object" &&
+              (itm.email === profile?.email ||
+                (itm.keycloakId && itm.keycloakId === profile?.keycloakId) ||
+                (itm._id && String(itm._id) === String(profile?._id)))
             ) {
               return false;
             }
@@ -551,62 +579,92 @@ export default function ProfilePage() {
             return true;
           });
         }
+      }
 
-        if (interestedList.length === 0) {
-          const pubRes = await fetch(`${apiUrl}/api/public/interested_list`, {
+      // Populate full customer document data if any items are string IDs or missing name info
+      const needsFullDetails = interestedList.some(
+        (itm: any) =>
+          typeof itm === "string" ||
+          (!itm.first_name && !itm.firstName && !itm.name),
+      );
+
+      if (needsFullDetails) {
+        try {
+          const custRes = await fetch(`${apiUrl}/api/customer_list`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            headers,
+            body: JSON.stringify({ limit: 300 }),
           }).catch(() => null);
 
-          if (pubRes && pubRes.ok) {
-            const pubData = await pubRes.json();
-            const received = pubData.receivedInterests || [];
-            const sent = pubData.sentInterests || [];
-            const combined = [...received, ...sent];
-            const seen = new Set();
-            interestedList = combined.filter((itm: any) => {
-              const pid = itm._id || itm.id || itm.customer_id;
-              if (!pid || seen.has(pid)) return false;
+          let allCusts: any[] = [];
+          if (custRes && custRes.ok) {
+            const custData = await custRes.json();
+            allCusts = Array.isArray(custData) ? custData : custData?.data || [];
+          } else {
+            const pubCustRes = await fetch(`${apiUrl}/api/public/customer_list`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ limit: 300 }),
+            }).catch(() => null);
+
+            if (pubCustRes && pubCustRes.ok) {
+              const pubCustData = await pubCustRes.json();
+              allCusts = Array.isArray(pubCustData) ? pubCustData : pubCustData?.data || [];
+            }
+          }
+
+          if (allCusts.length > 0) {
+            interestedList = interestedList.map((itm: any) => {
               if (
-                itm.email === profile?.email ||
-                (itm.keycloakId && itm.keycloakId === profile?.keycloakId)
+                typeof itm === "object" &&
+                (itm.first_name || itm.firstName || itm.name)
               ) {
-                return false;
+                return itm;
               }
-              seen.add(pid);
-              return true;
+              const itmId = typeof itm === "string" ? itm : (itm._id || itm.id || itm.customer_id);
+              const found = allCusts.find((c: any) => {
+                const cIds = [c._id, c.id, c.customer_id, c.keycloakId, c.email].map(String).filter(Boolean);
+                return cIds.includes(String(itmId));
+              });
+              return found || itm;
             });
           }
+        } catch (e) {
+          console.error("Failed to populate full customer details:", e);
         }
-
-        if (interestedList.length === 0) {
-          const profileInterested =
-            profile?.interested_people ||
-            profile?.interested_profiles ||
-            profile?.interests_received ||
-            profile?.interested_by ||
-            profile?.interest_list ||
-            profile?.expressed_interests ||
-            profile?.connection_requests;
-
-          if (Array.isArray(profileInterested) && profileInterested.length > 0) {
-            interestedList = profileInterested;
-          }
-        }
-
-        setInterestedPeople(interestedList);
-      } catch (err) {
-        console.error("Failed to fetch interested candidates:", err);
-      } finally {
-        setLoadingInterested(false);
       }
-    };
 
+      setInterestedPeople(interestedList);
+    } catch (err) {
+      console.error("Failed to fetch interested candidates:", err);
+    } finally {
+      setLoadingInterested(false);
+    }
+  }, [profile, keycloak]);
+
+  useEffect(() => {
     if (profile) {
       fetchInterestedPeople();
     }
-  }, [profile]);
+
+    const handleInterestUpdate = () => {
+      fetchInterestedPeople();
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("interestUpdated", handleInterestUpdate);
+      window.addEventListener("focus", handleInterestUpdate);
+      window.addEventListener("storage", handleInterestUpdate);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("interestUpdated", handleInterestUpdate);
+        window.removeEventListener("focus", handleInterestUpdate);
+        window.removeEventListener("storage", handleInterestUpdate);
+      }
+    };
+  }, [profile, fetchInterestedPeople]);
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
@@ -1125,14 +1183,18 @@ export default function ProfilePage() {
   };
 
   // Interaction handlers
-  const handleLike = () => {
-    setIsLiked(!isLiked);
+  const handleLike = async () => {
+    const newState = !isLiked;
+    setIsLiked(newState);
     showToast(
-      isLiked
-        ? "Removed profile from your liked list"
-        : "Added profile to your liked list! ♥",
-      isLiked ? "info" : "success",
+      newState
+        ? "Added profile to your liked list! ♥"
+        : "Removed profile from your liked list",
+      newState ? "success" : "info",
     );
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("interestUpdated"));
+    }
   };
 
   const handleShortlist = () => {
@@ -1145,13 +1207,94 @@ export default function ProfilePage() {
     );
   };
 
-  const handleSendInterest = () => {
-    if (interestSent) return;
-    setInterestSent(true);
+  const handleSendInterest = async (targetPerson?: any) => {
+    const target = targetPerson || profile;
+    const targetId = target?._id || target?.id || target?.customer_id;
+    const newState = !interestSent;
+    setInterestSent(newState);
+
     showToast(
-      "Connection interest sent successfully! Priya will be notified.",
-      "success",
+      newState
+        ? "Connection interest sent successfully!"
+        : "Connection interest removed.",
+      newState ? "success" : "info",
     );
+
+    if (targetId) {
+      const allCustomerIds = Array.from(
+        new Set(
+          [
+            target?._id,
+            target?.id,
+            target?.customer_id,
+            target?.keycloakId,
+          ]
+            .map(String)
+            .filter(Boolean),
+        ),
+      );
+
+      if (!newState) {
+        setInterestedPeople((prev) =>
+          prev.filter((person: any) => {
+            const pIds = [person._id, person.id, person.customer_id, person.keycloakId]
+              .map(String)
+              .filter(Boolean);
+            return !allCustomerIds.some((id) => pIds.includes(id));
+          }),
+        );
+      }
+
+      if (typeof window !== "undefined") {
+        try {
+          const stored = JSON.parse(
+            localStorage.getItem("interested_profile_ids") || "[]",
+          );
+          let updated = Array.isArray(stored) ? [...stored] : [];
+          if (newState) {
+            allCustomerIds.forEach((id) => {
+              if (!updated.includes(id)) updated.push(id);
+            });
+          } else {
+            updated = updated.filter((id) => !allCustomerIds.includes(id));
+          }
+          localStorage.setItem("interested_profile_ids", JSON.stringify(updated));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      try {
+        const apiUrl = configUrls?.apiUrl || "";
+        const token =
+          typeof window !== "undefined"
+            ? sessionStorage.getItem("token") || localStorage.getItem("token")
+            : null;
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        await fetch(`${apiUrl}/api/send_interest`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            customer_id: targetId,
+            target_customer_id: targetId,
+            user_customer_id: profile?.customer_id || profile?._id,
+            isInterested: newState,
+            interestSent: newState,
+            interest_sent: newState,
+          }),
+        }).catch(() => null);
+      } catch (err) {
+        console.error("Failed to send interest from Profile page:", err);
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("interestUpdated"));
+    }
   };
 
   const handleSendMessage = () => {
