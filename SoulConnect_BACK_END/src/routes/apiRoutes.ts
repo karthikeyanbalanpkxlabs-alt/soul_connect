@@ -10,6 +10,8 @@ import {
   handleCustomerEdit,
   handleCustomerDelete,
   handleCustomerCreate,
+  handleSendInterest,
+  handleGetInterestedList,
 } from "../controllers/customerController";
 import {
   handleSubscriptionCreate,
@@ -69,6 +71,9 @@ router.get("/profile_detail/:id", keycloak.protect(), handleProfileDetailGet);
 router.post("/customer_edit", keycloak.protect(), handleCustomerEdit);
 router.post("/customer_delete", keycloak.protect(), handleCustomerDelete);
 router.post("/customer_create", keycloak.protect(), handleCustomerCreate);
+router.post("/send_interest", keycloak.protect(), handleSendInterest);
+router.post("/interested_list", keycloak.protect(), handleGetInterestedList);
+router.get("/interested_list", keycloak.protect(), handleGetInterestedList);
 router.get("/subscription", keycloak.protect(), handleSubscriptionGet);
 router.get("/subscriptions", keycloak.protect(), handleSubscriptionGet);
 router.post(
@@ -153,6 +158,9 @@ router.get("/public/profile_detail/:id", handleProfileDetailGet);
 router.post("/public/customer_edit", handleCustomerEdit);
 router.post("/public/customer_delete", handleCustomerDelete);
 router.post("/public/customer_create", handleCustomerCreate);
+router.post("/public/send_interest", handleSendInterest);
+router.post("/public/interested_list", handleGetInterestedList);
+router.get("/public/interested_list", handleGetInterestedList);
 router.get("/public/subscription", handleSubscriptionGet);
 router.get("/public/subscriptions", handleSubscriptionGet);
 router.post("/public/subscription/create", handleSubscriptionCreate);

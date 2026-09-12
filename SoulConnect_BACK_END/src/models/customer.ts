@@ -18,6 +18,8 @@ const customerSchema = new mongoose.Schema(
     familyBackground: mongoose.Schema.Types.Mixed,
     lifeStyle: mongoose.Schema.Types.Mixed,
     partnerPreferencesDetails: mongoose.Schema.Types.Mixed,
+    interestProfiles: [String],
+    interestedBy: [String],
     blood_group: String,
     additional_report_info: String,
     public_verify_command_helper: String,

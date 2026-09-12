@@ -495,20 +495,6 @@ export default function ProfilePage() {
   const interestedPerPage = 6;
 
   useEffect(() => {
-    const profileInterested =
-      profile?.interested_people ||
-      profile?.interested_profiles ||
-      profile?.interests_received ||
-      profile?.interested_by ||
-      profile?.interest_list ||
-      profile?.expressed_interests ||
-      profile?.connection_requests;
-
-    if (Array.isArray(profileInterested) && profileInterested.length > 0) {
-      setInterestedPeople(profileInterested);
-      return;
-    }
-
     const fetchInterestedPeople = async () => {
       setLoadingInterested(true);
       try {
@@ -520,50 +506,96 @@ export default function ProfilePage() {
           headers["Authorization"] = `Bearer ${keycloak.token}`;
         }
 
-        const res = await fetch(`${apiUrl}/api/customer_list`, {
+        let localInterestedIds: string[] = [];
+        if (typeof window !== "undefined") {
+          try {
+            localInterestedIds = JSON.parse(
+              localStorage.getItem("interested_profile_ids") || "[]"
+            );
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        const payload = {
+          keycloakId: profile?.keycloakId,
+          email: profile?.email,
+          customer_id: profile?.customer_id || profile?._id,
+          id: profile?._id || profile?.id,
+          localInterestedIds,
+        };
+
+        const res = await fetch(`${apiUrl}/api/interested_list`, {
           method: "POST",
           headers,
-          body: JSON.stringify({
-            skip: 0,
-            limit: 10,
-            filters: {},
-          }),
-        });
+          body: JSON.stringify(payload),
+        }).catch(() => null);
 
-        if (res.ok) {
-          const result = await res.json();
-          const list: any[] = result?.data || (Array.isArray(result) ? result : []);
-
-          const currentUserGender = (profile?.gender || "").toLowerCase();
-          const targetGender =
-            currentUserGender === "male" || currentUserGender === "maile"
-              ? "female"
-              : currentUserGender === "female"
-              ? "male"
-              : "";
-
-          const filtered = list.filter((itm: any) => {
-            const isSelf =
-              (itm.keycloakId && itm.keycloakId === profile?.keycloakId) ||
-              (itm._id && itm._id === profile?._id) ||
-              (itm.email && itm.email === profile?.email);
-            if (isSelf) return false;
-
-            if (targetGender && itm.gender) {
-              const g = String(itm.gender).toLowerCase();
-              if (targetGender === "female" && g !== "female") return false;
-              if (targetGender === "male" && g !== "male" && g !== "maile")
-                return false;
+        let interestedList: any[] = [];
+        if (res && res.ok) {
+          const data = await res.json();
+          const received = data.receivedInterests || [];
+          const sent = data.sentInterests || [];
+          const combined = [...received, ...sent];
+          const seen = new Set();
+          interestedList = combined.filter((itm: any) => {
+            const pid = itm._id || itm.id || itm.customer_id;
+            if (!pid || seen.has(pid)) return false;
+            if (
+              itm.email === profile?.email ||
+              (itm.keycloakId && itm.keycloakId === profile?.keycloakId)
+            ) {
+              return false;
             }
+            seen.add(pid);
             return true;
           });
-
-          setInterestedPeople(
-            filtered.length > 0
-              ? filtered
-              : list.filter((itm: any) => itm.email !== profile?.email)
-          );
         }
+
+        if (interestedList.length === 0) {
+          const pubRes = await fetch(`${apiUrl}/api/public/interested_list`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }).catch(() => null);
+
+          if (pubRes && pubRes.ok) {
+            const pubData = await pubRes.json();
+            const received = pubData.receivedInterests || [];
+            const sent = pubData.sentInterests || [];
+            const combined = [...received, ...sent];
+            const seen = new Set();
+            interestedList = combined.filter((itm: any) => {
+              const pid = itm._id || itm.id || itm.customer_id;
+              if (!pid || seen.has(pid)) return false;
+              if (
+                itm.email === profile?.email ||
+                (itm.keycloakId && itm.keycloakId === profile?.keycloakId)
+              ) {
+                return false;
+              }
+              seen.add(pid);
+              return true;
+            });
+          }
+        }
+
+        if (interestedList.length === 0) {
+          const profileInterested =
+            profile?.interested_people ||
+            profile?.interested_profiles ||
+            profile?.interests_received ||
+            profile?.interested_by ||
+            profile?.interest_list ||
+            profile?.expressed_interests ||
+            profile?.connection_requests;
+
+          if (Array.isArray(profileInterested) && profileInterested.length > 0) {
+            interestedList = profileInterested;
+          }
+        }
+
+        setInterestedPeople(interestedList);
       } catch (err) {
         console.error("Failed to fetch interested candidates:", err);
       } finally {

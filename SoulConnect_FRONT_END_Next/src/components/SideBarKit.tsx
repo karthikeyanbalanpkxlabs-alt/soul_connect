@@ -14,6 +14,7 @@ import {
   ReceiptText,
   CircleDollarSign,
   CreditCard,
+  Heart,
 } from "lucide-react";
 
 import keycloak from "../lib/keycloak";
@@ -57,6 +58,11 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       name: "Customer",
       icon: Users,
       router: "/portal/customer",
+    },
+    {
+      name: "Interested Profiles",
+      icon: Heart,
+      router: "/portal/interested",
     },
     {
       name: "Transactions",

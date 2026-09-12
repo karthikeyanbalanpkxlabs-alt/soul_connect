@@ -1881,3 +1881,209 @@ export async function handleCustomerCreate(req: Request, res: Response) {
     res.status(500).json({ error: err.message || "Failed to create customer" });
   }
 }
+
+export async function handleSendInterest(req: Request, res: Response) {
+  try {
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const loggedInKeycloakId =
+      tokenContent?.sub || req.body.loggedInKeycloakId || req.body.keycloakId;
+    const loggedInEmail =
+      tokenContent?.email || req.body.loggedInEmail || req.body.email;
+    const user_customer_id = req.body.user_customer_id;
+    const user_id = req.body.user_id || req.body._id;
+
+    let userQuery: any = null;
+    if (loggedInKeycloakId) {
+      userQuery = { keycloakId: loggedInKeycloakId };
+    } else if (loggedInEmail) {
+      userQuery = { email: loggedInEmail };
+    } else if (user_customer_id) {
+      userQuery = { customer_id: user_customer_id };
+    } else if (user_id) {
+      userQuery = { _id: user_id };
+    } else if (req.body.customer_id) {
+      userQuery = { customer_id: req.body.customer_id };
+    }
+
+    const targetCustomerId =
+      req.body.target_customer_id ||
+      req.body.target_id ||
+      req.body.profile_id ||
+      req.body.target_customer;
+
+    if (!targetCustomerId) {
+      return res.status(400).json({ error: "Missing target customer ID" });
+    }
+
+    const targetIdStr = String(targetCustomerId);
+    const isInterested =
+      req.body.isInterested !== false && req.body.interestSent !== false;
+
+    let customer = null;
+    let loggedInIdStr = "";
+
+    if (userQuery) {
+      customer = await Customers.findOne(userQuery);
+      if (customer) {
+        loggedInIdStr = String(
+          customer._id ||
+            customer.get("customer_id") ||
+            customer.get("keycloakId") ||
+            customer.get("email"),
+        );
+
+        const updateOp = isInterested
+          ? { $addToSet: { interestProfiles: targetIdStr } }
+          : { $pull: { interestProfiles: targetIdStr } };
+
+        customer = await Customers.findOneAndUpdate(userQuery, updateOp, {
+          new: true,
+        });
+      }
+    }
+
+    // Also update target customer document to add/remove loggedInIdStr from their interestedBy array
+    if (loggedInIdStr || loggedInEmail || loggedInKeycloakId) {
+      const actorId = loggedInIdStr || loggedInEmail || loggedInKeycloakId;
+      let targetQuery: any = null;
+      if (mongoose.Types.ObjectId.isValid(targetIdStr)) {
+        targetQuery = { $or: [{ _id: targetIdStr }, { customer_id: targetIdStr }] };
+      } else {
+        targetQuery = { customer_id: targetIdStr };
+      }
+
+      const targetUpdateOp = isInterested
+        ? {
+            $addToSet: { interestedBy: actorId },
+            $set: { interestSent: isInterested, interest_sent: isInterested, isInterested: isInterested },
+          }
+        : {
+            $pull: { interestedBy: actorId },
+            $set: { interestSent: isInterested, interest_sent: isInterested, isInterested: isInterested },
+          };
+
+      await Customers.updateOne(targetQuery, targetUpdateOp).catch(() => null);
+    }
+
+    res.json({
+      success: true,
+      message: isInterested
+        ? "Interest sent (Liked) successfully"
+        : "Interest removed (Unliked) successfully",
+      isInterested,
+      interestProfiles: customer?.get("interestProfiles") || [],
+      interestedBy: customer?.get("interestedBy") || [],
+      customer,
+    });
+  } catch (err: any) {
+    console.error("send_interest error:", err);
+    res.status(500).json({ error: err.message || "Failed to send interest" });
+  }
+}
+
+export async function handleGetInterestedList(req: Request, res: Response) {
+  try {
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const keycloakId = tokenContent?.sub || req.query.keycloakId || req.body.keycloakId;
+    const email = tokenContent?.email || req.query.email || req.body.email;
+    const customer_id = (req.query.customer_id || req.body.customer_id) as string;
+    const id = (req.query.id || req.body.id || req.body._id) as string;
+    const localInterestedIds: string[] = req.body.localInterestedIds || [];
+
+    const searchOr: any[] = [];
+    if (keycloakId) searchOr.push({ keycloakId });
+    if (email) searchOr.push({ email });
+    if (customer_id) searchOr.push({ customer_id });
+    if (id && mongoose.Types.ObjectId.isValid(id)) searchOr.push({ _id: id });
+    if (id) searchOr.push({ customer_id: id });
+
+    let currentCustomer = null;
+    if (searchOr.length > 0) {
+      currentCustomer = await Customers.findOne({ $or: searchOr });
+    }
+
+    const interestProfiles: string[] = currentCustomer
+      ? currentCustomer.get("interestProfiles") || []
+      : [];
+    const interestedList: string[] = currentCustomer
+      ? currentCustomer.get("interestedList") || []
+      : [];
+    const interestedBy: string[] = currentCustomer
+      ? currentCustomer.get("interestedBy") || []
+      : [];
+
+    const sentIds = Array.from(
+      new Set([...interestProfiles, ...interestedList, ...localInterestedIds]),
+    ).filter(Boolean);
+
+    // Query sent interests (profiles that the current user liked)
+    let sentInterests: any[] = [];
+    if (sentIds.length > 0) {
+      const validObjectIds = sentIds.filter((i) => mongoose.Types.ObjectId.isValid(i));
+      sentInterests = await Customers.find({
+        $or: [
+          { _id: { $in: validObjectIds } },
+          { customer_id: { $in: sentIds } },
+          { keycloakId: { $in: sentIds } },
+          { email: { $in: sentIds } },
+        ],
+      });
+    }
+
+    if (sentInterests.length === 0) {
+      sentInterests = await Customers.find({
+        $or: [
+          { interestSent: true },
+          { isInterested: true },
+          { interest_sent: true },
+        ],
+      }).limit(50);
+    }
+
+    // Query received interests (profiles that liked the current user)
+    const userIdentifiers = currentCustomer
+      ? [
+          String(currentCustomer._id),
+          currentCustomer.get("customer_id"),
+          currentCustomer.get("keycloakId"),
+          currentCustomer.get("email"),
+        ].filter(Boolean)
+      : [keycloakId, email, customer_id, id].filter(Boolean);
+
+    let receivedInterests: any[] = [];
+    if (userIdentifiers.length > 0 || interestedBy.length > 0) {
+      const validReceivedObjectIds = interestedBy.filter((i) =>
+        mongoose.Types.ObjectId.isValid(i),
+      );
+
+      const recOr: any[] = [];
+      if (validReceivedObjectIds.length > 0) recOr.push({ _id: { $in: validReceivedObjectIds } });
+      if (interestedBy.length > 0) {
+        recOr.push({ customer_id: { $in: interestedBy } });
+        recOr.push({ keycloakId: { $in: interestedBy } });
+        recOr.push({ email: { $in: interestedBy } });
+      }
+      if (userIdentifiers.length > 0) {
+        recOr.push({ interestProfiles: { $in: userIdentifiers } });
+        recOr.push({ interestedList: { $in: userIdentifiers } });
+        recOr.push({ interestedBy: { $in: userIdentifiers } });
+      }
+
+      if (recOr.length > 0) {
+        receivedInterests = await Customers.find({ $or: recOr });
+      }
+    }
+
+    res.json({
+      success: true,
+      interestProfiles: sentIds,
+      interestedBy,
+      sentInterests,
+      receivedInterests,
+    });
+  } catch (err: any) {
+    console.error("interested_list error:", err);
+    res.status(500).json({ error: err.message || "Failed to fetch interested list" });
+  }
+}
+
