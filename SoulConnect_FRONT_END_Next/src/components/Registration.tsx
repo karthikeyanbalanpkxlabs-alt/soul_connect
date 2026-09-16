@@ -1028,7 +1028,20 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           onBlur={formik.handleBlur}
                         />
                       </div>
-                      {!mobileVerified && (
+                      {mobileVerified ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileVerified(false);
+                            setMobileOtpSent(false);
+                            setMobileOtpInput("");
+                            showToast("Mobile number unlocked for editing.", "info");
+                          }}
+                          className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors shadow-sm z-10 cursor-pointer flex items-center gap-1"
+                        >
+                          ✎ Edit
+                        </button>
+                      ) : (
                         <button
                           type="button"
                           disabled={formik.values.mobile.length !== 10 || mobileOtpSending}
@@ -1127,7 +1140,20 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           onBlur={formik.handleBlur}
                         />
                       </div>
-                      {!emailVerified && (
+                      {emailVerified ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmailVerified(false);
+                            setEmailOtpSent(false);
+                            setEmailOtpInput("");
+                            showToast("Email address unlocked for editing.", "info");
+                          }}
+                          className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors shadow-sm z-10 cursor-pointer flex items-center gap-1"
+                        >
+                          ✎ Edit
+                        </button>
+                      ) : (
                         <button
                           type="button"
                           disabled={!formik.values.email || !/\S+@\S+\.\S+/.test(formik.values.email) || emailOtpSending}
