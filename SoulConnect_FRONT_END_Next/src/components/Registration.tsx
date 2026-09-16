@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { districts } from "@/data/districts";
 import {
   Send,
@@ -25,12 +27,8 @@ import {
   Trash2
 } from "lucide-react";
 import { onSaveCustomer, onSendOtpApi, onVerifyOtpApi } from './api'
-import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../configUrls";
 import keycloak from "@/lib/keycloak";
-const generateId = () => {
-  return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
-};
 
 interface RegistrationProps {
   selectedDistrict: string;
@@ -44,6 +42,50 @@ interface ChatMessage {
   text: string;
   timestamp: string;
 }
+
+// Yup Validation Schema for Step 1 Manual Registration
+const registrationValidationSchema = Yup.object().shape({
+  registerFor: Yup.string().required("Please select who you are registering for"),
+  firstName: Yup.string()
+    .trim()
+    .required("First name is required")
+    .min(2, "First name must be at least 2 characters"),
+  lastName: Yup.string()
+    .trim()
+    .required("Last name is required"),
+  dob: Yup.string()
+    .required("Date of birth is required")
+    .test("age-check", "Must be at least 18 years old", (value) => {
+      if (!value) return false;
+      const birthDate = new Date(value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= 18;
+    }),
+  gender: Yup.string().required("Please select gender"),
+  mobile: Yup.string()
+    .required("Mobile number is required")
+    .matches(/^[0-9]{10}$/, "Mobile number must be exactly 10 digits"),
+  email: Yup.string()
+    .required("Email address is required")
+    .email("Please enter a valid email address"),
+  district: Yup.string().required("Please select a district"),
+  taluk: Yup.string(),
+  religion: Yup.string(),
+  caste: Yup.string(),
+  motherTongue: Yup.string().required("Mother tongue is required"),
+  maritalStatus: Yup.string().required("Marital status is required"),
+  education: Yup.string(),
+  profession: Yup.string(),
+  income: Yup.string(),
+  height: Yup.string(),
+  aboutMe: Yup.string(),
+  preferences: Yup.string(),
+});
 
 export default function Registration({
   selectedDistrict,
@@ -72,7 +114,6 @@ export default function Registration({
     })
       .then((r) => r.json())
       .then((data) => {
-        console.log("subscription data response:", data);
         const list = Array.isArray(data) ? data : data?.data || [];
         setSubscriptions(list);
       })
@@ -85,15 +126,6 @@ export default function Registration({
 
   // Tab State for Step 1
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
-  
-  // Manual Form States
-  const [registerFor, setRegisterFor] = useState("For myself");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [email, setEmail] = useState("");
 
   // Mobile OTP state
   const [mobileVerified, setMobileVerified] = useState(false);
@@ -111,6 +143,57 @@ export default function Registration({
   const [generatedEmailOtp, setGeneratedEmailOtp] = useState("");
   const [emailTimer, setEmailTimer] = useState(0);
 
+  const [heightUnit, setHeightUnit] = useState<"ft" | "cm">("ft");
+
+  // Formik Hook integration
+  const formik = useFormik({
+    initialValues: {
+      registerFor: "For myself",
+      firstName: "",
+      lastName: "",
+      dob: "",
+      gender: "",
+      mobile: "",
+      email: "",
+      district: selectedDistrict || "",
+      taluk: "",
+      religion: "",
+      caste: "",
+      motherTongue: "Tamil",
+      maritalStatus: "Never Married",
+      education: "",
+      profession: "",
+      income: "Prefer not to say",
+      height: "",
+      aboutMe: "",
+      preferences: "",
+    },
+    validationSchema: registrationValidationSchema,
+    onSubmit: () => {
+      if (!mobileVerified) {
+        showToast("Please verify your Mobile Number using OTP before proceeding.", "error");
+        return;
+      }
+      if (!emailVerified) {
+        showToast("Please verify your Email Address using OTP before proceeding.", "error");
+        return;
+      }
+      setRegStep(2);
+      showToast("Profile drafted successfully! Please choose a plan, upload photos, and verify your ID.", "success");
+      const regSection = document.getElementById("register");
+      if (regSection) {
+        regSection.scrollIntoView({ behavior: "smooth" });
+      }
+    },
+  });
+
+  // Sync selected district from Districts component
+  useEffect(() => {
+    if (selectedDistrict) {
+      formik.setFieldValue("district", selectedDistrict);
+    }
+  }, [selectedDistrict]);
+
   // Mobile Timer effect
   useEffect(() => {
     if (mobileTimer <= 0) return;
@@ -126,7 +209,8 @@ export default function Registration({
   }, [emailTimer]);
 
   const handleSendMobileOtp = async () => {
-    if (mobile.length !== 10) {
+    const mobileVal = formik.values.mobile;
+    if (mobileVal.length !== 10) {
       showToast("Please enter a valid 10-digit mobile number.", "error");
       return;
     }
@@ -135,24 +219,24 @@ export default function Registration({
     setGeneratedMobileOtp(fallbackCode);
 
     try {
-      if (email) {
+      if (formik.values.email) {
         const resp = await onSendOtpApi({
-          email,
+          email: formik.values.email,
           type: "phone",
-          phone_number: mobile,
+          phone_number: mobileVal,
           phone_code: "+91",
         });
         if (resp && resp.success) {
           if (resp.otp) setGeneratedMobileOtp(resp.otp);
-          showToast(`OTP sent to +91 ${mobile}!`, "info");
+          showToast(`OTP sent to +91 ${mobileVal}!`, "info");
         } else {
-          showToast(`OTP sent to +91 ${mobile}! Your code is: ${fallbackCode}`, "info");
+          showToast(`OTP sent to +91 ${mobileVal}! Your code is: ${fallbackCode}`, "info");
         }
       } else {
-        showToast(`OTP sent to +91 ${mobile}! Your code is: ${fallbackCode}`, "info");
+        showToast(`OTP sent to +91 ${mobileVal}! Your code is: ${fallbackCode}`, "info");
       }
     } catch {
-      showToast(`OTP sent to +91 ${mobile}! Your code is: ${fallbackCode}`, "info");
+      showToast(`OTP sent to +91 ${mobileVal}! Your code is: ${fallbackCode}`, "info");
     } finally {
       setMobileOtpSent(true);
       setMobileOtpSending(false);
@@ -161,9 +245,10 @@ export default function Registration({
   };
 
   const handleVerifyMobileOtp = async () => {
-    if (email) {
+    const emailVal = formik.values.email;
+    if (emailVal) {
       try {
-        const resp = await onVerifyOtpApi({ email, type: "phone", otp: mobileOtpInput });
+        const resp = await onVerifyOtpApi({ email: emailVal, type: "phone", otp: mobileOtpInput });
         if (resp && resp.success) {
           setMobileVerified(true);
           showToast("Mobile number verified successfully!", "success");
@@ -182,7 +267,8 @@ export default function Registration({
   };
 
   const handleSendEmailOtp = async () => {
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    const emailVal = formik.values.email;
+    if (!emailVal || !/\S+@\S+\.\S+/.test(emailVal)) {
       showToast("Please enter a valid email address.", "error");
       return;
     }
@@ -191,21 +277,21 @@ export default function Registration({
     setGeneratedEmailOtp(fallbackCode);
 
     try {
-      const resp = await onSendOtpApi({ email, type: "email" });
+      const resp = await onSendOtpApi({ email: emailVal, type: "email" });
       const sentCode = resp?.otp || fallbackCode;
       setGeneratedEmailOtp(sentCode);
 
       if (resp && resp.success) {
         if (resp.email_sent) {
-          showToast(`OTP sent to ${email}! Check your inbox (Code: ${sentCode}).`, "info");
+          showToast(`OTP sent to ${emailVal}! Check your inbox (Code: ${sentCode}).`, "info");
         } else {
-          showToast(`OTP generated for ${email}! Your code is: ${sentCode}`, "info");
+          showToast(`OTP generated for ${emailVal}! Your code is: ${sentCode}`, "info");
         }
       } else {
-        showToast(`OTP sent to ${email}! Your code is: ${fallbackCode}`, "info");
+        showToast(`OTP sent to ${emailVal}! Your code is: ${fallbackCode}`, "info");
       }
     } catch {
-      showToast(`OTP sent to ${email}! Your code is: ${fallbackCode}`, "info");
+      showToast(`OTP sent to ${emailVal}! Your code is: ${fallbackCode}`, "info");
     } finally {
       setEmailOtpSent(true);
       setEmailOtpSending(false);
@@ -214,9 +300,10 @@ export default function Registration({
   };
 
   const handleVerifyEmailOtp = async () => {
-    if (email) {
+    const emailVal = formik.values.email;
+    if (emailVal) {
       try {
-        const resp = await onVerifyOtpApi({ email, type: "email", otp: emailOtpInput });
+        const resp = await onVerifyOtpApi({ email: emailVal, type: "email", otp: emailOtpInput });
         if (resp && resp.success) {
           setEmailVerified(true);
           showToast("Email address verified successfully!", "success");
@@ -233,24 +320,11 @@ export default function Registration({
       showToast("Invalid Email OTP. Please check the code sent.", "error");
     }
   };
-  const [district, setDistrict] = useState("");
-  const [taluk, setTaluk] = useState("");
-  const [religion, setReligion] = useState("");
-  const [caste, setCaste] = useState("");
-  const [motherTongue, setMotherTongue] = useState("Tamil");
-  const [maritalStatus, setMaritalStatus] = useState("Never Married");
-  const [education, setEducation] = useState("");
-  const [profession, setProfession] = useState("");
-  const [income, setIncome] = useState("Prefer not to say");
-  const [heightUnit, setHeightUnit] = useState<"ft" | "cm">("ft");
-  const [height, setHeight] = useState("");
-  const [aboutMe, setAboutMe] = useState("");
-  const [preferences, setPreferences] = useState("");
 
   // Step 2 Selection States
   const [selectedPlan, setSelectedPlan] = useState("Premium Match");
   const [docType, setDocType] = useState("Aadhaar Card");
-  
+
   // File Upload State
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [identityProof, setIdentityProof] = useState<any>("");
@@ -348,13 +422,6 @@ export default function Registration({
   const [faceMatchStatus, setFaceMatchStatus] = useState<"pending" | "scanning" | "matched">("pending");
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [scanningProgress, setScanningProgress] = useState(0);
-
-  // Sync selected district from Districts component
-  useEffect(() => {
-    if (selectedDistrict) {
-      setDistrict(selectedDistrict);
-    }
-  }, [selectedDistrict]);
 
   // AI Assistant States
   const [chatInput, setChatInput] = useState("");
@@ -519,41 +586,12 @@ export default function Registration({
         })
       : staticMembershipPlans;
 
-  // First step manual form validation and submit
-  const handleManualSubmit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!firstName || !lastName || !dob || !gender || !mobile || !email || !district) {
-      showToast("Please fill in all required fields (Name, DOB, Gender, Mobile, Email, District)", "error");
-      return;
-    }
-    if (mobile.length !== 10) {
-      showToast("Please enter a valid 10-digit mobile number", "error");
-      return;
-    }
-    if (!mobileVerified) {
-      showToast("Please verify your Mobile Number using OTP before proceeding.", "error");
-      return;
-    }
-    if (!emailVerified) {
-      showToast("Please verify your Email Address using OTP before proceeding.", "error");
-      return;
-    }
-    // Transition to Step 2
-    setRegStep(2);
-    showToast("Profile drafted successfully! Please choose a plan, upload photos, and verify your ID.", "success");
-    // Scroll to section top
-    const regSection = document.getElementById("register");
-    if (regSection) {
-      regSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   const generateId = () => {
     return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
   };
 
   // Final step submit
-  const handleFinalSubmit = async(e: React.MouseEvent) => {
+  const handleFinalSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (images.length === 0) {
       showToast("Please upload at least 1 profile image.", "error");
@@ -568,42 +606,63 @@ export default function Registration({
       return;
     }
     const selectedPlanData = membershipPlans.find(p => p.name === selectedPlan);
-    
-    // Process registration success callback
-    onRegisterSuccess();
+
+    const handleRegistrationError = (errMsg: string) => {
+      const lowerMsg = errMsg.toLowerCase();
+      if (lowerMsg.includes("phone") || lowerMsg.includes("mobile")) {
+        formik.setFieldError("mobile", errMsg);
+        setMobileVerified(false);
+        setMobileOtpSent(false);
+        setRegStep(1);
+        setTimeout(() => {
+          const regSection = document.getElementById("register");
+          if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      } else if (lowerMsg.includes("email")) {
+        formik.setFieldError("email", errMsg);
+        setEmailVerified(false);
+        setEmailOtpSent(false);
+        setRegStep(1);
+        setTimeout(() => {
+          const regSection = document.getElementById("register");
+          if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    };
 
     let dataGenerateId = generateId();
+    const values = formik.values;
     const createFixture = {
       customer_id: "cid_" + dataGenerateId,
-      profile_created_for: registerFor,
-      whoiam_register: registerFor,
-      first_name: firstName,
-      last_name: lastName,
-      email: email,
+      profile_created_for: values.registerFor,
+      whoiam_register: values.registerFor,
+      first_name: values.firstName,
+      last_name: values.lastName,
+      email: values.email,
       role: "customer_g",
-      dob: dob,
-      gender: gender,
-      phone_number: mobile,
+      dob: values.dob,
+      gender: values.gender,
+      phone_number: values.mobile,
       phone_code: "+91",
       email_verified: emailVerified,
       phone_verified: mobileVerified,
       mobile_verified: mobileVerified,
       is_email_verified: emailVerified,
       is_phone_verified: mobileVerified,
-      district: district,
-      taluk_town: taluk,
+      district: values.district,
+      taluk_town: values.taluk,
       state: "tamilnadu",
       zipcode: "641035",
-      religion: religion,
-      caste: caste,
-      mother_tongue: motherTongue,
-      maritial_status: maritalStatus,
-      education: education,
-      profession: profession,
-      annual_income: income,
-      height: height,
-      about_self: aboutMe,
-      partner_preference: preferences,
+      religion: values.religion,
+      caste: values.caste,
+      mother_tongue: values.motherTongue,
+      maritial_status: values.maritalStatus,
+      education: values.education,
+      profession: values.profession,
+      annual_income: values.income,
+      height: values.height,
+      about_self: values.aboutMe,
+      partner_preference: values.preferences,
       subscription_type: selectedPlanData?.id,
       subscription_view_access: 4,
       image: images,
@@ -617,20 +676,20 @@ export default function Registration({
 
     try {
       const customerResp = await onSaveCustomer(createFixture);
-      console.log("customerResp--------->", customerResp);
 
       if (!customerResp || customerResp.error) {
-        showToast(customerResp?.error || customerResp?.message || "Failed to save customer data.", "error");
+        const errMsg = customerResp?.error || customerResp?.message || "Failed to save customer data.";
+        showToast(errMsg, "error");
+        handleRegistrationError(errMsg);
         return;
       }
 
+      // Process registration success callback on success
+      onRegisterSuccess();
+
       // Trigger membership payment checkout modal if a paid plan is selected
       if (selectedPlanData && selectedPlanData.price !== "₹0") {
-        console.log("selectedPlanData", selectedPlanData);
         showToast(`Registration completed successfully on the ${selectedPlanData?.id} tier! Redirecting to login...`, "success");
-         /**
-         * @Payment_Related_POPUP
-         */
         onOpenPayment(
           selectedPlanData.name,
           selectedPlanData.price,
@@ -646,7 +705,9 @@ export default function Registration({
       }
     } catch (error: any) {
       console.error("Registration error:", error);
-      showToast(error?.message || "Failed to create customer profile. Please try again.", "error");
+      const errMsg = error?.message || "Failed to create customer profile. Please try again.";
+      showToast(errMsg, "error");
+      handleRegistrationError(errMsg);
     }
   };
 
@@ -658,7 +719,7 @@ export default function Registration({
       ...chatMessages,
       { sender: "user", text: textToSend, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
     ] as ChatMessage[];
-    
+
     setChatMessages(newMsgs);
     setChatInput("");
     setParsing(true);
@@ -697,16 +758,19 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
 
   const applyAiProfile = () => {
     if (!parsedData) return;
-    setFirstName(parsedData.name);
-    setLastName("S");
-    setGender(parsedData.name === "Meera" ? "Female" : "Male");
-    setDistrict(parsedData.location);
-    setProfession(parsedData.profession);
-    setEducation(parsedData.education);
-    setDob("1998-05-15");
-    setMobile("9988776655");
-    setEmail(`${parsedData.name.toLowerCase()}@email.com`);
-    
+    formik.setValues({
+      ...formik.values,
+      firstName: parsedData.name,
+      lastName: "S",
+      gender: parsedData.name === "Meera" ? "Female" : "Male",
+      district: parsedData.location,
+      profession: parsedData.profession,
+      education: parsedData.education,
+      dob: "1998-05-15",
+      mobile: "9988776655",
+      email: `${parsedData.name.toLowerCase()}@email.com`,
+    });
+
     showToast("Parsed profile details copied to Manual form!", "success");
     setActiveTab("manual");
   };
@@ -736,7 +800,6 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
   };
 
   const handleFile = (file: File) => {
-    console.log("file------>", file);
     const isAllowed =
       file.type === "application/pdf" ||
       file.type.startsWith("image/") ||
@@ -800,7 +863,6 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       </h2>
       <p className="section-sub">
         {regStep === 1
-          // ? "Choose manual registration for full control, or let our AI assist you for a faster experience."
           ? ""
           : "Secure your match compatibility ratings and access active communication features by finishing setup."}
       </p>
@@ -837,25 +899,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       {/* STEP 1: REGISTRATION TABS & PANEL */}
       {regStep === 1 && (
         <>
-          {/* <div className="reg-tabs-bar">
-            <button
-              className={`reg-tab ${activeTab === "manual" ? "active" : ""}`}
-              onClick={() => setActiveTab("manual")}
-            >
-              ✍️ Manual Registration
-            </button>
-            <button
-              className={`reg-tab ${activeTab === "auto" ? "active" : ""}`}
-              onClick={() => setActiveTab("auto")}
-            >
-              ⚡ AI-Assisted
-            </button>
-          </div> */}
-
           {/* MANUAL PANEL */}
           <div className={`reg-panel ${activeTab === "manual" ? "active" : ""}`}>
             <div className="reg-layout">
-              <div className="reg-form-card">
+              <form onSubmit={formik.handleSubmit} className="reg-form-card">
                 <div className="reg-form-title">Create your profile</div>
                 <div className="reg-form-sub">
                   Fill in your details. Takes about 10 minutes. All fields are private by default.
@@ -874,14 +921,14 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       { id: "son", label: "For my son", icon: "👦", gender: "Male" },
                       { id: "daughter", label: "For my daughter", icon: "👧", gender: "Female" },
                     ].map((opt) => {
-                      const isSelected = registerFor === opt.label;
+                      const isSelected = formik.values.registerFor === opt.label;
                       return (
                         <button
                           key={opt.id}
                           type="button"
                           onClick={() => {
-                            setRegisterFor(opt.label);
-                            if (opt.gender) setGender(opt.gender);
+                            formik.setFieldValue("registerFor", opt.label);
+                            if (opt.gender) formik.setFieldValue("gender", opt.gender);
                           }}
                           className={`flex items-center gap-2 px-5 py-3 rounded-2xl border-2 font-semibold text-sm transition-all shadow-sm ${
                             isSelected
@@ -895,44 +942,80 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       );
                     })}
                   </div>
+                  {formik.touched.registerFor && formik.errors.registerFor && (
+                    <span className="text-xs text-red-500 font-medium mt-1 block">
+                      {formik.errors.registerFor}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>First Name</label>
+                    <label>First Name <span className="text-red-500">*</span></label>
                     <input
                       type="text"
+                      name="firstName"
                       placeholder="Enter first name"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+                      value={formik.values.firstName}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     />
+                    {formik.touched.firstName && formik.errors.firstName && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.firstName}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>Last Name</label>
+                    <label>Last Name <span className="text-red-500">*</span></label>
                     <input
                       type="text"
+                      name="lastName"
                       placeholder="Enter last name"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
+                      value={formik.values.lastName}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     />
+                    {formik.touched.lastName && formik.errors.lastName && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.lastName}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Date of Birth</label>
+                    <label>Date of Birth <span className="text-red-500">*</span></label>
                     <input
                       type="date"
-                      value={dob}
-                      onChange={(e) => setDob(e.target.value)}
+                      name="dob"
+                      value={formik.values.dob}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     />
+                    {formik.touched.dob && formik.errors.dob && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.dob}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>Gender</label>
-                    <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                    <label>Gender <span className="text-red-500">*</span></label>
+                    <select
+                      name="gender"
+                      value={formik.values.gender}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="">Select gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                     </select>
+                    {formik.touched.gender && formik.errors.gender && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.gender}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="form-row">
@@ -957,23 +1040,38 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                         <span className="phone-code-prefix">🇮🇳 +91</span>
                         <input
                           type="tel"
+                          name="mobile"
                           placeholder="9876543210"
-                          value={mobile}
+                          value={formik.values.mobile}
                           maxLength={10}
                           disabled={mobileVerified}
                           className="!pr-24"
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                            setMobile(val);
+                            formik.setFieldValue("mobile", val);
                             if (mobileVerified) setMobileVerified(false);
                             if (mobileOtpSent) setMobileOtpSent(false);
                           }}
+                          onBlur={formik.handleBlur}
                         />
                       </div>
-                      {!mobileVerified && (
+                      {mobileVerified ? (
                         <button
                           type="button"
-                          disabled={mobile.length !== 10 || mobileOtpSending}
+                          onClick={() => {
+                            setMobileVerified(false);
+                            setMobileOtpSent(false);
+                            setMobileOtpInput("");
+                            showToast("Mobile number unlocked for editing.", "info");
+                          }}
+                          className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors shadow-sm z-10 cursor-pointer flex items-center gap-1"
+                        >
+                          ✎ Edit
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={formik.values.mobile.length !== 10 || mobileOtpSending}
                           onClick={handleSendMobileOtp}
                           className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-white bg-rose hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm z-10"
                         >
@@ -985,6 +1083,11 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                         </button>
                       )}
                     </div>
+                    {formik.touched.mobile && formik.errors.mobile && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.mobile}
+                      </span>
+                    )}
 
                     {/* Mobile OTP Inline Verification Card */}
                     {mobileOtpSent && !mobileVerified && (
@@ -1051,21 +1154,36 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       >
                         <input
                           type="email"
+                          name="email"
                           placeholder="name@email.com"
-                          value={email}
+                          value={formik.values.email}
                           disabled={emailVerified}
                           className="!pr-24"
                           onChange={(e) => {
-                            setEmail(e.target.value);
+                            formik.handleChange(e);
                             if (emailVerified) setEmailVerified(false);
                             if (emailOtpSent) setEmailOtpSent(false);
                           }}
+                          onBlur={formik.handleBlur}
                         />
                       </div>
-                      {!emailVerified && (
+                      {emailVerified ? (
                         <button
                           type="button"
-                          disabled={!email || !/\S+@\S+\.\S+/.test(email) || emailOtpSending}
+                          onClick={() => {
+                            setEmailVerified(false);
+                            setEmailOtpSent(false);
+                            setEmailOtpInput("");
+                            showToast("Email address unlocked for editing.", "info");
+                          }}
+                          className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors shadow-sm z-10 cursor-pointer flex items-center gap-1"
+                        >
+                          ✎ Edit
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={!formik.values.email || !/\S+@\S+\.\S+/.test(formik.values.email) || emailOtpSending}
                           onClick={handleSendEmailOtp}
                           className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-white bg-rose hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm z-10"
                         >
@@ -1077,6 +1195,11 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                         </button>
                       )}
                     </div>
+                    {formik.touched.email && formik.errors.email && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.email}
+                      </span>
+                    )}
 
                     {/* Email OTP Inline Verification Card */}
                     {emailOtpSent && !emailVerified && (
@@ -1127,11 +1250,13 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="form-section-label">Location — Tamil Nadu</div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>District (மாவட்டம்)</label>
+                    <label>District (மாவட்டம்) <span className="text-red-500">*</span></label>
                     <select
                       id="districtSelect"
-                      value={district}
-                      onChange={(e) => setDistrict(e.target.value)}
+                      name="district"
+                      value={formik.values.district}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     >
                       <option value="">Select district</option>
                       {districts.map((d) => (
@@ -1140,14 +1265,21 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                         </option>
                       ))}
                     </select>
+                    {formik.touched.district && formik.errors.district && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.district}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>Taluk / Town</label>
                     <input
                       type="text"
+                      name="taluk"
                       placeholder="Enter your taluk or town"
-                      value={taluk}
-                      onChange={(e) => setTaluk(e.target.value)}
+                      value={formik.values.taluk}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     />
                   </div>
                 </div>
@@ -1156,7 +1288,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="form-row">
                   <div className="form-group">
                     <label>Religion</label>
-                    <select value={religion} onChange={(e) => setReligion(e.target.value)}>
+                    <select
+                      name="religion"
+                      value={formik.values.religion}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="">Select religion</option>
                       <option value="Hindu">Hindu</option>
                       <option value="Muslim">Muslim</option>
@@ -1170,16 +1307,23 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     <label>Caste / Community</label>
                     <input
                       type="text"
+                      name="caste"
                       placeholder="Enter community (optional)"
-                      value={caste}
-                      onChange={(e) => setCaste(e.target.value)}
+                      value={formik.values.caste}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                     />
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Mother Tongue</label>
-                    <select value={motherTongue} onChange={(e) => setMotherTongue(e.target.value)}>
+                    <label>Mother Tongue <span className="text-red-500">*</span></label>
+                    <select
+                      name="motherTongue"
+                      value={formik.values.motherTongue}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="Tamil">Tamil</option>
                       <option value="Telugu">Telugu</option>
                       <option value="Kannada">Kannada</option>
@@ -1187,15 +1331,30 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       <option value="Hindi">Hindi</option>
                       <option value="Other">Other</option>
                     </select>
+                    {formik.touched.motherTongue && formik.errors.motherTongue && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.motherTongue}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>Marital Status</label>
-                    <select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)}>
+                    <label>Marital Status <span className="text-red-500">*</span></label>
+                    <select
+                      name="maritalStatus"
+                      value={formik.values.maritalStatus}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="Never Married">Never Married</option>
                       <option value="Divorced">Divorced</option>
                       <option value="Widowed">Widowed</option>
                       <option value="Awaiting Divorce">Awaiting Divorce</option>
                     </select>
+                    {formik.touched.maritalStatus && formik.errors.maritalStatus && (
+                      <span className="text-xs text-red-500 font-medium mt-1 block">
+                        {formik.errors.maritalStatus}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -1203,7 +1362,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="form-row">
                   <div className="form-group">
                     <label>Education</label>
-                    <select value={education} onChange={(e) => setEducation(e.target.value)}>
+                    <select
+                      name="education"
+                      value={formik.values.education}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="">Select highest qualification</option>
                       <option value="10th / SSLC">10th / SSLC</option>
                       <option value="12th / HSC">12th / HSC</option>
@@ -1216,7 +1380,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   </div>
                   <div className="form-group">
                     <label>Profession</label>
-                    <select value={profession} onChange={(e) => setProfession(e.target.value)}>
+                    <select
+                      name="profession"
+                      value={formik.values.profession}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="">Select profession</option>
                       <option value="Software / IT">Software / IT</option>
                       <option value="Doctor">Doctor</option>
@@ -1235,7 +1404,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="form-row">
                   <div className="form-group">
                     <label>Annual Income (₹)</label>
-                    <select value={income} onChange={(e) => setIncome(e.target.value)}>
+                    <select
+                      name="income"
+                      value={formik.values.income}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="Prefer not to say">Prefer not to say</option>
                       <option value="Below 3 LPA">Below 3 LPA</option>
                       <option value="3–6 LPA">3–6 LPA</option>
@@ -1253,7 +1427,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           type="button"
                           onClick={() => {
                             setHeightUnit("ft");
-                            setHeight("");
+                            formik.setFieldValue("height", "");
                           }}
                           className={`px-2 py-0.5 rounded-md transition-all ${
                             heightUnit === "ft"
@@ -1267,7 +1441,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           type="button"
                           onClick={() => {
                             setHeightUnit("cm");
-                            setHeight("");
+                            formik.setFieldValue("height", "");
                           }}
                           className={`px-2 py-0.5 rounded-md transition-all ${
                             heightUnit === "cm"
@@ -1279,7 +1453,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                         </button>
                       </div>
                     </div>
-                    <select value={height} onChange={(e) => setHeight(e.target.value)}>
+                    <select
+                      name="height"
+                      value={formik.values.height}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
                       <option value="">
                         Select height ({heightUnit === "ft" ? "ft/in" : "cm"})
                       </option>
@@ -1357,27 +1536,31 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="form-group">
                   <label>About yourself</label>
                   <textarea
+                    name="aboutMe"
                     placeholder="Tell potential partners about yourself — your interests, values, and what you're looking for..."
-                    value={aboutMe}
-                    onChange={(e) => setAboutMe(e.target.value)}
+                    value={formik.values.aboutMe}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                   ></textarea>
                 </div>
                 <div className="form-group">
                   <label>Partner Preferences</label>
                   <textarea
+                    name="preferences"
                     placeholder="Describe your ideal partner — district preference, profession, values..."
-                    value={preferences}
-                    onChange={(e) => setPreferences(e.target.value)}
+                    value={formik.values.preferences}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                   ></textarea>
                 </div>
 
-                <button className="btn-form-submit" onClick={handleManualSubmit}>
+                <button type="submit" className="btn-form-submit">
                   Create Profile & Get Started →
                 </button>
                 <p className="text-center text-xs text-gray-400 mt-3">
                   Free registration. Document verification and plans are configured in the next step.
                 </p>
-              </div>
+              </form>
 
               <div className="reg-info-panel">
                 <h3 className="font-display text-2xl text-white mb-6 font-bold">Why register manually?</h3>
@@ -1417,7 +1600,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
           <div className={`reg-panel ${activeTab === "auto" ? "active" : ""}`}>
             <div className="reg-layout">
               <div className="bg-[#17112E] border border-white/10 rounded-3xl p-6 flex flex-col justify-between" style={{ minHeight: "560px" }}>
-                
+
                 {/* Chat header */}
                 <div className="flex items-center gap-3 border-b border-white/10 pb-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-pink-500 to-violet-600">
@@ -1448,7 +1631,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       <span className="block text-[9px] text-white/40 mt-1">{msg.timestamp}</span>
                     </div>
                   ))}
-                  
+
                   {parsing && (
                     <div className="bg-white/5 border border-white/10 text-white rounded-2xl p-4 max-w-[80%] self-start flex items-center gap-2">
                       <svg className="animate-spin h-4 w-4 text-pink-400" viewBox="0 0 24 24" fill="none">
@@ -1559,7 +1742,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
               <h3 className="font-display text-xl font-bold mb-2 text-white">1. Upload Profile & Family Photos</h3>
               <p className="text-sm text-gray-400">Add high quality photos to make your profile stand out and gain verified responses.</p>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Profile Images Card Component */}
               <div className="p-6 bg-white rounded-2xl border border-gray-200/80 shadow-sm text-left">
@@ -1847,7 +2030,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
             {/* Account Verification & Trust Meter */}
             <div className="trust-meter">
               <h4 className="trust-meter-title">Account Verification & Trust Meter</h4>
-              
+
               <div className="trust-meter-row">
                 <span className="meter-label">Level 1: Basic Profile</span>
                 <div className="meter-track">
@@ -1873,7 +2056,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     <div className="meter-fill" style={{ width: faceMatchStatus === "matched" ? "100%" : "0%" }}></div>
                   </div>
                   {faceMatchStatus === "pending" && uploadedFile ? (
-                    <button 
+                    <button
                       onClick={startCameraVerification}
                       className="text-xs bg-violet-600 hover:bg-violet-700 text-white font-bold px-3 py-1 rounded-lg transition"
                     >
@@ -1881,8 +2064,8 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     </button>
                   ) : (
                     <span className={`trust-badge font-bold ${
-                      faceMatchStatus === "matched" 
-                        ? "text-emerald-500 approved" 
+                      faceMatchStatus === "matched"
+                        ? "text-emerald-500 approved"
                         : "text-slate-400 pending"
                     }`}>
                       {faceMatchStatus === "matched" ? "Matched" : "Pending"}
@@ -1919,7 +2102,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
               </div>
               {/* Scanner green line */}
               {faceMatchStatus === "scanning" && (
-                <div 
+                <div
                   className="absolute left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 shadow-md shadow-emerald-500"
                   style={{
                     top: `${scanningProgress}%`,

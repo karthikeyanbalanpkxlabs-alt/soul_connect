@@ -12,33 +12,32 @@ export const onSaveCustomer = async (data: any) => {
       data.profile_created_for || data.whoiam_register || "For myself";
   }
   let endpoint = configUrls?.apiUrl + "/api/public/customer_create";
-  return fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  })
-    .then(async (r) => {
-      const resData = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        const errorMsg =
-          resData.error ||
-          resData.message ||
-          resData.detail ||
-          `Request failed with status ${r.status}`;
-        throw new Error(errorMsg);
-      }
-      if (resData.error) {
-        throw new Error(resData.error);
-      }
-      console.log("Customer created outside", resData);
-      return resData;
-    })
-    .catch((e) => {
-      console.error("Error saving customer:", e);
-      throw e;
+  try {
+    const r = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     });
+    const resData = await r.json().catch(() => ({}));
+    if (!r.ok || resData.error) {
+      const errorMsg =
+        resData.error ||
+        resData.message ||
+        resData.detail ||
+        `Request failed with status ${r.status}`;
+      return { success: false, error: errorMsg };
+    }
+    console.log("Customer created outside", resData);
+    return { success: true, ...resData };
+  } catch (e: any) {
+    console.error("Error saving customer:", e);
+    return {
+      success: false,
+      error: e?.message || "Network error while saving customer data.",
+    };
+  }
 };
 
 /**
