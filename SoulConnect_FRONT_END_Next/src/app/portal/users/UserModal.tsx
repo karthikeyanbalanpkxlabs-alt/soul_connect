@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Upload, User, Trash2, Camera, Shield, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import {
+  X,
+  Upload,
+  User,
+  Trash2,
+  Camera,
+  Shield,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+} from "lucide-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
@@ -13,14 +24,11 @@ export interface UserModalProps {
   subscriptionList?: any[];
 }
 
-export const ROLE_OPTIONS = [
-  { displayName: "Manager", id: "manager_g" },
-  { displayName: "Assit", id: "assit_g" },
-];
+export const ROLE_OPTIONS = [{ displayName: "Assit", id: "assit_g" }];
 
 const defaultUserFormData = {
   customer_id: "",
-  role: "manager_g",
+  role: "assit_g",
   first_name: "",
   last_name: "",
   email: "",
@@ -76,7 +84,7 @@ export default function UserModal({
 
     return {
       customer_id: initialData.customer_id || "",
-      role: initialData.role || "manager_g",
+      role: initialData.role || "assit_g",
       first_name: initialData.first_name || initialData.firstName || "",
       last_name: initialData.last_name || initialData.lastName || "",
       email: initialData.email || "",
@@ -84,7 +92,9 @@ export default function UserModal({
       phone_number: initialData.phone_number || "",
       gender: (initialData.gender || "male").toLowerCase(),
       dob: initialData.dob || "",
-      status: initialData.status || (initialData.public_verify === false ? "Inactive" : "Active"),
+      status:
+        initialData.status ||
+        (initialData.public_verify === false ? "Inactive" : "Active"),
       district: initialData.district || "",
       state: initialData.state || "",
       zipcode: initialData.zipcode || "",
@@ -139,7 +149,8 @@ export default function UserModal({
   if (!isOpen) return null;
 
   const getInputClassName = (fieldName: keyof typeof defaultUserFormData) => {
-    const isInvalid = formik.touched[fieldName] && Boolean(formik.errors[fieldName]);
+    const isInvalid =
+      formik.touched[fieldName] && Boolean(formik.errors[fieldName]);
     return `w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-all outline-none ${
       isInvalid
         ? "border-rose-300 bg-rose-50/50 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
@@ -158,14 +169,14 @@ export default function UserModal({
     return null;
   };
 
-  const currentImage = Array.isArray(formik.values.image) && formik.values.image[0]?.url
-    ? formik.values.image[0].url
-    : null;
+  const currentImage =
+    Array.isArray(formik.values.image) && formik.values.image[0]?.url
+      ? formik.values.image[0].url
+      : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
-        
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white rounded-t-2xl">
           <div className="flex items-center gap-3">
@@ -194,8 +205,11 @@ export default function UserModal({
 
         {/* Form Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <form id="user-form" onSubmit={formik.handleSubmit} className="space-y-6">
-
+          <form
+            id="user-form"
+            onSubmit={formik.handleSubmit}
+            className="space-y-6"
+          >
             {/* Profile Avatar & Role Summary Card */}
             <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
               <div className="relative group">
@@ -208,7 +222,9 @@ export default function UserModal({
                     />
                   ) : (
                     <span className="text-2xl font-bold">
-                      {formik.values.first_name ? formik.values.first_name.charAt(0).toUpperCase() : "U"}
+                      {formik.values.first_name
+                        ? formik.values.first_name.charAt(0).toUpperCase()
+                        : "U"}
                     </span>
                   )}
                 </div>
@@ -263,7 +279,10 @@ export default function UserModal({
                       </option>
                     ))}
                   </select>
-                  <Shield size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-violet-500 pointer-events-none" />
+                  <Shield
+                    size={14}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-violet-500 pointer-events-none"
+                  />
                 </div>
                 {renderFieldError("role")}
               </div>
@@ -467,7 +486,6 @@ export default function UserModal({
                 </div>
               </div>
             </div>
-
           </form>
         </div>
 
@@ -489,7 +507,6 @@ export default function UserModal({
             <span>{isEdit ? "Save Changes" : "Create User"}</span>
           </button>
         </div>
-
       </div>
     </div>
   );

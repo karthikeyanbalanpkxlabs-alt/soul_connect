@@ -30,11 +30,14 @@ export default function LayoutKit({ children }: { children: React.ReactNode }) {
   }
 
   const role =
-    roles.find((r) => r === "manager_g" || r === "customer_g") || "no_roles";
+    roles.find(
+      (r) => r === "manager_g" || r === "assit_g" || r === "customer_g",
+    ) || "no_roles";
 
+  console.log("role", role, role === "manager_g" || role === "assit_g");
   return (
     <>
-      {role === "manager_g" ? (
+      {role === "manager_g" || role === "assit_g" ? (
         <SideBarKit>{children}</SideBarKit>
       ) : role === "customer_g" ? (
         <>
