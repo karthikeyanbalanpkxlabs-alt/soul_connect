@@ -608,6 +608,7 @@ function CardPage() {
                     ) : stateProps?.rows && stateProps.rows.length > 0 ? (
                       stateProps.rows.map((row: any) => (
                         <ProfileCard
+                          subscriptionList={stateProps?.subscriptions}
                           key={row._id || row.customer_id || row.id}
                           customer={row}
                           loggedInProfile={profile}
@@ -619,7 +620,9 @@ function CardPage() {
                               await refreshProfile().catch(() => null);
                             }
                             if (typeof window !== "undefined") {
-                              window.dispatchEvent(new Event("interestUpdated"));
+                              window.dispatchEvent(
+                                new Event("interestUpdated"),
+                              );
                             }
                           }}
                           canDelete={stateProps?.getRoles?.includes("manager")}
@@ -788,7 +791,8 @@ function CardPage() {
               Loading Profiles...
             </h3>
             <p className="mt-2 text-xs text-slate-500 max-w-sm leading-relaxed">
-              Fetching verified profiles, horoscope details, and family preferences
+              Fetching verified profiles, horoscope details, and family
+              preferences
             </p>
 
             {/* Animated Pulse Dots */}

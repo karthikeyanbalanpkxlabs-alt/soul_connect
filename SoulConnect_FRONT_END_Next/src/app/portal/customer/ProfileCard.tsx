@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Heart, User, Pencil, Trash2, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Heart, User, Pencil, Trash2, Loader2, Lock } from "lucide-react";
 import configUrls from "../../../../configUrls";
 import { useKeycloak } from "@/providers/KeycloakProvider";
 
@@ -11,6 +11,7 @@ interface ProfileCardProps {
   onSendInterest?: (customer: any) => void;
   canDelete?: boolean;
   loggedInProfile?: any;
+  subscriptionList?: any[];
 }
 
 // Clean and validate stored IDs in localStorage (removes legacy "undefined" / "null" values)
@@ -48,6 +49,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   onSendInterest,
   canDelete,
   loggedInProfile,
+  subscriptionList = [],
 }) => {
   const { profile: contextProfile } = useKeycloak();
   const activeProfile = loggedInProfile || contextProfile;
@@ -57,12 +59,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   // Extract only genuine, non-empty, valid IDs for this specific profile
   const allCustomerIds = Array.from(
     new Set(
-      [
-        customer?._id,
-        customer?.id,
-        customer?.customer_id,
-        customer?.keycloakId,
-      ]
+      [customer?._id, customer?.id, customer?.customer_id, customer?.keycloakId]
         .filter(
           (val) =>
             val !== null &&
@@ -78,6 +75,78 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
   const [isInterested, setIsInterested] = useState(false);
   const [isSavingInterest, setIsSavingInterest] = useState(false);
+
+  // --- Subscription & Interest Limit Logic ---
+  const userSubVal =
+    activeProfile?.subscription_type ||
+    activeProfile?.subscription ||
+    activeProfile?.subscription_id ||
+    activeProfile?.plan_name ||
+    "guest";
+
+  const matchedSubscription = useMemo(() => {
+    if (!Array.isArray(subscriptionList)) return null;
+    return (
+      subscriptionList.find((s: any) => {
+        if (!s) return false;
+        const sType = String(s.type || "").toLowerCase().trim();
+        const sName = String(s.name || s.title || s.plan_name || "")
+          .toLowerCase()
+          .trim();
+        const sId = String(s._id || s.id || "").toLowerCase().trim();
+        const userSub = String(userSubVal).toLowerCase().trim();
+
+        return (
+          (sType && sType === userSub) ||
+          (sName && sName === userSub) ||
+          (sId && sId === userSub)
+        );
+      }) || null
+    );
+  }, [subscriptionList, userSubVal]);
+
+  const rawLimit =
+    matchedSubscription?.profile_instersted_limit !== undefined
+      ? matchedSubscription.profile_instersted_limit
+      : matchedSubscription?.profile_interested_limit !== undefined
+        ? matchedSubscription.profile_interested_limit
+        : matchedSubscription?.interested_limit !== undefined
+          ? matchedSubscription.interested_limit
+          : matchedSubscription?.interest_limit;
+
+  const hasLimitDefined =
+    rawLimit !== undefined &&
+    rawLimit !== null &&
+    String(rawLimit).trim() !== "" &&
+    !isNaN(Number(rawLimit));
+
+  const limitCount = hasLimitDefined ? Number(rawLimit) : Infinity;
+
+  // Calculate current total unique interests sent by this user
+  const currentSentCount = useMemo(() => {
+    const profileSentIds = [
+      ...(Array.isArray(activeProfile?.interestProfiles)
+        ? activeProfile.interestProfiles
+        : []),
+      ...(Array.isArray(activeProfile?.interestedList)
+        ? activeProfile.interestedList
+        : []),
+    ]
+      .filter(
+        (id) =>
+          typeof id === "string" &&
+          id.trim() !== "" &&
+          id !== "undefined" &&
+          id !== "null",
+      )
+      .map((id) => id.trim());
+
+    const localSentIds = getCleanStoredInterestedIds();
+    return Array.from(new Set([...profileSentIds, ...localSentIds])).length;
+  }, [activeProfile, isInterested]);
+
+  const isLimitReached =
+    hasLimitDefined && !isInterested && currentSentCount >= limitCount;
 
   const evaluateIsInterested = useCallback(() => {
     if (allCustomerIds.length === 0) return false;
@@ -151,6 +220,19 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     e.stopPropagation();
     if (isSavingInterest) return;
 
+    if (!isInterested && isLimitReached) {
+      const planName =
+        matchedSubscription?.name ||
+        matchedSubscription?.title ||
+        matchedSubscription?.type ||
+        userSubVal ||
+        "current";
+      alert(
+        `You have reached your interest limit (${currentSentCount}/${limitCount}) for your ${planName} plan. Please upgrade your subscription to send more interests.`,
+      );
+      return;
+    }
+
     const newState = !isInterested;
     setIsInterested(newState);
     setIsSavingInterest(true);
@@ -165,7 +247,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             if (!updated.includes(cidStr)) updated.push(cidStr);
           });
         } else {
-          updated = updated.filter((id: string) => !allCustomerIds.includes(id));
+          updated = updated.filter(
+            (id: string) => !allCustomerIds.includes(id),
+          );
         }
         localStorage.setItem("interested_profile_ids", JSON.stringify(updated));
       } catch (err) {
@@ -248,7 +332,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     `${customer?.first_name || "Unknown"} ${customer?.last_name || ""}`.trim();
   const calculateAge = (dobStr?: string) => {
     if (!dobStr) return "N/A";
-    let day = 0, month = 0, year = 0;
+    let day = 0,
+      month = 0,
+      year = 0;
     if (dobStr.includes("-")) {
       const parts = dobStr.split("-");
       if (parts[0].length === 4) {
@@ -304,7 +390,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   const DEFAULT_PLACEHOLDER =
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop";
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleImageError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
     const target = e.currentTarget;
     target.onerror = null;
     target.src = DEFAULT_PLACEHOLDER;
@@ -327,13 +415,25 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       <div className="flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <Heart
-              onClick={handleInterestClick}
-              className={`w-5 h-5 cursor-pointer transition-colors ${isInterested
-                  ? "fill-pink-500 text-pink-500"
-                  : "text-pink-500 hover:fill-pink-500"
+            <span
+              title={
+                isLimitReached && !isInterested
+                  ? `Interest limit reached (${currentSentCount}/${limitCount})`
+                  : undefined
+              }
+              className="inline-flex"
+            >
+              <Heart
+                onClick={handleInterestClick}
+                className={`w-5 h-5 transition-colors ${
+                  isLimitReached && !isInterested
+                    ? "text-gray-300 cursor-not-allowed opacity-60"
+                    : isInterested
+                      ? "cursor-pointer fill-pink-500 text-pink-500"
+                      : "cursor-pointer text-pink-500 hover:fill-pink-500"
                 }`}
-            />
+              />
+            </span>
             <h3 className="text-xl font-bold text-gray-800">{name}</h3>
           </div>
 
@@ -379,16 +479,30 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
           <button
             onClick={handleInterestClick}
-            disabled={isSavingInterest}
-            className={`px-5 py-2.5 rounded text-sm font-medium transition-all flex items-center gap-2 cursor-pointer shadow-2xs active:scale-95 disabled:opacity-70 ${
-              isInterested
-                ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
-                : "bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white"
+            disabled={isSavingInterest || (isLimitReached && !isInterested)}
+            className={`px-5 py-2.5 rounded text-sm font-medium transition-all flex items-center gap-2 shadow-2xs active:scale-95 disabled:opacity-70 ${
+              isSavingInterest
+                ? "opacity-75 cursor-wait"
+                : isInterested
+                  ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 cursor-pointer"
+                  : isLimitReached
+                    ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed hover:bg-gray-100"
+                    : "bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white cursor-pointer"
             }`}
-            title={isInterested ? "Interest Sent" : "Send Interest to this profile"}
+            title={
+              isSavingInterest
+                ? "Saving..."
+                : isInterested
+                  ? "Interest Sent"
+                  : isLimitReached
+                    ? `Interest limit reached (${currentSentCount}/${limitCount}) for ${matchedSubscription?.name || matchedSubscription?.type || "your"} plan`
+                    : "Send Interest to this profile"
+            }
           >
             {isSavingInterest ? (
               <Loader2 className="w-4 h-4 animate-spin text-current" />
+            ) : isLimitReached && !isInterested ? (
+              <Lock className="w-4 h-4 text-gray-400" />
             ) : (
               <Heart
                 className={`w-4 h-4 ${
@@ -403,7 +517,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                 ? "Saving..."
                 : isInterested
                   ? "Interest Sent"
-                  : "Send Interest"}
+                  : isLimitReached
+                    ? "Limit Reached"
+                    : "Send Interest"}
             </span>
           </button>
 

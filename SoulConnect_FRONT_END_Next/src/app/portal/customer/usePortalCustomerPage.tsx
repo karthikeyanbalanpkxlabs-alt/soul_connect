@@ -280,7 +280,8 @@ function usePortalCustomerPage() {
   };
 
   const onToggleApproveCustomer = async (customer: any) => {
-    const nextStatus = customer?.public_verify === true ? "Wait for approval" : "Approved";
+    const nextStatus =
+      customer?.public_verify === true ? "Wait for approval" : "Approved";
     return onChangeCustomerApprovalStatus(customer, nextStatus);
   };
 
@@ -823,12 +824,17 @@ function usePortalCustomerPage() {
           let dataKit = data?.data;
           dataKit = dataKit.map((itm: any) => {
             let status = "Wait for approval";
-            if (itm?.public_verify === true || itm?.approvalStatus === "Approved") {
+            if (
+              itm?.public_verify === true ||
+              itm?.approvalStatus === "Approved"
+            ) {
               status = "Approved";
             } else if (
               itm?.approvalStatus === "Rejected" ||
               itm?.approval_status === "Rejected" ||
-              itm?.public_verify_command_helper?.toLowerCase()?.includes("reject")
+              itm?.public_verify_command_helper
+                ?.toLowerCase()
+                ?.includes("reject")
             ) {
               status = "Rejected";
             } else if (itm?.approvalStatus) {
@@ -996,7 +1002,10 @@ function usePortalCustomerPage() {
         if (isUpdating) {
           return (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 animate-pulse">
-              <Loader2 size={13} className="animate-spin text-slate-500 shrink-0" />
+              <Loader2
+                size={13}
+                className="animate-spin text-slate-500 shrink-0"
+              />
               <span>Updating...</span>
             </span>
           );
@@ -1018,7 +1027,10 @@ function usePortalCustomerPage() {
                 onChange={(e) =>
                   onChangeCustomerApprovalStatus(
                     row,
-                    e.target.value as "Approved" | "Wait for approval" | "Rejected",
+                    e.target.value as
+                      | "Approved"
+                      | "Wait for approval"
+                      | "Rejected",
                   )
                 }
                 title="Change Approval Status"
@@ -1063,7 +1075,9 @@ function usePortalCustomerPage() {
           );
         }
 
-        {/* NON-MANAGER VIEW */}
+        {
+          /* NON-MANAGER VIEW */
+        }
         return (
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
@@ -1101,7 +1115,10 @@ function usePortalCustomerPage() {
           row.plan_name;
 
         const rawVal =
-          row.subscription_type || row.subscription_id || row.subscription || "guest";
+          row.subscription_type ||
+          row.subscription_id ||
+          row.subscription ||
+          "guest";
 
         let subName = "guest";
 
@@ -1116,8 +1133,11 @@ function usePortalCustomerPage() {
             (s: any) =>
               (s._id && String(s._id) === String(rawVal)) ||
               (s.id && String(s.id) === String(rawVal)) ||
-              (s.type && String(s.type).toLowerCase() === String(rawVal).toLowerCase()) ||
-              (s.name && String(s.name).toLowerCase() === String(rawVal).toLowerCase())
+              (s.type &&
+                String(s.type).toLowerCase() ===
+                  String(rawVal).toLowerCase()) ||
+              (s.name &&
+                String(s.name).toLowerCase() === String(rawVal).toLowerCase()),
           );
 
           if (matched) {
@@ -1133,7 +1153,8 @@ function usePortalCustomerPage() {
         }
 
         const subLower = subName.toLowerCase();
-        const isPremium = subLower !== "guest" && subLower !== "" && subLower !== "free";
+        const isPremium =
+          subLower !== "guest" && subLower !== "" && subLower !== "free";
         return (
           <span
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
