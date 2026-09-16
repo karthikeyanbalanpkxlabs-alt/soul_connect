@@ -1,0 +1,812 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import UserModal from "./UserModal";
+import ConfirmModal from "../../../components/ConfirmModal";
+import usePortalPage from "./usePortalCustomerPage";
+import FilterSidebar from "./FilterSidebar";
+import ProfileCard from "./ProfileCard";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Check,
+  AlertTriangle,
+  RefreshCw,
+  Lock,
+  ArrowRight,
+  Mail,
+  Users,
+  Plus,
+  Trash2,
+  Heart,
+} from "lucide-react";
+import keycloak from "@/lib/keycloak";
+import configUrls from "../../../../configUrls";
+import { useRouter } from "next/navigation";
+import { useKeycloak } from "@/providers/KeycloakProvider";
+function CardPage() {
+  const { profile, refreshProfile } = useKeycloak();
+  const stateProps = usePortalPage();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("Latest");
+  const [getLoader, setLoader] = useState(false);
+  const tabs = ["Latest", "Popular", "Trending", "Best"];
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoader(true);
+    }, 2000);
+
+    return () => {
+      setLoader(false);
+    };
+  }, []);
+
+  const handleView = (id: string) => {
+    router.push(`/portal/customer_detail?id=${id}`);
+  };
+
+  console.log("profile", profile);
+
+  const renderPublicVerify = () => {
+    const idProofUrl =
+      typeof profile?.identity_proff === "object"
+        ? profile.identity_proff?.url
+        : typeof profile?.identity_proff === "string"
+          ? profile.identity_proff
+          : null;
+    const hasIdProof = !!idProofUrl;
+
+    const familyPhotoUrl =
+      Array.isArray(profile?.family_photos) && profile.family_photos.length > 0
+        ? typeof profile.family_photos[0] === "string"
+          ? profile.family_photos[0]
+          : profile.family_photos[0]?.url
+        : profile?.family_photo
+          ? typeof profile.family_photo === "string"
+            ? profile.family_photo
+            : profile.family_photo?.url
+          : null;
+    const hasFamilyPhoto = !!familyPhotoUrl;
+
+    const horoObj = profile?.horoscopeDetails || {};
+    const starVal = horoObj.star || profile?.star;
+    const rasiVal = horoObj.rasi || profile?.rasi;
+    const jathagamUrl =
+      horoObj.jathagam?.url || horoObj.jathagam || profile?.jathagam;
+    const hasHoroscope = !!(starVal || rasiVal || jathagamUrl);
+
+    const famObj = profile?.familyBackground || {};
+    const fatherVal = famObj.father_name || profile?.father_name;
+    const motherVal = famObj.mother_name || profile?.mother_name;
+    const famTypeVal = famObj.family_type || profile?.family_type;
+    const famStatusVal = famObj.family_status || profile?.family_status;
+    const famAddressVal = famObj.family_address || profile?.family_address;
+    const hasFamilyBackground = !!(
+      fatherVal ||
+      motherVal ||
+      famTypeVal ||
+      famStatusVal ||
+      famAddressVal
+    );
+
+    const lifeObj = profile?.lifeStyle || {};
+    const dietVal = lifeObj.diet || profile?.diet;
+    const smokingVal = lifeObj.smoking || profile?.smoking;
+    const drinkingVal = lifeObj.drinking || profile?.drinking;
+    const livingWithVal = lifeObj.living_with || profile?.living_with;
+    const relocateVal =
+      lifeObj.willing_to_relocate || profile?.willing_to_relocate;
+    const interestsVal = lifeObj.interests || profile?.interests;
+    const hasLifestyle = !!(
+      dietVal ||
+      smokingVal ||
+      drinkingVal ||
+      livingWithVal ||
+      relocateVal ||
+      interestsVal
+    );
+
+    const allStepsComplete =
+      hasIdProof &&
+      hasFamilyPhoto &&
+      hasHoroscope &&
+      hasFamilyBackground &&
+      hasLifestyle;
+
+    return (
+      <div className="py-12 px-4 max-w-3xl mx-auto">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+          {/* Header Banner */}
+          <div className="relative p-8 md:p-10 text-center bg-gradient-to-br from-rose-50 via-purple-50/50 to-white border-b border-gray-100">
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 rounded-full bg-rose-200/20 blur-2xl pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 rounded-full bg-purple-200/20 blur-2xl pointer-events-none"></div>
+
+            <div className="relative flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-amber-50 rounded-full text-amber-500 ring-4 ring-amber-100/50 animate-pulse">
+              <Clock className="w-10 h-10" />
+            </div>
+
+            <h2 className="text-2xl md:text-3xl font-serif text-gray-900 font-semibold mb-3">
+              Profile Verification Pending
+            </h2>
+            <p className="text-gray-600 max-w-md mx-auto text-sm leading-relaxed font-body">
+              Welcome to SoulConect! To ensure a safe, secure, and authentic
+              matchmaking environment, we manually review and verify every
+              profile before activation.
+            </p>
+            {profile?.public_verify_command_helper && (
+              <p className="mt-4 text-gray-700 bg-amber-50/60 border border-amber-200/80 rounded-xl p-4 max-w-md mx-auto text-sm font-semibold leading-relaxed font-body text-amber-900">
+                {profile.public_verify_command_helper}
+              </p>
+            )}
+          </div>
+
+          {/* Verification Timeline/Steps */}
+          <div className="p-8 md:p-10 space-y-8">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 font-display">
+              Verification Checkpoints
+            </h3>
+
+            <div className="relative border-l-2 border-dashed border-gray-100 pl-8 ml-4 space-y-8">
+              {/* Step 1 */}
+              <div className="relative">
+                <span className="absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white shadow-sm">
+                  <Check className="w-4 h-4" />
+                </span>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm font-body">
+                    Profile Registered
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    Your matrimonial profile has been successfully created.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasIdProof
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasIdProof ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Identity Proof Upload
+                    </h4>
+                    {!hasIdProof && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasIdProof
+                      ? "Document successfully uploaded and received."
+                      : "Please upload a valid Govt ID (Aadhaar, Passport, etc.) to proceed with verification."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3: Family Photo */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasFamilyPhoto
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasFamilyPhoto ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Family Photo Upload
+                    </h4>
+                    {!hasFamilyPhoto && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasFamilyPhoto
+                      ? "Family photo successfully uploaded (Max 1 photo)."
+                      : "Please upload a Family Photo (Max 1 photo) for profile verification."}
+                  </p>
+
+                  {/* Family Photo Checkpoint Status */}
+                  <div className="mt-3">
+                    {hasFamilyPhoto && (
+                      <div className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl max-w-sm">
+                        <div className="w-16 h-20 rounded-xl overflow-hidden bg-slate-200 border border-slate-300">
+                          <img
+                            src={familyPhotoUrl}
+                            alt="Family Photo"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            Family Photo Uploaded
+                          </p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓ Max 1 photo verified
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4: Horoscope & Birth Details */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasHoroscope
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasHoroscope ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Horoscope & Birth Details
+                    </h4>
+                    {!hasHoroscope && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasHoroscope
+                      ? "Horoscope & birth details provided."
+                      : "Please add your Horoscope details (Star, Rasi, etc.) or upload Jathagam in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasHoroscope && (
+                      <div className="flex items-center gap-3 p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
+                          ⭐
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            Horoscope Verified
+                          </p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓ Star: {starVal || "Provided"}{" "}
+                            {rasiVal ? `| Rasi: ${rasiVal}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 5: Family Background Details */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasFamilyBackground
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasFamilyBackground ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Family Background Details
+                    </h4>
+                    {!hasFamilyBackground && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasFamilyBackground
+                      ? "Family background and address details provided."
+                      : "Please add your Family Background details (Father, Mother, Status, Address, etc.) in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasFamilyBackground && (
+                      <div className="flex items-center gap-3 p-3 bg-purple-50/60 border border-purple-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                          🏠
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            Family Background Verified
+                          </p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓{" "}
+                            {fatherVal
+                              ? `Father: ${fatherVal}`
+                              : famStatusVal
+                                ? `Status: ${famStatusVal}`
+                                : "Details Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lifestyle Details */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    hasLifestyle
+                      ? "bg-emerald-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {hasLifestyle ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-gray-900 text-sm font-body">
+                      Lifestyle Details
+                    </h4>
+                    {!hasLifestyle && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {hasLifestyle
+                      ? "Lifestyle habits and personal preferences provided."
+                      : "Please add your Lifestyle details (Diet, Smoking, Drinking, Living arrangements, Relocation, Interests) in your Profile to complete verification."}
+                  </p>
+
+                  <div className="mt-3">
+                    {hasLifestyle && (
+                      <div className="flex items-center gap-3 p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl max-w-sm">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                          🌿
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            Lifestyle Verified
+                          </p>
+                          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
+                            ✓{" "}
+                            {dietVal
+                              ? `Diet: ${dietVal}`
+                              : interestsVal
+                                ? `Interests: ${interestsVal}`
+                                : "Details Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Manual Verification Check */}
+              <div className="relative">
+                <span
+                  className={`absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full shadow-sm ${
+                    allStepsComplete
+                      ? "bg-amber-100 text-amber-600"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {allStepsComplete ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Lock className="w-4 h-4" />
+                  )}
+                </span>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm font-body">
+                    Manual Verification Check
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    {allStepsComplete
+                      ? "Our admin panel is verifying your documents, family photo, horoscope, family background, and lifestyle details."
+                      : "Awaiting ID proof, family photo, horoscope, family background & lifestyle submission before review can begin."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 6 */}
+              <div className="relative">
+                <span className="absolute -left-[41px] top-0 flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-400 shadow-sm">
+                  <Lock className="w-4 h-4" />
+                </span>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm font-body">
+                    Profile Activation
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                    You will receive full access to search and view matches once
+                    approved.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons Section */}
+          <div className="bg-gray-50/50 p-8 md:p-10 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h4 className="font-semibold text-gray-900 text-sm font-body font-semibold">
+                Need help or want to check status?
+              </h4>
+              <p className="text-xs text-gray-500 mt-0.5 font-body font-light">
+                We usually complete reviews within 2 to 24 hours.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {!hasIdProof ? (
+                <button
+                  onClick={() => router.push("/portal/profile")}
+                  className="w-full sm:w-auto bg-[#c28b70] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#b07d64] transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Upload ID Proof</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push("/portal/profile")}
+                  className="w-full sm:w-auto border border-gray-200 bg-white text-gray-700 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>View My Profile</span>
+                </button>
+              )}
+
+              <a
+                href="mailto:support@soulconect.com?subject=Profile Verification Query"
+                className="w-full sm:w-auto border border-gray-200 bg-white text-gray-700 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 cursor-pointer animate-pulse"
+              >
+                <Mail className="w-4 h-4" />
+                <span>Contact Support</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <>
+      {getLoader ? (
+        <div
+          style={{ marginTop: 60 }}
+          className="p-6 md:p-10 max-w-[1600px] mx-auto bg-white min-h-screen"
+        >
+          {profile?.public_verify ? (
+            <>
+              {/* Top action buttons */}
+              <div className="mb-8 flex items-center justify-between border-b pb-4 flex-wrap gap-4">
+                <h1 className="font-serif text-3xl text-gray-800">
+                  Your Match Profiles
+                </h1>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => router.push("/portal/interested")}
+                    className="border border-rose-200 text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
+                  >
+                    <Heart className="w-4 h-4 fill-rose-600" />
+                    <span>Interested Profiles</span>
+                  </button>
+                  {stateProps?.getRoles?.includes("manager") && (
+                    <button
+                      className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
+                      onClick={stateProps?.onHandleClickCreateCustomer}
+                    >
+                      + Create
+                    </button>
+                  )}
+                  {stateProps?.getRoles?.includes("manager") && (
+                    <button
+                      className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
+                      onClick={stateProps?.onHandleClickCreateManager}
+                    >
+                      + Create Manager
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col lg:flex-row items-start">
+                {/* Left Sidebar */}
+                <FilterSidebar
+                  filters={stateProps?.filters}
+                  onFilterChange={stateProps?.handleFilterChange}
+                />
+
+                {/* Right Content */}
+                <div className="flex-1 w-full lg:w-auto mt-8 lg:mt-0">
+                  {/* Breadcrumbs & Title */}
+                  <div className="mb-6">
+                    <div className="text-sm text-gray-500 mb-2">
+                      <span className="hover:text-gray-800 cursor-pointer transition-colors">
+                        Home
+                      </span>{" "}
+                      |{" "}
+                      <span className="text-gray-800 font-medium cursor-pointer">
+                        Latest
+                      </span>{" "}
+                      |{" "}
+                      <span className="hover:text-gray-800 cursor-pointer transition-colors">
+                        Popular
+                      </span>
+                    </div>
+                    {/* <p className="text-gray-600 text-sm">
+              <strong className="text-gray-800 font-medium">
+                Sed Dignissim Lacinia Nunc
+              </strong>{" "}
+              (Fusce tellus sed augue semper porta)
+            </p> */}
+                  </div>
+
+                  {/* Tabs */}
+                  {/* <div className="flex bg-gray-100 rounded overflow-hidden mb-8 w-fit border border-gray-200">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-8 py-2.5 text-sm font-medium transition-colors ${
+                  activeTab === tab
+                    ? "bg-[#e50046] text-white"
+                    : "text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div> */}
+
+                  {/* Cards List */}
+                  <div className="flex flex-col gap-6">
+                    {stateProps?.loading ? (
+                      <div className="py-12 text-center text-gray-500">
+                        Loading profiles...
+                      </div>
+                    ) : stateProps?.rows && stateProps.rows.length > 0 ? (
+                      stateProps.rows.map((row: any) => (
+                        <ProfileCard
+                          subscriptionList={stateProps?.subscriptions}
+                          key={row._id || row.customer_id || row.id}
+                          customer={row}
+                          loggedInProfile={profile}
+                          onEdit={stateProps?.onHandleEditCustomer}
+                          onDelete={stateProps?.onDeleteCustomer}
+                          onView={handleView}
+                          onSendInterest={async () => {
+                            if (refreshProfile) {
+                              await refreshProfile().catch(() => null);
+                            }
+                            if (typeof window !== "undefined") {
+                              window.dispatchEvent(
+                                new Event("interestUpdated"),
+                              );
+                            }
+                          }}
+                          canDelete={stateProps?.getRoles?.includes("manager")}
+                        />
+                      ))
+                    ) : (
+                      <div className="py-12 text-center text-gray-500">
+                        No profiles found.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pagination & Per Page */}
+                  {!stateProps?.loading &&
+                    stateProps?.total > 0 &&
+                    (() => {
+                      const totalPages = Math.max(
+                        1,
+                        Math.ceil(
+                          (stateProps?.total || 0) / (stateProps?.limit || 10),
+                        ),
+                      );
+                      const currentPage =
+                        Math.floor(
+                          (stateProps?.skip || 0) / (stateProps?.limit || 10),
+                        ) + 1;
+                      return (
+                        <div className="mt-12 flex flex-col sm:flex-row justify-between items-center gap-4 border-t pt-6 border-gray-100">
+                          <div className="text-sm text-gray-500">
+                            Showing{" "}
+                            <span className="font-semibold">
+                              {stateProps.skip + 1}
+                            </span>{" "}
+                            to{" "}
+                            <span className="font-semibold">
+                              {Math.min(
+                                stateProps.skip + stateProps.limit,
+                                stateProps.total,
+                              )}
+                            </span>{" "}
+                            of{" "}
+                            <span className="font-semibold">
+                              {stateProps.total}
+                            </span>{" "}
+                            entries
+                          </div>
+
+                          <div className="flex items-center gap-6">
+                            {/* Per Page Select */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">
+                                Rows per page:
+                              </span>
+                              <select
+                                value={stateProps?.limit}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  stateProps?.setLimit(val);
+                                  stateProps?.setSkip(0);
+                                }}
+                                className="bg-white border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-[#c28b70]"
+                              >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                              </select>
+                            </div>
+
+                            {/* Page Numbers */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                disabled={currentPage === 1}
+                                onClick={() =>
+                                  stateProps?.setSkip(
+                                    Math.max(
+                                      0,
+                                      (stateProps?.skip || 0) -
+                                        (stateProps?.limit || 10),
+                                    ),
+                                  )
+                                }
+                                className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <ChevronLeft className="w-4 h-4" />
+                              </button>
+
+                              {Array.from(
+                                { length: totalPages },
+                                (_, i) => i + 1,
+                              ).map((page) => (
+                                <button
+                                  key={page}
+                                  onClick={() =>
+                                    stateProps?.setSkip(
+                                      (page - 1) * (stateProps?.limit || 10),
+                                    )
+                                  }
+                                  className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium transition-colors ${
+                                    page === currentPage
+                                      ? "bg-[#c28b70] text-white border border-[#c28b70]"
+                                      : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              ))}
+
+                              <button
+                                disabled={currentPage >= totalPages}
+                                onClick={() =>
+                                  stateProps?.setSkip(
+                                    (stateProps?.skip || 0) +
+                                      (stateProps?.limit || 10),
+                                  )
+                                }
+                                className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>{renderPublicVerify()}</>
+          )}
+          {stateProps?.isModalOpen && (
+            <UserModal
+              isOpen={stateProps?.isModalOpen}
+              onClose={() => stateProps?.setIsModalOpen(false)}
+              onSave={stateProps?.onSaveCustomer}
+              initialData={stateProps?.editingCustomer}
+              subscriptionList={stateProps?.subscriptions}
+            />
+          )}
+          <ConfirmModal
+            isOpen={!!stateProps?.deleteConfirmId}
+            title="Delete Customer"
+            message="Are you sure want to delete"
+            confirmText="Yes"
+            cancelText="No"
+            loading={stateProps?.isDeleting}
+            onConfirm={stateProps?.onConfirmDelete}
+            onCancel={stateProps?.onCancelDelete}
+          />
+        </div>
+      ) : (
+        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 p-6">
+          <div className="relative flex flex-col items-center text-center">
+            {/* Outer glowing pulsing aura */}
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-r from-rose-400 via-purple-400 to-amber-400 opacity-20 blur-2xl animate-pulse" />
+
+            {/* Center Animated Loader Badge */}
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-white shadow-2xl border border-rose-100">
+              <div className="h-16 w-16 animate-spin rounded-full border-[3.5px] border-rose-500 border-t-transparent" />
+              <span className="absolute text-2xl animate-bounce">💖</span>
+            </div>
+
+            {/* Loading Title & Subtitle */}
+            <h3 className="mt-6 font-serif text-2xl font-bold tracking-tight text-slate-800">
+              Loading Profiles...
+            </h3>
+            <p className="mt-2 text-xs text-slate-500 max-w-sm leading-relaxed">
+              Fetching verified profiles, horoscope details, and family
+              preferences
+            </p>
+
+            {/* Animated Pulse Dots */}
+            <div className="mt-6 flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-bounce" />
+              <span className="h-2.5 w-2.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.2s]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-bounce [animation-delay:0.4s]" />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default CardPage;
+export { CardPage };

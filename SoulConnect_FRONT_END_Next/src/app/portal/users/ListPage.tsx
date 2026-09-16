@@ -2,7 +2,7 @@
 
 import React from "react";
 import DynamicTable from "../../../components/DynamicTable";
-import CustomerModal from "../../../components/CustomerModal";
+import UserModal from "./UserModal";
 import usePortalPage from "./usePortalCustomerPage";
 import Toast from "../../../components/Toast";
 import { Plus, UserPlus, ShieldPlus, Users } from "lucide-react";
@@ -23,7 +23,7 @@ function ListPage() {
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                Customers
+                Users
               </h1>
               {typeof stateProps?.total === "number" && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200/60">
@@ -32,7 +32,7 @@ function ListPage() {
               )}
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              View, search, filter, and manage customer records.
+              View, search, filter, and manage user records.
             </p>
           </div>
         </div>
@@ -46,24 +46,6 @@ function ListPage() {
             <Plus size={16} />
             <span>Create</span>
           </button>
-
-          {/* <button
-            className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-xs sm:text-sm cursor-pointer shadow-2xs"
-            onClick={stateProps?.onHandleClickCreateClient}
-          >
-            <UserPlus size={16} className="text-slate-500" />
-            <span>Create Client</span>
-          </button>
-
-          {stateProps?.getRoles?.includes("manager") && (
-            <button
-              className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-xs sm:text-sm cursor-pointer shadow-2xs"
-              onClick={stateProps?.onHandleClickCreateManager}
-            >
-              <ShieldPlus size={16} className="text-slate-500" />
-              <span>Create Manager</span>
-            </button>
-          )} */}
         </div>
       </div>
 
@@ -83,7 +65,7 @@ function ListPage() {
 
       {/* MODAL */}
       {stateProps?.isModalOpen && (
-        <CustomerModal
+        <UserModal
           isOpen={stateProps?.isModalOpen}
           onClose={() => stateProps?.setIsModalOpen(false)}
           onSave={stateProps?.onSaveCustomer}
@@ -95,7 +77,7 @@ function ListPage() {
       {/* DELETE CONFIRMATION POPUP MODAL */}
       <ConfirmModal
         isOpen={!!stateProps?.deleteConfirmId}
-        title="Delete Customer"
+        title="Delete User"
         message="Are you sure want to delete?"
         confirmText="Yes"
         cancelText="No"
