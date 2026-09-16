@@ -3,12 +3,13 @@
 import keycloak from "../lib/keycloak";
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import { useState } from "react";
-import { LogOut, Flame, User, UserCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { LogOut, Flame, User, UserCircle, Heart } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 import company_logo from "./company_logo.png";
 
 export default function Navbar(props: any) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { profile } = useKeycloak();
 
@@ -141,11 +142,45 @@ export default function Navbar(props: any) {
     );
   };
   const renderLandingAuthCustomerLinks = () => {
+    const isInterestedActive =
+      pathname === "/portal" ||
+      pathname === "/portal/customer" ||
+      pathname === "/portal/interested";
+    const isAccountActive = pathname === "/portal/profile";
+
     return (
       <>
         <a
-          style={{ cursor: "pointer" }}
+          style={{
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            fontWeight: isInterestedActive ? 700 : 400,
+            color: isInterestedActive ? "var(--rose, #e11d48)" : "var(--ink-80, #334155)",
+          }}
           onClick={() => {
+            handleLinkClick();
+            router.push(`/portal/customer`);
+          }}
+        >
+          <Heart
+            size={16}
+            style={{
+              color: "var(--rose, #e11d48)",
+              fill: isInterestedActive ? "var(--rose, #e11d48)" : "none",
+            }}
+          />
+          <span>Interested</span>
+        </a>
+        <a
+          style={{
+            cursor: "pointer",
+            fontWeight: isAccountActive ? 700 : 400,
+            color: isAccountActive ? "var(--rose, #e11d48)" : "var(--ink-80, #334155)",
+          }}
+          onClick={() => {
+            handleLinkClick();
             router.push(`/portal/profile`);
           }}
         >
