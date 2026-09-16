@@ -89,11 +89,15 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     return (
       subscriptionList.find((s: any) => {
         if (!s) return false;
-        const sType = String(s.type || "").toLowerCase().trim();
+        const sType = String(s.type || "")
+          .toLowerCase()
+          .trim();
         const sName = String(s.name || s.title || s.plan_name || "")
           .toLowerCase()
           .trim();
-        const sId = String(s._id || s.id || "").toLowerCase().trim();
+        const sId = String(s._id || s.id || "")
+          .toLowerCase()
+          .trim();
         const userSub = String(userSubVal).toLowerCase().trim();
 
         return (
@@ -114,6 +118,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           ? matchedSubscription.interested_limit
           : matchedSubscription?.interest_limit;
 
+  console.log("rawLimit", rawLimit);
+
   const hasLimitDefined =
     rawLimit !== undefined &&
     rawLimit !== null &&
@@ -122,67 +128,92 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
   const limitCount = hasLimitDefined ? Number(rawLimit) : Infinity;
 
-  // Calculate current total unique interests sent by this user
-  const currentSentCount = useMemo(() => {
-    const profileSentIds = [
+  // Primary unique ID of this customer card
+  const primaryCustomerId = String(
+    customer?._id || customer?.id || customer?.customer_id || "",
+  ).trim();
+
+  // 1. Extract all sent interested IDs from profile (checking sendInterested, interestProfiles, interestedList, etc.) and localStorage
+  const sendInterestedIds = useMemo(() => {
+    const rawProfileList: any[] = [
+      ...(Array.isArray(activeProfile?.sendInterested)
+        ? activeProfile.sendInterested
+        : []),
+      ...(Array.isArray(activeProfile?.send_interested)
+        ? activeProfile.send_interested
+        : []),
+      ...(Array.isArray(activeProfile?.sendInterest)
+        ? activeProfile.sendInterest
+        : []),
       ...(Array.isArray(activeProfile?.interestProfiles)
         ? activeProfile.interestProfiles
+        : []),
+      ...(Array.isArray(activeProfile?.interestedProfiles)
+        ? activeProfile.interestedProfiles
         : []),
       ...(Array.isArray(activeProfile?.interestedList)
         ? activeProfile.interestedList
         : []),
-    ]
-      .filter(
-        (id) =>
-          typeof id === "string" &&
-          id.trim() !== "" &&
-          id !== "undefined" &&
-          id !== "null",
-      )
-      .map((id) => id.trim());
+    ];
 
-    const localSentIds = getCleanStoredInterestedIds();
-    return Array.from(new Set([...profileSentIds, ...localSentIds])).length;
+    const parsedProfileIds = rawProfileList
+      .map((item: any) => {
+        if (!item) return "";
+        if (typeof item === "string") return item.trim();
+        return String(
+          item._id ||
+            item.id ||
+            item.customer_id ||
+            item.target_customer_id ||
+            item.target_id ||
+            "",
+        ).trim();
+      })
+      .filter((id: string) => id && id !== "undefined" && id !== "null");
+
+    const localStored = getCleanStoredInterestedIds();
+    return Array.from(new Set([...parsedProfileIds, ...localStored]));
   }, [activeProfile, isInterested]);
 
-  const isLimitReached =
-    hasLimitDefined && !isInterested && currentSentCount >= limitCount;
+  // Length of sent interested IDs
+  const sendInterestedLength = sendInterestedIds.length;
+
+  // 2. ID-based check: Has interest already been sent to THIS specific card's ID?
+  const isThisProfileSent = useMemo(() => {
+    if (allCustomerIds.length === 0) return false;
+    return allCustomerIds.some((id) => sendInterestedIds.includes(id));
+  }, [allCustomerIds, sendInterestedIds]);
+
+  const isCardInterested = isInterested || isThisProfileSent;
+
+  // 3. ID-based access limit check:
+  // If this card is already sent, user has access to it.
+  // If not sent, lock access when sendInterestedLength >= limitCount.
+  const isLimitReached = hasLimitDefined && sendInterestedLength >= limitCount;
+
+  const isAccessLocked = isLimitReached && !isCardInterested;
+
+  console.log("Access Control:", {
+    primaryCustomerId,
+    rawLimit,
+    limitCount,
+    sendInterestedLength,
+    sendInterestedIds,
+    isThisProfileSent,
+    isCardInterested,
+    isLimitReached,
+    isAccessLocked,
+  });
 
   const evaluateIsInterested = useCallback(() => {
     if (allCustomerIds.length === 0) return false;
 
-    // 1. Check sanitized localStorage for this customer's IDs only
-    const stored = getCleanStoredInterestedIds();
-    if (stored.some((id) => allCustomerIds.includes(id))) {
+    // Check if card ID is in sendInterested list
+    if (allCustomerIds.some((id) => sendInterestedIds.includes(id))) {
       return true;
     }
 
-    // 2. Check current logged-in user profile's interest lists
-    const activeProf = loggedInProfile || contextProfile;
-    if (activeProf) {
-      const profileSentInterests: string[] = [
-        ...(Array.isArray(activeProf?.interestProfiles)
-          ? activeProf.interestProfiles
-          : []),
-        ...(Array.isArray(activeProf?.interestedList)
-          ? activeProf.interestedList
-          : []),
-      ]
-        .filter(
-          (id) =>
-            typeof id === "string" &&
-            id.trim() !== "" &&
-            id !== "undefined" &&
-            id !== "null",
-        )
-        .map((id) => id.trim());
-
-      if (profileSentInterests.some((id) => allCustomerIds.includes(id))) {
-        return true;
-      }
-    }
-
-    // 3. Fallback to explicit boolean on customer object
+    // Fallback to explicit boolean on customer object
     if (
       customer?.interestSent === true ||
       customer?.isInterested === true ||
@@ -192,7 +223,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     }
 
     return false;
-  }, [allCustomerIds, loggedInProfile, contextProfile, customer]);
+  }, [allCustomerIds, sendInterestedIds, customer]);
 
   useEffect(() => {
     setIsInterested(evaluateIsInterested());
@@ -220,7 +251,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     e.stopPropagation();
     if (isSavingInterest) return;
 
-    if (!isInterested && isLimitReached) {
+    // ID-based access check: block new interest if limit is reached
+    if (!isCardInterested && isAccessLocked) {
       const planName =
         matchedSubscription?.name ||
         matchedSubscription?.title ||
@@ -228,7 +260,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         userSubVal ||
         "current";
       alert(
-        `You have reached your interest limit (${currentSentCount}/${limitCount}) for your ${planName} plan. Please upgrade your subscription to send more interests.`,
+        `You have reached your interest limit (${sendInterestedLength}/${limitCount}) for your ${planName} plan. Please upgrade your subscription to send more interests.`,
       );
       return;
     }
@@ -237,21 +269,22 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     setIsInterested(newState);
     setIsSavingInterest(true);
 
-    // Save to localStorage with clean IDs
-    if (typeof window !== "undefined" && allCustomerIds.length > 0) {
+    // Save to localStorage: use single primary ID per customer so 1 customer = 1 count!
+    if (typeof window !== "undefined" && primaryCustomerId) {
       try {
         const stored = getCleanStoredInterestedIds();
         let updated = [...stored];
         if (newState) {
-          allCustomerIds.forEach((cidStr) => {
-            if (!updated.includes(cidStr)) updated.push(cidStr);
-          });
+          if (!updated.includes(primaryCustomerId)) {
+            updated.push(primaryCustomerId);
+          }
         } else {
           updated = updated.filter(
             (id: string) => !allCustomerIds.includes(id),
           );
         }
         localStorage.setItem("interested_profile_ids", JSON.stringify(updated));
+        localStorage.setItem("sendInterested", JSON.stringify(updated));
       } catch (err) {
         console.error("Failed to save interest to localStorage", err);
       }
@@ -417,8 +450,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           <div className="flex items-center gap-3 mb-4">
             <span
               title={
-                isLimitReached && !isInterested
-                  ? `Interest limit reached (${currentSentCount}/${limitCount})`
+                isAccessLocked
+                  ? `Interest limit reached (${sendInterestedLength}/${limitCount})`
                   : undefined
               }
               className="inline-flex"
@@ -426,9 +459,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
               <Heart
                 onClick={handleInterestClick}
                 className={`w-5 h-5 transition-colors ${
-                  isLimitReached && !isInterested
+                  isAccessLocked
                     ? "text-gray-300 cursor-not-allowed opacity-60"
-                    : isInterested
+                    : isCardInterested
                       ? "cursor-pointer fill-pink-500 text-pink-500"
                       : "cursor-pointer text-pink-500 hover:fill-pink-500"
                 }`}
@@ -471,42 +504,52 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
+            disabled={isSavingInterest || isAccessLocked}
             onClick={() => onView?.(customer._id || customer.id)}
-            className="bg-[#15203c] text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-[#0d1428] transition-colors flex items-center gap-2 cursor-pointer"
+            style={{
+              backgroundColor: isAccessLocked ? "#f7f8f9" : "#15203c",
+              color: isAccessLocked ? "#b9bec8" : "#f7f8f9",
+            }}
+            className={`bg-[#15203c] text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-[#0d1428] transition-colors flex items-center gap-2 cursor-pointer`}
           >
-            <User className="w-4 h-4" /> View Full Profile
+            {isAccessLocked ? (
+              <Lock className="w-4 h-4 text-gray-400" />
+            ) : (
+              <User className="w-4 h-4" />
+            )}
+            View Full Profile
           </button>
 
           <button
             onClick={handleInterestClick}
-            disabled={isSavingInterest || (isLimitReached && !isInterested)}
+            disabled={isSavingInterest || isAccessLocked}
             className={`px-5 py-2.5 rounded text-sm font-medium transition-all flex items-center gap-2 shadow-2xs active:scale-95 disabled:opacity-70 ${
               isSavingInterest
                 ? "opacity-75 cursor-wait"
-                : isInterested
+                : isCardInterested
                   ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 cursor-pointer"
-                  : isLimitReached
+                  : isAccessLocked
                     ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed hover:bg-gray-100"
                     : "bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white cursor-pointer"
             }`}
             title={
               isSavingInterest
                 ? "Saving..."
-                : isInterested
+                : isCardInterested
                   ? "Interest Sent"
-                  : isLimitReached
-                    ? `Interest limit reached (${currentSentCount}/${limitCount}) for ${matchedSubscription?.name || matchedSubscription?.type || "your"} plan`
+                  : isAccessLocked
+                    ? `Interest limit reached (${sendInterestedLength}/${limitCount}) for ${matchedSubscription?.name || matchedSubscription?.type || "your"} plan`
                     : "Send Interest to this profile"
             }
           >
             {isSavingInterest ? (
               <Loader2 className="w-4 h-4 animate-spin text-current" />
-            ) : isLimitReached && !isInterested ? (
+            ) : isAccessLocked ? (
               <Lock className="w-4 h-4 text-gray-400" />
             ) : (
               <Heart
                 className={`w-4 h-4 ${
-                  isInterested
+                  isCardInterested
                     ? "fill-rose-600 text-rose-600"
                     : "fill-white text-white"
                 }`}
@@ -515,9 +558,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             <span>
               {isSavingInterest
                 ? "Saving..."
-                : isInterested
+                : isCardInterested
                   ? "Interest Sent"
-                  : isLimitReached
+                  : isAccessLocked
                     ? "Limit Reached"
                     : "Send Interest"}
             </span>
