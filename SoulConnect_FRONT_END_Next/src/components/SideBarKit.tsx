@@ -52,6 +52,8 @@ export default function SideBarKit({ children }: SideBarKitProps) {
     profile?.role === "manager_g" ||
     role.includes("assit_g") ||
     profile?.role === "assit_g";
+  const isManagerOnly =
+    role.includes("manager") || profile?.role === "manager_g";
 
   const menus = [
     {
@@ -69,11 +71,15 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       icon: Heart,
       router: "/portal/interested",
     },
-    {
-      name: "Users",
-      icon: Users,
-      router: "/portal/users",
-    },
+    ...(isManagerOnly
+      ? [
+          {
+            name: "Users",
+            icon: Users,
+            router: "/portal/users",
+          },
+        ]
+      : []),
     {
       name: "Transactions",
       icon: ReceiptText,
@@ -84,7 +90,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       icon: CircleDollarSign,
       router: "/portal/subscription",
     },
-    ...(isManager
+    ...(isManagerOnly
       ? [
           {
             name: "Payment Account",

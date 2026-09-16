@@ -34,7 +34,6 @@ export default function LayoutKit({ children }: { children: React.ReactNode }) {
       (r) => r === "manager_g" || r === "assit_g" || r === "customer_g",
     ) || "no_roles";
 
-  console.log("role", role, role === "manager_g" || role === "assit_g");
   return (
     <>
       {role === "manager_g" || role === "assit_g" ? (
