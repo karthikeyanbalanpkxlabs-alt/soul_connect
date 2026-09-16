@@ -607,8 +607,28 @@ export default function Registration({
     }
     const selectedPlanData = membershipPlans.find(p => p.name === selectedPlan);
 
-    // Process registration success callback
-    onRegisterSuccess();
+    const handleRegistrationError = (errMsg: string) => {
+      const lowerMsg = errMsg.toLowerCase();
+      if (lowerMsg.includes("phone") || lowerMsg.includes("mobile")) {
+        formik.setFieldError("mobile", errMsg);
+        setMobileVerified(false);
+        setMobileOtpSent(false);
+        setRegStep(1);
+        setTimeout(() => {
+          const regSection = document.getElementById("register");
+          if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      } else if (lowerMsg.includes("email")) {
+        formik.setFieldError("email", errMsg);
+        setEmailVerified(false);
+        setEmailOtpSent(false);
+        setRegStep(1);
+        setTimeout(() => {
+          const regSection = document.getElementById("register");
+          if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    };
 
     let dataGenerateId = generateId();
     const values = formik.values;
@@ -658,9 +678,14 @@ export default function Registration({
       const customerResp = await onSaveCustomer(createFixture);
 
       if (!customerResp || customerResp.error) {
-        showToast(customerResp?.error || customerResp?.message || "Failed to save customer data.", "error");
+        const errMsg = customerResp?.error || customerResp?.message || "Failed to save customer data.";
+        showToast(errMsg, "error");
+        handleRegistrationError(errMsg);
         return;
       }
+
+      // Process registration success callback on success
+      onRegisterSuccess();
 
       // Trigger membership payment checkout modal if a paid plan is selected
       if (selectedPlanData && selectedPlanData.price !== "₹0") {
@@ -680,7 +705,9 @@ export default function Registration({
       }
     } catch (error: any) {
       console.error("Registration error:", error);
-      showToast(error?.message || "Failed to create customer profile. Please try again.", "error");
+      const errMsg = error?.message || "Failed to create customer profile. Please try again.";
+      showToast(errMsg, "error");
+      handleRegistrationError(errMsg);
     }
   };
 
