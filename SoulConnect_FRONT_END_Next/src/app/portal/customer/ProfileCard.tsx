@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Heart, User, Pencil, Trash2, Loader2 } from "lucide-react";
 import configUrls from "../../../../configUrls";
+import { useKeycloak } from "@/providers/KeycloakProvider";
 
 interface ProfileCardProps {
   customer: any;
@@ -9,7 +10,35 @@ interface ProfileCardProps {
   onView?: (id: string) => void;
   onSendInterest?: (customer: any) => void;
   canDelete?: boolean;
+  loggedInProfile?: any;
 }
+
+// Clean and validate stored IDs in localStorage (removes legacy "undefined" / "null" values)
+const getCleanStoredInterestedIds = (): string[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("interested_profile_ids");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const cleaned = parsed
+      .filter(
+        (id: any) =>
+          typeof id === "string" &&
+          id.trim() !== "" &&
+          id !== "undefined" &&
+          id !== "null",
+      )
+      .map((id: string) => id.trim());
+
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem("interested_profile_ids", JSON.stringify(cleaned));
+    }
+    return cleaned;
+  } catch {
+    return [];
+  }
+};
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
   customer,
@@ -18,8 +47,14 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   onView,
   onSendInterest,
   canDelete,
+  loggedInProfile,
 }) => {
+  const { profile: contextProfile } = useKeycloak();
+  const activeProfile = loggedInProfile || contextProfile;
+
   const customerId = customer?._id || customer?.id || customer?.customer_id;
+
+  // Extract only genuine, non-empty, valid IDs for this specific profile
   const allCustomerIds = Array.from(
     new Set(
       [
@@ -27,44 +62,90 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         customer?.id,
         customer?.customer_id,
         customer?.keycloakId,
-        customer?.email,
       ]
-        .map(String)
-        .filter(Boolean),
+        .filter(
+          (val) =>
+            val !== null &&
+            val !== undefined &&
+            typeof val !== "object" &&
+            String(val).trim() !== "" &&
+            String(val) !== "undefined" &&
+            String(val) !== "null",
+        )
+        .map((val) => String(val).trim()),
     ),
   );
 
   const [isInterested, setIsInterested] = useState(false);
   const [isSavingInterest, setIsSavingInterest] = useState(false);
 
-  useEffect(() => {
-    let initialInterested = false;
+  const evaluateIsInterested = useCallback(() => {
+    if (allCustomerIds.length === 0) return false;
 
-    if (typeof window !== "undefined") {
-      try {
-        const stored = JSON.parse(
-          localStorage.getItem("interested_profile_ids") || "[]",
-        );
-        if (
-          Array.isArray(stored) &&
-          allCustomerIds.some((id) => stored.includes(id))
-        ) {
-          initialInterested = true;
-        }
-      } catch (e) {
-        console.error(e);
+    // 1. Check sanitized localStorage for this customer's IDs only
+    const stored = getCleanStoredInterestedIds();
+    if (stored.some((id) => allCustomerIds.includes(id))) {
+      return true;
+    }
+
+    // 2. Check current logged-in user profile's interest lists
+    const activeProf = loggedInProfile || contextProfile;
+    if (activeProf) {
+      const profileSentInterests: string[] = [
+        ...(Array.isArray(activeProf?.interestProfiles)
+          ? activeProf.interestProfiles
+          : []),
+        ...(Array.isArray(activeProf?.interestedList)
+          ? activeProf.interestedList
+          : []),
+      ]
+        .filter(
+          (id) =>
+            typeof id === "string" &&
+            id.trim() !== "" &&
+            id !== "undefined" &&
+            id !== "null",
+        )
+        .map((id) => id.trim());
+
+      if (profileSentInterests.some((id) => allCustomerIds.includes(id))) {
+        return true;
       }
     }
 
-    if (!initialInterested) {
-      initialInterested =
-        customer?.interestSent === true ||
-        customer?.isInterested === true ||
-        customer?.interest_sent === true;
+    // 3. Fallback to explicit boolean on customer object
+    if (
+      customer?.interestSent === true ||
+      customer?.isInterested === true ||
+      customer?.interest_sent === true
+    ) {
+      return true;
     }
 
-    setIsInterested(initialInterested);
-  }, [customer, customerId]);
+    return false;
+  }, [allCustomerIds, loggedInProfile, contextProfile, customer]);
+
+  useEffect(() => {
+    setIsInterested(evaluateIsInterested());
+  }, [evaluateIsInterested]);
+
+  // Sync state when interest is updated globally or storage changes
+  useEffect(() => {
+    const handleInterestUpdate = () => {
+      setIsInterested(evaluateIsInterested());
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("interestUpdated", handleInterestUpdate);
+      window.addEventListener("storage", handleInterestUpdate);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("interestUpdated", handleInterestUpdate);
+        window.removeEventListener("storage", handleInterestUpdate);
+      }
+    };
+  }, [evaluateIsInterested]);
 
   const handleInterestClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,13 +155,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     setIsInterested(newState);
     setIsSavingInterest(true);
 
-    // Save to localStorage for instant local persistence
-    if (typeof window !== "undefined") {
+    // Save to localStorage with clean IDs
+    if (typeof window !== "undefined" && allCustomerIds.length > 0) {
       try {
-        const stored = JSON.parse(
-          localStorage.getItem("interested_profile_ids") || "[]",
-        );
-        let updated = Array.isArray(stored) ? [...stored] : [];
+        const stored = getCleanStoredInterestedIds();
+        let updated = [...stored];
         if (newState) {
           allCustomerIds.forEach((cidStr) => {
             if (!updated.includes(cidStr)) updated.push(cidStr);
@@ -109,9 +188,18 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         headers["Authorization"] = `Bearer ${token}`;
       }
 
+      const targetIdToUse =
+        customerId || (allCustomerIds.length > 0 ? allCustomerIds[0] : "");
+
+      const activeProf = loggedInProfile || contextProfile;
+
       const payload = {
-        customer_id: customerId,
-        target_customer_id: customerId,
+        target_customer_id: targetIdToUse,
+        target_id: targetIdToUse,
+        user_customer_id: activeProf?.customer_id || activeProf?._id,
+        user_id: activeProf?._id || activeProf?.id,
+        loggedInKeycloakId: activeProf?.keycloakId,
+        loggedInEmail: activeProf?.email,
         isInterested: newState,
         interestSent: newState,
         interest_sent: newState,
@@ -131,8 +219,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           method: "POST",
           headers,
           body: JSON.stringify({
-            _id: customerId,
-            customer_id: customerId,
+            id: targetIdToUse,
+            customer_id: targetIdToUse,
             isInterested: newState,
             interestSent: newState,
             interest_sent: newState,

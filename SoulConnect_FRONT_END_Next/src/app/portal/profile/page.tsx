@@ -508,9 +508,20 @@ export default function ProfilePage() {
       let localInterestedIds: string[] = [];
       if (typeof window !== "undefined") {
         try {
-          localInterestedIds = JSON.parse(
+          const parsed = JSON.parse(
             localStorage.getItem("interested_profile_ids") || "[]",
           );
+          if (Array.isArray(parsed)) {
+            localInterestedIds = parsed
+              .filter(
+                (id: any) =>
+                  typeof id === "string" &&
+                  id.trim() !== "" &&
+                  id !== "undefined" &&
+                  id !== "null",
+              )
+              .map((id: string) => id.trim());
+          }
         } catch (e) {
           console.error(e);
         }
@@ -623,7 +634,16 @@ export default function ProfilePage() {
               }
               const itmId = typeof itm === "string" ? itm : (itm._id || itm.id || itm.customer_id);
               const found = allCusts.find((c: any) => {
-                const cIds = [c._id, c.id, c.customer_id, c.keycloakId, c.email].map(String).filter(Boolean);
+                const cIds = [c._id, c.id, c.customer_id, c.keycloakId, c.email]
+                  .filter(
+                    (v) =>
+                      v !== null &&
+                      v !== undefined &&
+                      String(v).trim() !== "" &&
+                      String(v) !== "undefined" &&
+                      String(v) !== "null",
+                  )
+                  .map((v) => String(v).trim());
                 return cIds.includes(String(itmId));
               });
               return found || itm;
@@ -1229,8 +1249,15 @@ export default function ProfilePage() {
             target?.customer_id,
             target?.keycloakId,
           ]
-            .map(String)
-            .filter(Boolean),
+            .filter(
+              (v) =>
+                v !== null &&
+                v !== undefined &&
+                String(v).trim() !== "" &&
+                String(v) !== "undefined" &&
+                String(v) !== "null",
+            )
+            .map((v) => String(v).trim()),
         ),
       );
 
@@ -1238,19 +1265,35 @@ export default function ProfilePage() {
         setInterestedPeople((prev) =>
           prev.filter((person: any) => {
             const pIds = [person._id, person.id, person.customer_id, person.keycloakId]
-              .map(String)
-              .filter(Boolean);
+              .filter(
+                (v) =>
+                  v !== null &&
+                  v !== undefined &&
+                  String(v).trim() !== "" &&
+                  String(v) !== "undefined" &&
+                  String(v) !== "null",
+              )
+              .map((v) => String(v).trim());
             return !allCustomerIds.some((id) => pIds.includes(id));
           }),
         );
       }
 
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && allCustomerIds.length > 0) {
         try {
-          const stored = JSON.parse(
-            localStorage.getItem("interested_profile_ids") || "[]",
-          );
-          let updated = Array.isArray(stored) ? [...stored] : [];
+          const raw = localStorage.getItem("interested_profile_ids");
+          const stored = raw ? JSON.parse(raw) : [];
+          let updated = Array.isArray(stored)
+            ? stored
+                .filter(
+                  (id: any) =>
+                    typeof id === "string" &&
+                    id.trim() !== "" &&
+                    id !== "undefined" &&
+                    id !== "null",
+                )
+                .map((id: string) => id.trim())
+            : [];
           if (newState) {
             allCustomerIds.forEach((id) => {
               if (!updated.includes(id)) updated.push(id);

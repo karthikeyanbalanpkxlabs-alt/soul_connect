@@ -610,6 +610,7 @@ function CardPage() {
                         <ProfileCard
                           key={row._id || row.customer_id || row.id}
                           customer={row}
+                          loggedInProfile={profile}
                           onEdit={stateProps?.onHandleEditCustomer}
                           onDelete={stateProps?.onDeleteCustomer}
                           onView={handleView}
