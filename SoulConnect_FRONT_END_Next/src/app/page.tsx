@@ -32,6 +32,7 @@ export default function Home() {
   const [isComingSoon, setIsComingSoon] = useState(false);
 
   useEffect(() => {
+    console.log("BUILD TEST SEP 16");
     if (
       typeof window !== "undefined" &&
       window.location.origin.includes("//soulconect.com")
