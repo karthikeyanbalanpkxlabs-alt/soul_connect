@@ -39,13 +39,15 @@ function ListPage() {
 
         {/* ACTION BUTTONS */}
         <div className="flex items-center flex-wrap gap-2.5">
-          <button
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-violet-500/20 hover:shadow-lg transition-all text-xs sm:text-sm cursor-pointer"
-            onClick={stateProps?.onHandleClickCreateCustomer}
-          >
-            <Plus size={16} />
-            <span>Create</span>
-          </button>
+          {stateProps?.getRoles?.includes("manager") && (
+            <button
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-violet-500/20 hover:shadow-lg transition-all text-xs sm:text-sm cursor-pointer"
+              onClick={stateProps?.onHandleClickCreateCustomer}
+            >
+              <Plus size={16} />
+              <span>Create</span>
+            </button>
+          )}
 
           {/* <button
             className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-xs sm:text-sm cursor-pointer shadow-2xs"
@@ -69,6 +71,7 @@ function ListPage() {
 
       {/* DYNAMIC DATA TABLE */}
       <DynamicTable
+        isActiveFiltersDisable={true}
         columns={stateProps?.columns}
         rows={stateProps?.rows}
         loading={stateProps?.loading}
@@ -84,6 +87,7 @@ function ListPage() {
       {/* MODAL */}
       {stateProps?.isModalOpen && (
         <CustomerModal
+          isManager={stateProps?.getRoles?.includes("manager")}
           isOpen={stateProps?.isModalOpen}
           onClose={() => stateProps?.setIsModalOpen(false)}
           onSave={stateProps?.onSaveCustomer}

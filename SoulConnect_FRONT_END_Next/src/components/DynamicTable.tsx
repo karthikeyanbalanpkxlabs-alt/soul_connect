@@ -27,6 +27,7 @@ interface DynamicTableProps<T = any> {
   columns: TableColumn<T>[];
   rows: T[];
 
+  isActiveFiltersDisable?: boolean;
   loading?: boolean;
 
   total: number;
@@ -61,6 +62,7 @@ function DynamicTable<T>({
   sortOrder,
   onSortChange,
   syncWithUrl = true,
+  isActiveFiltersDisable = false,
 }: DynamicTableProps<T>) {
   const router = useRouter();
   const pathname = usePathname();
@@ -141,7 +143,8 @@ function DynamicTable<T>({
 
   const handleHeaderClick = (column: TableColumn<T>) => {
     const keyStr = String(column.key);
-    if (!onSortChange || column.isSortable === false || keyStr === "action") return;
+    if (!onSortChange || column.isSortable === false || keyStr === "action")
+      return;
 
     if (sortField !== keyStr) {
       onSortChange(keyStr, "asc");
@@ -153,7 +156,7 @@ function DynamicTable<T>({
   };
 
   const activeFilters = Object.entries(filters).filter(
-    ([_, val]) => val && String(val).trim() !== ""
+    ([_, val]) => val && String(val).trim() !== "",
   );
 
   const clearAllFilters = () => {
@@ -188,7 +191,10 @@ function DynamicTable<T>({
     return pages.map((page, idx) => {
       if (typeof page === "string") {
         return (
-          <span key={`ellipse-${idx}`} className="px-2 py-1 text-xs text-slate-400">
+          <span
+            key={`ellipse-${idx}`}
+            className="px-2 py-1 text-xs text-slate-400"
+          >
             ...
           </span>
         );
@@ -213,38 +219,44 @@ function DynamicTable<T>({
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
       {/* FILTER CHIPS BANNER */}
-      {activeFilters.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 bg-gradient-to-r from-violet-50/80 via-indigo-50/40 to-slate-50 border-b border-violet-100 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-violet-800 font-semibold flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-violet-600 animate-pulse"></span>
-              Active Filters:
-            </span>
-            {activeFilters.map(([key, val]) => (
-              <span
-                key={key}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-violet-200 text-violet-700 font-medium shadow-2xs text-[11px]"
-              >
-                <span className="text-slate-400">{getColumnLabel(key)}:</span>
-                <span className="font-semibold text-violet-900">{val}</span>
-                <button
-                  onClick={() => onFilterChange(key, "")}
-                  className="text-violet-400 hover:text-violet-700 rounded-full p-0.5 transition-colors cursor-pointer"
-                  title="Remove filter"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
-          </div>
+      {isActiveFiltersDisable === false && (
+        <>
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 bg-gradient-to-r from-violet-50/80 via-indigo-50/40 to-slate-50 border-b border-violet-100 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-violet-800 font-semibold flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-violet-600 animate-pulse"></span>
+                  Active Filters:
+                </span>
+                {activeFilters.map(([key, val]) => (
+                  <span
+                    key={key}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-violet-200 text-violet-700 font-medium shadow-2xs text-[11px]"
+                  >
+                    <span className="text-slate-400">
+                      {getColumnLabel(key)}:
+                    </span>
+                    <span className="font-semibold text-violet-900">{val}</span>
+                    <button
+                      onClick={() => onFilterChange(key, "")}
+                      className="text-violet-400 hover:text-violet-700 rounded-full p-0.5 transition-colors cursor-pointer"
+                      title="Remove filter"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
 
-          <button
-            onClick={clearAllFilters}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-violet-600 hover:text-violet-900 hover:bg-violet-100/60 font-semibold cursor-pointer transition-colors text-xs"
-          >
-            <XCircle size={14} /> Clear All
-          </button>
-        </div>
+              <button
+                onClick={clearAllFilters}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-violet-600 hover:text-violet-900 hover:bg-violet-100/60 font-semibold cursor-pointer transition-colors text-xs"
+              >
+                <XCircle size={14} /> Clear All
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* TABLE DATA */}
@@ -285,7 +297,10 @@ function DynamicTable<T>({
                               </span>
                             )
                           ) : (
-                            <ArrowUpDown size={12} className="text-slate-400 opacity-60 hover:opacity-100" />
+                            <ArrowUpDown
+                              size={12}
+                              className="text-slate-400 opacity-60 hover:opacity-100"
+                            />
                           )}
                         </span>
                       )}
@@ -344,7 +359,8 @@ function DynamicTable<T>({
                       <div
                         className="h-4 bg-slate-200/80 rounded-md"
                         style={{
-                          width: colIdx === 0 ? "60%" : colIdx === 3 ? "80%" : "40%",
+                          width:
+                            colIdx === 0 ? "60%" : colIdx === 3 ? "80%" : "40%",
                         }}
                       ></div>
                     </td>
@@ -367,7 +383,8 @@ function DynamicTable<T>({
                         No records found
                       </p>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        We couldn't find any results matching your active criteria.
+                        We couldn't find any results matching your active
+                        criteria.
                       </p>
                     </div>
                     {activeFilters.length > 0 && (
@@ -453,9 +470,7 @@ function DynamicTable<T>({
             <span className="hidden md:inline">Prev</span>
           </button>
 
-          <div className="flex items-center gap-1">
-            {renderPageButtons()}
-          </div>
+          <div className="flex items-center gap-1">{renderPageButtons()}</div>
 
           <button
             disabled={currentPage >= totalPages || loading}
@@ -474,4 +489,3 @@ function DynamicTable<T>({
 
 export default DynamicTable;
 export { DynamicTable };
-

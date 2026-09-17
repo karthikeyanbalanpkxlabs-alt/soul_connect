@@ -57,6 +57,7 @@ function ListPage() {
 
       {/* DYNAMIC DATA TABLE */}
       <DynamicTable
+        isActiveFiltersDisable={true}
         columns={stateProps?.columns}
         rows={stateProps?.rows}
         loading={stateProps?.loading}

@@ -756,6 +756,7 @@ function CardPage() {
           )}
           {stateProps?.isModalOpen && (
             <CustomerModal
+              isManager={stateProps?.getRoles?.includes("manager")}
               isOpen={stateProps?.isModalOpen}
               onClose={() => stateProps?.setIsModalOpen(false)}
               onSave={stateProps?.onSaveCustomer}

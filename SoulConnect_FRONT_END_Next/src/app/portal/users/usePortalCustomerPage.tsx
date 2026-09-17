@@ -1277,34 +1277,34 @@ function usePortalCustomerPage() {
         </div>
       ),
     },
-    {
-      key: "role",
-      label: "Role",
-      isFilterable: true,
-      render: (row: any) => {
-        const r = (row.role || "").toLowerCase();
-        const isManager = r === "manager_g" || r === "manager";
-        const isAssit = r === "assit_g" || r === "assit" || r === "assistant";
-        const label = isManager
-          ? "Manager"
-          : isAssit
-            ? "Assit"
-            : row.role || "-";
-        return (
-          <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-              isManager
-                ? "bg-indigo-50 text-indigo-700 border-indigo-200/80"
-                : isAssit
-                  ? "bg-amber-50 text-amber-700 border-amber-200/80"
-                  : "bg-slate-50 text-slate-700 border-slate-200"
-            }`}
-          >
-            {label}
-          </span>
-        );
-      },
-    },
+    // {
+    //   key: "role",
+    //   label: "Role",
+    //   isFilterable: true,
+    //   render: (row: any) => {
+    //     const r = (row.role || "").toLowerCase();
+    //     const isManager = r === "manager_g" || r === "manager";
+    //     const isAssit = r === "assit_g" || r === "assit" || r === "assistant";
+    //     const label = isManager
+    //       ? "Manager"
+    //       : isAssit
+    //         ? "Assit"
+    //         : row.role || "-";
+    //     return (
+    //       <span
+    //         className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+    //           isManager
+    //             ? "bg-indigo-50 text-indigo-700 border-indigo-200/80"
+    //             : isAssit
+    //               ? "bg-amber-50 text-amber-700 border-amber-200/80"
+    //               : "bg-slate-50 text-slate-700 border-slate-200"
+    //         }`}
+    //       >
+    //         {label}
+    //       </span>
+    //     );
+    //   },
+    // },
     // {
     //   key: "approvalStatus",
     //   label: "Approval Status",
