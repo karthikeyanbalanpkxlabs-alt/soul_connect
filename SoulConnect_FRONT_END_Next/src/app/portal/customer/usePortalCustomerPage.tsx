@@ -34,7 +34,12 @@ function usePortalCustomerPage() {
       : "female";
   console.log("profile-1111", profile);
 
-  const [getRoles, setRoles] = React.useState<any>("");
+  const [getRoles, setRoles] = React.useState<any>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("roles") || "";
+    }
+    return "";
+  });
   const [loading, setLoading] = React.useState(true);
   const [rows, setRows] = React.useState<any[]>([]);
   const [skip, setSkip] = React.useState(0);
@@ -865,7 +870,11 @@ function usePortalCustomerPage() {
       const tokenParsed: any = keycloak.tokenParsed;
       let roles: any = tokenParsed?.realm_access?.roles;
       roles = roles.filter(
-        (itm: any) => itm === "manager_g" || itm === "customer_g",
+        (itm: any) =>
+          itm === "manager_g" ||
+          itm === "customer_g" ||
+          itm === "assit_g" ||
+          itm === "assist_g",
       );
       roles = roles.length > 0 ? roles[0] : "customer_g";
       setRoles(roles);
@@ -895,7 +904,11 @@ function usePortalCustomerPage() {
       const tokenParsed: any = keycloak.tokenParsed;
       let roles: any = tokenParsed?.realm_access?.roles;
       roles = roles.filter(
-        (itm: any) => itm === "manager_g" || itm === "customer_g",
+        (itm: any) =>
+          itm === "manager_g" ||
+          itm === "customer_g" ||
+          itm === "assit_g" ||
+          itm === "assist_g",
       );
       roles = roles.length > 0 ? roles[0] : "no_roles";
       setRoles(roles);
@@ -903,6 +916,13 @@ function usePortalCustomerPage() {
       localStorage.setItem("token", keycloak?.token || "");
     }
   };
+
+  const currentRole = getRoles || profile?.role || "";
+  const isManager = currentRole?.includes("manager");
+  const isAssist =
+    currentRole?.includes("assit") ||
+    currentRole?.includes("assist") ||
+    (!isManager && !currentRole?.includes("customer"));
 
   const columns = [
     {
@@ -978,6 +998,48 @@ function usePortalCustomerPage() {
         </div>
       ),
     },
+    ...(isManager
+      ? [
+          {
+            key: "assit_verified_by",
+            label: "Public Verified By",
+            isFilterable: true,
+            render: (row: any) => {
+              const isVerified = row.assit_public_verify === true;
+              const verifiedBy = row.assit_verified_by || row.assit_email || "";
+              return (
+                <div className="flex flex-col gap-1">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border w-fit ${
+                      isVerified
+                        ? "bg-teal-50 text-teal-700 border-teal-200/80"
+                        : "bg-slate-50 text-slate-600 border-slate-200"
+                    }`}
+                  >
+                    {isVerified ? (
+                      <CheckCircle2
+                        size={13}
+                        className="text-teal-600 shrink-0"
+                      />
+                    ) : (
+                      <Clock size={13} className="text-slate-400 shrink-0" />
+                    )}
+                    <span>{isVerified ? "Verified" : "Not Verified"}</span>
+                  </span>
+                  {isVerified && verifiedBy ? (
+                    <span
+                      className="text-[11px] text-slate-500 font-mono truncate max-w-[170px]"
+                      title={verifiedBy}
+                    >
+                      {verifiedBy}
+                    </span>
+                  ) : null}
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: "approvalStatus",
       label: "Approval Status",

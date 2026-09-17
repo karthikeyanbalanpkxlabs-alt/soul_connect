@@ -108,6 +108,18 @@ export async function handleCustomerList(
           } else {
             filter.public_verify = null;
           }
+        } else if (key === "assit_verified_by" || key === "assit_email") {
+          filter.$or = [
+            { assit_verified_by: { $regex: val, $options: "i" } },
+            { assit_email: { $regex: val, $options: "i" } },
+          ];
+        } else if (key === "assit_public_verify") {
+          const lowerVal = String(val).toLowerCase();
+          if (lowerVal === "true" || lowerVal === "verified" || lowerVal === "yes") {
+            filter.assit_public_verify = true;
+          } else if (lowerVal === "false" || lowerVal === "not verified" || lowerVal === "no") {
+            filter.assit_public_verify = false;
+          }
         } else if (key === "gender") {
           filter[dbKey] = { $regex: `^${val}$`, $options: "i" };
         } else if (key === "star" || key === "rasi" || key === "lagnam" || key === "gothram" || key === "dosham") {
@@ -1259,6 +1271,15 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       updateFields.modifiedByemail = email;
     }
 
+    if (updateFields.assit_public_verify && !updateFields.assit_verified_by && loggedInEmail) {
+      updateFields.assit_verified_by = loggedInEmail;
+      updateFields.assit_email = loggedInEmail;
+    } else if (updateFields.assit_verified_by) {
+      updateFields.assit_email = updateFields.assit_verified_by;
+    } else if (updateFields.assit_email) {
+      updateFields.assit_verified_by = updateFields.assit_email;
+    }
+
     const customer = await Customers.findOneAndUpdate(
       query,
       { $set: updateFields },
@@ -1632,6 +1653,22 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       lifeStyle: processedLifeStyle,
       partnerPreferencesDetails: processedPartnerPreferencesDetails,
       role,
+      public_verify:
+        req.body.public_verify !== undefined ? req.body.public_verify : true,
+      assit_public_verify:
+        req.body.assit_public_verify !== undefined
+          ? req.body.assit_public_verify
+          : false,
+      assit_verified_by:
+        req.body.assit_verified_by ||
+        req.body.assit_email ||
+        (req.body.assit_public_verify ? (loggedInEmail || "") : ""),
+      assit_email:
+        req.body.assit_email ||
+        req.body.assit_verified_by ||
+        (req.body.assit_public_verify ? (loggedInEmail || "") : ""),
+      public_verify_command_helper:
+        req.body.public_verify_command_helper || "",
       createdAtTime: new Date(),
       modifiedAtTime: new Date(),
       modifiedByemail: loggedInEmail || email || undefined,

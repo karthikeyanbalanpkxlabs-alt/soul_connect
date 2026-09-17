@@ -3,6 +3,7 @@ import { X, Upload, Users, Plus, Trash2 } from "lucide-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import configUrls from "../../configUrls";
+import { useKeycloak } from "@/providers/KeycloakProvider";
 
 interface CustomerModalProps {
   isOpen: boolean;
@@ -171,6 +172,8 @@ const defaultFormData = {
   },
   transaction: [],
   public_verify: true,
+  assit_public_verify: false,
+  assit_verified_by: "",
   public_verify_command_helper: "",
 };
 
@@ -238,6 +241,9 @@ const customerValidationSchema = Yup.object().shape({
     .min(1, "Family photo is required")
     .max(1, "Maximum 1 family photo allowed")
     .required("Family photo is required"),
+  public_verify: Yup.boolean(),
+  assit_public_verify: Yup.boolean(),
+  assit_verified_by: Yup.string().trim(),
   public_verify_command_helper: Yup.string().trim(),
 });
 
@@ -249,6 +255,7 @@ export default function CustomerModal({
   subscriptionList,
   isManager = false,
 }: CustomerModalProps) {
+  const { profile } = useKeycloak();
   const [subscriptions, setSubscriptions] = useState<any[]>(
     subscriptionList || [],
   );
@@ -406,6 +413,20 @@ export default function CustomerModal({
               "",
           },
           role: initialData.role || "customer_g",
+          public_verify:
+            initialData.public_verify !== undefined
+              ? initialData.public_verify
+              : defaultFormData.public_verify,
+          assit_public_verify:
+            initialData.assit_public_verify !== undefined
+              ? initialData.assit_public_verify
+              : defaultFormData.assit_public_verify,
+          assit_verified_by:
+            initialData.assit_verified_by ||
+            initialData.assit_email ||
+            defaultFormData.assit_verified_by,
+          public_verify_command_helper:
+            initialData.public_verify_command_helper || "",
         }
       : defaultFormData,
     enableReinitialize: true,
@@ -413,8 +434,13 @@ export default function CustomerModal({
     onSubmit: (values) => {
       const selectedWho =
         values.whoiam_register || values.profile_created_for || "For myself";
+      const assistEmail =
+        values.assit_verified_by ||
+        (values.assit_public_verify ? profile?.email || "" : "");
       onSave({
         ...values,
+        assit_verified_by: values.assit_public_verify ? assistEmail : "",
+        assit_email: values.assit_public_verify ? assistEmail : "",
         whoiam_register: selectedWho,
         profile_created_for: selectedWho,
         role: values.role || "customer_g",
@@ -2546,63 +2572,75 @@ export default function CustomerModal({
                     </div>
                   </div>
                 </div>
-
-                {/* Booleans/Misc */}
-                <div className="space-y-4 flex flex-col mt-6 sm:col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5">
-                  {isManager ? (
-                    <label
-                      className={`flex items-center gap-3 ${isManager ? "cursor-pointer" : "cursor-not-allowed opacity-80"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        name="public_verify"
-                        disabled={!isManager}
-                        checked={formik.values.public_verify}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="w-5 h-5 accent-violet-500 rounded"
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        Manager - Publicly Verified
-                      </span>
-                    </label>
-                  ) : (
-                    <label className={`flex items-center gap-3 `}>
-                      <input
-                        type="checkbox"
-                        name="public_verify"
-                        checked={formik.values.public_verify}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="w-5 h-5 accent-violet-500 rounded"
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        Assit - Publicly Verified
-                      </span>
-                    </label>
-                  )}
-
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">
-                      Publicly Verified Command Helper
-                    </label>
-                    <textarea
-                      name="public_verify_command_helper"
-                      rows={3}
-                      value={formik.values.public_verify_command_helper}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={getInputClassName(
-                        "public_verify_command_helper",
-                      )}
-                      placeholder="Enter command helper instructions for verification (Optional)"
-                    />
-                    {isManager &&
-                      renderFieldError("public_verify_command_helper")}
-                  </div>
-                </div>
               </div>
             </fieldset>
+
+            {/* Verification Section */}
+            <div className="space-y-4 flex flex-col mt-6 border-t pt-6">
+              <div className="flex flex-col sm:flex-row gap-6 sm:items-center">
+                {/* Manager / Assist Verification */}
+                {isManager ? (
+                  <label
+                    className={`flex items-center gap-3 ${isManager ? "cursor-pointer" : "cursor-not-allowed opacity-80"}`}
+                  >
+                    <input
+                      type="checkbox"
+                      name="public_verify"
+                      disabled={!isManager}
+                      checked={formik.values.public_verify}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-5 h-5 accent-violet-500 rounded disabled:cursor-not-allowed"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Manager - Publicly Verified
+                    </span>
+                  </label>
+                ) : (
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="assit_public_verify"
+                      checked={formik.values.assit_public_verify}
+                      onChange={(e) => {
+                        formik.handleChange(e);
+                        if (e.target.checked && profile?.email) {
+                          formik.setFieldValue(
+                            "assit_verified_by",
+                            profile.email,
+                          );
+                        } else if (!e.target.checked) {
+                          formik.setFieldValue("assit_verified_by", "");
+                        }
+                      }}
+                      onBlur={formik.handleBlur}
+                      className="w-5 h-5 accent-violet-500 rounded cursor-pointer"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Assit - Publicly Verified
+                    </span>
+                  </label>
+                )}
+
+                {/* Assist Verification */}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Publicly Verified Command Helper
+                </label>
+                <textarea
+                  name="public_verify_command_helper"
+                  rows={3}
+                  value={formik.values.public_verify_command_helper}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={getInputClassName("public_verify_command_helper")}
+                  placeholder="Enter command helper instructions for verification (Optional)"
+                />
+                {renderFieldError("public_verify_command_helper")}
+              </div>
+            </div>
           </form>
         </div>
 
