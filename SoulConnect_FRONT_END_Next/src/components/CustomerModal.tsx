@@ -439,6 +439,10 @@ export default function CustomerModal({
         (values.assit_public_verify ? profile?.email || "" : "");
       onSave({
         ...values,
+        manager_verified_by:
+          isManager && values.public_verify
+            ? profile?.email || initialData?.manager_verified_by || ""
+            : initialData?.manager_verified_by || "",
         assit_verified_by: values.assit_public_verify ? assistEmail : "",
         assit_email: values.assit_public_verify ? assistEmail : "",
         whoiam_register: selectedWho,

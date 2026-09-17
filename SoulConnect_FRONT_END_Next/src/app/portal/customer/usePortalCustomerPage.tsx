@@ -234,9 +234,13 @@ function usePortalCustomerPage() {
     }
     const token = keycloak?.token;
 
+    const loggedInEmail =
+      profile?.email || (keycloak as any)?.tokenParsed?.email || "";
+
     const payload = {
       ...customer,
       public_verify: isApproved,
+      manager_verified_by: isApproved ? loggedInEmail : "",
       approvalStatus: newStatus,
       public_verify_command_helper:
         newStatus === "Approved"
@@ -998,42 +1002,106 @@ function usePortalCustomerPage() {
         </div>
       ),
     },
-    ...(isManager
+    ...(isManager || isAssist
       ? [
           {
             key: "assit_verified_by",
             label: "Public Verified By",
             isFilterable: true,
             render: (row: any) => {
-              const isVerified = row.assit_public_verify === true;
-              const verifiedBy = row.assit_verified_by || row.assit_email || "";
+              const isManagerVerified = row.public_verify === true;
+              const isAssistVerified =
+                row.assit_public_verify === true ||
+                Boolean(row.assit_verified_by || row.assit_email);
+
+              const managerEmail =
+                row.manager_verified_by ||
+                (isManagerVerified ? row.modifiedByemail : "") ||
+                "";
+              const assistEmail =
+                row.assit_verified_by || row.assit_email || "";
+
+              const loggedInUserEmail = (
+                profile?.email ||
+                keycloak?.tokenParsed?.email ||
+                ""
+              )
+                .toLowerCase()
+                .trim();
+
+              const renderVerifier = (
+                roleLabel: string,
+                emailStr?: string,
+              ) => {
+                const cleaned = (emailStr || "").trim();
+                const isSelf =
+                  Boolean(loggedInUserEmail) &&
+                  Boolean(cleaned) &&
+                  cleaned.toLowerCase() === loggedInUserEmail;
+                const isManagerRole = roleLabel
+                  .toLowerCase()
+                  .includes("manager");
+
+                return (
+                  <div className="flex items-center gap-1 text-[11px] leading-tight">
+                    <span
+                      className={`font-semibold ${
+                        isManagerRole ? "text-indigo-600" : "text-teal-600"
+                      }`}
+                    >
+                      {roleLabel}:
+                    </span>
+                    {isSelf ? (
+                      <span className="font-semibold text-violet-700 bg-violet-50 border border-violet-200/80 px-1.5 py-0.5 rounded text-[10px]">
+                        My self
+                      </span>
+                    ) : cleaned ? (
+                      <span
+                        className="text-slate-600 font-mono truncate max-w-[150px]"
+                        title={cleaned}
+                      >
+                        {cleaned}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 italic">Verified</span>
+                    )}
+                  </div>
+                );
+              };
+
               return (
-                <div className="flex flex-col gap-1">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border w-fit ${
-                      isVerified
-                        ? "bg-teal-50 text-teal-700 border-teal-200/80"
-                        : "bg-slate-50 text-slate-600 border-slate-200"
-                    }`}
-                  >
-                    {isVerified ? (
+                <div className="flex flex-col gap-1.5">
+                  {isManagerVerified ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border w-fit bg-emerald-50 text-emerald-700 border-emerald-200/80">
+                      <CheckCircle2
+                        size={13}
+                        className="text-emerald-600 shrink-0"
+                      />
+                      <span>Verified</span>
+                    </span>
+                  ) : isAssistVerified ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border w-fit bg-teal-50 text-teal-700 border-teal-200/80">
                       <CheckCircle2
                         size={13}
                         className="text-teal-600 shrink-0"
                       />
-                    ) : (
-                      <Clock size={13} className="text-slate-400 shrink-0" />
-                    )}
-                    <span>{isVerified ? "Verified" : "Not Verified"}</span>
-                  </span>
-                  {isVerified && verifiedBy ? (
-                    <span
-                      className="text-[11px] text-slate-500 font-mono truncate max-w-[170px]"
-                      title={verifiedBy}
-                    >
-                      {verifiedBy}
+                      <span>Assit Verified</span>
                     </span>
-                  ) : null}
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border w-fit bg-slate-50 text-slate-600 border-slate-200">
+                      <Clock size={13} className="text-slate-400 shrink-0" />
+                      <span>Not Verified</span>
+                    </span>
+                  )}
+
+                  {(isManagerVerified || isAssistVerified) && (
+                    <div className="flex flex-col gap-0.5">
+                      {isManagerVerified &&
+                        renderVerifier("Manager", managerEmail)}
+                      {isAssistVerified &&
+                        renderVerifier("Assit", assistEmail)}
+                    </div>
+                  )}
                 </div>
               );
             },

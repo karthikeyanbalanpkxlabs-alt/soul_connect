@@ -1280,6 +1280,10 @@ export async function handleCustomerEdit(req: Request, res: Response) {
       updateFields.assit_verified_by = updateFields.assit_email;
     }
 
+    if (updateFields.public_verify && !updateFields.manager_verified_by && loggedInEmail) {
+      updateFields.manager_verified_by = loggedInEmail;
+    }
+
     const customer = await Customers.findOneAndUpdate(
       query,
       { $set: updateFields },
@@ -1655,6 +1659,9 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       role,
       public_verify:
         req.body.public_verify !== undefined ? req.body.public_verify : true,
+      manager_verified_by:
+        req.body.manager_verified_by ||
+        (req.body.public_verify ? (loggedInEmail || "") : ""),
       assit_public_verify:
         req.body.assit_public_verify !== undefined
           ? req.body.assit_public_verify

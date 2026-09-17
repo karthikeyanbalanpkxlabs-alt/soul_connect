@@ -23,6 +23,7 @@ const customerSchema = new mongoose.Schema(
     blood_group: String,
     additional_report_info: String,
     public_verify: Boolean,
+    manager_verified_by: String,
     assit_public_verify: Boolean,
     assit_verified_by: String,
     assit_email: String,
