@@ -29,6 +29,7 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json({ limit: "500mb" }));
 app.use(express_1.default.urlencoded({ limit: "500mb", extended: true }));
 app.use("/uploads", express_1.default.static(path_1.default.join(process.cwd(), "uploads")));
+app.use("/public", express_1.default.static(path_1.default.join(process.cwd(), "public")));
 app.use((0, express_session_1.default)({
     secret: process.env.SESSION_SECRET || "my-super-secret-session-key",
     resave: false,

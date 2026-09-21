@@ -43,6 +43,15 @@ import {
   handleMakePayment,
   handleCreateRazorpayOrder,
   handleRazorpayWebhook,
+  handleCreateUpiIntent,
+  handleCreateChargePage,
+  handleExpireChargePage,
+  handleGenerateChallan,
+  handleSeamlessUpiPayment,
+  handlePaymentStatusInquiry,
+  handleRefundRequest,
+  handleRefundStatus,
+  handleGatewayCallback,
 } from "../controllers/paymentController";
 import { handleForgotPassword, handleResetPassword } from "../controllers/authController";
 
@@ -148,6 +157,58 @@ router.get(
 router.post("/makePayment", keycloak.protect(), handleMakePayment);
 router.post("/make_payment", keycloak.protect(), handleMakePayment);
 
+// --- PAYMENT GATEWAY PROTECTED ROUTES ---
+router.post(
+  "/payment/gateway/upi-intent",
+  keycloak.protect(),
+  handleCreateUpiIntent,
+);
+router.post(
+  "/payment/gateway/charge-page",
+  keycloak.protect(),
+  handleCreateChargePage,
+);
+router.post(
+  "/payment/gateway/expire-page",
+  keycloak.protect(),
+  handleExpireChargePage,
+);
+router.post(
+  "/payment/gateway/challan",
+  keycloak.protect(),
+  handleGenerateChallan,
+);
+router.post(
+  "/payment/gateway/seamless-pay",
+  keycloak.protect(),
+  handleSeamlessUpiPayment,
+);
+router.post(
+  "/payment/gateway/status",
+  keycloak.protect(),
+  handlePaymentStatusInquiry,
+);
+router.get(
+  "/payment/gateway/status",
+  keycloak.protect(),
+  handlePaymentStatusInquiry,
+);
+router.post(
+  "/payment/gateway/refund",
+  keycloak.protect(),
+  handleRefundRequest,
+);
+router.post(
+  "/payment/gateway/refund-status",
+  keycloak.protect(),
+  handleRefundStatus,
+);
+router.get(
+  "/payment/gateway/refund-status",
+  keycloak.protect(),
+  handleRefundStatus,
+);
+
 router.get("/protected", keycloak.protect(), (req, res) => {
   res.json({ message: "Hello Protected World!" });
 });
@@ -188,6 +249,26 @@ router.get("/public/payment_account_detail/:id", handlePaymentAccountDetailGet);
 router.post("/public/makePayment", handleMakePayment);
 router.post("/public/make_payment", handleMakePayment);
 router.post("/makePayment", handleMakePayment);
+
+// --- PAYMENT GATEWAY PUBLIC ROUTES ---
+router.post("/public/payment/gateway/upi-intent", handleCreateUpiIntent);
+router.post("/public/payment/gateway/charge-page", handleCreateChargePage);
+router.post("/public/payment/gateway/expire-page", handleExpireChargePage);
+router.post("/public/payment/gateway/challan", handleGenerateChallan);
+router.post("/public/payment/gateway/seamless-pay", handleSeamlessUpiPayment);
+router.post("/public/payment/gateway/status", handlePaymentStatusInquiry);
+router.get("/public/payment/gateway/status", handlePaymentStatusInquiry);
+router.post("/public/payment/gateway/refund", handleRefundRequest);
+router.post("/public/payment/gateway/refund-status", handleRefundStatus);
+router.get("/public/payment/gateway/refund-status", handleRefundStatus);
+
+// Server-to-server callback / Webhooks / Return URLs
+router.post("/payment/gateway/callback", handleGatewayCallback);
+router.get("/payment/gateway/callback", handleGatewayCallback);
+router.post("/public/payment/gateway/callback", handleGatewayCallback);
+router.get("/public/payment/gateway/callback", handleGatewayCallback);
+router.post("/payment/razorpay/webhook", handleRazorpayWebhook);
+router.post("/public/payment/razorpay/webhook", handleRazorpayWebhook);
 
 router.get("/public", (req, res) => {
   res.json({ message: "Hello Public World!" });
