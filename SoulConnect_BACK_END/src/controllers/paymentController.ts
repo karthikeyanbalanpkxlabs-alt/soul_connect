@@ -274,11 +274,72 @@ export async function handleCreateUpiIntent(req: Request, res: Response) {
       });
     }
 
+    const rawIntentUrl = response.data?.upi_intent_url || "";
+    const queryPart = rawIntentUrl.includes("?")
+      ? rawIntentUrl.substring(rawIntentUrl.indexOf("?") + 1)
+      : rawIntentUrl.replace(/^upi:\/\/pay\/?/, "");
+
+    const phonepeUrl = `phonepe://pay?${queryPart}`;
+    const gpayUrl = `tez://upi/pay?${queryPart}`;
+    const paytmUrl = `paytmmp://pay?${queryPart}`;
+    const bhimUrl = `bhim://pay?${queryPart}`;
+    const credUrl = `credpay://upi/pay?${queryPart}`;
+
+    const appUrls = {
+      default: rawIntentUrl,
+      phonepe: phonepeUrl,
+      gpay: gpayUrl,
+      paytm: paytmUrl,
+      bhim: bhimUrl,
+      cred: credUrl,
+      android_intents: {
+        phonepe: `intent://pay?${queryPart}#Intent;scheme=upi;package=com.phonepe.app;end`,
+        gpay: `intent://pay?${queryPart}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`,
+        paytm: `intent://pay?${queryPart}#Intent;scheme=upi;package=net.one97.paytm;end`,
+        bhim: `intent://pay?${queryPart}#Intent;scheme=upi;package=in.org.npci.upiapp;end`,
+      },
+    };
+
+    const targetApp = String(
+      req.body.target_app || req.query.target_app || "",
+    ).toLowerCase();
+    const shouldRedirect =
+      req.body.redirect === true ||
+      req.query.redirect === "true" ||
+      req.query.redirect === "1";
+
+    let selectedAppUrl = rawIntentUrl;
+    if (targetApp === "phonepe" || targetApp === "phonepea") {
+      selectedAppUrl = phonepeUrl;
+    } else if (
+      targetApp === "gpay" ||
+      targetApp === "googlepay" ||
+      targetApp === "tez"
+    ) {
+      selectedAppUrl = gpayUrl;
+    } else if (targetApp === "paytm") {
+      selectedAppUrl = paytmUrl;
+    } else if (targetApp === "bhim") {
+      selectedAppUrl = bhimUrl;
+    }
+
+    if (shouldRedirect && selectedAppUrl) {
+      return res.redirect(selectedAppUrl);
+    }
+
     res.status(200).json({
       success: true,
       message: "UPI Intent URL generated successfully",
       data: {
         ...response.data,
+        upi_intent_url: rawIntentUrl,
+        phonepe_url: phonepeUrl,
+        gpay_url: gpayUrl,
+        paytm_url: paytmUrl,
+        bhim_url: bhimUrl,
+        cred_url: credUrl,
+        selected_app_url: selectedAppUrl,
+        app_urls: appUrls,
         order_id: generatedOrderId,
         amount: Number(amount),
         currency: currency || "INR",
@@ -290,6 +351,45 @@ export async function handleCreateUpiIntent(req: Request, res: Response) {
     res
       .status(500)
       .json({ error: err.message || "Failed to generate UPI Intent URL" });
+  }
+}
+
+/**
+ * Redirects user directly to PhonePe, Google Pay, Paytm, etc. via standard 302 redirect
+ * Endpoint: GET /api/public/payment/gateway/upi-redirect?app=phonepe&upi_url=...
+ */
+export async function handleUpiRedirect(req: Request, res: Response) {
+  try {
+    const app = String(
+      req.query.app || req.query.target_app || "default",
+    ).toLowerCase();
+    const rawUrl = String(req.query.upi_url || req.query.url || "").trim();
+
+    if (!rawUrl) {
+      return res.status(400).send("Missing 'upi_url' query parameter");
+    }
+
+    const queryPart = rawUrl.includes("?")
+      ? rawUrl.substring(rawUrl.indexOf("?") + 1)
+      : rawUrl.replace(/^upi:\/\/pay\/?/, "");
+
+    let redirectUrl = rawUrl;
+    if (app === "phonepe" || app === "phonepea") {
+      redirectUrl = `phonepe://pay?${queryPart}`;
+    } else if (app === "gpay" || app === "googlepay" || app === "tez") {
+      redirectUrl = `tez://upi/pay?${queryPart}`;
+    } else if (app === "paytm") {
+      redirectUrl = `paytmmp://pay?${queryPart}`;
+    } else if (app === "bhim") {
+      redirectUrl = `bhim://pay?${queryPart}`;
+    } else if (app === "cred") {
+      redirectUrl = `credpay://upi/pay?${queryPart}`;
+    }
+
+    return res.redirect(redirectUrl);
+  } catch (err: any) {
+    console.error("handleUpiRedirect error:", err);
+    res.status(500).send("Failed to redirect to UPI app");
   }
 }
 

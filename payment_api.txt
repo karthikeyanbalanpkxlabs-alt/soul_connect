@@ -1,0 +1,18 @@
+fetch(`http://localhost:3000/api/public/payment/gateway/upi-intent`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+  "email": "priya.sharma@example.com",
+  "amount": 1.00,
+  "description": "SoulConnect Premium Subscription",
+  "order_id": "ORD_SC_1001",
+  "name": "Priya Sharma",
+  "phone": "9876543210",
+  "city": "Bengaluru",
+  "zip_code": "560001",
+  "country": "IND",
+  "return_url": "https://mysite.com/payment/result",
+  "mode": "LIVE"
+}),});

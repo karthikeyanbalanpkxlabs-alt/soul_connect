@@ -44,6 +44,7 @@ import {
   handleCreateRazorpayOrder,
   handleRazorpayWebhook,
   handleCreateUpiIntent,
+  handleUpiRedirect,
   handleCreateChargePage,
   handleExpireChargePage,
   handleGenerateChallan,
@@ -163,6 +164,11 @@ router.post(
   keycloak.protect(),
   handleCreateUpiIntent,
 );
+router.get(
+  "/payment/gateway/upi-redirect",
+  keycloak.protect(),
+  handleUpiRedirect,
+);
 router.post(
   "/payment/gateway/charge-page",
   keycloak.protect(),
@@ -252,6 +258,7 @@ router.post("/makePayment", handleMakePayment);
 
 // --- PAYMENT GATEWAY PUBLIC ROUTES ---
 router.post("/public/payment/gateway/upi-intent", handleCreateUpiIntent);
+router.get("/public/payment/gateway/upi-redirect", handleUpiRedirect);
 router.post("/public/payment/gateway/charge-page", handleCreateChargePage);
 router.post("/public/payment/gateway/expire-page", handleExpireChargePage);
 router.post("/public/payment/gateway/challan", handleGenerateChallan);

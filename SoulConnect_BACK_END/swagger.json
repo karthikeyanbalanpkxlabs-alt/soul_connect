@@ -1,0 +1,737 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SoulConnect Payment Gateway APIs",
+    "description": "Comprehensive API documentation for SoulConnect Payment Gateway integration, covering UPI Payments (Intent & Collect), Hosted Charge Pages, Challan Invoicing, Transaction Status Inquiries, Refunds, and Webhook Callbacks.",
+    "version": "2.0.1",
+    "contact": {
+      "name": "SoulConnect API Support",
+      "email": "support@soulconect.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://dev.soulconect.com",
+      "description": "Development / Staging Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "UPI Payment Integration",
+      "description": "APIs for UPI deep-linking (Google Pay, PhonePe, Paytm) and UPI Collect"
+    },
+    {
+      "name": "Hosted Charge Page & Invoicing",
+      "description": "APIs for creating hosted checkout pages and SMS/Email invoice links"
+    },
+    {
+      "name": "Transactions & Status",
+      "description": "APIs for real-time status inquiry, transaction reconciliation, and history"
+    },
+    {
+      "name": "Refunds",
+      "description": "APIs for initiating refunds and checking refund statuses"
+    },
+    {
+      "name": "Webhooks & Callbacks",
+      "description": "Gateway server-to-server notifications and customer return callbacks"
+    },
+    {
+      "name": "Combined Payment Endpoint",
+      "description": "Unified `/makePayment` endpoint handling all actions via an `action` parameter"
+    }
+  ],
+  "paths": {
+    "/api/public/payment/gateway/upi-intent": {
+      "post": {
+        "tags": ["UPI Payment Integration"],
+        "summary": "Generate UPI Intent URL (GPay / PhonePe / Paytm / Dynamic QR)",
+        "description": "Creates a transaction and generates a UPI intent URL (`upi://pay?...`) that deep-links directly to installed UPI apps on mobile or can be converted to a QR code for desktop scanning.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpiIntentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "UPI Intent URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpiIntentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or gateway configuration error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/gateway/upi-intent": {
+      "post": {
+        "tags": ["UPI Payment Integration"],
+        "summary": "Generate UPI Intent URL (Protected with Keycloak)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpiIntentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "UPI Intent URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpiIntentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/seamless-pay": {
+      "post": {
+        "tags": ["UPI Payment Integration"],
+        "summary": "Seamless UPI Collect Payment (VPA / Customer UPI ID)",
+        "description": "Triggers a direct collect notification to the customer's UPI app using their Virtual Payment Address (e.g., `user@okhdfcbank`).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeamlessUpiRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "UPI collect request initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeamlessUpiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/charge-page": {
+      "post": {
+        "tags": ["Hosted Charge Page & Invoicing"],
+        "summary": "Create Hosted Charge Page URL (2-Step Integration)",
+        "description": "Generates a hosted payment selection page URL where customers can choose from allowed payment instruments (UPI, Cards, NetBanking, Wallets).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargePageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Charge page URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargePageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/expire-page": {
+      "post": {
+        "tags": ["Hosted Charge Page & Invoicing"],
+        "summary": "Manually Expire a Hosted Payment URL",
+        "description": "Prevents further payment attempts on an active payment URL using its UUID.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["uuid"],
+                "properties": {
+                  "uuid": {
+                    "type": "string",
+                    "example": "3c1943aa-13be-4866-925e-d56c32c62d47"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "URL expired successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string", "example": "SUCCESS" },
+                        "message": { "type": "string", "example": "The URL is expired" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/challan": {
+      "post": {
+        "tags": ["Hosted Charge Page & Invoicing"],
+        "summary": "Generate Challan / Invoice Payment Link",
+        "description": "Generates an invoice URL to send to customers via SMS or Email for direct checkout without manual entry.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChallanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Challan URL created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChallanResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/status": {
+      "post": {
+        "tags": ["Transactions & Status"],
+        "summary": "Check Payment Status (by order_id / transaction_id)",
+        "description": "Queries payment status, authorization details, and verifies the response hash against the salt.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Transactions & Status"],
+        "summary": "Check Payment Status (GET with Query Parameters)",
+        "parameters": [
+          { "name": "order_id", "in": "query", "schema": { "type": "string" }, "example": "ORD_SC_1001" },
+          { "name": "transaction_id", "in": "query", "schema": { "type": "string" }, "example": "HDUPIU2847194" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/refund": {
+      "post": {
+        "tags": ["Refunds"],
+        "summary": "Initiate Refund",
+        "description": "Initiates a full or partial refund for a captured or settled transaction.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refund request accepted by gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/refund-status": {
+      "post": {
+        "tags": ["Refunds"],
+        "summary": "Check Refund Status",
+        "description": "Retrieves the status of previously initiated refunds for a transaction.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["transaction_id"],
+                "properties": {
+                  "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+                  "merchant_order_id": { "type": "string", "example": "ORD_SC_1001" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refund status details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/payment/gateway/callback": {
+      "post": {
+        "tags": ["Webhooks & Callbacks"],
+        "summary": "Gateway Webhook & Return URL Callback",
+        "description": "Endpoint configured in Payment Gateway Dashboard (under Payment Callback URL). Validates SHA-512 hash, activates subscription, and updates customer transaction history in MongoDB.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayCallbackPayload"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayCallbackPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Callback verified and processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "received": { "type": "boolean", "example": true },
+                    "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+                    "order_id": { "type": "string", "example": "ORD_SC_1001" },
+                    "payment_status": { "type": "string", "example": "success" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/makePayment": {
+      "post": {
+        "tags": ["Combined Payment Endpoint"],
+        "summary": "Single Combined Payment Endpoint",
+        "description": "Unified endpoint supporting all payment operations via the `action` field: `create_upi_intent`, `create_charge_page`, `seamless_upi`, `payment_status`, `refund`, or Razorpay `create_order`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "description": "Action to perform",
+                    "enum": [
+                      "create_upi_intent",
+                      "create_charge_page",
+                      "expire_charge_page",
+                      "create_challan",
+                      "seamless_upi",
+                      "payment_status",
+                      "refund",
+                      "refund_status",
+                      "create_order",
+                      "verify_payment"
+                    ],
+                    "example": "create_upi_intent"
+                  },
+                  "email": { "type": "string", "example": "priya.sharma@example.com" },
+                  "amount": { "type": "number", "example": 999.00 },
+                  "description": { "type": "string", "example": "SoulConnect Premium Subscription" },
+                  "plan": { "type": "string", "example": "Soulmate" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action executed successfully"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UpiIntentRequest": {
+        "type": "object",
+        "required": ["email", "amount"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "priya.sharma@example.com" },
+          "amount": { "type": "number", "example": 999.00 },
+          "description": { "type": "string", "example": "SoulConnect Premium Subscription" },
+          "order_id": { "type": "string", "example": "ORD_SC_1001" },
+          "name": { "type": "string", "example": "Priya Sharma" },
+          "phone": { "type": "string", "example": "9876543210" },
+          "city": { "type": "string", "example": "Bengaluru" },
+          "state": { "type": "string", "example": "Karnataka" },
+          "country": { "type": "string", "example": "IND" },
+          "zip_code": { "type": "string", "example": "560001" },
+          "return_url": { "type": "string", "example": "https://mysite.com/payment/result" },
+          "mode": { "type": "string", "enum": ["TEST", "LIVE"], "example": "LIVE" }
+        }
+      },
+      "UpiIntentResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "UPI Intent URL generated successfully" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "upi_intent_url": {
+                "type": "string",
+                "example": "upi://pay?pa=merchant@bank&pn=SoulConnect&am=999.00&mam=999.00&tr=TXN_987654&tn=Payment+for+ORD_SC_1001&mc=5021&mode=04&purpose=00"
+              },
+              "phonepe_url": {
+                "type": "string",
+                "example": "phonepe://pay?pa=merchant@bank&pn=SoulConnect&am=999.00&tr=TXN_987654..."
+              },
+              "gpay_url": {
+                "type": "string",
+                "example": "tez://upi/pay?pa=merchant@bank&pn=SoulConnect&am=999.00&tr=TXN_987654..."
+              },
+              "paytm_url": {
+                "type": "string",
+                "example": "paytmmp://pay?pa=merchant@bank&pn=SoulConnect&am=999.00&tr=TXN_987654..."
+              },
+              "bhim_url": {
+                "type": "string",
+                "example": "bhim://pay?pa=merchant@bank&pn=SoulConnect&am=999.00&tr=TXN_987654..."
+              },
+              "selected_app_url": {
+                "type": "string",
+                "example": "phonepe://pay?pa=merchant@bank..."
+              },
+              "app_urls": {
+                "type": "object",
+                "properties": {
+                  "phonepe": { "type": "string", "example": "phonepe://pay?..." },
+                  "gpay": { "type": "string", "example": "tez://upi/pay?..." },
+                  "paytm": { "type": "string", "example": "paytmmp://pay?..." },
+                  "bhim": { "type": "string", "example": "bhim://pay?..." }
+                }
+              },
+              "payment_request_id": { "type": "integer", "example": 6478789 },
+              "order_id": { "type": "string", "example": "ORD_SC_1001" },
+              "amount": { "type": "number", "example": 999.00 },
+              "currency": { "type": "string", "example": "INR" },
+              "account_name": { "type": "string", "example": "Gateway_Primary" }
+            }
+          }
+        }
+      },
+      "SeamlessUpiRequest": {
+        "type": "object",
+        "required": ["email", "amount", "payer_virtual_address"],
+        "properties": {
+          "email": { "type": "string", "example": "priya.sharma@example.com" },
+          "amount": { "type": "number", "example": 999.00 },
+          "bank_code": { "type": "string", "default": "UPIU", "example": "UPIU" },
+          "payer_virtual_address": { "type": "string", "example": "priya@okhdfcbank" },
+          "description": { "type": "string", "example": "SoulConnect Premium Subscription" },
+          "order_id": { "type": "string", "example": "ORD_SC_1002" },
+          "name": { "type": "string", "example": "Priya Sharma" },
+          "phone": { "type": "string", "example": "9876543210" }
+        }
+      },
+      "SeamlessUpiResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": {
+            "type": "object",
+            "properties": {
+              "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+              "order_id": { "type": "string", "example": "ORD_SC_1002" },
+              "response_code": { "type": "integer", "example": 1088 },
+              "response_message": { "type": "string", "example": "We are processing your transaction" },
+              "amount": { "type": "string", "example": "999.00" }
+            }
+          }
+        }
+      },
+      "ChargePageRequest": {
+        "type": "object",
+        "required": ["email", "amount"],
+        "properties": {
+          "email": { "type": "string", "example": "arun.kumar@example.com" },
+          "amount": { "type": "number", "example": 1499.00 },
+          "description": { "type": "string", "example": "VIP Gold Matrimonial Plan" },
+          "expiry_in_minutes": { "type": "integer", "example": 30 },
+          "payment_options": { "type": "string", "example": "upi,cc,nb,w" },
+          "allowed_bank_codes": { "type": "string", "example": "UPIU,VISC,MASC,SBIN,HDFN" },
+          "return_url": { "type": "string", "example": "https://mysite.com/payment/callback" }
+        }
+      },
+      "ChargePageResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Charge page URL generated successfully" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "example": "https://api.paymentgateway.com/v2/executepaymentrequesturl/3c1943aa-13be-4866-925e-d56c32c62d47" },
+              "uuid": { "type": "string", "example": "3c1943aa-13be-4866-925e-d56c32c62d47" },
+              "expiry_datetime": { "type": "string", "example": "2026-09-22 00:30:00" },
+              "order_id": { "type": "string", "example": "ORD_1726941234_567" },
+              "amount": { "type": "number", "example": 1499.00 },
+              "currency": { "type": "string", "example": "INR" }
+            }
+          }
+        }
+      },
+      "ChallanRequest": {
+        "type": "object",
+        "required": ["name", "mobile", "email", "amount", "purpose"],
+        "properties": {
+          "name": { "type": "string", "example": "Karthik Balan" },
+          "mobile": { "type": "string", "example": "9876543210" },
+          "email": { "type": "string", "example": "karthik@example.com" },
+          "amount": { "type": "number", "example": 2500.00 },
+          "purpose": { "type": "string", "example": "Matchmaking Consultation & Background Check" }
+        }
+      },
+      "ChallanResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Challan / Invoice URL generated successfully" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "example": "https://api.paymentgateway.com/challan/b39b0596-73c4-4b7e-b63d-bbc13361e044" },
+              "uuid": { "type": "string", "example": "b39b0596-73c4-4b7e-b63d-bbc13361e044" },
+              "tnp_id": { "type": "integer", "example": 81600 }
+            }
+          }
+        }
+      },
+      "PaymentStatusRequest": {
+        "type": "object",
+        "properties": {
+          "order_id": { "type": "string", "example": "ORD_SC_1001" },
+          "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+          "date_from": { "type": "string", "example": "01-09-2026" },
+          "date_to": { "type": "string", "example": "21-09-2026" },
+          "page_number": { "type": "integer", "example": 1 },
+          "per_page": { "type": "integer", "example": 10 }
+        }
+      },
+      "PaymentStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "is_signature_valid": { "type": "boolean", "example": true },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+                "order_id": { "type": "string", "example": "ORD_SC_1001" },
+                "amount": { "type": "string", "example": "999.00" },
+                "payment_mode": { "type": "string", "example": "UPI" },
+                "response_code": { "type": "integer", "example": 0 },
+                "response_message": { "type": "string", "example": "SUCCESS" },
+                "authorization_staus": { "type": "string", "example": "captured" }
+              }
+            }
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer", "example": 1 },
+              "per_page": { "type": "integer", "example": 10 },
+              "current_page": { "type": "integer", "example": 1 },
+              "last_page": { "type": "integer", "example": 1 }
+            }
+          }
+        }
+      },
+      "RefundRequest": {
+        "type": "object",
+        "required": ["transaction_id", "amount", "description"],
+        "properties": {
+          "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+          "amount": { "type": "number", "example": 999.00 },
+          "description": { "type": "string", "example": "Customer requested cancellation" },
+          "merchant_refund_id": { "type": "string", "example": "REF_ORD_SC_1001_01" },
+          "email": { "type": "string", "example": "priya.sharma@example.com" }
+        }
+      },
+      "RefundResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Refund request accepted by gateway" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+              "refund_id": { "type": "integer", "example": 4351 },
+              "refund_reference_no": { "type": "string", "example": "602201803257434370" },
+              "merchant_refund_id": { "type": "string", "example": "REF_ORD_SC_1001_01" },
+              "merchant_order_id": { "type": "string", "example": "ORD_SC_1001" }
+            }
+          }
+        }
+      },
+      "RefundStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "is_signature_valid": { "type": "boolean", "example": true },
+          "data": {
+            "type": "object",
+            "properties": {
+              "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+              "merchant_order_id": { "type": "string", "example": "ORD_SC_1001" },
+              "refund_amount": { "type": "number", "example": 999.00 },
+              "transaction_amount": { "type": "string", "example": "999.00" },
+              "refund_details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "refund_id": { "type": "integer", "example": 4351 },
+                    "refund_reference_no": { "type": "string", "example": "602201803257434370" },
+                    "refund_status": { "type": "string", "example": "Customer Refunded" },
+                    "date": { "type": "string", "example": "2026-09-21 23:56:00" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "GatewayCallbackPayload": {
+        "type": "object",
+        "properties": {
+          "transaction_id": { "type": "string", "example": "HDUPIU2847194" },
+          "order_id": { "type": "string", "example": "ORD_SC_1001" },
+          "response_code": { "type": "integer", "example": 0 },
+          "response_message": { "type": "string", "example": "Transaction Successful" },
+          "amount": { "type": "string", "example": "999.00" },
+          "currency": { "type": "string", "example": "INR" },
+          "payment_mode": { "type": "string", "example": "UPI" },
+          "payment_channel": { "type": "string", "example": "Unified Payments Interface" },
+          "name": { "type": "string", "example": "Priya Sharma" },
+          "email": { "type": "string", "example": "priya.sharma@example.com" },
+          "hash": { "type": "string", "example": "D9F37A843512EF890ABCDEF12345678901234567890ABCDEF1234567890ABCDEF1234567890" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": { "type": "string", "example": "Payment gateway connection failed" },
+          "error_code": { "type": "string", "example": "GATEWAY_CONFIG_MISSING" }
+        }
+      }
+    }
+  }
+}
