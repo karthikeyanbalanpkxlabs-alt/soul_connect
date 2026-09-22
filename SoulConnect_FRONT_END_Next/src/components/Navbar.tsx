@@ -3,12 +3,13 @@
 import keycloak from "../lib/keycloak";
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import { useState } from "react";
-import { LogOut, Flame, User, UserCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { LogOut, Flame, User, UserCircle, Heart } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 import company_logo from "./company_logo.png";
 
 export default function Navbar(props: any) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { profile } = useKeycloak();
 
@@ -141,17 +142,84 @@ export default function Navbar(props: any) {
     );
   };
   const renderLandingAuthCustomerLinks = () => {
+    const isInterestedActive =
+      pathname === "/portal" ||
+      pathname === "/portal/customer" ||
+      pathname === "/portal/interested";
+    const isAccountActive = pathname === "/portal/profile";
+
     return (
-      <>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <a
-          style={{ cursor: "pointer" }}
+          style={{
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            fontWeight: isInterestedActive ? 700 : 500,
+            fontSize: "0.875rem",
+            color: isInterestedActive ? "#e11d48" : "#475569",
+            backgroundColor: isInterestedActive ? "#fff1f2" : "transparent",
+            border: isInterestedActive
+              ? "1px solid #fecdd3"
+              : "1px solid transparent",
+            boxShadow: isInterestedActive
+              ? "0 2px 6px rgba(225, 29, 72, 0.1)"
+              : "none",
+            transition: "all 0.2s ease-in-out",
+          }}
           onClick={() => {
+            handleLinkClick();
+            router.push(`/portal/customer`);
+          }}
+        >
+          <Heart
+            size={16}
+            style={{
+              color: isInterestedActive ? "#e11d48" : "#64748b",
+              fill: isInterestedActive ? "#e11d48" : "none",
+              transition: "all 0.2s ease-in-out",
+            }}
+          />
+          <span>Interested</span>
+        </a>
+        <a
+          style={{
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            fontWeight: isAccountActive ? 700 : 500,
+            fontSize: "0.875rem",
+            color: isAccountActive ? "#e11d48" : "#475569",
+            backgroundColor: isAccountActive ? "#fff1f2" : "transparent",
+            border: isAccountActive
+              ? "1px solid #fecdd3"
+              : "1px solid transparent",
+            boxShadow: isAccountActive
+              ? "0 2px 6px rgba(225, 29, 72, 0.1)"
+              : "none",
+            transition: "all 0.2s ease-in-out",
+          }}
+          onClick={() => {
+            handleLinkClick();
             router.push(`/portal/profile`);
           }}
         >
-          {`Account`}
+          <User
+            size={16}
+            style={{
+              color: isAccountActive ? "#e11d48" : "#64748b",
+              transition: "all 0.2s ease-in-out",
+            }}
+          />
+          <span>Account</span>
         </a>
-      </>
+      </div>
     );
   };
 
