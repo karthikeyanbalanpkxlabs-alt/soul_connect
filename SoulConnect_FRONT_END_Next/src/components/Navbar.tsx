@@ -149,15 +149,26 @@ export default function Navbar(props: any) {
     const isAccountActive = pathname === "/portal/profile";
 
     return (
-      <>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <a
           style={{
             cursor: "pointer",
             display: "inline-flex",
             alignItems: "center",
-            gap: "5px",
-            fontWeight: isInterestedActive ? 700 : 400,
-            color: isInterestedActive ? "var(--rose, #e11d48)" : "var(--ink-80, #334155)",
+            gap: "6px",
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            fontWeight: isInterestedActive ? 700 : 500,
+            fontSize: "0.875rem",
+            color: isInterestedActive ? "#e11d48" : "#475569",
+            backgroundColor: isInterestedActive ? "#fff1f2" : "transparent",
+            border: isInterestedActive
+              ? "1px solid #fecdd3"
+              : "1px solid transparent",
+            boxShadow: isInterestedActive
+              ? "0 2px 6px rgba(225, 29, 72, 0.1)"
+              : "none",
+            transition: "all 0.2s ease-in-out",
           }}
           onClick={() => {
             handleLinkClick();
@@ -167,8 +178,9 @@ export default function Navbar(props: any) {
           <Heart
             size={16}
             style={{
-              color: "var(--rose, #e11d48)",
-              fill: isInterestedActive ? "var(--rose, #e11d48)" : "none",
+              color: isInterestedActive ? "#e11d48" : "#64748b",
+              fill: isInterestedActive ? "#e11d48" : "none",
+              transition: "all 0.2s ease-in-out",
             }}
           />
           <span>Interested</span>
@@ -176,17 +188,38 @@ export default function Navbar(props: any) {
         <a
           style={{
             cursor: "pointer",
-            fontWeight: isAccountActive ? 700 : 400,
-            color: isAccountActive ? "var(--rose, #e11d48)" : "var(--ink-80, #334155)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            fontWeight: isAccountActive ? 700 : 500,
+            fontSize: "0.875rem",
+            color: isAccountActive ? "#e11d48" : "#475569",
+            backgroundColor: isAccountActive ? "#fff1f2" : "transparent",
+            border: isAccountActive
+              ? "1px solid #fecdd3"
+              : "1px solid transparent",
+            boxShadow: isAccountActive
+              ? "0 2px 6px rgba(225, 29, 72, 0.1)"
+              : "none",
+            transition: "all 0.2s ease-in-out",
           }}
           onClick={() => {
             handleLinkClick();
             router.push(`/portal/profile`);
           }}
         >
-          {`Account`}
+          <User
+            size={16}
+            style={{
+              color: isAccountActive ? "#e11d48" : "#64748b",
+              transition: "all 0.2s ease-in-out",
+            }}
+          />
+          <span>Account</span>
         </a>
-      </>
+      </div>
     );
   };
 
