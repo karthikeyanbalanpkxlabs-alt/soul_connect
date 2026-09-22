@@ -40,7 +40,9 @@ function usePortalCustomerPage() {
   const [skip, setSkip] = React.useState(0);
   const [limit, setLimit] = React.useState(10);
   const [total, setTotal] = React.useState(0);
-  const [filters, setFilters] = React.useState<Record<string, string>>({});
+  const [filters, setFilters] = React.useState<Record<string, string>>({
+    role: "customer_g",
+  });
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingCustomer, setEditingCustomer] = React.useState<any>(null);
   const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(

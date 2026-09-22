@@ -42,11 +42,18 @@ export default function SideBarKit({ children }: SideBarKitProps) {
 
   let roles =
     tokenParsed?.realm_access?.roles?.filter(
-      (role: string) => role === "manager_g" || role === "customer_g",
+      (role: string) =>
+        role === "manager_g" || role === "assit_g" || role === "customer_g",
     ) || [];
 
   const role = roles.length > 0 ? roles[0] : "no_roles";
-  const isManager = role.includes("manager") || profile?.role === "manager_g";
+  const isManager =
+    role.includes("manager") ||
+    profile?.role === "manager_g" ||
+    role.includes("assit_g") ||
+    profile?.role === "assit_g";
+  const isManagerOnly =
+    role.includes("manager") || profile?.role === "manager_g";
 
   const menus = [
     {
@@ -64,11 +71,15 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       icon: Heart,
       router: "/portal/interested",
     },
-    {
-      name: "Users",
-      icon: Users,
-      router: "/portal/users",
-    },
+    ...(isManagerOnly
+      ? [
+          {
+            name: "Users",
+            icon: Users,
+            router: "/portal/users",
+          },
+        ]
+      : []),
     {
       name: "Transactions",
       icon: ReceiptText,
@@ -79,7 +90,7 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       icon: CircleDollarSign,
       router: "/portal/subscription",
     },
-    ...(isManager
+    ...(isManagerOnly
       ? [
           {
             name: "Payment Account",
@@ -96,7 +107,8 @@ export default function SideBarKit({ children }: SideBarKitProps) {
   ];
 
   const isPortalUser =
-    role.includes("manager") && pathname.startsWith("/portal");
+    (role.includes("manager") && pathname.startsWith("/portal")) ||
+    (role.includes("assit") && pathname.startsWith("/portal"));
 
   if (!isPortalUser) {
     return <>{children}</>;
