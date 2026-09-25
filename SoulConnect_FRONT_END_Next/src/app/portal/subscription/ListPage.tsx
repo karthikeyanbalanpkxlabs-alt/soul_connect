@@ -15,12 +15,14 @@ function ListPage() {
     <div className="p-10">
       <div className="mb-10 flex items-center justify-between">
         <h1 className="text-xl font-bold">Subscriptions</h1>
-        <button
-          className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          onClick={stateProps?.onHandleClickCreateSubscription}
-        >
-          + Create Package
-        </button>
+        {!stateProps?.isAssist && (
+          <button
+            className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            onClick={stateProps?.onHandleClickCreateSubscription}
+          >
+            + Create Package
+          </button>
+        )}
       </div>
 
       <DynamicTable

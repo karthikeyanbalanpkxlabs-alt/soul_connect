@@ -450,15 +450,33 @@ function usePortalCustomerPage() {
     if (keycloak.authenticated) {
       const tokenParsed: any = keycloak.tokenParsed;
       let roles: any = tokenParsed?.realm_access?.roles;
-      roles = roles.filter(
-        (itm: any) => itm === "manager_g" || itm === "customer_g",
-      );
-      roles = roles.length > 0 ? roles[0] : "no_roles";
+      if (Array.isArray(roles)) {
+        roles = roles.filter(
+          (itm: any) =>
+            itm === "manager_g" ||
+            itm === "customer_g" ||
+            itm === "assit_g" ||
+            itm === "assist_g",
+        );
+        roles = roles.length > 0 ? roles[0] : "no_roles";
+      } else {
+        roles = "no_roles";
+      }
       setRoles(roles);
       localStorage.setItem("roles", roles || "");
       localStorage.setItem("token", keycloak?.token || "");
     }
   };
+
+  const isAssist =
+    getRoles === "assit_g" ||
+    getRoles === "assist_g" ||
+    getRoles?.includes("assit") ||
+    getRoles?.includes("assist") ||
+    profile?.role === "assit_g" ||
+    profile?.role === "assist_g" ||
+    profile?.role?.includes("assit") ||
+    profile?.role?.includes("assist");
 
   const columns = [
     {
@@ -513,22 +531,26 @@ function usePortalCustomerPage() {
       isFilterable: false,
       render: (row: any) => (row.active !== false ? "Yes" : "No"),
     },
-    {
-      key: "action",
-      label: "Action",
-      isFilterable: false,
-      render: (row: any) => (
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => onHandleEditSubscription(row)}
-            className="text-violet-600 hover:text-violet-800 font-medium"
-            title="Edit Subscription"
-          >
-            Edit
-          </button>
-        </div>
-      ),
-    },
+    ...(!isAssist
+      ? [
+          {
+            key: "action",
+            label: "Action",
+            isFilterable: false,
+            render: (row: any) => (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => onHandleEditSubscription(row)}
+                  className="text-violet-600 hover:text-violet-800 font-medium"
+                  title="Edit Subscription"
+                >
+                  Edit
+                </button>
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   const loadCustomers = async () => {
@@ -555,6 +577,7 @@ function usePortalCustomerPage() {
   return {
     getRoles,
     setRoles,
+    isAssist,
     loading,
     setLoading,
     rows,
