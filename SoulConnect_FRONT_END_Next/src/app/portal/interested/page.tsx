@@ -8,8 +8,19 @@ import { Heart, Loader2, User, UserCheck, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function InterestedPage() {
-  const { profile, refreshProfile } = useKeycloak();
+  const { profile, refreshProfile, roles } = useKeycloak();
   const router = useRouter();
+
+  const isManagerOrAssist =
+    roles?.some((r) => r === "manager_g" || r === "assit_g") ||
+    profile?.role === "manager_g" ||
+    profile?.role === "assit_g";
+
+  useEffect(() => {
+    if (isManagerOrAssist) {
+      router.replace("/portal");
+    }
+  }, [isManagerOrAssist, router]);
 
   const [activeTab, setActiveTab] = useState<"sent" | "received">("sent");
   const [loading, setLoading] = useState(true);
