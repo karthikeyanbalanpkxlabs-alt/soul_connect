@@ -66,11 +66,6 @@ export default function SideBarKit({ children }: SideBarKitProps) {
       icon: Users,
       router: "/portal/customer",
     },
-    {
-      name: "Interested Profiles",
-      icon: Heart,
-      router: "/portal/interested",
-    },
     ...(isManagerOnly
       ? [
           {

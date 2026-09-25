@@ -524,13 +524,6 @@ function CardPage() {
                   Your Match Profiles
                 </h1>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => router.push("/portal/interested")}
-                    className="border border-rose-200 text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
-                  >
-                    <Heart className="w-4 h-4 fill-rose-600" />
-                    <span>Interested Profiles</span>
-                  </button>
                   {stateProps?.getRoles?.includes("manager") && (
                     <button
                       className="bg-[#c28b70] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#b07d64] transition-colors"
