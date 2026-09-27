@@ -17,6 +17,7 @@ import Lottie from "lottie-react";
 import loadingAnimation from "./maintenance_V3.json";
 import configUrls from "../../configUrls";
 import { onSaveCustomer } from "@/components/api";
+import PaymentStatusModal from "@/components/PaymentStatusModal";
 
 export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
@@ -26,6 +27,22 @@ export default function Home() {
   } | null>(null);
   const [isComingSoon, setIsComingSoon] = useState(false);
   const hasProcessedPayment = useRef(false);
+
+  const [paymentModal, setPaymentModal] = useState<{
+    isOpen: boolean;
+    status: "processing" | "success" | "failed";
+    email?: string;
+    orderId?: string;
+    txnId?: string;
+    planName?: string;
+    amount?: number | string;
+    errorMessage?: string;
+    retryType?: "account_creation" | "payment";
+    retryParams?: any;
+  }>({
+    isOpen: false,
+    status: "processing",
+  });
 
   useEffect(() => {
     console.log("BUILD TEST SEP 16");
@@ -95,6 +112,14 @@ export default function Home() {
         if (!hasProcessedPayment.current) {
           hasProcessedPayment.current = true;
           setIsComingSoon(false);
+          setPaymentModal({
+            isOpen: true,
+            status: "processing",
+            orderId,
+            txnId,
+            planName,
+            amount: amountVal,
+          });
           handlePostPaymentAccountCreation(
             orderId,
             txnId,
@@ -108,8 +133,45 @@ export default function Home() {
       } else if (paymentStatus === "failed") {
         const reason =
           queryParams.get("reason") ||
+          queryParams.get("message") ||
           "Payment processing was declined or cancelled.";
+
+        setIsComingSoon(false);
         showToast(`Payment Failed: ${reason}`, "error");
+
+        let pendingPlan: any = null;
+        let regEmail = "";
+        try {
+          pendingPlan = JSON.parse(
+            localStorage.getItem("pending_selected_plan") ||
+              sessionStorage.getItem("pending_selected_plan") ||
+              "{}",
+          );
+          const regData = JSON.parse(
+            localStorage.getItem("registration_data") ||
+              sessionStorage.getItem("registration_data") ||
+              "{}",
+          );
+          regEmail = regData.email || "";
+        } catch (_) {}
+
+        setPaymentModal({
+          isOpen: true,
+          status: "failed",
+          orderId: orderId || "",
+          txnId: txnId || "",
+          planName: planName || pendingPlan?.name || "",
+          amount: amountVal || pendingPlan?.price || "",
+          email: regEmail,
+          errorMessage: reason,
+          retryType: "payment",
+          retryParams: {
+            planName: planName || pendingPlan?.name || "Premium",
+            price: amountVal ? `₹${amountVal}` : (pendingPlan?.price || "₹2,499"),
+            features: pendingPlan?.features || [],
+          },
+        });
+
         window.history.replaceState(
           {},
           document.title,
@@ -383,14 +445,37 @@ export default function Home() {
           customerResp?.message ||
           "Failed to save customer account.";
         showToast(
-          `Payment was verified (${orderId}), but account creation returned: ${errMsg}`,
+          `Payment verified (${finalOrderId}), but account setup returned: ${errMsg}`,
           "error",
         );
+        setPaymentModal({
+          isOpen: true,
+          status: "failed",
+          orderId: finalOrderId,
+          txnId: finalTxnId,
+          planName: targetPlan,
+          amount: finalAmount,
+          email: createFixture?.email || "",
+          errorMessage: `Payment was verified (${finalOrderId}), but creating your account profile returned: ${errMsg}`,
+          retryType: "account_creation",
+          retryParams: {
+            orderId,
+            txnId,
+            planName,
+            amountVal,
+            paymentTypeParam,
+            paymentModeParam,
+            paymentChannelParam,
+          },
+        });
       } else {
-        showToast(
-          `Payment Successful! Order: ${orderId}. Your account has been created. Redirecting to login...`,
-          "success",
-        );
+        const registeredEmail =
+          customerResp?.email ||
+          customerResp?.customer?.email ||
+          customerResp?.data?.email ||
+          createFixture?.email ||
+          "";
+
         localStorage.removeItem("pending_customer_registration");
         localStorage.removeItem("pending_selected_plan");
         localStorage.removeItem("registration_data");
@@ -398,11 +483,20 @@ export default function Home() {
         sessionStorage.removeItem("pending_selected_plan");
         sessionStorage.removeItem("registration_data");
 
-        setTimeout(() => {
-          if (typeof window !== "undefined") {
-            window.location.href = window.location.origin + "/portal";
-          }
-        }, 2500);
+        setPaymentModal({
+          isOpen: true,
+          status: "success",
+          orderId: finalOrderId,
+          txnId: finalTxnId,
+          planName: targetPlan,
+          amount: finalAmount,
+          email: registeredEmail,
+        });
+
+        showToast(
+          `Payment Successful! Order: ${finalOrderId}. An email with your temporary password has been sent.`,
+          "success",
+        );
       }
     } catch (err: any) {
       console.error("handlePostPaymentAccountCreation error:", err);
@@ -410,10 +504,75 @@ export default function Home() {
         `Error creating account after payment: ${err.message}`,
         "error",
       );
+      setPaymentModal({
+        isOpen: true,
+        status: "failed",
+        orderId: orderId,
+        txnId: txnId,
+        planName: planName,
+        amount: amountVal,
+        errorMessage: `Payment verified, but an unexpected error occurred while setting up your account: ${err.message}`,
+        retryType: "account_creation",
+        retryParams: {
+          orderId,
+          txnId,
+          planName,
+          amountVal,
+          paymentTypeParam,
+          paymentModeParam,
+          paymentChannelParam,
+        },
+      });
     } finally {
       // Clean query params so user doesn't re-trigger on refresh
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+  };
+
+  const handleProceedToPortal = () => {
+    setPaymentModal((prev) => ({ ...prev, isOpen: false }));
+    if (typeof window !== "undefined") {
+      window.location.href = window.location.origin + "/portal";
+    }
+  };
+
+  const handleModalRetry = () => {
+    if (
+      paymentModal.retryType === "account_creation" &&
+      paymentModal.retryParams
+    ) {
+      setPaymentModal((prev) => ({
+        ...prev,
+        status: "processing",
+        errorMessage: undefined,
+      }));
+      const p = paymentModal.retryParams;
+      handlePostPaymentAccountCreation(
+        p.orderId,
+        p.txnId,
+        p.planName,
+        p.amountVal,
+        p.paymentTypeParam,
+        p.paymentModeParam,
+        p.paymentChannelParam,
+      );
+    } else {
+      // Retry payment flow
+      setPaymentModal((prev) => ({ ...prev, isOpen: false }));
+      const p = paymentModal.retryParams;
+      if (p && p.planName) {
+        handleOpenPayment(p.planName, p.price, p.features);
+      } else {
+        const regSection = document.getElementById("register");
+        if (regSection) {
+          regSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+  };
+
+  const handleModalClose = () => {
+    setPaymentModal((prev) => ({ ...prev, isOpen: false }));
   };
 
   const showToast = (
@@ -550,6 +709,19 @@ export default function Home() {
             onClose={() => setToast(null)}
           />
         )}
+        <PaymentStatusModal
+          isOpen={paymentModal.isOpen}
+          status={paymentModal.status}
+          email={paymentModal.email}
+          orderId={paymentModal.orderId}
+          txnId={paymentModal.txnId}
+          planName={paymentModal.planName}
+          amount={paymentModal.amount}
+          errorMessage={paymentModal.errorMessage}
+          onProceedToPortal={handleProceedToPortal}
+          onRetry={handleModalRetry}
+          onClose={handleModalClose}
+        />
       </div>
     );
   }
@@ -587,6 +759,20 @@ export default function Home() {
           onClose={() => setToast(null)}
         />
       )}
+
+      <PaymentStatusModal
+        isOpen={paymentModal.isOpen}
+        status={paymentModal.status}
+        email={paymentModal.email}
+        orderId={paymentModal.orderId}
+        txnId={paymentModal.txnId}
+        planName={paymentModal.planName}
+        amount={paymentModal.amount}
+        errorMessage={paymentModal.errorMessage}
+        onProceedToPortal={handleProceedToPortal}
+        onRetry={handleModalRetry}
+        onClose={handleModalClose}
+      />
     </>
   );
 }
