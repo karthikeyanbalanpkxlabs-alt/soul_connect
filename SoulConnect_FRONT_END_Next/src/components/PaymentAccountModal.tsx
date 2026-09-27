@@ -23,6 +23,8 @@ export default function PaymentAccountModal({
   const [environment, setEnvironment] = useState("test");
   const [keyId, setKeyId] = useState("");
   const [keySecret, setKeySecret] = useState("");
+  const [merchantId, setMerchantId] = useState("");
+  const [apiUrl, setApiUrl] = useState("https://pgbiz.omniware.in");
   const [webhookSecret, setWebhookSecret] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [currency, setCurrency] = useState("INR");
@@ -40,10 +42,12 @@ export default function PaymentAccountModal({
 
       const cfg = initialData.config || {};
       setEnvironment(cfg.environment || "test");
-      setKeyId(cfg.key_id || "");
-      setKeySecret(cfg.key_secret || "");
+      setKeyId(cfg.key_id || cfg.api_key || "");
+      setKeySecret(cfg.key_secret || cfg.salt || "");
+      setMerchantId(cfg.merchant_id || "");
+      setApiUrl(cfg.api_url || "https://pgbiz.omniware.in");
       setWebhookSecret(cfg.webhook_secret || "");
-      setWebhookUrl(cfg.webhook?.url || "");
+      setWebhookUrl(cfg.webhook?.url || cfg.return_url || "");
       setCurrency(cfg.currency || "INR");
       setReceiptPrefix(cfg.order?.receipt_prefix || "ORD");
       setCapturePayment(cfg.capture_payment !== undefined ? cfg.capture_payment : true);
@@ -53,6 +57,8 @@ export default function PaymentAccountModal({
       setEnvironment("test");
       setKeyId("");
       setKeySecret("");
+      setMerchantId("");
+      setApiUrl("https://pgbiz.omniware.in");
       setWebhookSecret("");
       setWebhookUrl("");
       setCurrency("INR");
@@ -80,6 +86,8 @@ export default function PaymentAccountModal({
       setSaving(true);
       setError("");
 
+      const isOmni = provider.trim().toLowerCase() === "omniware";
+
       const payload = {
         id: initialData?._id || initialData?.id,
         account_name: accountName.trim(),
@@ -88,6 +96,11 @@ export default function PaymentAccountModal({
         config: {
           key_id: keyId.trim(),
           key_secret: keySecret.trim(),
+          api_key: keyId.trim(),
+          salt: keySecret.trim(),
+          merchant_id: merchantId.trim(),
+          api_url: apiUrl.trim() || "https://pgbiz.omniware.in",
+          return_url: webhookUrl.trim() || (isOmni ? "https://api.soulconect.com/api/public/payment/omniware/callback" : ""),
           webhook_secret: webhookSecret.trim(),
           environment: environment,
           currency: currency.trim() || "INR",
@@ -95,7 +108,7 @@ export default function PaymentAccountModal({
           payment_method: initialData?.config?.payment_method || "all",
           webhook: {
             enabled: true,
-            url: webhookUrl.trim() || `https://api.soulconnect.in/api/payment/${provider}/webhook`,
+            url: webhookUrl.trim() || `https://api.soulconect.com/api/payment/${provider}/webhook`,
             events: initialData?.config?.webhook?.events || [
               "payment.authorized",
               "payment.captured",
@@ -190,9 +203,17 @@ export default function PaymentAccountModal({
                 </label>
                 <select
                   value={provider}
-                  onChange={(e) => setProvider(e.target.value)}
+                  onChange={(e) => {
+                    const newProvider = e.target.value;
+                    setProvider(newProvider);
+                    if (newProvider === "omniware") {
+                      if (!webhookUrl) setWebhookUrl("https://api.soulconect.com/api/public/payment/omniware/callback");
+                      if (!apiUrl) setApiUrl("https://pgbiz.omniware.in");
+                    }
+                  }}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 bg-white"
                 >
+                  <option value="omniware">Omniware (Redirection PG)</option>
                   <option value="razorpay">Razorpay</option>
                   <option value="stripe">Stripe</option>
                   <option value="paytm">Paytm</option>
@@ -236,44 +257,119 @@ export default function PaymentAccountModal({
             </h3>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Key ID / Publishable Key
-                </label>
-                <input
-                  type="text"
-                  placeholder="rzp_test_xxxxxxxxxxxxx"
-                  value={keyId}
-                  onChange={(e) => setKeyId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                />
-              </div>
+              {provider.toLowerCase() === "omniware" ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Omniware API Key (UUID) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="fb6bca86-b429-4abf-a42f-824bdd29022e"
+                      value={keyId}
+                      onChange={(e) => setKeyId(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Key Secret
-                </label>
-                <input
-                  type="password"
-                  placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
-                  value={keySecret}
-                  onChange={(e) => setKeySecret(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                />
-              </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Merchant SALT <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="80c67bfdf027da08de88ab5ba903fecafaab8f6d"
+                      value={keySecret}
+                      onChange={(e) => setKeySecret(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Webhook Secret
-                </label>
-                <input
-                  type="text"
-                  placeholder="whsec_xxxxxxxxxxxxxxxxxxxxxxxx"
-                  value={webhookSecret}
-                  onChange={(e) => setWebhookSecret(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                />
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Merchant ID
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="291499"
+                        value={merchantId}
+                        onChange={(e) => setMerchantId(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Omniware API Base URL
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="https://pgbiz.omniware.in"
+                        value={apiUrl}
+                        onChange={(e) => setApiUrl(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Return / Callback URL (Customer Return)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://api.soulconect.com/api/public/payment/omniware/callback"
+                      value={webhookUrl}
+                      onChange={(e) => setWebhookUrl(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      Add this URL in Omniware Portal under "Payment Callback URL"
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Key ID / Publishable Key
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="rzp_test_xxxxxxxxxxxxx"
+                      value={keyId}
+                      onChange={(e) => setKeyId(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Key Secret
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
+                      value={keySecret}
+                      onChange={(e) => setKeySecret(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Webhook Secret
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="whsec_xxxxxxxxxxxxxxxxxxxxxxxx"
+                      value={webhookSecret}
+                      onChange={(e) => setWebhookSecret(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">

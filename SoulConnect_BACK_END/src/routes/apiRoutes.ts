@@ -43,6 +43,10 @@ import {
   handleMakePayment,
   handleCreateRazorpayOrder,
   handleRazorpayWebhook,
+  handleOmniwareInitiate,
+  handleOmniwareRedirect,
+  handleOmniwareCallback,
+  handleOmniwareWebhook,
 } from "../controllers/paymentController";
 import { handleForgotPassword, handleResetPassword } from "../controllers/authController";
 
@@ -188,6 +192,25 @@ router.get("/public/payment_account_detail/:id", handlePaymentAccountDetailGet);
 router.post("/public/makePayment", handleMakePayment);
 router.post("/public/make_payment", handleMakePayment);
 router.post("/makePayment", handleMakePayment);
+
+// --- OMNIWARE PAYMENT GATEWAY ROUTES ---
+// 1. Browser 301 / 302 Redirection API
+router.get("/payment/omniware/redirect", handleOmniwareRedirect);
+router.post("/payment/omniware/redirect", handleOmniwareRedirect);
+router.get("/public/payment/omniware/redirect", handleOmniwareRedirect);
+router.post("/public/payment/omniware/redirect", handleOmniwareRedirect);
+
+// 2. Initiate Payment Session (Returns JSON with payment execution URL)
+router.post("/payment/omniware/initiate", handleOmniwareInitiate);
+router.post("/public/payment/omniware/initiate", handleOmniwareInitiate);
+
+// 3. Return URL Callback (Customer browser returns here via POST from Omniware)
+router.post("/payment/omniware/callback", handleOmniwareCallback);
+router.post("/public/payment/omniware/callback", handleOmniwareCallback);
+
+// 4. Server-to-Server Webhook
+router.post("/payment/omniware/webhook", handleOmniwareWebhook);
+router.post("/public/payment/omniware/webhook", handleOmniwareWebhook);
 
 router.get("/public", (req, res) => {
   res.json({ message: "Hello Public World!" });

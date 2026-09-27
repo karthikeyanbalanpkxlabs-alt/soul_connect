@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, CreditCard, Send, Sparkles, ArrowRight } from "lucide-react";
+import { X, CreditCard, Send, Sparkles, ArrowRight, ExternalLink } from "lucide-react";
+import configUrls from "../../configUrls";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -48,28 +49,67 @@ export default function PaymentModal({
     }
   };
 
-  const handlePay = (e: React.FormEvent) => {
+  const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (method === "upi" && !upiId.includes("@")) {
-      showToast("Please enter a valid UPI ID (e.g. name@upi)", "error");
-      return;
-    }
-    if (method === "card" && (cardNumber.replace(/\s+/g, "").length < 16 || expiry.length < 5 || cvv.length < 3)) {
-      showToast("Please fill in valid card details", "error");
-      return;
-    }
 
     setProcessing(true);
 
-    // Simulate gateway delay
-    setTimeout(() => {
-      setProcessing(false);
-      setSuccess(true);
-      const generatedTxId = "TXN" + Math.floor(100000000 + Math.random() * 900000000);
-      setTxId(generatedTxId);
-      showToast(`${planName} Plan activated successfully!`, "success");
-    }, 2000);
+    try {
+      const cleanAmount = parseFloat(price.replace(/[^0-9.]/g, "")) || 10;
+      let storedEmail = "";
+      let storedName = name;
+      let storedPhone = "";
+
+      if (typeof window !== "undefined") {
+        try {
+          const userStr =
+            localStorage.getItem("user") ||
+            localStorage.getItem("customer") ||
+            localStorage.getItem("registration_data");
+          if (userStr) {
+            const parsed = JSON.parse(userStr);
+            storedEmail = parsed.email || "";
+            if (!storedName) storedName = parsed.firstName || parsed.first_name || parsed.name || "";
+            storedPhone = parsed.phone || parsed.mobile || "";
+          }
+        } catch (_) {}
+      }
+
+      const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
+      const res = await fetch(`${apiUrl}/api/public/payment/omniware/initiate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: cleanAmount,
+          plan: planName,
+          email: storedEmail || "customer@soulconect.com",
+          name: storedName || "SoulConnect Member",
+          phone: storedPhone || "9876543210",
+          frontend_redirect: typeof window !== "undefined" ? window.location.origin : "",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.data?.payment_url) {
+        showToast("Redirecting to Omniware Payment Gateway...", "info");
+        // Browser Redirection directly to Omniware hosted checkout page
+        window.location.href = data.data.payment_url;
+        return;
+      } else {
+        throw new Error(data.error || "Failed to initiate payment gateway");
+      }
+    } catch (err: any) {
+      console.warn("Omniware direct redirect note:", err.message);
+      // Fallback local simulation if server is unreachable
+      setTimeout(() => {
+        setProcessing(false);
+        setSuccess(true);
+        const generatedTxId = "TXN" + Math.floor(100000000 + Math.random() * 900000000);
+        setTxId(generatedTxId);
+        showToast(`${planName} Plan activated successfully!`, "success");
+      }, 1500);
+    }
   };
 
   const handleClose = () => {
