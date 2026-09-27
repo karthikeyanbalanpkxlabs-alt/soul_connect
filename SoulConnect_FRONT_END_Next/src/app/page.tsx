@@ -557,22 +557,38 @@ export default function Home() {
         p.paymentChannelParam,
       );
     } else {
-      // Retry payment flow
+      // Failure flow: close modal, trigger prefilled fields restore, and scroll to registration form
       setPaymentModal((prev) => ({ ...prev, isOpen: false }));
-      const p = paymentModal.retryParams;
-      if (p && p.planName) {
-        handleOpenPayment(p.planName, p.price, p.features);
-      } else {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("soulconnect:prefill_registration"),
+        );
+      }
+      setTimeout(() => {
         const regSection = document.getElementById("register");
         if (regSection) {
           regSection.scrollIntoView({ behavior: "smooth" });
         }
-      }
+      }, 50);
     }
   };
 
   const handleModalClose = () => {
+    const wasFailed = paymentModal.status === "failed";
     setPaymentModal((prev) => ({ ...prev, isOpen: false }));
+    if (wasFailed) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("soulconnect:prefill_registration"),
+        );
+      }
+      setTimeout(() => {
+        const regSection = document.getElementById("register");
+        if (regSection) {
+          regSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 50);
+    }
   };
 
   const showToast = (

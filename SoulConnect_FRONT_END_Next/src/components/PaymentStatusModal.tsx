@@ -311,7 +311,7 @@ export default function PaymentStatusModal({
 
               {/* Helpful Advice */}
               <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-                Your profile information is safely preserved. You can try the payment again or review your details.
+                All your profile details and selections are safely preserved. Click &ldquo;Try Again&rdquo; to review your prefilled form and complete your registration.
               </p>
 
               {/* Try Again / Action Buttons */}
@@ -330,7 +330,7 @@ export default function PaymentStatusModal({
                   <button
                     type="button"
                     onClick={onRetry}
-                    className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-md shadow-rose-500/20 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white font-bold shadow-md shadow-rose-500/20 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <RotateCcw size={16} />
                     <span>Try Again</span>

@@ -168,6 +168,7 @@ export default function Registration({
       aboutMe: "",
       preferences: "",
     },
+    enableReinitialize: true,
     validationSchema: registrationValidationSchema,
     onSubmit: () => {
       if (!mobileVerified) {
@@ -334,6 +335,142 @@ export default function Registration({
   // Profile Image Upload States & Handlers
   const [images, setImages] = useState<any[]>([]);
   const [familyPhotos, setFamilyPhotos] = useState<any[]>([]);
+
+  // Restore prefilled registration data from storage (for failure retry flow or return visits)
+  const restorePendingRegistration = () => {
+    try {
+      const pendingStr =
+        localStorage.getItem("pending_customer_registration") ||
+        sessionStorage.getItem("pending_customer_registration");
+
+      let fixture: any = null;
+      if (pendingStr) {
+        try {
+          fixture = JSON.parse(pendingStr);
+        } catch (_) {}
+      }
+
+      let regData: any = null;
+      try {
+        const regStr =
+          localStorage.getItem("registration_data") ||
+          sessionStorage.getItem("registration_data") ||
+          localStorage.getItem("customer") ||
+          localStorage.getItem("user");
+        if (regStr) regData = JSON.parse(regStr);
+      } catch (_) {}
+
+      if (fixture || regData) {
+        const who =
+          fixture?.whoiam_register ||
+          fixture?.profile_created_for ||
+          "For myself";
+        const fName =
+          fixture?.first_name ||
+          regData?.firstName ||
+          regData?.first_name ||
+          regData?.name ||
+          "";
+        const lName =
+          fixture?.last_name ||
+          regData?.lastName ||
+          regData?.last_name ||
+          "";
+        const emailVal = fixture?.email || regData?.email || "";
+        const mobileVal =
+          fixture?.phone_number ||
+          regData?.mobile ||
+          regData?.phone ||
+          "";
+
+        formik.setValues({
+          registerFor: who,
+          firstName: fName,
+          lastName: lName,
+          dob: fixture?.dob || "",
+          gender: fixture?.gender || "",
+          mobile: mobileVal,
+          email: emailVal,
+          district: fixture?.district || selectedDistrict || "",
+          taluk: fixture?.taluk_town || "",
+          religion: fixture?.religion || "",
+          caste: fixture?.caste || "",
+          motherTongue: fixture?.mother_tongue || "Tamil",
+          maritalStatus: fixture?.maritial_status || "Never Married",
+          education: fixture?.education || "",
+          profession: fixture?.profession || "",
+          income: fixture?.annual_income || "Prefer not to say",
+          height: fixture?.height || "",
+          aboutMe: fixture?.about_self || "",
+          preferences: fixture?.partner_preference || "",
+        });
+
+        if (
+          fixture?.mobile_verified ||
+          fixture?.phone_verified ||
+          fixture?.is_phone_verified ||
+          mobileVal
+        ) {
+          setMobileVerified(true);
+        }
+        if (
+          fixture?.email_verified ||
+          fixture?.is_email_verified ||
+          emailVal
+        ) {
+          setEmailVerified(true);
+        }
+
+        if (Array.isArray(fixture?.image) && fixture.image.length > 0) {
+          setImages(fixture.image);
+        }
+        if (
+          Array.isArray(fixture?.family_photos) &&
+          fixture.family_photos.length > 0
+        ) {
+          setFamilyPhotos(fixture.family_photos);
+        }
+        if (fixture?.identity_proff) {
+          setIdentityProof(fixture.identity_proff);
+        }
+
+        try {
+          const planStr =
+            localStorage.getItem("pending_selected_plan") ||
+            sessionStorage.getItem("pending_selected_plan");
+          if (planStr) {
+            const planObj = JSON.parse(planStr);
+            if (planObj?.name) {
+              setSelectedPlan(planObj.name);
+            }
+          }
+        } catch (_) {}
+
+        setRegStep(2);
+      }
+    } catch (e) {
+      console.error("Error restoring pending registration:", e);
+    }
+  };
+
+  useEffect(() => {
+    restorePendingRegistration();
+
+    const handlePrefillEvent = () => {
+      restorePendingRegistration();
+    };
+
+    window.addEventListener(
+      "soulconnect:prefill_registration",
+      handlePrefillEvent,
+    );
+    return () => {
+      window.removeEventListener(
+        "soulconnect:prefill_registration",
+        handlePrefillEvent,
+      );
+    };
+  }, []);
 
   const handleFamilyPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
