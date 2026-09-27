@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, CreditCard, Send, Sparkles, ArrowRight, ExternalLink } from "lucide-react";
+import {
+  X,
+  CreditCard,
+  Send,
+  Sparkles,
+  ArrowRight,
+  ExternalLink,
+} from "lucide-react";
 import configUrls from "../../configUrls";
 
 interface PaymentModalProps {
@@ -69,25 +76,31 @@ export default function PaymentModal({
           if (userStr) {
             const parsed = JSON.parse(userStr);
             storedEmail = parsed.email || "";
-            if (!storedName) storedName = parsed.firstName || parsed.first_name || parsed.name || "";
+            if (!storedName)
+              storedName =
+                parsed.firstName || parsed.first_name || parsed.name || "";
             storedPhone = parsed.phone || parsed.mobile || "";
           }
         } catch (_) {}
       }
 
       const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
-      const res = await fetch(`${apiUrl}/api/public/payment/omniware/initiate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: cleanAmount,
-          plan: planName,
-          email: storedEmail || "customer@soulconect.com",
-          name: storedName || "SoulConnect Member",
-          phone: storedPhone || "9876543210",
-          frontend_redirect: typeof window !== "undefined" ? window.location.origin : "",
-        }),
-      });
+      const res = await fetch(
+        `${apiUrl}/api/public/payment/omniware/initiate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: cleanAmount,
+            plan: planName,
+            email: storedEmail || "customer@soulconect.com",
+            name: storedName || "SoulConnect Member",
+            phone: storedPhone || "9876543210",
+            frontend_redirect:
+              typeof window !== "undefined" ? window.location.origin : "",
+          }),
+        },
+      );
 
       const data = await res.json();
 
@@ -105,7 +118,8 @@ export default function PaymentModal({
       setTimeout(() => {
         setProcessing(false);
         setSuccess(true);
-        const generatedTxId = "TXN" + Math.floor(100000000 + Math.random() * 900000000);
+        const generatedTxId =
+          "TXN" + Math.floor(100000000 + Math.random() * 900000000);
         setTxId(generatedTxId);
         showToast(`${planName} Plan activated successfully!`, "success");
       }, 1500);
@@ -137,7 +151,9 @@ export default function PaymentModal({
         {!success ? (
           <>
             <h3 className="modal-title">Upgrade to {planName}</h3>
-            <p className="modal-sub">Get instant access to premium candidates & verified profiles</p>
+            <p className="modal-sub">
+              Get instant access to premium candidates & verified profiles
+            </p>
 
             <div className="amount-display">
               <span className="amount-label">Amount Payable:</span>
@@ -176,7 +192,8 @@ export default function PaymentModal({
                     required
                   />
                   <p className="mt-1 text-[10px] text-gray-400">
-                    Supports Google Pay, PhonePe, Paytm, BHIM and all major bank apps
+                    Supports Google Pay, PhonePe, Paytm, BHIM and all major bank
+                    apps
                   </p>
                 </div>
               ) : (
@@ -193,7 +210,7 @@ export default function PaymentModal({
                             .replace(/\s?/g, "")
                             .replace(/(\d{4})/g, "$1 ")
                             .trim()
-                            .substring(0, 19)
+                            .substring(0, 19),
                         )
                       }
                       placeholder="4111 2222 3333 4444"
@@ -210,7 +227,8 @@ export default function PaymentModal({
                         onChange={(e) => {
                           let val = e.target.value.replace(/\D/g, "");
                           if (val.length > 2) {
-                            val = val.substring(0, 2) + "/" + val.substring(2, 4);
+                            val =
+                              val.substring(0, 2) + "/" + val.substring(2, 4);
                           }
                           setExpiry(val.substring(0, 5));
                         }}
@@ -224,7 +242,11 @@ export default function PaymentModal({
                         type="password"
                         id="cvv"
                         value={cvv}
-                        onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").substring(0, 3))}
+                        onChange={(e) =>
+                          setCvv(
+                            e.target.value.replace(/\D/g, "").substring(0, 3),
+                          )
+                        }
                         placeholder="•••"
                         required
                       />
@@ -252,9 +274,24 @@ export default function PaymentModal({
               >
                 {processing ? (
                   <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Contacting Bank Gateway...
                   </span>
@@ -281,13 +318,21 @@ export default function PaymentModal({
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 mb-4">
               <span className="text-3xl text-emerald-600">✓</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">Payment Successful!</h3>
-            <p className="text-sm text-gray-500 mb-6">Your transaction was processed securely.</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">
+              Payment Successful!
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Your transaction was processed securely.
+            </p>
 
             <div className="rounded-xl bg-gray-50 p-4 border border-dashed border-gray-200 text-left mb-6 text-xs text-gray-600 flex flex-col gap-2">
               <div className="flex justify-between">
-                <span className="font-semibold text-gray-400">PLAN DETAILS</span>
-                <span className="font-bold text-indigo-600">{planName.toUpperCase()}</span>
+                <span className="font-semibold text-gray-400">
+                  PLAN DETAILS
+                </span>
+                <span className="font-bold text-indigo-600">
+                  {planName.toUpperCase()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>AMOUNT PAID</span>
@@ -303,10 +348,7 @@ export default function PaymentModal({
               </div>
             </div>
 
-            <button
-              onClick={handleClose}
-              className="btn-pay w-full"
-            >
+            <button onClick={handleClose} className="btn-pay w-full">
               Start Searching Matches ✦
             </button>
           </div>

@@ -20,17 +20,18 @@ export interface Send2FactorSMSResult {
  * E.g., "+919876543210" -> "919876543210", "9876543210" -> "919876543210"
  */
 function sanitizePhoneNumber(phone: string): string {
-  let cleaned = phone.replace(/[^\d]/g, "");
-  // If 10 digits without country code, default to 91 (India)
-  if (cleaned.length === 10) {
-    cleaned = "91" + cleaned;
+  const digitsOnly = phone.replace(/[^\d]/g, "");
+  // Extract last 10 digits and prefix with 91 for Indian mobile numbers
+  if (digitsOnly.length >= 10) {
+    return "91" + digitsOnly.slice(-10);
   }
-  return cleaned;
+  return digitsOnly;
 }
 
 /**
  * Send SMS OTP via 2Factor.in REST API.
  * Endpoint format: https://2factor.in/API/V1/{API_KEY}/SMS/{PHONE_NUMBER}/{OTP}
+ * Or with custom DLT template: https://2factor.in/API/V1/{API_KEY}/SMS/{PHONE_NUMBER}/{OTP}/{TEMPLATE_NAME}
  */
 export async function send2FactorOTP(
   options: Send2FactorSMSOptions,
@@ -49,18 +50,19 @@ export async function send2FactorOTP(
   }
 
   const cleanedPhone = sanitizePhoneNumber(options.phone);
-  const template =
-    options.templateName || process.env.TWOFACTOR_TEMPLATE_NAME || "SMS";
+  const template = options.templateName || process.env.TWOFACTOR_TEMPLATE_NAME;
 
-  // Build 2Factor API URL strictly specifying the SMS template/channel
-  const url = `https://2factor.in/API/V1/${apiKey}/SMS/${cleanedPhone}/${options.otp}/${encodeURIComponent(template)}`;
+  // Build 2Factor API URL: Only append template if explicitly configured
+  const url = template
+    ? `https://2factor.in/API/V1/${apiKey}/SMS/${cleanedPhone}/${options.otp}/${encodeURIComponent(template)}`
+    : `https://2factor.in/API/V1/${apiKey}/SMS/${cleanedPhone}/${options.otp}`;
 
   console.log("====================================");
-  console.log("📱 [2Factor.in] Dispatching SMS OTP (SMS Channel Only)");
+  console.log("📱 [2Factor.in] Dispatching SMS OTP");
   console.log("Recipient :", cleanedPhone);
   console.log("OTP       :", options.otp);
-  console.log("Channel   : SMS Text Message (No Voice Call)");
-  console.log("Template  :", template || "Default SMS");
+  console.log("Channel   : SMS Text Message");
+  console.log("Template  :", template || "Default (Open OTP Route)");
   console.log("====================================");
 
   try {

@@ -19,31 +19,49 @@ export async function handleSendOTP(req: Request, res: Response) {
   try {
     const { email, type, phone_number, phone_code } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "Missing email parameter" });
-    }
-
     if (type !== "email" && type !== "phone") {
       return res.status(400).json({
         error: "Invalid verification type. Expected 'email' or 'phone'",
       });
     }
 
-    const customer = await Customers.findOne({ email });
+    if (type === "email" && !email) {
+      return res.status(400).json({ error: "Missing email parameter" });
+    }
+
+    const cleanPhoneDigits = phone_number
+      ? String(phone_number).replace(/[^\d]/g, "").slice(-10)
+      : "";
+
+    if (type === "phone" && !cleanPhoneDigits && !email) {
+      return res.status(400).json({
+        error: "Phone number or email is required for phone verification",
+      });
+    }
+
+    const customer = email
+      ? await Customers.findOne({ email: { $regex: `^${email.trim()}$`, $options: "i" } })
+      : cleanPhoneDigits
+      ? await Customers.findOne({ phone_number: { $regex: `${cleanPhoneDigits}$` } })
+      : null;
 
     const otp = generateOTP();
     const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
 
     // Store in temp memory store for new registration validation
-    const otpKey = `${email.toLowerCase()}_${type}`;
+    const primaryKey = email ? email.toLowerCase() : `phone_${cleanPhoneDigits}`;
+    const otpKey = `${primaryKey}_${type}`;
     tempOtpStore.set(otpKey, { otp, expires });
+    if (cleanPhoneDigits) {
+      tempOtpStore.set(`phone_${cleanPhoneDigits}_phone`, { otp, expires });
+    }
 
     if (customer) {
       if (type === "email") {
         customer.set("email_otp", otp);
         customer.set("email_otp_expires", expires);
       } else {
-        if (phone_number) customer.set("phone_number", phone_number);
+        if (cleanPhoneDigits) customer.set("phone_number", cleanPhoneDigits);
         if (phone_code) customer.set("phone_code", phone_code);
         customer.set("phone_otp", otp);
         customer.set("phone_otp_expires", expires);
@@ -129,8 +147,12 @@ export async function handleSendOTP(req: Request, res: Response) {
 
       return res.status(200).json({
         success: true,
-        message: "Phone verification OTP sent successfully",
+        sms_sent: smsResult.success,
+        message: smsResult.success
+          ? "Phone verification OTP sent successfully"
+          : `SMS delivery pending/failed: ${smsResult.error || "Provider error"}. Your OTP is: ${otp}`,
         otp: otp,
+        error: smsResult.success ? undefined : smsResult.error,
       });
     }
   } catch (err: any) {
@@ -146,12 +168,12 @@ export async function handleSendOTP(req: Request, res: Response) {
  */
 export async function handleVerifyOTP(req: Request, res: Response) {
   try {
-    const { email, type, otp } = req.body;
+    const { email, type, otp, phone_number } = req.body;
 
-    if (!email || !type || !otp) {
+    if (!type || !otp) {
       return res
         .status(400)
-        .json({ error: "Missing email, type, or otp parameters" });
+        .json({ error: "Missing type or otp parameters" });
     }
 
     if (type !== "email" && type !== "phone") {
@@ -160,9 +182,32 @@ export async function handleVerifyOTP(req: Request, res: Response) {
       });
     }
 
-    const customer = await Customers.findOne({ email });
-    const otpKey = `${email.toLowerCase()}_${type}`;
-    const tempStored = tempOtpStore.get(otpKey);
+    if (type === "email" && !email) {
+      return res.status(400).json({ error: "Missing email parameter" });
+    }
+
+    const cleanPhoneDigits = phone_number
+      ? String(phone_number).replace(/[^\d]/g, "").slice(-10)
+      : "";
+
+    if (type === "phone" && !email && !cleanPhoneDigits) {
+      return res
+        .status(400)
+        .json({ error: "Missing email or phone_number for phone verification" });
+    }
+
+    const customer = email
+      ? await Customers.findOne({ email: { $regex: `^${email.trim()}$`, $options: "i" } })
+      : cleanPhoneDigits
+      ? await Customers.findOne({ phone_number: { $regex: `${cleanPhoneDigits}$` } })
+      : null;
+
+    const primaryKey = email ? email.toLowerCase() : `phone_${cleanPhoneDigits}`;
+    const otpKey = `${primaryKey}_${type}`;
+    let tempStored = tempOtpStore.get(otpKey);
+    if (!tempStored && cleanPhoneDigits) {
+      tempStored = tempOtpStore.get(`phone_${cleanPhoneDigits}_phone`);
+    }
 
     let validOtp = false;
 
@@ -236,6 +281,9 @@ export async function handleVerifyOTP(req: Request, res: Response) {
 
     // Remove from temp memory store after successful verification
     tempOtpStore.delete(otpKey);
+    if (cleanPhoneDigits) {
+      tempOtpStore.delete(`phone_${cleanPhoneDigits}_phone`);
+    }
 
     console.log(
       `✅ [Verification] Customer ${email} verified their ${type} successfully`,
