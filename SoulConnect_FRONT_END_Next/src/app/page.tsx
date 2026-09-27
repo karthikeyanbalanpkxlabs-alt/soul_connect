@@ -49,6 +49,9 @@ export default function Home() {
       let txnId = "";
       let planName = "";
       let amountVal = "";
+      let paymentTypeParam = "";
+      let paymentModeParam = "";
+      let paymentChannelParam = "";
 
       for (const [key, value] of queryParams.entries()) {
         const cleanKey = key.trim().toLowerCase();
@@ -67,6 +70,24 @@ export default function Home() {
           planName = cleanVal;
         } else if (cleanKey === "amount") {
           amountVal = cleanVal;
+        } else if (
+          cleanKey === "payment_type" ||
+          cleanKey === "paymenttype" ||
+          cleanKey === "pay_type"
+        ) {
+          paymentTypeParam = cleanVal;
+        } else if (
+          cleanKey === "payment_mode" ||
+          cleanKey === "paymentmode" ||
+          cleanKey === "mode"
+        ) {
+          paymentModeParam = cleanVal;
+        } else if (
+          cleanKey === "payment_channel" ||
+          cleanKey === "paymentchannel" ||
+          cleanKey === "channel"
+        ) {
+          paymentChannelParam = cleanVal;
         }
       }
 
@@ -74,7 +95,15 @@ export default function Home() {
         if (!hasProcessedPayment.current) {
           hasProcessedPayment.current = true;
           setIsComingSoon(false);
-          handlePostPaymentAccountCreation(orderId, txnId, planName, amountVal);
+          handlePostPaymentAccountCreation(
+            orderId,
+            txnId,
+            planName,
+            amountVal,
+            paymentTypeParam,
+            paymentModeParam,
+            paymentChannelParam,
+          );
         }
       } else if (paymentStatus === "failed") {
         const reason =
@@ -95,6 +124,9 @@ export default function Home() {
     txnId: string,
     planName: string,
     amountVal?: string,
+    paymentTypeParam?: string,
+    paymentModeParam?: string,
+    paymentChannelParam?: string,
   ) => {
     try {
       showToast("Payment verified! Creating your account...", "info");
@@ -180,7 +212,9 @@ export default function Home() {
           ],
           video: "",
           identity_proff: "identity_proof_doc",
-          transaction: [],
+          transaction: {
+            history: [],
+          },
           public_verify: false,
           keycloakId: randId,
         };
@@ -226,54 +260,112 @@ export default function Home() {
       }
 
       const now = new Date();
-      const startDate = now.toISOString().split("T")[0];
-      const endDt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-      const endDate = endDt.toISOString().split("T")[0];
+      const purchaseDate = now.toISOString();
+      const endDt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+      const expiredDate = endDt.toISOString();
 
-      const targetPlan =
-        planName || createFixture.subscription_type || "Premium Match";
+      const targetPlan = (
+        planName ||
+        createFixture.subscription_type ||
+        "premium"
+      ).toLowerCase();
 
-      // 2. Prepare transaction data with order_id
-      const finalTxnId = txnId || `TXN_${Date.now()}`;
-      const transactionRecord = {
-        payment_type: "Full",
-        transaction_id: finalTxnId,
-        order_id: orderId,
-        transaction_date: startDate,
-        status: "Success",
-        amount: String(paidAmount),
-        currency_type: "₹",
-        tax: { gst: "", cgst: "" },
+      // 2. Prepare transaction data in structured format with order_id and summary
+      const dateCode = now.toISOString().slice(0, 10).replace(/-/g, "");
+      const finalOrderId = orderId || `ORD${dateCode}0001`;
+      const finalTxnId = txnId || `PAY${dateCode}0001`;
+      const finalInvoiceNo = `INV${dateCode}0001`;
+      const finalAmount = Number(paidAmount) || 100;
+
+      // Dynamically resolve payment_type from callback (netbanking, upi, cc, dc)
+      const rawMode = (
+        paymentTypeParam ||
+        paymentModeParam ||
+        paymentChannelParam ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+      let dynamicPaymentType = "Omniware NetBanking";
+      if (
+        rawMode === "upi" ||
+        rawMode.includes("upi") ||
+        rawMode.includes("gpay") ||
+        rawMode.includes("phonepe") ||
+        rawMode.includes("paytm")
+      ) {
+        dynamicPaymentType = "UPI";
+      } else if (
+        rawMode === "cc" ||
+        rawMode.includes("credit") ||
+        rawMode === "credit card" ||
+        rawMode === "credit_card"
+      ) {
+        dynamicPaymentType = "CC";
+      } else if (
+        rawMode === "dc" ||
+        rawMode.includes("debit") ||
+        rawMode === "debit card" ||
+        rawMode === "debit_card"
+      ) {
+        dynamicPaymentType = "DC";
+      } else if (
+        rawMode === "nb" ||
+        rawMode.includes("netbanking") ||
+        rawMode.includes("net_banking") ||
+        rawMode.includes("banking")
+      ) {
+        dynamicPaymentType = paymentChannelParam
+          ? `Omniware NetBanking (${paymentChannelParam})`
+          : "Omniware NetBanking";
+      } else if (paymentTypeParam) {
+        dynamicPaymentType = paymentTypeParam;
+      }
+
+      const currentPlanHistory = {
         plan: targetPlan,
-        mode: "Omniware NetBanking",
-        plan_start: startDate,
-        plan_end: endDate,
-        account_name: "omniware",
-        provider: "omniware",
-      };
-
-      const historyRecord = {
+        purchase_date: purchaseDate,
+        expired_date: expiredDate,
         current_plan: true,
-        plan: targetPlan,
-        purchase_date: startDate,
-        expired_date: endDate,
         summary: {
-          invoice_no: `INV_${Date.now()}`,
-          order_id: orderId,
+          order_id: finalOrderId,
+          invoice_no: finalInvoiceNo,
           payment_id: finalTxnId,
-          payment_method: "Omniware NetBanking",
+          amount: finalAmount,
+          tax: 0,
+          discount: 0,
+          total_amount: finalAmount,
           payment_status: "Success",
-          payment_type: "Full",
-          amount: paidAmount,
-          total_amount: paidAmount,
-          transaction_date: startDate,
-          account_name: "omniware",
-          provider: "omniware",
+          payment_method: "omniware",
+          payment_type: dynamicPaymentType,
+          currency_type: "₹",
+          transaction_date: purchaseDate,
         },
       };
 
-      createFixture.transaction = [transactionRecord];
-      createFixture["transaction.history"] = [historyRecord];
+      // Retain existing transaction history if present (marking prior plans as false),
+      // otherwise provide structured history entries
+      let priorHistory: any[] = [];
+      if (
+        createFixture.transaction?.history &&
+        Array.isArray(createFixture.transaction.history) &&
+        createFixture.transaction.history.length > 0
+      ) {
+        priorHistory = createFixture.transaction.history.map((item: any) => ({
+          ...item,
+          current_plan: false,
+        }));
+      } else {
+        priorHistory = [];
+      }
+
+      createFixture.transaction = {
+        history: [currentPlanHistory, ...priorHistory],
+      };
+      if (createFixture["transaction.history"]) {
+        delete createFixture["transaction.history"];
+      }
       createFixture.subscription_type = targetPlan;
 
       // 3. Call public customer create API: const customerResp = await onSaveCustomer(createFixture);
@@ -320,11 +412,7 @@ export default function Home() {
       );
     } finally {
       // Clean query params so user doesn't re-trigger on refresh
-      window.history.replaceState(
-        {},
-        document.title,
-        window.location.pathname,
-      );
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   };
 

@@ -669,7 +669,9 @@ export default function Registration({
       family_photos: familyPhotos,
       video: "",
       identity_proff: identityProof,
-      transaction: [],
+      transaction: {
+        history: [],
+      },
       public_verify: false,
       keycloakId: dataGenerateId,
     };
