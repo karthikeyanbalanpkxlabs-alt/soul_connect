@@ -41,7 +41,10 @@ export async function handleCreateRazorpayOrder(req: Request, res: Response) {
         .json({ error: "Missing or invalid 'amount' in request body" });
     }
 
-    const activeAccount = await getActivePaymentAccount(account_name, provider || "razorpay");
+    const activeAccount = await getActivePaymentAccount(
+      account_name,
+      provider || "razorpay",
+    );
     if (!activeAccount) {
       return res.status(400).json({
         success: false,
@@ -171,7 +174,9 @@ export async function handleMakePayment(req: Request, res: Response) {
     } = req.body;
 
     // 1. CHECK FOR ACTIVE PAYMENT ACCOUNT DATA (is_active: true) matching provider or account_name
-    const targetProvider = provider || (razorpay_payment_id || razorpay_signature ? "razorpay" : undefined);
+    const targetProvider =
+      provider ||
+      (razorpay_payment_id || razorpay_signature ? "razorpay" : undefined);
     const activePaymentAccount = await getActivePaymentAccount(
       account_name || payment_account_name,
       targetProvider,
@@ -554,7 +559,8 @@ export function verifyOmniwareResponseHash(
  * Default fallback credentials for Omniware Test Kit
  */
 const DEFAULT_OMNIWARE_CONFIG = {
-  api_key: process.env.OMNIWARE_API_KEY || "fb6bca86-b429-4abf-a42f-824bdd29022e",
+  api_key:
+    process.env.OMNIWARE_API_KEY || "fb6bca86-b429-4abf-a42f-824bdd29022e",
   salt: process.env.OMNIWARE_SALT || "80c67bfdf027da08de88ab5ba903fecafaab8f6d",
   merchant_id: "291499",
   api_url: process.env.OMNIWARE_API_URL || "https://pgbiz.omniware.in",
@@ -589,19 +595,23 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
         .json({ error: "Missing or invalid 'amount' in request body" });
     }
 
-    const activeAccount = await getActivePaymentAccount(account_name, "omniware");
+    const activeAccount = await getActivePaymentAccount(
+      account_name,
+      "omniware",
+    );
     const cfg = activeAccount?.get("config") || {};
 
-    const apiKey =
-      cfg.api_key || cfg.key_id || DEFAULT_OMNIWARE_CONFIG.api_key;
-    const salt =
-      cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
+    const apiKey = cfg.api_key || cfg.key_id || DEFAULT_OMNIWARE_CONFIG.api_key;
+    const salt = cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
     const mode = (
-      cfg.environment || cfg.mode || DEFAULT_OMNIWARE_CONFIG.environment
+      cfg.environment ||
+      cfg.mode ||
+      DEFAULT_OMNIWARE_CONFIG.environment
     ).toUpperCase();
-    const apiUrl = (
-      cfg.api_url || DEFAULT_OMNIWARE_CONFIG.api_url
-    ).replace(/\/+$/, "");
+    const apiUrl = (cfg.api_url || DEFAULT_OMNIWARE_CONFIG.api_url).replace(
+      /\/+$/,
+      "",
+    );
 
     // Generate unique order ID (max 30 chars per Omniware spec)
     const timestamp = Date.now().toString().slice(-8);
@@ -663,8 +673,7 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
       return res.status(400).json({
         success: false,
         error:
-          pgData?.error?.message ||
-          "Failed to generate Omniware payment URL",
+          pgData?.error?.message || "Failed to generate Omniware payment URL",
         details: pgData,
       });
     }
@@ -728,16 +737,17 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     );
     const cfg = activeAccount?.get("config") || {};
 
-    const apiKey =
-      cfg.api_key || cfg.key_id || DEFAULT_OMNIWARE_CONFIG.api_key;
-    const salt =
-      cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
+    const apiKey = cfg.api_key || cfg.key_id || DEFAULT_OMNIWARE_CONFIG.api_key;
+    const salt = cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
     const mode = (
-      cfg.environment || cfg.mode || DEFAULT_OMNIWARE_CONFIG.environment
+      cfg.environment ||
+      cfg.mode ||
+      DEFAULT_OMNIWARE_CONFIG.environment
     ).toUpperCase();
-    const apiUrl = (
-      cfg.api_url || DEFAULT_OMNIWARE_CONFIG.api_url
-    ).replace(/\/+$/, "");
+    const apiUrl = (cfg.api_url || DEFAULT_OMNIWARE_CONFIG.api_url).replace(
+      /\/+$/,
+      "",
+    );
 
     const timestamp = Date.now().toString().slice(-8);
     const rand = Math.floor(1000 + Math.random() * 9000);
@@ -745,10 +755,9 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
 
     const numAmount = Number(amount).toFixed(2);
     const orderCurrency = cfg.currency || "INR";
-    const orderDesc =
-      description
-        ? String(description)
-        : `SoulConnect Matrimony - ${plan || "Membership"} Plan`;
+    const orderDesc = description
+      ? String(description)
+      : `SoulConnect Matrimony - ${plan || "Membership"} Plan`;
 
     const custEmail = (email || "customer@soulconect.com").toString().trim();
     const custName = (name || "SoulConnect Member").toString().trim();
@@ -759,11 +768,10 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
 
     const host = req.get("host");
     const protocol = req.protocol;
-    const backendCallbackUrl =
-      return_url
-        ? String(return_url)
-        : cfg.return_url ||
-          `${protocol}://${host}/api/public/payment/omniware/callback`;
+    const backendCallbackUrl = return_url
+      ? String(return_url)
+      : cfg.return_url ||
+        `${protocol}://${host}/api/public/payment/omniware/callback`;
 
     const requestParams: Record<string, string> = {
       api_key: apiKey,
@@ -798,20 +806,23 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
 
     if (!pgRes.ok || !pgData?.data?.url) {
       console.error("Omniware getpaymentrequesturl error in redirect:", pgData);
-      return res.status(500).send(
-        `<h3>Failed to initiate payment gateway redirection</h3><p>${pgData?.error?.message || "Please try again later."}</p>`,
-      );
+      return res
+        .status(500)
+        .send(
+          `<h3>Failed to initiate payment gateway redirection</h3><p>${pgData?.error?.message || "Please try again later."}</p>`,
+        );
     }
 
     // Determine redirect HTTP status (301 Moved Permanently or 302 Found)
     const redirectCode = status_code === "301" ? 301 : 302;
-    console.log(`Redirecting customer (${redirectCode}) to Omniware:`, pgData.data.url);
+    console.log(
+      `Redirecting customer (${redirectCode}) to Omniware:`,
+      pgData.data.url,
+    );
     return res.redirect(redirectCode, pgData.data.url);
   } catch (err: any) {
     console.error("handleOmniwareRedirect error:", err);
-    return res
-      .status(500)
-      .send(`<h3>Redirection error: ${err.message}</h3>`);
+    return res.status(500).send(`<h3>Redirection error: ${err.message}</h3>`);
   }
 }
 
@@ -843,13 +854,14 @@ export async function handleOmniwareCallback(req: Request, res: Response) {
 
     const activeAccount = await getActivePaymentAccount(undefined, "omniware");
     const cfg = activeAccount?.get("config") || {};
-    const salt =
-      cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
+    const salt = cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
 
     // Verify Hash integrity
     const isValidHash = verifyOmniwareResponseHash(responseData, salt);
     if (!isValidHash && hash) {
-      console.warn("Omniware callback hash verification failed! Potential data tampering.");
+      console.warn(
+        "Omniware callback hash verification failed! Potential data tampering.",
+      );
     }
 
     const isSuccess = String(response_code) === "0" && (isValidHash || !hash);
@@ -940,7 +952,7 @@ export async function handleOmniwareCallback(req: Request, res: Response) {
       udf3 || process.env.FRONTEND_URL || "https://soulconect.com";
 
     if (isSuccess) {
-      const redirectUrl = `${clientOrigin}/portal?payment=success&order_id=${encodeURIComponent(
+      const redirectUrl = `${clientOrigin}?payment=success&order_id=${encodeURIComponent(
         order_id || "",
       )}&txn=${encodeURIComponent(transaction_id || "")}&plan=${encodeURIComponent(
         planName,
@@ -971,8 +983,7 @@ export async function handleOmniwareWebhook(req: Request, res: Response) {
     const data = req.body || {};
     const activeAccount = await getActivePaymentAccount(undefined, "omniware");
     const cfg = activeAccount?.get("config") || {};
-    const salt =
-      cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
+    const salt = cfg.salt || cfg.key_secret || DEFAULT_OMNIWARE_CONFIG.salt;
 
     const isValid = verifyOmniwareResponseHash(data, salt);
     if (!isValid && data.hash) {
@@ -982,7 +993,9 @@ export async function handleOmniwareWebhook(req: Request, res: Response) {
     }
 
     console.log("Omniware server-to-server webhook verified:", data);
-    return res.status(200).json({ status: "SUCCESS", message: "Webhook received" });
+    return res
+      .status(200)
+      .json({ status: "SUCCESS", message: "Webhook received" });
   } catch (err: any) {
     console.error("handleOmniwareWebhook error:", err);
     return res.status(500).json({ error: err.message || "Webhook error" });

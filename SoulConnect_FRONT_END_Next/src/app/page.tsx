@@ -12,10 +12,10 @@ import VibeMatch from "@/components/VibeMatch";
 import AppDownload from "@/components/AppDownload";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
-import PaymentModal from "@/components/PaymentModal";
 import Toast from "@/components/Toast";
 import Lottie from "lottie-react";
 import loadingAnimation from "./maintenance_V3.json";
+import configUrls from "../../configUrls";
 
 export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
@@ -23,12 +23,6 @@ export default function Home() {
     message: string;
     type: "success" | "info" | "error";
   } | null>(null);
-  const [paymentModal, setPaymentModal] = useState({
-    isOpen: false,
-    planName: "",
-    price: "",
-    features: [] as string[],
-  });
   const [isComingSoon, setIsComingSoon] = useState(false);
 
   useEffect(() => {
@@ -72,18 +66,60 @@ export default function Home() {
   const handleOpenPayment = (
     planName: string,
     price: string,
-    features: string[],
+    features?: string[],
   ) => {
-    setPaymentModal({
-      isOpen: true,
-      planName,
-      price,
-      features,
-    });
-  };
+    // If free plan, no payment needed
+    if (!price || price === "₹0" || planName.toLowerCase().includes("free")) {
+      const reg = document.getElementById("register");
+      if (reg) reg.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
 
-  const handleClosePayment = () => {
-    setPaymentModal((prev) => ({ ...prev, isOpen: false }));
+    const cleanAmount = parseFloat(price.replace(/[^0-9.]/g, "")) || 10;
+    let storedEmail = "";
+    let storedName = "";
+    let storedPhone = "";
+
+    try {
+      const userStr =
+        localStorage.getItem("user") ||
+        localStorage.getItem("customer") ||
+        localStorage.getItem("registration_data");
+      if (userStr) {
+        const parsed = JSON.parse(userStr);
+        storedEmail = parsed.email || "";
+        storedName = parsed.firstName || parsed.first_name || parsed.name || "";
+        storedPhone = parsed.phone || parsed.mobile || "";
+      }
+    } catch (_) {}
+
+    const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
+
+    // Direct HTML Form Submit to Omniware PG Redirection Endpoint
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = `${apiUrl}/api/public/payment/omniware/redirect`;
+
+    const appendField = (name: string, value: string) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    };
+
+    appendField("plan", planName);
+    appendField("amount", String(cleanAmount));
+    appendField("email", storedEmail || "customer@soulconect.com");
+    appendField("name", storedName || "SoulConnect Member");
+    appendField("phone", storedPhone || "9876543210");
+    appendField(
+      "frontend_redirect",
+      typeof window !== "undefined" ? window.location.origin : "",
+    );
+
+    document.body.appendChild(form);
+    form.submit();
   };
 
   if (isComingSoon) {
@@ -159,15 +195,6 @@ export default function Home() {
       {/* <AppDownload /> */}
       <CTA />
       <Footer />
-
-      <PaymentModal
-        isOpen={paymentModal.isOpen}
-        planName={paymentModal.planName}
-        price={paymentModal.price}
-        features={paymentModal.features}
-        onClose={handleClosePayment}
-        showToast={showToast}
-      />
 
       {toast && (
         <Toast

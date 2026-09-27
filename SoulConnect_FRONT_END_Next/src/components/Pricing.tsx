@@ -209,12 +209,66 @@ export default function Pricing({ onOpenPayment }: PricingProps) {
               ))}
             </div>
 
-            {/* <button
-              onClick={() => onOpenPayment && onOpenPayment(plan.name, plan.price, plan.features)}
-              className={`btn-plan ${plan.btnClass}`}
-            >
-              {plan.btnText}
-            </button> */}
+            {plan.price === "₹0" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const regSection = document.getElementById("register");
+                  if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
+                }}
+                className={`btn-plan ${plan.btnClass}`}
+              >
+                {plan.btnText || "Current Plan"}
+              </button>
+            ) : (
+              <form
+                method="POST"
+                action={`${configUrls?.apiUrl || "https://api.soulconect.com"}/api/public/payment/omniware/redirect`}
+                onSubmit={(e) => {
+                  const targetForm = e.currentTarget as any;
+                  try {
+                    const userStr =
+                      localStorage.getItem("user") ||
+                      localStorage.getItem("customer") ||
+                      localStorage.getItem("registration_data");
+                    if (userStr) {
+                      const parsed = JSON.parse(userStr);
+                      if (parsed.email && targetForm.email) {
+                        targetForm.email.value = parsed.email;
+                      }
+                      if ((parsed.firstName || parsed.first_name || parsed.name) && targetForm.name) {
+                        targetForm.name.value = parsed.firstName || parsed.first_name || parsed.name;
+                      }
+                      if ((parsed.phone || parsed.mobile) && targetForm.phone) {
+                        targetForm.phone.value = parsed.phone || parsed.mobile;
+                      }
+                    }
+                  } catch (_) {}
+                }}
+                className="w-full mt-2"
+              >
+                <input type="hidden" name="plan" value={plan.name} />
+                <input
+                  type="hidden"
+                  name="amount"
+                  value={parseFloat(plan.price.replace(/[^0-9.]/g, "")) || 10}
+                />
+                <input type="hidden" name="email" value="customer@soulconect.com" />
+                <input type="hidden" name="name" value="SoulConnect Member" />
+                <input type="hidden" name="phone" value="9876543210" />
+                <input
+                  type="hidden"
+                  name="frontend_redirect"
+                  value={typeof window !== "undefined" ? window.location.origin : ""}
+                />
+                <button
+                  type="submit"
+                  className={`btn-plan ${plan.btnClass} w-full flex items-center justify-center gap-1.5 cursor-pointer`}
+                >
+                  <span>{plan.btnText || "Pay with Omniware ✦"}</span>
+                </button>
+              </form>
+            )}
           </div>
         ))}
       </div>
