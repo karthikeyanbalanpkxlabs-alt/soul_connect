@@ -956,7 +956,7 @@ export async function handleOmniwareCallback(req: Request, res: Response) {
         order_id || "",
       )}&txn=${encodeURIComponent(transaction_id || "")}&plan=${encodeURIComponent(
         planName,
-      )}`;
+      )}&amount=${encodeURIComponent(amount || "")}`;
       return res.redirect(302, redirectUrl);
     } else {
       const redirectUrl = `${clientOrigin}/?payment=failed&order_id=${encodeURIComponent(

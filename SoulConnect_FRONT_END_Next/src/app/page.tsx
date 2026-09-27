@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Districts from "@/components/Districts";
@@ -16,6 +16,7 @@ import Toast from "@/components/Toast";
 import Lottie from "lottie-react";
 import loadingAnimation from "./maintenance_V3.json";
 import configUrls from "../../configUrls";
+import { onSaveCustomer } from "@/components/api";
 
 export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
@@ -24,6 +25,7 @@ export default function Home() {
     type: "success" | "info" | "error";
   } | null>(null);
   const [isComingSoon, setIsComingSoon] = useState(false);
+  const hasProcessedPayment = useRef(false);
 
   useEffect(() => {
     console.log("BUILD TEST SEP 16");
@@ -37,7 +39,294 @@ export default function Home() {
     if (localStorage.getItem("logged_in") === "true") {
       window.location.href = "/portal";
     }
+
+    // Check for payment callback query parameters: ?payment=success&order_id=...
+    if (typeof window !== "undefined") {
+      const queryParams = new URLSearchParams(window.location.search);
+
+      let paymentStatus = "";
+      let orderId = "";
+      let txnId = "";
+      let planName = "";
+      let amountVal = "";
+
+      for (const [key, value] of queryParams.entries()) {
+        const cleanKey = key.trim().toLowerCase();
+        const cleanVal = (value || "").replace(/^["']|["']$/g, "").trim();
+        if (cleanKey === "payment") {
+          paymentStatus = cleanVal.toLowerCase();
+        } else if (cleanKey === "order_id" || cleanKey === "orderid") {
+          orderId = cleanVal;
+        } else if (
+          cleanKey === "txn" ||
+          cleanKey === "transaction_id" ||
+          cleanKey === "txnid"
+        ) {
+          txnId = cleanVal;
+        } else if (cleanKey === "plan" || cleanKey === "subscription_type") {
+          planName = cleanVal;
+        } else if (cleanKey === "amount") {
+          amountVal = cleanVal;
+        }
+      }
+
+      if (paymentStatus === "success" && orderId) {
+        if (!hasProcessedPayment.current) {
+          hasProcessedPayment.current = true;
+          setIsComingSoon(false);
+          handlePostPaymentAccountCreation(orderId, txnId, planName, amountVal);
+        }
+      } else if (paymentStatus === "failed") {
+        const reason =
+          queryParams.get("reason") ||
+          "Payment processing was declined or cancelled.";
+        showToast(`Payment Failed: ${reason}`, "error");
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+      }
+    }
   }, []);
+
+  const handlePostPaymentAccountCreation = async (
+    orderId: string,
+    txnId: string,
+    planName: string,
+    amountVal?: string,
+  ) => {
+    try {
+      showToast("Payment verified! Creating your account...", "info");
+
+      // 1. Retrieve stored registration data or build valid fixture
+      let createFixture: any = null;
+      const pendingStr =
+        localStorage.getItem("pending_customer_registration") ||
+        sessionStorage.getItem("pending_customer_registration");
+
+      if (pendingStr) {
+        try {
+          createFixture = JSON.parse(pendingStr);
+        } catch (e) {
+          console.error("Error parsing pending_customer_registration:", e);
+        }
+      }
+
+      // If no stored fixture found in storage, construct a complete valid fixture
+      if (!createFixture) {
+        let storedReg: any = {};
+        try {
+          storedReg =
+            JSON.parse(localStorage.getItem("registration_data") || "{}") ||
+            JSON.parse(localStorage.getItem("customer") || "{}") ||
+            JSON.parse(localStorage.getItem("user") || "{}") ||
+            JSON.parse(sessionStorage.getItem("registration_data") || "{}");
+        } catch (_) {}
+
+        const randId = Math.random().toString(36).substring(2, 10);
+        const email =
+          storedReg.email ||
+          `customer_${Date.now().toString().slice(-6)}@soulconect.com`;
+        const firstName =
+          storedReg.firstName ||
+          storedReg.first_name ||
+          storedReg.name ||
+          "SoulConnect";
+        const lastName = storedReg.lastName || storedReg.last_name || "Member";
+        const phone = storedReg.mobile || storedReg.phone || "9876543210";
+
+        createFixture = {
+          customer_id: "cid_" + randId,
+          profile_created_for: "For myself",
+          whoiam_register: "For myself",
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          role: "customer_g",
+          dob: "1998-01-01",
+          gender: "Male",
+          phone_number: phone,
+          phone_code: "+91",
+          email_verified: true,
+          phone_verified: true,
+          mobile_verified: true,
+          is_email_verified: true,
+          is_phone_verified: true,
+          district: "Chennai",
+          taluk_town: "Chennai",
+          state: "tamilnadu",
+          zipcode: "600001",
+          religion: "Hindu",
+          caste: "Any",
+          mother_tongue: "Tamil",
+          maritial_status: "Never Married",
+          education: "Graduate",
+          profession: "Professional",
+          annual_income: "500000",
+          height: "5'8\"",
+          about_self: "Looking for a life partner.",
+          partner_preference: "Compatible partner.",
+          subscription_type: planName || "Premium Match",
+          subscription_view_access: 4,
+          image: [
+            {
+              url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600",
+              default: true,
+            },
+          ],
+          family_photos: [
+            "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=600",
+          ],
+          video: "",
+          identity_proff: "identity_proof_doc",
+          transaction: [],
+          public_verify: false,
+          keycloakId: randId,
+        };
+      }
+
+      // Ensure required image and family_photos fields exist for backend validation
+      if (
+        !Array.isArray(createFixture.image) ||
+        createFixture.image.length === 0
+      ) {
+        createFixture.image = [
+          {
+            url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600",
+            default: true,
+          },
+        ];
+      }
+      if (
+        !Array.isArray(createFixture.family_photos) ||
+        createFixture.family_photos.length === 0
+      ) {
+        createFixture.family_photos = [
+          "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=600",
+        ];
+      }
+
+      // Determine Plan and Amount
+      let paidAmount = 2499;
+      if (amountVal && !isNaN(Number(amountVal))) {
+        paidAmount = Number(amountVal);
+      } else {
+        try {
+          const planObj = JSON.parse(
+            localStorage.getItem("pending_selected_plan") ||
+              sessionStorage.getItem("pending_selected_plan") ||
+              "{}",
+          );
+          if (planObj.price) {
+            paidAmount =
+              parseFloat(planObj.price.replace(/[^0-9.]/g, "")) || 2499;
+          }
+        } catch (_) {}
+      }
+
+      const now = new Date();
+      const startDate = now.toISOString().split("T")[0];
+      const endDt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+      const endDate = endDt.toISOString().split("T")[0];
+
+      const targetPlan =
+        planName || createFixture.subscription_type || "Premium Match";
+
+      // 2. Prepare transaction data with order_id
+      const finalTxnId = txnId || `TXN_${Date.now()}`;
+      const transactionRecord = {
+        payment_type: "Full",
+        transaction_id: finalTxnId,
+        order_id: orderId,
+        transaction_date: startDate,
+        status: "Success",
+        amount: String(paidAmount),
+        currency_type: "₹",
+        tax: { gst: "", cgst: "" },
+        plan: targetPlan,
+        mode: "Omniware NetBanking",
+        plan_start: startDate,
+        plan_end: endDate,
+        account_name: "omniware",
+        provider: "omniware",
+      };
+
+      const historyRecord = {
+        current_plan: true,
+        plan: targetPlan,
+        purchase_date: startDate,
+        expired_date: endDate,
+        summary: {
+          invoice_no: `INV_${Date.now()}`,
+          order_id: orderId,
+          payment_id: finalTxnId,
+          payment_method: "Omniware NetBanking",
+          payment_status: "Success",
+          payment_type: "Full",
+          amount: paidAmount,
+          total_amount: paidAmount,
+          transaction_date: startDate,
+          account_name: "omniware",
+          provider: "omniware",
+        },
+      };
+
+      createFixture.transaction = [transactionRecord];
+      createFixture["transaction.history"] = [historyRecord];
+      createFixture.subscription_type = targetPlan;
+
+      // 3. Call public customer create API: const customerResp = await onSaveCustomer(createFixture);
+      console.log(
+        "Submitting onSaveCustomer after payment success with order_id:",
+        orderId,
+        createFixture,
+      );
+      const customerResp = await onSaveCustomer(createFixture);
+      console.log("customerResp result:", customerResp);
+
+      if (!customerResp || customerResp.error) {
+        const errMsg =
+          customerResp?.error ||
+          customerResp?.message ||
+          "Failed to save customer account.";
+        showToast(
+          `Payment was verified (${orderId}), but account creation returned: ${errMsg}`,
+          "error",
+        );
+      } else {
+        showToast(
+          `Payment Successful! Order: ${orderId}. Your account has been created. Redirecting to login...`,
+          "success",
+        );
+        localStorage.removeItem("pending_customer_registration");
+        localStorage.removeItem("pending_selected_plan");
+        localStorage.removeItem("registration_data");
+        sessionStorage.removeItem("pending_customer_registration");
+        sessionStorage.removeItem("pending_selected_plan");
+        sessionStorage.removeItem("registration_data");
+
+        setTimeout(() => {
+          if (typeof window !== "undefined") {
+            window.location.href = window.location.origin + "/portal";
+          }
+        }, 2500);
+      }
+    } catch (err: any) {
+      console.error("handlePostPaymentAccountCreation error:", err);
+      showToast(
+        `Error creating account after payment: ${err.message}`,
+        "error",
+      );
+    } finally {
+      // Clean query params so user doesn't re-trigger on refresh
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname,
+      );
+    }
+  };
 
   const showToast = (
     message: string,
@@ -166,6 +455,13 @@ export default function Home() {
             © {new Date().getFullYear()} Soul Connect. All rights reserved.
           </div>
         </div>
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
     );
   }
@@ -178,7 +474,7 @@ export default function Home() {
         onSelectDistrict={handleSelectDistrict}
       /> */}
       <HowItWorks />
-      <Pricing onOpenPayment={handleOpenPayment} />
+      <Pricing /* onOpenPayment={handleOpenPayment} */ />
       <Registration
         selectedDistrict={selectedDistrict}
         onRegisterSuccess={() =>

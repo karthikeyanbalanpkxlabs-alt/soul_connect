@@ -674,11 +674,71 @@ export default function Registration({
       keycloakId: dataGenerateId,
     };
 
+    // IF A PAID PLAN IS SELECTED: Save pending registration and redirect to payment FIRST
+    if (selectedPlanData && selectedPlanData.price !== "₹0") {
+      try {
+        const fixtureStr = JSON.stringify(createFixture);
+        localStorage.setItem("pending_customer_registration", fixtureStr);
+        sessionStorage.setItem("pending_customer_registration", fixtureStr);
+      } catch (err) {
+        console.warn("Storage quota warning, storing lightweight fixture:", err);
+        try {
+          const lightweightFixture = {
+            ...createFixture,
+            image: createFixture.image?.slice(0, 1),
+            family_photos: createFixture.family_photos?.slice(0, 1),
+          };
+          const lightStr = JSON.stringify(lightweightFixture);
+          localStorage.setItem("pending_customer_registration", lightStr);
+          sessionStorage.setItem("pending_customer_registration", lightStr);
+        } catch (_) {}
+      }
+
+      try {
+        localStorage.setItem(
+          "pending_selected_plan",
+          JSON.stringify(selectedPlanData),
+        );
+        sessionStorage.setItem(
+          "pending_selected_plan",
+          JSON.stringify(selectedPlanData),
+        );
+        const regInfo = JSON.stringify({
+          email: values.email,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          mobile: values.mobile,
+          phone: values.mobile,
+        });
+        localStorage.setItem("registration_data", regInfo);
+        sessionStorage.setItem("registration_data", regInfo);
+      } catch (err) {
+        console.error("Failed to store pending plan/registration_data:", err);
+      }
+
+      showToast(
+        `Profile details verified! Redirecting to payment for ${selectedPlanData.name}...`,
+        "info",
+      );
+
+      // Trigger direct payment redirection (Account creation will happen after payment success)
+      onOpenPayment(
+        selectedPlanData.name,
+        selectedPlanData.price,
+        selectedPlanData.features,
+      );
+      return;
+    }
+
+    // FREE PLAN: Create customer account immediately
     try {
       const customerResp = await onSaveCustomer(createFixture);
 
       if (!customerResp || customerResp.error) {
-        const errMsg = customerResp?.error || customerResp?.message || "Failed to save customer data.";
+        const errMsg =
+          customerResp?.error ||
+          customerResp?.message ||
+          "Failed to save customer data.";
         showToast(errMsg, "error");
         handleRegistrationError(errMsg);
         return;
@@ -686,23 +746,15 @@ export default function Registration({
 
       // Process registration success callback on success
       onRegisterSuccess();
-
-      // Trigger membership payment checkout modal if a paid plan is selected
-      if (selectedPlanData && selectedPlanData.price !== "₹0") {
-        showToast(`Registration completed successfully on the ${selectedPlanData?.id} tier! Redirecting to login...`, "success");
-        onOpenPayment(
-          selectedPlanData.name,
-          selectedPlanData.price,
-          selectedPlanData.features
-        );
-      } else {
-        showToast("Registration completed successfully on the Free tier! Redirecting to login...", "success");
-        setTimeout(() => {
-          if (typeof window !== "undefined") {
-            window.location.href = window.location.origin + "/portal";
-          }
-        }, 2000);
-      }
+      showToast(
+        "Registration completed successfully on the Free tier! Redirecting to login...",
+        "success",
+      );
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          window.location.href = window.location.origin + "/portal";
+        }
+      }, 2000);
     } catch (error: any) {
       console.error("Registration error:", error);
       const errMsg = error?.message || "Failed to create customer profile. Please try again.";
