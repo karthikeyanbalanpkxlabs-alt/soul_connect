@@ -632,10 +632,14 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
     const custZip = (zip_code || "600001").trim();
 
     // Default backend callback return_url
+    const rawProto =
+      (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
+    const protocol = rawProto.split(",")[0].trim();
+    const host = req.get("host");
     const backendCallbackUrl =
       return_url ||
       cfg.return_url ||
-      `${req.protocol}://${req.get("host")}/api/public/payment/omniware/callback`;
+      `${protocol}://${host}/api/public/payment/omniware/callback`;
 
     const requestParams: Record<string, string> = {
       api_key: apiKey,
@@ -765,12 +769,25 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     const custCity = (city || "Chennai").toString().trim();
     const custCountry = (country || "IND").toString().trim();
     const custZip = (zip_code || "600001").toString().trim();
-    let host = req.get("host");
-    let protocol = req.get("host");
+    const host = req.get("host");
+    const rawProto =
+      (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
+    const protocol = rawProto.split(",")[0].trim();
     const backendCallbackUrl = return_url
       ? String(return_url)
       : cfg.return_url ||
         `${protocol}://${host}/api/public/payment/omniware/callback`;
+
+    let redirectFrontend = frontend_redirect ? String(frontend_redirect) : "";
+    if (!redirectFrontend) {
+      const referer = req.get("referer") || req.get("origin");
+      if (referer) {
+        try {
+          const refUrl = new URL(referer);
+          redirectFrontend = refUrl.origin;
+        } catch (_) {}
+      }
+    }
 
     const requestParams: Record<string, string> = {
       api_key: apiKey,
@@ -788,7 +805,7 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
       return_url: backendCallbackUrl,
       udf1: String(plan || "Premium"),
       udf2: custEmail,
-      udf3: frontend_redirect ? String(frontend_redirect) : "",
+      udf3: redirectFrontend,
     };
 
     const hash = generateOmniwareHash(requestParams, salt);
@@ -947,11 +964,12 @@ export async function handleOmniwareCallback(req: Request, res: Response) {
     }
 
     // Determine client frontend redirect URL
-    const clientOrigin =
+    const rawClientOrigin =
       udf3 || process.env.FRONTEND_URL || "https://soulconect.com";
+    const cleanOrigin = String(rawClientOrigin).trim().replace(/\/+$/, "");
 
     if (isSuccess) {
-      const redirectUrl = `${clientOrigin}?payment=success&order_id=${encodeURIComponent(
+      const redirectUrl = `${cleanOrigin}/?payment=success&order_id=${encodeURIComponent(
         order_id || "",
       )}&txn=${encodeURIComponent(transaction_id || "")}&plan=${encodeURIComponent(
         planName,
@@ -964,7 +982,7 @@ export async function handleOmniwareCallback(req: Request, res: Response) {
       )}&payment_channel=${encodeURIComponent(payment_channel || "")}`;
       return res.redirect(302, redirectUrl);
     } else {
-      const redirectUrl = `${clientOrigin}/?payment=failed&order_id=${encodeURIComponent(
+      const redirectUrl = `${cleanOrigin}/?payment=failed&order_id=${encodeURIComponent(
         order_id || "",
       )}&reason=${encodeURIComponent(
         response_message || error_desc || "Transaction Failed",
