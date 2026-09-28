@@ -765,8 +765,8 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     const custCity = (city || "Chennai").toString().trim();
     const custCountry = (country || "IND").toString().trim();
     const custZip = (zip_code || "600001").toString().trim();
-
-    const host = req.get("host");
+    let host = req.get("host");
+    host = host?.includes("local") ? host : "dev.soulconect.com";
     const protocol = req.protocol;
     const backendCallbackUrl = return_url
       ? String(return_url)
@@ -962,9 +962,7 @@ export async function handleOmniwareCallback(req: Request, res: Response) {
         payment_mode || "",
       )}&payment_type=${encodeURIComponent(
         payment_mode || "",
-      )}&payment_channel=${encodeURIComponent(
-        payment_channel || "",
-      )}`;
+      )}&payment_channel=${encodeURIComponent(payment_channel || "")}`;
       return res.redirect(302, redirectUrl);
     } else {
       const redirectUrl = `${clientOrigin}/?payment=failed&order_id=${encodeURIComponent(
