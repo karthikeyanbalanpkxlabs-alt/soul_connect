@@ -247,7 +247,7 @@ export default function ForgotPassword() {
                   >
                     {sentEmailAddress}
                   </span>
-                  <p
+                  {/* <p
                     style={{
                       fontSize: "13px",
                       color: "#166534",
@@ -258,7 +258,7 @@ export default function ForgotPassword() {
                   >
                     Please check your inbox (and spam folder). Click the link in
                     the email to reset your password.
-                  </p>
+                  </p> */}
                 </div>
 
                 <button
