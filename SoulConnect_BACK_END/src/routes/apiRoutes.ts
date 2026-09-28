@@ -204,8 +204,10 @@ router.post("/public/payment/omniware/redirect", handleOmniwareRedirect);
 router.post("/payment/omniware/initiate", handleOmniwareInitiate);
 router.post("/public/payment/omniware/initiate", handleOmniwareInitiate);
 
-// 3. Return URL Callback (Customer browser returns here via POST from Omniware)
+// 3. Return URL Callback (Customer browser returns here via POST or GET from Omniware)
+router.get("/payment/omniware/callback", handleOmniwareCallback);
 router.post("/payment/omniware/callback", handleOmniwareCallback);
+router.get("/public/payment/omniware/callback", handleOmniwareCallback);
 router.post("/public/payment/omniware/callback", handleOmniwareCallback);
 
 // 4. Server-to-Server Webhook

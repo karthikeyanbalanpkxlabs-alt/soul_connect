@@ -632,10 +632,10 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
     const custZip = (zip_code || "600001").trim();
 
     // Default backend callback return_url
-    const rawProto =
-      (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
-    const protocol = rawProto.split(",")[0].trim();
-    const host = req.get("host");
+    const host = req.get("host") || "";
+    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+    const rawProto = (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
+    const protocol = isLocalhost ? (rawProto.includes("https") ? "https" : "http") : "https";
     const backendCallbackUrl =
       return_url ||
       cfg.return_url ||
@@ -769,10 +769,10 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     const custCity = (city || "Chennai").toString().trim();
     const custCountry = (country || "IND").toString().trim();
     const custZip = (zip_code || "600001").toString().trim();
-    const host = req.get("host");
-    const rawProto =
-      (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
-    const protocol = rawProto.split(",")[0].trim();
+    const host = req.get("host") || "";
+    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+    const rawProto = (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
+    const protocol = isLocalhost ? (rawProto.includes("https") ? "https" : "http") : "https";
     const backendCallbackUrl = return_url
       ? String(return_url)
       : cfg.return_url ||
@@ -849,7 +849,7 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
  */
 export async function handleOmniwareCallback(req: Request, res: Response) {
   try {
-    const responseData = req.body || {};
+    const responseData = { ...(req.query || {}), ...(req.body || {}) };
     console.log("Omniware return callback received:", responseData);
 
     const {
