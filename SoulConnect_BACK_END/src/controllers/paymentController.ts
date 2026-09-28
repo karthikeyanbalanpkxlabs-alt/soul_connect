@@ -766,9 +766,7 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     const custCountry = (country || "IND").toString().trim();
     const custZip = (zip_code || "600001").toString().trim();
     let host = req.get("host");
-    host = host?.includes("local") ? host : "dev.soulconect.com";
     let protocol = req.get("host");
-    protocol = req.get("host")?.includes("local") ? protocol : "https";
     const backendCallbackUrl = return_url
       ? String(return_url)
       : cfg.return_url ||
