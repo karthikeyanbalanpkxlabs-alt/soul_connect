@@ -4,6 +4,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import configUrls from "../../configUrls";
 import { useKeycloak } from "@/providers/KeycloakProvider";
+import { uploadMediaFile } from "./api";
 
 interface CustomerModalProps {
   isOpen: boolean;
@@ -475,7 +476,7 @@ export default function CustomerModal({
     return null;
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const currentImages = Array.isArray(formik.values.image)
@@ -490,22 +491,22 @@ export default function CustomerModal({
         alert("Please upload valid image files (JPEG, PNG, WebP).");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should not exceed 5MB.");
+      if (file.size > 20 * 1024 * 1024) {
+        alert("Image size should not exceed 20MB.");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
+      const res = await uploadMediaFile(file, "profile");
+      if (res.success && res.url) {
         const isFirst = validImages.length === 0;
         const newImages = [
           ...validImages,
-          { url: base64String, default: isFirst },
+          { url: res.url, default: isFirst },
         ];
         formik.setFieldValue("image", newImages);
         formik.setFieldTouched("image", true, true);
-      };
-      reader.readAsDataURL(file);
+      } else {
+        alert(res.error || "Failed to upload image.");
+      }
     }
   };
 
@@ -538,7 +539,7 @@ export default function CustomerModal({
     formik.setFieldTouched("image", true, true);
   };
 
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const isMp4 =
@@ -547,12 +548,16 @@ export default function CustomerModal({
         alert("Please upload only MP4 video files.");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        formik.setFieldValue("video", { url: base64String });
-      };
-      reader.readAsDataURL(file);
+      if (file.size > 100 * 1024 * 1024) {
+        alert("Video size should not exceed 100MB.");
+        return;
+      }
+      const res = await uploadMediaFile(file, "vid", "media");
+      if (res.success && res.url) {
+        formik.setFieldValue("video", { url: res.url });
+      } else {
+        alert(res.error || "Failed to upload video.");
+      }
     }
   };
 
@@ -560,7 +565,7 @@ export default function CustomerModal({
     formik.setFieldValue("video", "");
   };
 
-  const handleIdentityProofUpload = (
+  const handleIdentityProofUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
@@ -575,17 +580,21 @@ export default function CustomerModal({
         alert("Please upload only Image or PDF files.");
         return;
       }
+      if (file.size > 20 * 1024 * 1024) {
+        alert("File size should not exceed 20MB.");
+        return;
+      }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
+      const res = await uploadMediaFile(file, "id_proof");
+      if (res.success && res.url) {
         formik.setFieldValue("identity_proff", {
-          url: base64String,
+          url: res.url,
           name: file.name,
           type: file.type,
         });
-      };
-      reader.readAsDataURL(file);
+      } else {
+        alert(res.error || "Failed to upload identity proof.");
+      }
     }
   };
 
@@ -593,7 +602,7 @@ export default function CustomerModal({
     formik.setFieldValue("identity_proff", "");
   };
 
-  const handleHealthReportUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHealthReportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const isAllowed =
@@ -606,17 +615,21 @@ export default function CustomerModal({
         alert("Please upload only Image or PDF files.");
         return;
       }
+      if (file.size > 20 * 1024 * 1024) {
+        alert("File size should not exceed 20MB.");
+        return;
+      }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
+      const res = await uploadMediaFile(file, "health_report");
+      if (res.success && res.url) {
         formik.setFieldValue("health_report", {
-          url: base64String,
+          url: res.url,
           name: file.name,
           type: file.type,
         });
-      };
-      reader.readAsDataURL(file);
+      } else {
+        alert(res.error || "Failed to upload health report.");
+      }
     }
   };
 
@@ -624,7 +637,7 @@ export default function CustomerModal({
     formik.setFieldValue("health_report", "");
   };
 
-  const handleJathagamUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleJathagamUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const isAllowed =
@@ -637,16 +650,21 @@ export default function CustomerModal({
         alert("Please upload only Image or PDF files.");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
+      if (file.size > 20 * 1024 * 1024) {
+        alert("File size should not exceed 20MB.");
+        return;
+      }
+
+      const res = await uploadMediaFile(file, "jathagam");
+      if (res.success && res.url) {
         formik.setFieldValue("horoscopeDetails.jathagam", {
-          url: base64String,
+          url: res.url,
           name: file.name,
           type: file.type,
         });
-      };
-      reader.readAsDataURL(file);
+      } else {
+        alert(res.error || "Failed to upload Jathagam.");
+      }
     }
   };
 
@@ -654,23 +672,23 @@ export default function CustomerModal({
     formik.setFieldValue("horoscopeDetails.jathagam", null);
   };
 
-  const handleFamilyPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFamilyPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
         alert("Please upload a valid image file (JPEG, PNG, WebP).");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should not exceed 5MB.");
+      if (file.size > 20 * 1024 * 1024) {
+        alert("Image size should not exceed 20MB.");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        formik.setFieldValue("family_photos", [{ url: base64String }]);
-      };
-      reader.readAsDataURL(file);
+      const res = await uploadMediaFile(file, "family_photo");
+      if (res.success && res.url) {
+        formik.setFieldValue("family_photos", [{ url: res.url }]);
+      } else {
+        alert(res.error || "Failed to upload family photo.");
+      }
     }
   };
 

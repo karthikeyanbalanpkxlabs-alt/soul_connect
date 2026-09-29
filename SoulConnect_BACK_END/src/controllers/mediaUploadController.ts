@@ -28,17 +28,40 @@ const storage = multer.diskStorage({
     }
     cb(null, uploadDir);
   },
-  filename: (_req, file, cb) => {
-    // Generate prefix based on MIME type similar to existing backend files
-    let prefix = "media";
-    if (file.mimetype.startsWith("image/")) {
-      prefix = "img";
-    } else if (file.mimetype === "application/pdf") {
-      prefix = "pdf";
-    } else if (file.mimetype.startsWith("video/")) {
-      prefix = "vid";
-    } else if (file.mimetype.startsWith("audio/")) {
-      prefix = "aud";
+  filename: (req, file, cb) => {
+    // Check if custom prefix is specified in query, body, header, or fieldname
+    const rawPrefix =
+      (req.query?.prefix as string) ||
+      (req.body?.prefix as string) ||
+      (req.headers["x-prefix"] as string) ||
+      (file.fieldname &&
+      file.fieldname !== "file" &&
+      file.fieldname !== "files" &&
+      file.fieldname !== "media"
+        ? file.fieldname
+        : "");
+
+    let cleanPrefix = "";
+    if (rawPrefix) {
+      cleanPrefix = String(rawPrefix)
+        .replace(/[^a-zA-Z0-9_-]/g, "")
+        .toLowerCase();
+    }
+
+    // Default prefix if none provided
+    let prefix = cleanPrefix;
+    if (!prefix) {
+      if (file.mimetype.startsWith("image/")) {
+        prefix = "profile";
+      } else if (file.mimetype === "application/pdf") {
+        prefix = "pdf";
+      } else if (file.mimetype.startsWith("video/")) {
+        prefix = "vid";
+      } else if (file.mimetype.startsWith("audio/")) {
+        prefix = "aud";
+      } else {
+        prefix = "media";
+      }
     }
 
     // Determine file extension
@@ -204,19 +227,38 @@ function processBase64Content(req: Request, base64Str: string): ReturnType<typeo
       if (mimeStr) {
         mimetype = mimeStr;
         if (mimeStr.startsWith("image/")) {
-          prefix = "img";
           ext = mimeStr.split("/")[1] || "png";
         } else if (mimeStr === "application/pdf") {
-          prefix = "pdf";
           ext = "pdf";
         } else if (mimeStr.startsWith("video/")) {
-          prefix = "vid";
           ext = mimeStr.split("/")[1] || "mp4";
         } else if (mimeStr.startsWith("audio/")) {
-          prefix = "aud";
           ext = mimeStr.split("/")[1] || "mp3";
         }
       }
+    }
+
+    const rawPrefix =
+      (req.query?.prefix as string) ||
+      (req.body?.prefix as string) ||
+      (req.headers["x-prefix"] as string) ||
+      "";
+    const cleanPrefix = rawPrefix
+      ? String(rawPrefix).replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase()
+      : "";
+
+    if (cleanPrefix) {
+      prefix = cleanPrefix;
+    } else if (mimetype.startsWith("image/")) {
+      prefix = "profile";
+    } else if (mimetype === "application/pdf") {
+      prefix = "pdf";
+    } else if (mimetype.startsWith("video/")) {
+      prefix = "vid";
+    } else if (mimetype.startsWith("audio/")) {
+      prefix = "aud";
+    } else {
+      prefix = "media";
     }
 
     if (ext === "jpeg") ext = "jpg";

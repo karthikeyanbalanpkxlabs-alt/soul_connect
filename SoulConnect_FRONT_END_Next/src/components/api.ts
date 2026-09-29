@@ -92,3 +92,61 @@ export const onVerifyOtpApi = async (payload: {
     return { success: false, error: err.message || "Network error" };
   }
 };
+
+/**
+ * Upload Media (Image, PDF, Video, Audio) via multipart FormData
+ * Returns { success: boolean, url?: string, path?: string, filename?: string, error?: string }
+ */
+export const uploadMediaFile = async (
+  file: File | Blob,
+  prefix = "profile",
+  fieldName = "file",
+): Promise<{
+  success: boolean;
+  url?: string;
+  path?: string;
+  filename?: string;
+  mimetype?: string;
+  size?: number;
+  data?: any;
+  error?: string;
+}> => {
+  try {
+    const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
+    const endpoint = `${apiUrl}/media-upload?prefix=${encodeURIComponent(prefix)}`;
+    const formData = new FormData();
+    formData.append("prefix", prefix);
+    formData.append(fieldName, file);
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "x-prefix": prefix,
+      },
+      body: formData,
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      return {
+        success: false,
+        error: data.error || `Upload failed with status ${res.status}`,
+      };
+    }
+
+    return {
+      success: true,
+      url: data.url,
+      path: data.path,
+      filename: data.filename,
+      mimetype: data.mimetype,
+      size: data.size,
+      data: data.data,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Network error while uploading file",
+    };
+  }
+};

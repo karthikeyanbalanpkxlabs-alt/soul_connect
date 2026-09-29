@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { uploadMediaFile } from "@/components/api";
 
 export interface UserModalProps {
   isOpen: boolean;
@@ -122,23 +123,23 @@ export default function UserModal({
     },
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
         alert("Please upload a valid image file (PNG, JPG, JPEG, WebP).");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should not exceed 5MB.");
+      if (file.size > 20 * 1024 * 1024) {
+        alert("Image size should not exceed 20MB.");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        formik.setFieldValue("image", [{ url: base64String, default: true }]);
-      };
-      reader.readAsDataURL(file);
+      const res = await uploadMediaFile(file, "profile");
+      if (res.success && res.url) {
+        formik.setFieldValue("image", [{ url: res.url, default: true }]);
+      } else {
+        alert(res.error || "Failed to upload image.");
+      }
     }
   };
 
