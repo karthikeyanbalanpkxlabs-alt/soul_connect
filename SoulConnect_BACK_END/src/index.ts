@@ -6,6 +6,10 @@ import path from "path";
 import { keycloak, sessionStore } from "./keycloak-config";
 import { connectDB } from "./config/db";
 import apiRoutes from "./routes/apiRoutes";
+import {
+  handleMediaUpload,
+  mediaUploadMiddleware,
+} from "./controllers/mediaUploadController";
 
 // Import Keycloak admin client to trigger connection keep-alive
 import "./config/keycloak-admin";
@@ -49,6 +53,10 @@ connectDB();
 
 // Mount Routes under /api prefix
 app.use("/api", apiRoutes);
+
+// Direct media-upload routes at root level
+app.post("/media-upload", mediaUploadMiddleware, handleMediaUpload);
+app.post("/media_upload", mediaUploadMiddleware, handleMediaUpload);
 
 app.listen(PORT, () => {
   console.log(`Backend is running on http://localhost:${PORT}`);

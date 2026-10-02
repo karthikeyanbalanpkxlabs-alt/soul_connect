@@ -11,6 +11,7 @@ const path_1 = __importDefault(require("path"));
 const keycloak_config_1 = require("./keycloak-config");
 const db_1 = require("./config/db");
 const apiRoutes_1 = __importDefault(require("./routes/apiRoutes"));
+const mediaUploadController_1 = require("./controllers/mediaUploadController");
 // Import Keycloak admin client to trigger connection keep-alive
 require("./config/keycloak-admin");
 dotenv_1.default.config();
@@ -41,6 +42,9 @@ app.use(keycloak_config_1.keycloak.middleware());
 (0, db_1.connectDB)();
 // Mount Routes under /api prefix
 app.use("/api", apiRoutes_1.default);
+// Direct media-upload routes at root level
+app.post("/media-upload", mediaUploadController_1.mediaUploadMiddleware, mediaUploadController_1.handleMediaUpload);
+app.post("/media_upload", mediaUploadController_1.mediaUploadMiddleware, mediaUploadController_1.handleMediaUpload);
 app.listen(PORT, () => {
     console.log(`Backend is running on http://localhost:${PORT}`);
 });

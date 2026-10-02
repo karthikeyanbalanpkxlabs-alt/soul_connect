@@ -26,7 +26,7 @@ import {
   Plus,
   Trash2
 } from "lucide-react";
-import { onSaveCustomer, onSendOtpApi, onVerifyOtpApi } from './api'
+import { onSaveCustomer, onSendOtpApi, onVerifyOtpApi, uploadMediaFile } from './api'
 import configUrls from "../../configUrls";
 import keycloak from "@/lib/keycloak";
 
@@ -472,24 +472,25 @@ export default function Registration({
     };
   }, []);
 
-  const handleFamilyPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFamilyPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
         showToast("Please upload a valid image file (JPEG, PNG, WebP).", "error");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("Image size should not exceed 5MB.", "error");
+      if (file.size > 20 * 1024 * 1024) {
+        showToast("Image size should not exceed 20MB.", "error");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setFamilyPhotos([{ url: base64String }]);
+      showToast("Uploading family photo...", "info");
+      const res = await uploadMediaFile(file, "family_photo");
+      if (res.success && res.url) {
+        setFamilyPhotos([{ url: res.url }]);
         showToast("Family photo added successfully!", "success");
-      };
-      reader.readAsDataURL(file);
+      } else {
+        showToast(res.error || "Failed to upload family photo", "error");
+      }
     }
   };
 
@@ -498,7 +499,7 @@ export default function Registration({
     showToast("Family photo removed.", "info");
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const currentImages = Array.isArray(images) ? images : [];
@@ -511,21 +512,23 @@ export default function Registration({
         showToast("Please upload valid image files (JPEG, PNG, WebP).", "error");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("Image size should not exceed 5MB.", "error");
+      if (file.size > 20 * 1024 * 1024) {
+        showToast("Image size should not exceed 20MB.", "error");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
+      showToast("Uploading profile image...", "info");
+      const res = await uploadMediaFile(file, "profile");
+      if (res.success && res.url) {
         const isFirst = validImages.length === 0;
         const newImages = [
           ...validImages,
-          { url: base64String, default: isFirst },
+          { url: res.url, default: isFirst },
         ];
         setImages(newImages);
-      };
-      reader.readAsDataURL(file);
+        showToast("Image uploaded successfully!", "success");
+      } else {
+        showToast(res.error || "Failed to upload image", "error");
+      }
     }
   };
 
@@ -990,7 +993,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     const isAllowed =
       file.type === "application/pdf" ||
       file.type.startsWith("image/") ||
@@ -1001,23 +1004,24 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       showToast("Please upload only Image or PDF files.", "error");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("File is too large. Max limit is 5MB.", "error");
+    if (file.size > 20 * 1024 * 1024) {
+      showToast("File is too large. Max limit is 20MB.", "error");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
+    showToast(`Uploading ${docType} document...`, "info");
+    const res = await uploadMediaFile(file, "id_proof");
+    if (res.success && res.url) {
       setIdentityProof({
-        url: base64String,
+        url: res.url,
         name: file.name,
         type: file.type,
       });
       setUploadedFile(file);
       showToast(`${docType} document uploaded successfully!`, "success");
-    };
-    reader.readAsDataURL(file);
+    } else {
+      showToast(res.error || "Failed to upload document", "error");
+    }
   };
 
   const triggerDocUpload = () => {

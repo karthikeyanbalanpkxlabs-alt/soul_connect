@@ -49,6 +49,10 @@ import {
   handleOmniwareWebhook,
 } from "../controllers/paymentController";
 import { handleForgotPassword, handleResetPassword } from "../controllers/authController";
+import {
+  handleMediaUpload,
+  mediaUploadMiddleware,
+} from "../controllers/mediaUploadController";
 
 const router = Router();
 
@@ -231,5 +235,11 @@ router.post("/public/forgot-password", handleForgotPassword);
 router.post("/forgot-password", handleForgotPassword);
 router.post("/public/reset-password", handleResetPassword);
 router.post("/reset-password", handleResetPassword);
+
+// --- MEDIA UPLOAD ROUTES ---
+router.post("/media-upload", mediaUploadMiddleware, handleMediaUpload);
+router.post("/media_upload", mediaUploadMiddleware, handleMediaUpload);
+router.post("/public/media-upload", mediaUploadMiddleware, handleMediaUpload);
+router.post("/public/media_upload", mediaUploadMiddleware, handleMediaUpload);
 
 export default router;

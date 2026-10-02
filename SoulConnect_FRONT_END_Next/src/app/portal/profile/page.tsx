@@ -35,6 +35,7 @@ import {
 import { useKeycloak } from "@/providers/KeycloakProvider";
 import configUrls from "../../../../configUrls";
 import { districts } from "@/data/districts";
+import { uploadMediaFile } from "@/components/api";
 
 const STAR_TAMIL_MAP: Record<string, string> = {
   "Ashwini": "அசுவினி",
@@ -1357,20 +1358,21 @@ export default function ProfilePage() {
     horoInputRef.current?.click();
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       if (casualPhotos.length >= 3) {
         showToast("Maximum of 3 profile photos allowed", "error");
         return;
       }
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setCasualPhotos((prev) => [...prev, base64String]);
+      showToast("Uploading profile photo...", "info");
+      const res = await uploadMediaFile(file, "profile");
+      if (res.success && res.url) {
+        setCasualPhotos((prev) => [...prev, res.url!]);
         showToast("Profile photo uploaded! Click 'Save Changes' or 'Save Photos' to save.", "success");
-      };
-      reader.readAsDataURL(file);
+      } else {
+        showToast(res.error || "Failed to upload profile photo", "error");
+      }
     }
   };
 
@@ -1385,16 +1387,17 @@ export default function ProfilePage() {
     showToast("Default photo updated! Click 'Save Photo Changes' to apply.", "success");
   };
 
-  const handleFamilyPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFamilyPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setFamilyPhotos([base64String]);
+      showToast("Uploading family photo...", "info");
+      const res = await uploadMediaFile(file, "family_photo");
+      if (res.success && res.url) {
+        setFamilyPhotos([res.url!]);
         showToast("Family photo added successfully! Click Save Changes to apply.", "success");
-      };
-      reader.readAsDataURL(file);
+      } else {
+        showToast(res.error || "Failed to upload family photo", "error");
+      }
     }
   };
 
@@ -1421,48 +1424,50 @@ export default function ProfilePage() {
       const file = e.target.files[0];
       setHoroscopeFileName(file.name);
       setHoroscopeUploaded(true);
+      showToast("Uploading Jathagam / Birth Chart...", "info");
 
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        try {
-          const token = keycloak?.token;
-          const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
-          const res = await fetch(`${apiUrl}/api/customer_edit`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({
-              ...profile,
-              horoscopeDetails: {
-                ...(profile?.horoscopeDetails || {}),
-                jathagam: {
-                  url: base64String,
-                  name: file.name,
-                  type: file.type,
-                },
+      const uploadRes = await uploadMediaFile(file, "jathagam");
+      if (!uploadRes.success || !uploadRes.url) {
+        showToast(uploadRes.error || "Failed to upload Jathagam", "error");
+        return;
+      }
+
+      try {
+        const token = keycloak?.token;
+        const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
+        const res = await fetch(`${apiUrl}/api/customer_edit`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            ...profile,
+            horoscopeDetails: {
+              ...(profile?.horoscopeDetails || {}),
+              jathagam: {
+                url: uploadRes.url,
+                name: file.name,
+                type: file.type,
               },
-              keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
-              customer_id: profile?.customer_id,
-              _id: profile?._id,
-            }),
-          });
+            },
+            keycloakId: profile?.keycloakId || keycloak?.tokenParsed?.sub,
+            customer_id: profile?.customer_id,
+            _id: profile?._id,
+          }),
+        });
 
-          const data = await res.json();
-          if (res.ok && !data.error) {
-            showToast("Jathagam / Birth Chart saved to local uploads! ✨", "success");
-            if (refreshProfile) await refreshProfile();
-          } else {
-            showToast(data.error || "Failed to upload Jathagam", "error");
-          }
-        } catch (err: any) {
-          console.error("Error uploading Jathagam:", err);
-          showToast(err.message || "Failed to upload Jathagam", "error");
+        const data = await res.json();
+        if (res.ok && !data.error) {
+          showToast("Jathagam / Birth Chart saved to local uploads! ✨", "success");
+          if (refreshProfile) await refreshProfile();
+        } else {
+          showToast(data.error || "Failed to upload Jathagam", "error");
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err: any) {
+        console.error("Error uploading Jathagam:", err);
+        showToast(err.message || "Failed to upload Jathagam", "error");
+      }
     }
   };
 
@@ -4111,58 +4116,6 @@ export default function ProfilePage() {
                     </span>
                   </label>
                 )}
-              </div>
-            </div>
-
-            {/* Video Intro Card */}
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".1s" }}
-            >
-              <div className="content-card-title">
-                <div className="ctitle-icon">🎥</div>Video Introduction
-              </div>
-              <div
-                style={{
-                  background:
-                    "linear-gradient(135deg,var(--plum-light),var(--rose-light))",
-                  borderRadius: "var(--radius-sm)",
-                  padding: "40px 24px",
-                  textAlign: "center",
-                  border: "2px dashed rgba(124,58,237,.2)",
-                }}
-              >
-                <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>
-                  🎬
-                </div>
-                <div
-                  style={{
-                    fontSize: ".9rem",
-                    fontWeight: 600,
-                    color: "var(--plum-dark)",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Add a 60-second Video Introduction
-                </div>
-                <div
-                  style={{
-                    fontSize: ".78rem",
-                    color: "var(--plum)",
-                    marginBottom: "16px",
-                  }}
-                >
-                  Profiles with a video get 5× more views
-                </div>
-                <button
-                  className="btn-secondary"
-                  style={{ display: "inline-flex", margin: "0 auto" }}
-                  onClick={() =>
-                    showToast("Video recorder interface loading...", "info")
-                  }
-                >
-                  ▶ Record Now
-                </button>
               </div>
             </div>
           </div>
