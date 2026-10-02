@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { Customers } from "../models/customer";
 import { GLOBAL_DETAILS } from "../config/keycloak-admin";
 import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
@@ -47,6 +48,47 @@ function calculateAgeFromDob(dobStr?: string): number | null {
     age--;
   }
   return age;
+}
+
+function secureRandomInt(max: number): number {
+  if (max <= 0) return 0;
+  return crypto.randomBytes(4).readUInt32BE(0) % max;
+}
+
+/**
+ * Generate a dynamic customer temporary password:
+ * - At least 1 uppercase letter
+ * - At least 1 lowercase letter
+ * - At least 1 number
+ * - At least 1 special character (@#$&*!)
+ * - Total length of 10 characters
+ * - Excludes confusing characters (I, O, l, 0, 1) for readability
+ */
+function generateDynamicCustomerPassword(length = 10): string {
+  const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lowercase = "abcdefghjkmnpqrstuvwxyz";
+  const numbers = "23456789";
+  const special = "@#$&*!";
+  const allChars = uppercase + lowercase + numbers + special;
+
+  const passwordChars = [
+    uppercase[secureRandomInt(uppercase.length)],
+    lowercase[secureRandomInt(lowercase.length)],
+    numbers[secureRandomInt(numbers.length)],
+    special[secureRandomInt(special.length)],
+  ];
+
+  for (let i = passwordChars.length; i < length; i++) {
+    passwordChars.push(allChars[secureRandomInt(allChars.length)]);
+  }
+
+  // Cryptographically secure shuffle (Fisher-Yates)
+  for (let i = passwordChars.length - 1; i > 0; i--) {
+    const j = secureRandomInt(i + 1);
+    [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+  }
+
+  return passwordChars.join("");
 }
 
 export async function handleCustomerList(
@@ -1346,6 +1388,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       health_report,
       family_photos,
       family_photo,
+      password,
       ...otherFields
     } = req?.body;
 
@@ -1548,6 +1591,11 @@ export async function handleCustomerCreate(req: Request, res: Response) {
     const customer_id =
       req.body.customer_id || `cid_${new mongoose.Types.ObjectId()}`;
 
+    const customerPassword =
+      typeof password === "string" && password.trim().length > 0
+        ? password.trim()
+        : generateDynamicCustomerPassword(10);
+
     let keycloakId = undefined;
     try {
       const kcAdmin = new KeycloakAdminClient({
@@ -1575,7 +1623,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
         credentials: [
           {
             type: "password",
-            value: "password@123",
+            value: customerPassword,
             temporary: true,
           },
         ],
@@ -1815,7 +1863,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
                           Temporary Password
                         </td>
                         <td style="color: #1F2937; font-size: 14px; font-weight: bold; font-family: monospace;" valign="middle">
-                          password@123
+                          ${customerPassword}
                         </td>
                       </tr>
                     </table>
@@ -1919,6 +1967,7 @@ export async function handleCustomerCreate(req: Request, res: Response) {
       success: true,
       message: "Customer created successfully",
       customer: newCustomer,
+      temporaryPassword: customerPassword,
     });
   } catch (err: any) {
     console.error("customer_create error:", err);
