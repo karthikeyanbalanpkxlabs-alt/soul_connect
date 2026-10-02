@@ -4118,58 +4118,6 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-
-            {/* Video Intro Card */}
-            <div
-              className="content-card reveal visible"
-              style={{ transitionDelay: ".1s" }}
-            >
-              <div className="content-card-title">
-                <div className="ctitle-icon">🎥</div>Video Introduction
-              </div>
-              <div
-                style={{
-                  background:
-                    "linear-gradient(135deg,var(--plum-light),var(--rose-light))",
-                  borderRadius: "var(--radius-sm)",
-                  padding: "40px 24px",
-                  textAlign: "center",
-                  border: "2px dashed rgba(124,58,237,.2)",
-                }}
-              >
-                <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>
-                  🎬
-                </div>
-                <div
-                  style={{
-                    fontSize: ".9rem",
-                    fontWeight: 600,
-                    color: "var(--plum-dark)",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Add a 60-second Video Introduction
-                </div>
-                <div
-                  style={{
-                    fontSize: ".78rem",
-                    color: "var(--plum)",
-                    marginBottom: "16px",
-                  }}
-                >
-                  Profiles with a video get 5× more views
-                </div>
-                <button
-                  className="btn-secondary"
-                  style={{ display: "inline-flex", margin: "0 auto" }}
-                  onClick={() =>
-                    showToast("Video recorder interface loading...", "info")
-                  }
-                >
-                  ▶ Record Now
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* HOROSCOPE TAB PANEL */}
