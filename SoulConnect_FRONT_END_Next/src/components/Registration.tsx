@@ -241,10 +241,8 @@ export default function Registration({
         setMobileOtpSent(true);
         if (resp.otp) {
           setGeneratedMobileOtp(resp.otp);
-          showToast(`OTP Code sent (simulated): ${resp.otp}`, "success");
-        } else {
-          showToast("Verification code sent successfully!", "success");
         }
+        showToast("Verification code sent successfully!", "success");
         setMobileTimer(30);
       } else {
         showToast(resp?.error || "Failed to send verification code", "error");
@@ -339,16 +337,7 @@ export default function Registration({
         if (sentCode) {
           setGeneratedEmailOtp(sentCode);
         }
-        if (resp.email_sent) {
-          showToast(
-            `OTP sent to ${emailVal}! Check your inbox${sentCode ? ` (Code: ${sentCode})` : ""}.`,
-            "success"
-          );
-        } else if (sentCode) {
-          showToast(`OTP Code sent (simulated): ${sentCode}`, "success");
-        } else {
-          showToast("Verification code sent successfully!", "success");
-        }
+        showToast("Verification code sent successfully!", "success");
         setEmailTimer(30);
       } else {
         showToast(resp?.error || "Failed to send verification code", "error");

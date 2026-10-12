@@ -114,7 +114,7 @@ export async function handleSendOTP(req: Request, res: Response) {
         email_sent: emailSent,
         message: emailSent
           ? "Email verification OTP sent successfully"
-          : `Email delivery pending/unconfigured. Your OTP is: ${otp}`,
+          : `Email delivery pending/unconfigured`,
         otp: otp,
       });
     } else {
@@ -150,7 +150,7 @@ export async function handleSendOTP(req: Request, res: Response) {
         sms_sent: smsResult.success,
         message: smsResult.success
           ? "Phone verification OTP sent successfully"
-          : `SMS delivery pending/failed: ${smsResult.error || "Provider error"}. Your OTP is: ${otp}`,
+          : `SMS delivery pending/failed: ${smsResult.error || "Provider error"}`,
         otp: otp,
         error: smsResult.success ? undefined : smsResult.error,
       });

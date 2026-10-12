@@ -1094,11 +1094,7 @@ export default function ProfilePage() {
 
       const data = await res.json();
       setOtpSent(true);
-      if (verifyingType === "phone" && data.otp) {
-        showToast(`OTP Code sent (simulated): ${data.otp}`, "success");
-      } else {
-        showToast("Verification code sent successfully!", "success");
-      }
+      showToast("Verification code sent successfully!", "success");
     } catch (err: any) {
       console.error(err);
       showToast(err.message || "Failed to send verification code", "error");
