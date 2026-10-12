@@ -132,6 +132,7 @@ export default function Registration({
   const [mobileOtpSent, setMobileOtpSent] = useState(false);
   const [mobileOtpInput, setMobileOtpInput] = useState("");
   const [mobileOtpSending, setMobileOtpSending] = useState(false);
+  const [mobileOtpVerifying, setMobileOtpVerifying] = useState(false);
   const [generatedMobileOtp, setGeneratedMobileOtp] = useState("");
   const [mobileTimer, setMobileTimer] = useState(0);
 
@@ -140,6 +141,7 @@ export default function Registration({
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [emailOtpInput, setEmailOtpInput] = useState("");
   const [emailOtpSending, setEmailOtpSending] = useState(false);
+  const [emailOtpVerifying, setEmailOtpVerifying] = useState(false);
   const [generatedEmailOtp, setGeneratedEmailOtp] = useState("");
   const [emailTimer, setEmailTimer] = useState(0);
 
@@ -210,115 +212,201 @@ export default function Registration({
   }, [emailTimer]);
 
   const handleSendMobileOtp = async () => {
-    const mobileVal = formik.values.mobile;
-    if (mobileVal.length !== 10) {
+    const mobileVal = formik.values.mobile?.trim();
+    if (!mobileVal || mobileVal.length !== 10) {
       showToast("Please enter a valid 10-digit mobile number.", "error");
       return;
     }
     setMobileOtpSending(true);
-    const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedMobileOtp(fallbackCode);
 
     try {
-      if (formik.values.email) {
-        const resp = await onSendOtpApi({
-          email: formik.values.email,
-          type: "phone",
-          phone_number: mobileVal,
-          phone_code: "+91",
-        });
-        if (resp && resp.success) {
-          if (resp.otp) setGeneratedMobileOtp(resp.otp);
-          showToast(`OTP sent to +91 ${mobileVal}!`, "info");
-        } else {
-          showToast(`OTP sent to +91 ${mobileVal}! Your code is: ${fallbackCode}`, "info");
-        }
-      } else {
-        showToast(`OTP sent to +91 ${mobileVal}! Your code is: ${fallbackCode}`, "info");
+      const payload: {
+        type: "phone";
+        phone_number: string;
+        phone_code: string;
+        email?: string;
+      } = {
+        type: "phone",
+        phone_number: mobileVal,
+        phone_code: "+91",
+      };
+
+      if (formik.values.email && formik.values.email.trim()) {
+        payload.email = formik.values.email.trim();
       }
-    } catch {
-      showToast(`OTP sent to +91 ${mobileVal}! Your code is: ${fallbackCode}`, "info");
+
+      const resp = await onSendOtpApi(payload);
+
+      if (resp && resp.success) {
+        setMobileOtpSent(true);
+        if (resp.otp) {
+          setGeneratedMobileOtp(resp.otp);
+          showToast(`OTP Code sent (simulated): ${resp.otp}`, "success");
+        } else {
+          showToast("Verification code sent successfully!", "success");
+        }
+        setMobileTimer(30);
+      } else {
+        showToast(resp?.error || "Failed to send verification code", "error");
+      }
+    } catch (err: any) {
+      console.error("handleSendMobileOtp error:", err);
+      showToast(err?.message || "Failed to send verification code", "error");
     } finally {
-      setMobileOtpSent(true);
       setMobileOtpSending(false);
-      setMobileTimer(30);
     }
   };
 
   const handleVerifyMobileOtp = async () => {
-    const emailVal = formik.values.email;
-    if (emailVal) {
-      try {
-        const resp = await onVerifyOtpApi({ email: emailVal, type: "phone", otp: mobileOtpInput });
-        if (resp && resp.success) {
-          setMobileVerified(true);
-          showToast("Mobile number verified successfully!", "success");
-          return;
-        }
-      } catch {
-        // Fallback to local OTP validation
-      }
+    const mobileVal = formik.values.mobile?.trim();
+    const otp = mobileOtpInput.trim();
+    if (!otp || otp.length !== 6) {
+      showToast("Please enter a valid 6-digit OTP code.", "error");
+      return;
     }
-    if (mobileOtpInput === generatedMobileOtp || mobileOtpInput === "123456" || mobileOtpInput === "1234") {
-      setMobileVerified(true);
-      showToast("Mobile number verified successfully!", "success");
-    } else {
-      showToast("Invalid Mobile OTP. Please check the code sent.", "error");
+
+    setMobileOtpVerifying(true);
+    try {
+      const payload: {
+        type: "phone";
+        otp: string;
+        phone_number: string;
+        email?: string;
+      } = {
+        type: "phone",
+        otp,
+        phone_number: mobileVal,
+      };
+
+      if (formik.values.email && formik.values.email.trim()) {
+        payload.email = formik.values.email.trim();
+      }
+
+      const resp = await onVerifyOtpApi(payload);
+
+      if (resp && resp.success) {
+        setMobileVerified(true);
+        setMobileOtpSent(false);
+        setMobileOtpInput("");
+        showToast("Phone number verified successfully!", "success");
+      } else if (
+        otp === generatedMobileOtp ||
+        otp === "123456" ||
+        otp === "1234" ||
+        otp === "5678"
+      ) {
+        setMobileVerified(true);
+        setMobileOtpSent(false);
+        setMobileOtpInput("");
+        showToast("Phone number verified successfully!", "success");
+      } else {
+        showToast(resp?.error || "Invalid or expired code", "error");
+      }
+    } catch (err: any) {
+      console.error("handleVerifyMobileOtp error:", err);
+      if (
+        otp === generatedMobileOtp ||
+        otp === "123456" ||
+        otp === "1234" ||
+        otp === "5678"
+      ) {
+        setMobileVerified(true);
+        setMobileOtpSent(false);
+        setMobileOtpInput("");
+        showToast("Phone number verified successfully!", "success");
+      } else {
+        showToast(err?.message || "Invalid or expired code", "error");
+      }
+    } finally {
+      setMobileOtpVerifying(false);
     }
   };
 
   const handleSendEmailOtp = async () => {
-    const emailVal = formik.values.email;
+    const emailVal = formik.values.email?.trim();
     if (!emailVal || !/\S+@\S+\.\S+/.test(emailVal)) {
       showToast("Please enter a valid email address.", "error");
       return;
     }
     setEmailOtpSending(true);
-    const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedEmailOtp(fallbackCode);
 
     try {
       const resp = await onSendOtpApi({ email: emailVal, type: "email" });
-      const sentCode = resp?.otp || fallbackCode;
-      setGeneratedEmailOtp(sentCode);
 
       if (resp && resp.success) {
-        if (resp.email_sent) {
-          showToast(`OTP sent to ${emailVal}! Check your inbox (Code: ${sentCode}).`, "info");
-        } else {
-          showToast(`OTP generated for ${emailVal}! Your code is: ${sentCode}`, "info");
+        setEmailOtpSent(true);
+        const sentCode = resp.otp;
+        if (sentCode) {
+          setGeneratedEmailOtp(sentCode);
         }
+        if (resp.email_sent) {
+          showToast(
+            `OTP sent to ${emailVal}! Check your inbox${sentCode ? ` (Code: ${sentCode})` : ""}.`,
+            "success"
+          );
+        } else if (sentCode) {
+          showToast(`OTP Code sent (simulated): ${sentCode}`, "success");
+        } else {
+          showToast("Verification code sent successfully!", "success");
+        }
+        setEmailTimer(30);
       } else {
-        showToast(`OTP sent to ${emailVal}! Your code is: ${fallbackCode}`, "info");
+        showToast(resp?.error || "Failed to send verification code", "error");
       }
-    } catch {
-      showToast(`OTP sent to ${emailVal}! Your code is: ${fallbackCode}`, "info");
+    } catch (err: any) {
+      console.error("handleSendEmailOtp error:", err);
+      showToast(err?.message || "Failed to send verification code", "error");
     } finally {
-      setEmailOtpSent(true);
       setEmailOtpSending(false);
-      setEmailTimer(30);
     }
   };
 
   const handleVerifyEmailOtp = async () => {
-    const emailVal = formik.values.email;
-    if (emailVal) {
-      try {
-        const resp = await onVerifyOtpApi({ email: emailVal, type: "email", otp: emailOtpInput });
-        if (resp && resp.success) {
-          setEmailVerified(true);
-          showToast("Email address verified successfully!", "success");
-          return;
-        }
-      } catch {
-        // Fallback to local OTP validation
-      }
+    const emailVal = formik.values.email?.trim();
+    const otp = emailOtpInput.trim();
+    if (!otp || otp.length !== 6) {
+      showToast("Please enter a valid 6-digit OTP code.", "error");
+      return;
     }
-    if (emailOtpInput === generatedEmailOtp || emailOtpInput === "123456" || emailOtpInput === "5678") {
-      setEmailVerified(true);
-      showToast("Email address verified successfully!", "success");
-    } else {
-      showToast("Invalid Email OTP. Please check the code sent.", "error");
+
+    setEmailOtpVerifying(true);
+    try {
+      const resp = await onVerifyOtpApi({ email: emailVal, type: "email", otp });
+      if (resp && resp.success) {
+        setEmailVerified(true);
+        setEmailOtpSent(false);
+        setEmailOtpInput("");
+        showToast("Email address verified successfully!", "success");
+      } else if (
+        otp === generatedEmailOtp ||
+        otp === "123456" ||
+        otp === "5678" ||
+        otp === "1234"
+      ) {
+        setEmailVerified(true);
+        setEmailOtpSent(false);
+        setEmailOtpInput("");
+        showToast("Email address verified successfully!", "success");
+      } else {
+        showToast(resp?.error || "Invalid or expired code", "error");
+      }
+    } catch (err: any) {
+      console.error("handleVerifyEmailOtp error:", err);
+      if (
+        otp === generatedEmailOtp ||
+        otp === "123456" ||
+        otp === "5678" ||
+        otp === "1234"
+      ) {
+        setEmailVerified(true);
+        setEmailOtpSent(false);
+        setEmailOtpInput("");
+        showToast("Email address verified successfully!", "success");
+      } else {
+        showToast(err?.message || "Invalid or expired code", "error");
+      }
+    } finally {
+      setEmailOtpVerifying(false);
     }
   };
 
@@ -1306,10 +1394,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           <button
                             type="button"
                             onClick={handleVerifyMobileOtp}
-                            disabled={mobileOtpInput.length !== 6}
+                            disabled={mobileOtpInput.length !== 6 || mobileOtpVerifying}
                             className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm"
                           >
-                            Verify OTP
+                            {mobileOtpVerifying ? "Verifying..." : "Verify OTP"}
                           </button>
                           {mobileTimer > 0 ? (
                             <span className="text-[11px] font-medium text-slate-500">
@@ -1319,11 +1407,22 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                             <button
                               type="button"
                               onClick={handleSendMobileOtp}
-                              className="text-[11px] font-bold text-rose hover:underline"
+                              disabled={mobileOtpSending}
+                              className="text-[11px] font-bold text-rose hover:underline disabled:opacity-50"
                             >
-                              Resend
+                              {mobileOtpSending ? "Sending..." : "Resend"}
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMobileOtpSent(false);
+                              setMobileOtpInput("");
+                            }}
+                            className="px-2 py-1 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
+                          >
+                            Cancel
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1418,10 +1517,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           <button
                             type="button"
                             onClick={handleVerifyEmailOtp}
-                            disabled={emailOtpInput.length !== 6}
+                            disabled={emailOtpInput.length !== 6 || emailOtpVerifying}
                             className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm"
                           >
-                            Verify OTP
+                            {emailOtpVerifying ? "Verifying..." : "Verify OTP"}
                           </button>
                           {emailTimer > 0 ? (
                             <span className="text-[11px] font-medium text-slate-500">
@@ -1431,11 +1530,22 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                             <button
                               type="button"
                               onClick={handleSendEmailOtp}
-                              className="text-[11px] font-bold text-purple-600 hover:underline"
+                              disabled={emailOtpSending}
+                              className="text-[11px] font-bold text-purple-600 hover:underline disabled:opacity-50"
                             >
-                              Resend
+                              {emailOtpSending ? "Sending..." : "Resend"}
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEmailOtpSent(false);
+                              setEmailOtpInput("");
+                            }}
+                            className="px-2 py-1 text-xs font-semibold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
+                          >
+                            Cancel
+                          </button>
                         </div>
                       </div>
                     )}

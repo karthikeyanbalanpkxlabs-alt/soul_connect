@@ -44,7 +44,7 @@ export const onSaveCustomer = async (data: any) => {
  * Send Verification OTP (Email or Phone)
  */
 export const onSendOtpApi = async (payload: {
-  email: string;
+  email?: string;
   type: "email" | "phone";
   phone_number?: string;
   phone_code?: string;
@@ -71,9 +71,10 @@ export const onSendOtpApi = async (payload: {
  * Verify OTP (Email or Phone)
  */
 export const onVerifyOtpApi = async (payload: {
-  email: string;
+  email?: string;
   type: "email" | "phone";
   otp: string;
+  phone_number?: string;
 }) => {
   try {
     const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
