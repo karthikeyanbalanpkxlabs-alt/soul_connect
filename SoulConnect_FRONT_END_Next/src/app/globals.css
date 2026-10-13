@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./legal-pages.css";
 
 :root {
   --rose: #F2688C; --rose-light: #FDE8EF; --rose-dark: #C0436A;

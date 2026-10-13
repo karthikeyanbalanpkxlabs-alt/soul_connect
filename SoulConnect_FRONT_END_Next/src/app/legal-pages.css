@@ -1,0 +1,717 @@
+/* ─── LEGAL & SUPPORT PAGES (Terms, Privacy, About, Contact) ─── */
+
+.legal-page {
+  font-family: var(--font-body);
+  background: var(--surface);
+  color: var(--ink);
+  line-height: 1.65;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.legal-page .reveal,
+.legal-page .card,
+.legal-page .box,
+.legal-page .feat,
+.legal-page .val,
+.legal-page .lead,
+.legal-page .story,
+.legal-page .vision,
+.legal-page .cta {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.legal-page .hero {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 140px 5vw 60px;
+}
+
+.legal-page .hero-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 20% 40%, rgba(242, 104, 140, 0.08), transparent 60%),
+              radial-gradient(ellipse 60% 50% at 80% 60%, rgba(124, 58, 237, 0.07), transparent 60%);
+  pointer-events: none;
+}
+
+.legal-page .hero > * {
+  position: relative;
+}
+
+.legal-page .hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--plum-light);
+  color: var(--plum-dark);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 100px;
+  margin-bottom: 1.4rem;
+  border: 1px solid rgba(124, 58, 237, 0.15);
+}
+
+.legal-page .hero-badge i {
+  width: 6px;
+  height: 6px;
+  background: var(--rose);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legal-page .hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  max-width: 760px;
+  margin: 0 auto 1.2rem;
+}
+
+.legal-page .hero h1 em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--rose), var(--plum));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.legal-page .hero p {
+  font-size: 1.05rem;
+  color: var(--ink-60);
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+/* Layout for TOC + Cards (Terms & Conditions, Privacy Policy) */
+.legal-page .layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 48px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 5vw 90px;
+  align-items: start;
+}
+
+.legal-page .toc {
+  position: sticky;
+  top: 90px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  padding: 20px 14px;
+}
+
+.legal-page .toc h4 {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--rose);
+  padding: 0 10px 10px;
+}
+
+.legal-page .toc a {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: var(--ink-60);
+  text-decoration: none;
+  line-height: 1.35;
+  transition: all 0.2s;
+}
+
+.legal-page .toc a b {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--ink-40);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.legal-page .toc a:hover {
+  background: var(--plum-light);
+  color: var(--plum);
+}
+
+.legal-page .toc a.on {
+  background: var(--plum-light);
+  color: var(--plum-dark);
+  font-weight: 600;
+}
+
+.legal-page .toc a.on b {
+  color: var(--rose);
+}
+
+/* Legal Cards */
+.legal-page .card {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  padding: 36px 38px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+  scroll-margin-top: 90px;
+}
+
+.legal-page .card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rose), var(--plum), transparent);
+}
+
+.legal-page .card.intro {
+  background: linear-gradient(160deg, var(--plum-light), var(--rose-light));
+  border: none;
+}
+
+.legal-page .card.intro::after {
+  display: none;
+}
+
+.legal-page .sec-num {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--rose);
+  margin-bottom: 0.5rem;
+}
+
+.legal-page .card h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 1.1rem;
+}
+
+.legal-page .card.safe {
+  background: var(--ink);
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.legal-page .card.safe h2,
+.legal-page .card.safe strong {
+  color: #fff;
+}
+
+.legal-page .card.safe .prose a {
+  color: #FF9DC6;
+}
+
+.legal-page .prose p {
+  font-size: 0.95rem;
+  color: var(--ink-60);
+  line-height: 1.75;
+  margin-bottom: 0.95rem;
+}
+
+.legal-page .prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.legal-page .prose a {
+  color: var(--plum);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.3);
+}
+
+.legal-page .prose ul {
+  margin: 0.2rem 0 1rem;
+  padding-left: 1.3rem;
+  color: var(--ink-60);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.legal-page .prose li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.legal-page .prose li::marker {
+  color: var(--rose);
+}
+
+.legal-page .prose li > p {
+  margin-bottom: 0.5rem;
+}
+
+.legal-page .prose ol {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.3rem 0;
+}
+
+.legal-page .prose ol ol {
+  padding-left: 1.4rem;
+  margin-top: 0.5rem;
+}
+
+.legal-page .prose ol li {
+  padding-left: 0;
+}
+
+.legal-page .card.safe .prose,
+.legal-page .card.safe .prose p,
+.legal-page .card.safe .prose li,
+.legal-page .card.safe .prose ul {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.legal-page .card.safe .prose li::marker {
+  color: var(--rose);
+}
+
+.legal-page .premier > .prose > ol > li > p:first-child > strong,
+.legal-page .premier > .prose > ol > li > p:first-child {
+  color: var(--ink);
+}
+
+.legal-page .premier > .prose > ol > li > p:first-child {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.02rem;
+  margin-top: 1.1rem;
+}
+
+.legal-page .premier > .prose > ol > li {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.legal-page .premier > .prose > ol > li:first-child {
+  border-top: none;
+}
+
+/* About Us & Contact Us Wrap */
+.legal-page .wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 5vw 90px;
+}
+
+.legal-page .tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--rose-dark);
+  margin-bottom: 1rem;
+}
+
+.legal-page .lead {
+  max-width: 760px;
+  margin: 0 auto 60px;
+  text-align: center;
+}
+
+.legal-page .lead p {
+  font-size: 1.05rem;
+  color: var(--ink-60);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+.legal-page .lead strong,
+.legal-page .story strong {
+  color: var(--ink);
+}
+
+.legal-page .eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--rose);
+  margin-bottom: 0.6rem;
+}
+
+.legal-page h2.t {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.legal-page .story {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 28px;
+  padding: 48px;
+  margin-bottom: 60px;
+}
+
+.legal-page .story p {
+  font-size: 1.02rem;
+  color: var(--ink-60);
+  line-height: 1.85;
+  margin-bottom: 1rem;
+}
+
+.legal-page .sec {
+  margin-bottom: 60px;
+}
+
+.legal-page .sub {
+  font-size: 1.05rem;
+  color: var(--ink-60);
+  margin-bottom: 2rem;
+  max-width: 620px;
+}
+
+.legal-page .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.legal-page .feat,
+.legal-page .val {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  padding: 32px;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.legal-page .feat:hover,
+.legal-page .val:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 34px rgba(124, 58, 237, 0.08);
+}
+
+.legal-page .ic,
+.legal-page .vi {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  margin-bottom: 1.1rem;
+  background: var(--plum-light);
+  color: var(--plum);
+}
+
+.legal-page .val.rose .vi {
+  background: var(--rose-light);
+  color: var(--rose-dark);
+}
+
+.legal-page .val.sage .vi {
+  background: var(--sage-light);
+  color: var(--sage);
+}
+
+.legal-page .val.amber .vi {
+  background: var(--amber-light);
+  color: var(--amber);
+}
+
+.legal-page .feat h3,
+.legal-page .val h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.legal-page .feat p,
+.legal-page .val p {
+  font-size: 0.92rem;
+  color: var(--ink-60);
+  line-height: 1.7;
+}
+
+.legal-page .vision {
+  background: var(--ink);
+  color: rgba(255, 255, 255, 0.75);
+  border-radius: 28px;
+  padding: 56px 44px;
+  text-align: center;
+  margin-bottom: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.legal-page .vision::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 20% 0, rgba(242, 104, 140, 0.25), transparent 60%),
+              radial-gradient(ellipse 60% 80% at 90% 100%, rgba(124, 58, 237, 0.3), transparent 60%);
+}
+
+.legal-page .vision > * {
+  position: relative;
+}
+
+.legal-page .vision h2 {
+  font-family: var(--font-display);
+  color: #fff;
+  font-size: 1.9rem;
+  margin-bottom: 1rem;
+}
+
+.legal-page .vision p {
+  max-width: 680px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.legal-page .cta {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto;
+  padding-bottom: 20px;
+}
+
+.legal-page .cta p {
+  color: var(--ink-60);
+  font-size: 1.05rem;
+  margin-bottom: 1.6rem;
+}
+
+.legal-page .cta blockquote {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 2rem 0 0.5rem;
+}
+
+.legal-page .cta .tail {
+  font-style: italic;
+  color: var(--rose-dark);
+  margin-bottom: 2rem;
+}
+
+.legal-page .btns {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.legal-page .btns a {
+  padding: 12px 26px;
+  font-size: 0.92rem;
+  text-decoration: none;
+  border-radius: 100px;
+}
+
+/* Contact Us */
+.legal-page .box {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  padding: 34px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.legal-page .box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 34px rgba(124, 58, 237, 0.1);
+}
+
+.legal-page .box::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rose), var(--plum), transparent);
+}
+
+.legal-page .box .ic {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  margin-bottom: 1.1rem;
+  background: var(--plum-light);
+  color: var(--plum);
+}
+
+.legal-page .box.rose .ic {
+  background: var(--rose-light);
+  color: var(--rose-dark);
+}
+
+.legal-page .box.sage .ic {
+  background: var(--sage-light);
+  color: var(--sage);
+}
+
+.legal-page .box h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.legal-page .box p,
+.legal-page .box address {
+  font-style: normal;
+  font-size: 0.98rem;
+  color: var(--ink-60);
+  line-height: 1.8;
+}
+
+.legal-page .box address strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.legal-page .box a.link {
+  display: block;
+  color: var(--plum);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+  word-break: break-word;
+  transition: color 0.2s;
+}
+
+.legal-page .box a.link:hover {
+  color: var(--rose-dark);
+}
+
+.legal-page .dir {
+  display: inline-block;
+  margin-top: 1.1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--plum);
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(124, 58, 237, 0.3);
+  transition: all 0.2s;
+}
+
+.legal-page .dir:hover {
+  color: var(--plum-dark);
+  border-bottom-color: var(--plum);
+}
+
+.legal-page .social {
+  background: var(--ink);
+  border-radius: 28px;
+  padding: 44px;
+  position: relative;
+  overflow: hidden;
+}
+
+.legal-page .social::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 15% 0, rgba(242, 104, 140, 0.22), transparent 60%),
+              radial-gradient(ellipse 60% 80% at 95% 100%, rgba(124, 58, 237, 0.28), transparent 60%);
+}
+
+.legal-page .social > * {
+  position: relative;
+}
+
+.legal-page .social h2 {
+  font-family: var(--font-display);
+  color: #fff;
+  font-size: 1.7rem;
+  margin-bottom: 1.6rem;
+}
+
+.legal-page .sgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.legal-page .s {
+  display: block;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 18px 20px;
+  color: #fff;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.legal-page a.s:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-3px);
+}
+
+.legal-page .s small {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.legal-page .s span {
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.legal-page .s.off span {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 900px) {
+  .legal-page .layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .legal-page .toc {
+    position: static;
+    max-height: 260px;
+  }
+  .legal-page .card {
+    padding: 26px 22px;
+  }
+  .legal-page .hero {
+    padding-top: 110px;
+  }
+}
+
+@media (max-width: 700px) {
+  .legal-page .story,
+  .legal-page .vision,
+  .legal-page .social {
+    padding: 32px 22px;
+  }
+}

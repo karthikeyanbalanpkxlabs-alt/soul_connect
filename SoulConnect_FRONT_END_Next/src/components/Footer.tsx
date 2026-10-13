@@ -1,10 +1,10 @@
-"use client";
+import Link from "next/link";
 
 export default function Footer() {
   const socialLinks = [
-    { label: "FB", url: "#" },
-    { label: "IG", url: "#" },
-    { label: "LN", url: "#" },
+    { label: "FB", url: "https://www.facebook.com/soulconects" },
+    { label: "IG", url: "https://www.instagram.com/soulconects" },
+    { label: "TW", url: "https://twitter.com/soulconects" },
     { label: "YT", url: "#" }
   ];
 
@@ -23,7 +23,7 @@ export default function Footer() {
           </p>
           <div className="footer-socials mt-4">
             {socialLinks.map((s, idx) => (
-              <a key={idx} href={s.url} className="social-btn">
+              <a key={idx} href={s.url} target={s.url !== "#" ? "_blank" : undefined} rel={s.url !== "#" ? "noopener noreferrer" : undefined} className="social-btn">
                 {s.label}
               </a>
             ))}
@@ -32,29 +32,28 @@ export default function Footer() {
 
         <div className="footer-col">
           <h5>Top Districts</h5>
-          <a href="#districts">Chennai Profiles</a>
-          <a href="#districts">Coimbatore Matches</a>
-          <a href="#districts">Madurai Candidates</a>
-          <a href="#districts">Tiruchirappalli Partners</a>
-          <a href="#districts">Salem Soulmates</a>
+          <a href="/#districts">Chennai Profiles</a>
+          <a href="/#districts">Coimbatore Matches</a>
+          <a href="/#districts">Madurai Candidates</a>
+          <a href="/#districts">Tiruchirappalli Partners</a>
+          <a href="/#districts">Salem Soulmates</a>
         </div>
 
         <div className="footer-col">
           <h5>Company</h5>
-          <a href="#how">How it Works</a>
-          <a href="#pricing">Membership Plans</a>
-          <a href="#verify">Verification Safety</a>
-          <a href="#app">Mobile Application</a>
-          <a href="#">Success Stories</a>
+          <a href="/#how">How it Works</a>
+          <a href="/#pricing">Membership Plans</a>
+          <a href="/#verify">Verification Safety</a>
+          <a href="/#app">Mobile Application</a>
+          <a href="/#stories">Success Stories</a>
         </div>
 
         <div className="footer-col">
           <h5>Legal & Support</h5>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Account Deactivation</a>
-          <a href="#">Helpline Center</a>
-          <a href="#">Contact Office</a>
+          <Link href="/privacy-policy">Privacy Policy</Link>
+          <Link href="/terms-and-conditions">Terms and Conditions</Link>
+          <Link href="/about-us">About Us</Link>
+          <Link href="/contact-us">Contact Us</Link>
         </div>
       </div>
 

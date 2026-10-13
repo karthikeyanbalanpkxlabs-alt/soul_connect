@@ -115,18 +115,19 @@ export default function Navbar(props: any) {
   };
 
   const renderLandingLinks = () => {
+    const isHome = pathname === "/";
     return (
       <>
         {/* <a href="#districts" onClick={handleLinkClick}>
           Districts
         </a> */}
-        <a href="#how" onClick={handleLinkClick}>
+        <a href={isHome ? "#how" : "/#how"} onClick={handleLinkClick}>
           How it works
         </a>
-        <a href="#pricing" onClick={handleLinkClick}>
+        <a href={isHome ? "#pricing" : "/#pricing"} onClick={handleLinkClick}>
           Plans
         </a>
-        <a href="#register" onClick={handleLinkClick}>
+        <a href={isHome ? "#register" : "/#register"} onClick={handleLinkClick}>
           Register
         </a>
         {/* <a href="#verify" onClick={handleLinkClick}>
@@ -234,7 +235,7 @@ export default function Navbar(props: any) {
   };
 
   let logoObj: any = {
-    href: "#",
+    href: "/",
   };
 
   if ("customer_g" === roles) {
@@ -267,7 +268,11 @@ export default function Navbar(props: any) {
           {"customer_g" === roles ? (
             <></>
           ) : (
-            <a href="#register" className="btn-nav" onClick={handleLinkClick}>
+            <a
+              href={pathname === "/" ? "#register" : "/#register"}
+              className="btn-nav"
+              onClick={handleLinkClick}
+            >
               Begin Journey ✦
             </a>
           )}
