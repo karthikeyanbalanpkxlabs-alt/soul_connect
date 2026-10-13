@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>About Us – Soul Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--rose:#F2688C;--rose-light:#FDE8EF;--rose-dark:#C0436A;--plum:#7C3AED;--plum-light:#EDE9FE;--plum-dark:#5B21B6;--sage:#059669;--sage-light:#D1FAE5;--amber:#D97706;--amber-light:#FEF3C7;--ink:#0F0A1E;--ink-80:#2D2645;--ink-60:#4B4468;--ink-40:#8B85A0;--surface:#FAFAF8;--white:#fff;--border:rgba(124,58,237,.12);--border-soft:rgba(0,0,0,.06);--font-display:'Sora',sans-serif;--font-body:'DM Sans',sans-serif}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{font-family:var(--font-body);background:var(--surface);color:var(--ink);line-height:1.6;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,250,248,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border-soft);padding:0 5vw;height:68px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:var(--font-display);font-weight:700;font-size:1.25rem;color:var(--plum);text-decoration:none;display:flex;align-items:center;gap:8px}
+.nav-logo span{color:var(--rose)}
+.logo-dot{width:8px;height:8px;background:var(--rose);border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.7}}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:.875rem;color:var(--ink-60);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--plum)}
+.btn-primary{background:var(--plum);color:#fff!important;padding:8px 18px;border-radius:100px;font-size:.82rem;font-weight:500;text-decoration:none;transition:background .2s,transform .15s}
+.btn-primary:hover{background:var(--plum-dark);transform:translateY(-1px)}
+.btn-outline{color:var(--plum)!important;padding:8px 18px;border-radius:100px;font-size:.82rem;font-weight:500;border:1.5px solid var(--plum)}
+.btn-outline:hover{background:var(--plum-light)}
+
+.hero{position:relative;overflow:hidden;text-align:center;padding:150px 5vw 70px}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 40%,rgba(242,104,140,.08),transparent 60%),radial-gradient(ellipse 60% 50% at 80% 60%,rgba(124,58,237,.07),transparent 60%);pointer-events:none}
+.hero>*{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--plum-light);color:var(--plum-dark);font-size:.8rem;font-weight:500;padding:6px 16px;border-radius:100px;margin-bottom:1.6rem;border:1px solid rgba(124,58,237,.15)}
+.hero-badge i{width:6px;height:6px;background:var(--rose);border-radius:50%}
+.hero h1{font-family:var(--font-display);font-size:clamp(2.2rem,5vw,3.8rem);font-weight:700;line-height:1.12;max-width:760px;margin:0 auto 1.2rem}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--rose),var(--plum));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:1.1rem;color:var(--ink-60);max-width:560px;margin:0 auto}
+
+
+.hero{padding-bottom:50px}
+.tagline{font-family:var(--font-display);font-style:italic;font-size:1.15rem;color:var(--rose-dark);margin-bottom:1rem}
+.wrap{max-width:1080px;margin:0 auto;padding:0 5vw}
+.lead{max-width:760px;margin:0 auto 70px;text-align:center}
+.lead p{font-size:1.05rem;color:var(--ink-60);line-height:1.8;margin-bottom:1rem}
+.lead strong,.story strong{color:var(--ink)}
+.eyebrow{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--rose);margin-bottom:.6rem}
+h2.t{font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;line-height:1.2;margin-bottom:1rem}
+.story{background:linear-gradient(160deg,var(--plum-light),var(--rose-light));border-radius:28px;padding:48px 44px;margin-bottom:80px}
+.story p{font-size:1rem;color:var(--ink-80);line-height:1.8;margin-bottom:1rem;max-width:760px}
+.sec{margin-bottom:80px}.sec>p.sub{color:var(--ink-60);margin-bottom:1.8rem;max-width:620px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.feat,.val{background:#fff;border:1px solid var(--border-soft);border-radius:22px;padding:28px;transition:transform .25s,box-shadow .25s}
+.feat:hover,.val:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(124,58,237,.1)}
+.ic,.vi{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.2rem;margin-bottom:1rem;background:var(--plum-light);color:var(--plum)}
+.feat h3,.val h3{font-family:var(--font-display);font-size:1.05rem;margin-bottom:.5rem}
+.feat p,.val p{font-size:.92rem;color:var(--ink-60);line-height:1.7}
+.val.rose .vi{background:var(--rose-light);color:var(--rose-dark)}.val.sage .vi{background:var(--sage-light);color:var(--sage)}.val.amber .vi{background:var(--amber-light);color:var(--amber)}
+.vision{background:var(--ink);color:rgba(255,255,255,.75);border-radius:28px;padding:56px 44px;text-align:center;margin-bottom:80px;position:relative;overflow:hidden}
+.vision::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 20% 0,rgba(242,104,140,.25),transparent 60%),radial-gradient(ellipse 60% 80% at 90% 100%,rgba(124,58,237,.3),transparent 60%)}
+.vision>*{position:relative}.vision h2{font-family:var(--font-display);color:#fff;font-size:1.8rem;margin-bottom:1rem}
+.vision p{max-width:680px;margin:0 auto;font-size:1.1rem;line-height:1.8}
+.cta{text-align:center;max-width:720px;margin:0 auto;padding-bottom:90px}
+.cta p{color:var(--ink-60);font-size:1.05rem;margin-bottom:1.6rem}
+.cta blockquote{font-family:var(--font-display);font-size:clamp(1.1rem,2.2vw,1.4rem);font-weight:600;line-height:1.5;margin:2rem 0 .5rem}
+.cta .tail{font-style:italic;color:var(--rose-dark);margin-bottom:2rem}
+.btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btns a{padding:12px 26px;font-size:.92rem}
+@media(max-width:700px){.story,.vision{padding:34px 24px}}
+footer{background:var(--ink);color:rgba(255,255,255,.4);padding:40px 5vw;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;border-top:1px solid rgba(255,255,255,.06)}
+footer .logo{font-family:var(--font-display);font-weight:700;color:#fff;font-size:1.1rem}
+footer .logo span{color:var(--rose)}
+footer p{font-size:.8rem}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{color:rgba(255,255,255,.4);text-decoration:none;font-size:.8rem;transition:color .2s}
+.footer-links a:hover,.footer-links a.cur{color:#fff}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:none}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:20px}.toc{position:static;max-height:260px}.nav-links .hide{display:none}.card{padding:26px 22px}.hero{padding-top:110px}}
+</style></head>
+<body>
+<header class="hero" id="top"><div class="hero-bg"></div>
+<div class="hero-badge"><i></i>About Us</div>
+<h1>Welcome to Soul<em>Connect</em></h1>
+<p class="tagline">Connecting Souls, Creating Forever.</p></header>
+<main class="wrap">
+<section class="lead reveal"><p>At <strong>Soul Connect</strong>, we believe that marriage is far more than just a union of two individuals—it is the harmonious coming together of two souls, families, traditions, and dreams.</p><p>Founded on the principles of <strong>trust, authenticity, and personalized guidance</strong>, our mission is to help you find a partner who truly understands, respects, and completes you. Whether you are seeking a life partner rooted in cultural values or looking for someone who shares your modern lifestyle and aspirations, we bridge the gap between traditional matchmaking and contemporary sensibilities.</p></section>
+<section class="story reveal" id="story"><div class="eyebrow">Our Story</div><h2 class="t">Where genuine connections begin</h2><p>In a fast-paced world driven by endless swiping and superficial connections, finding a deep, meaningful relationship can feel overwhelming. <strong>Soul Connect Matrimonial</strong> was established with a singular vision: to bring heart, security, and true intent back into matchmaking.</p><p>We recognized that every individual has a unique story, set of values, and vision for the future. By combining modern algorithms with dedicated, human-led matchmaking services, we created a platform where genuine individuals and families can connect with complete peace of mind.</p></section>
+<section class="sec" id="why"><div class="eyebrow">Why choose us</div><h2 class="t">Why Choose Soul Connect Matrimonial?</h2><p class="sub">We are committed to making your journey toward marriage effortless, respectful, and joyful. Here is what sets us apart:</p><div class="grid"><div class="feat reveal"><div class="ic">✓</div><h3>100% Verified Profiles</h3><p>Your safety and trust are our top priorities. Every profile undergoes rigorous verification to ensure authentic and serious background information.</p></div><div class="feat reveal"><div class="ic">✦</div><h3>Personalized Matchmaking</h3><p>We look beyond basic criteria. Our expert matchmakers take the time to understand your personal values, lifestyle, interests, and family expectations.</p></div><div class="feat reveal"><div class="ic">🔒</div><h3>Privacy Confidentiality</h3><p>We respect your privacy. You have complete control over who views your contact details and photos.</p></div><div class="feat reveal"><div class="ic">🌍</div><h3>Culturally Diverse Inclusive</h3><p>We cater to diverse communities, professions, and cultural backgrounds, helping you find matches tailored to your specific preferences.</p></div><div class="feat reveal"><div class="ic">🤝</div><h3>Dedicated Relationship Managers</h3><p>For members seeking an extra level of care, our dedicated team offers hands-on assistance every step of the way—from initial introduction to family discussions.</p></div></div></section>
+<section class="sec" id="values"><div class="eyebrow">What guides us</div><h2 class="t">Our Core Values</h2><div class="grid"><div class="val plum reveal"><div class="vi">⚖</div><h3>Integrity</h3><p>We operate with total transparency, honesty, and moral commitment in every interaction.</p></div><div class="val rose reveal"><div class="vi">♡</div><h3>Empathy</h3><p>We understand the emotional significance of choosing a life partner and handle your journey with deep sensitivity and care.</p></div><div class="val sage reveal"><div class="vi">🛡</div><h3>Trust Safety</h3><p>Creating a safe, secure, and dignified space for men, women, and families is at the core of everything we do.</p></div><div class="val amber reveal"><div class="vi">★</div><h3>Excellence</h3><p>We constantly innovate our technology and customer support to offer you the best matchmaking experience possible.</p></div></div></section>
+<section class="vision reveal"><h2>Our Vision</h2><p>To be the most trusted and cherished matrimonial platform worldwide—a place where meaningful connections turn into lifelong partnerships, built on mutual respect, love, and shared dreams.</p></section>
+<section class="cta reveal"><div class="eyebrow">Get started</div><h2 class="t">Begin Your Journey Today</h2><p>Your story of togetherness starts here. Let us assist you in finding the soulmate you’ve been searching for.</p>
+<div class="btns"><a href="#" class="btn-primary">Get Started Today</a><a href="#" class="btn-outline">Contact Our Matchmakers</a></div>
+<blockquote>“A happy marriage is a long conversation which always seems too short”</blockquote><p class="tail">Find the person you want to talk to forever.</p></section>
+</main>
+<script>const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:0});document.querySelectorAll('.reveal').forEach(el=>io.observe(el));</script>
+</body></html>
