@@ -50,7 +50,7 @@ export default function Home() {
       typeof window !== "undefined" &&
       window.location.origin.includes("//soulconect.com")
     ) {
-      setIsComingSoon(true);
+      // setIsComingSoon(true);
     }
 
     if (localStorage.getItem("logged_in") === "true") {
@@ -111,7 +111,7 @@ export default function Home() {
       if (paymentStatus === "success" && orderId) {
         if (!hasProcessedPayment.current) {
           hasProcessedPayment.current = true;
-          setIsComingSoon(false);
+          // setIsComingSoon(false);
           setPaymentModal({
             isOpen: true,
             status: "processing",
@@ -136,7 +136,7 @@ export default function Home() {
           queryParams.get("message") ||
           "Payment processing was declined or cancelled.";
 
-        setIsComingSoon(false);
+        // setIsComingSoon(false);
         showToast(`Payment Failed: ${reason}`, "error");
 
         let pendingPlan: any = null;
@@ -167,7 +167,7 @@ export default function Home() {
           retryType: "payment",
           retryParams: {
             planName: planName || pendingPlan?.name || "Premium",
-            price: amountVal ? `₹${amountVal}` : (pendingPlan?.price || "₹2,499"),
+            price: amountVal ? `₹${amountVal}` : pendingPlan?.price || "₹2,499",
             features: pendingPlan?.features || [],
           },
         });

@@ -102,7 +102,7 @@ export default function ForgotPassword() {
     return typeof window !== "undefined" &&
       ["localhost", "127.0.0.1"].includes(window.location.hostname)
       ? "http://localhost:5174/portal"
-      : "https://dev.soulconect.com/portal";
+      : "https://soulconect.com/portal";
   };
 
   return (

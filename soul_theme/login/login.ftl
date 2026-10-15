@@ -11,14 +11,14 @@
 <body>
 
 <nav>
-  <a href="#" onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3000/' : 'https://dev.soulconect.com/'); return false;" class="nav-logo">
+  <a href="#" onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname) ? 'http://localhost:3000/' : 'https://soulconect.com/'); return false;" class="nav-logo">
     <img src="${url.resourcesPath}/img/company_logo.png" width="120" height="40" alt="company_logo" style="max-height: 40px; width: auto;" />
   </a>
   <div class="nav-right">
     <a href="#" class="nav-link">Browse Profiles</a>
     <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/#register'
-            : 'https://dev.soulconect.com/#register'); return false;" class="btn-nav">Join Free ✦</a>
+            : 'https://soulconect.com/#register'); return false;" class="btn-nav">Join Free ✦</a>
   </div>
 </nav>
 
@@ -31,7 +31,7 @@
         class="auth-back reveal"
         onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/'
-            : 'https://dev.soulconect.com/'); return false;">
+            : 'https://soulconect.com/'); return false;">
         ← Back to home
         </a>
 
@@ -39,7 +39,7 @@
         <div class="auth-title">Welcome back 🙏</div>
         <div class="auth-subtitle">Don't have an account? <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/#register'
-            : 'https://dev.soulconect.com/#register'); return false;"
+            : 'https://soulconect.com/#register'); return false;"
             >Create your profile →</a></div>
       </div>
 
@@ -83,7 +83,7 @@
             <div class="form-group">
               <div class="form-label-row">
                 <label class="form-label" for="loginPwd">Password</label>
-                <a href="https://dev.soulconect.com/forgot_password" class="forgot-link">Forgot password?</a>
+                <a href="https://soulconect.com/forgot_password" class="forgot-link">Forgot password?</a>
               </div>
               <div class="form-input-wrap">
                 <span class="form-input-icon">🔒</span>
@@ -132,7 +132,7 @@
           <div class="form-group">
             <div class="form-label-row">
               <label class="form-label" for="idPwd">Password</label>
-              <a href="https://dev.soulconect.com/forgot_password" class="forgot-link">Forgot password?</a>
+              <a href="https://soulconect.com/forgot_password" class="forgot-link">Forgot password?</a>
             </div>
             <div class="form-input-wrap">
               <span class="form-input-icon">🔒</span>
@@ -171,7 +171,7 @@
       <div class="auth-already reveal" style="transition-delay:.3s">
         New to Soul Connect? <a href="#"  onclick="window.location.href = (['localhost','127.0.0.1'].includes(location.hostname)
             ? 'http://localhost:5174/#register'
-            : 'https://dev.soulconect.com/#register'); return false;"
+            : 'https://soulconect.com/#register'); return false;"
             >Create a free profile →</a>
       </div>
 
