@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { sendGridEmail } from "../config/email";
 
 export async function handleSendEmail(req: Request, res: Response) {
-  const { to, subject, message } = req.body;
+  const { to, subject, message } = req.body || {};
 
   try {
     const emailTo = to || "karthikeyanbalan.pkxlabs@gmail.com";

@@ -6,7 +6,7 @@ import crypto from "crypto";
 import { Customers } from "../models/customer";
 import { GLOBAL_DETAILS } from "../config/keycloak-admin";
 import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
-import { EMAIL_TRIGGER_ENABLE_FLAG } from "../config/email";
+import { EMAIL_TRIGGER_ENABLE_FLAG, sendGridEmail } from "../config/email";
 
 const PORT = process.env.PORT || 3000;
 
@@ -1941,19 +1941,24 @@ export async function handleCustomerCreate(req: Request, res: Response) {
 </body>
 </html>`;
 
-          console.log(`Triggering /api/send-email for ${email}...`);
+          console.log(`Sending welcome email with credentials directly to ${email}...`);
 
-          await fetch(`${protocol}://${host}/api/send-email`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              to: email,
-              subject: "Welcome to Soul Connect - Account Created",
-              message: emailHtml,
-            }),
+          await sendGridEmail({
+            to: email,
+            subject: "Welcome to Soul Connect - Account Created",
+            html: emailHtml,
+            text: `Hello ${first || "User"},
+
+Your Soul Connect account has been successfully created.
+
+Username: ${first || email}
+Email: ${email}
+Temporary Password: ${customerPassword}
+
+Please login at https://soulconect.com/portal/ to access your account.
+`,
           });
+          console.log(`✅ Welcome email dispatched successfully to ${email}`);
         }
       } catch (emailErr: any) {
         console.error(

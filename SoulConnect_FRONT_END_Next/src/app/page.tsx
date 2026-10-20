@@ -32,6 +32,8 @@ export default function Home() {
     isOpen: boolean;
     status: "processing" | "success" | "failed";
     email?: string;
+    temporaryPassword?: string;
+    firstName?: string;
     orderId?: string;
     txnId?: string;
     planName?: string;
@@ -476,6 +478,20 @@ export default function Home() {
           createFixture?.email ||
           "";
 
+        const tempPassword =
+          customerResp?.temporaryPassword ||
+          customerResp?.data?.temporaryPassword ||
+          customerResp?.customer?.temporaryPassword ||
+          "";
+
+        const customerFirstName =
+          customerResp?.first_name ||
+          customerResp?.firstName ||
+          customerResp?.customer?.first_name ||
+          customerResp?.customer?.firstName ||
+          createFixture?.first_name ||
+          "";
+
         localStorage.removeItem("pending_customer_registration");
         localStorage.removeItem("pending_selected_plan");
         localStorage.removeItem("registration_data");
@@ -491,10 +507,12 @@ export default function Home() {
           planName: targetPlan,
           amount: finalAmount,
           email: registeredEmail,
+          temporaryPassword: tempPassword,
+          firstName: customerFirstName,
         });
 
         showToast(
-          `Payment Successful! Order: ${finalOrderId}. An email with your temporary password has been sent.`,
+          `Payment Successful! Order: ${finalOrderId}. Welcome email and temporary password generated.`,
           "success",
         );
       }
@@ -729,6 +747,8 @@ export default function Home() {
           isOpen={paymentModal.isOpen}
           status={paymentModal.status}
           email={paymentModal.email}
+          temporaryPassword={paymentModal.temporaryPassword}
+          firstName={paymentModal.firstName}
           orderId={paymentModal.orderId}
           txnId={paymentModal.txnId}
           planName={paymentModal.planName}
@@ -780,6 +800,8 @@ export default function Home() {
         isOpen={paymentModal.isOpen}
         status={paymentModal.status}
         email={paymentModal.email}
+        temporaryPassword={paymentModal.temporaryPassword}
+        firstName={paymentModal.firstName}
         orderId={paymentModal.orderId}
         txnId={paymentModal.txnId}
         planName={paymentModal.planName}

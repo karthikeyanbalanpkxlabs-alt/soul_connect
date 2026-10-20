@@ -151,3 +151,39 @@ export const uploadMediaFile = async (
     };
   }
 };
+
+/**
+ * Resend Welcome Email with Temporary Password
+ */
+export const onResendWelcomeEmailApi = async (payload: {
+  email: string;
+  temporaryPassword?: string;
+  firstName?: string;
+}): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
+    const endpoint = `${apiUrl}/api/send-email`;
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: payload.email,
+        subject: "Welcome to Soul Connect - Account Credentials",
+        message: `Hello ${payload.firstName || "Member"},\n\nHere are your Soul Connect login details:\n\nEmail: ${payload.email}\nTemporary Password: ${payload.temporaryPassword || "password@123"}\n\nLogin to Portal: https://soulconect.com/portal\n\nPlease log in and change your password for security.\n\nBest regards,\nSoul Connect Team`,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      return {
+        success: false,
+        error: data.error || data.message || `HTTP ${res.status}`,
+      };
+    }
+    return { success: true, ...data };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Network error while sending email",
+    };
+  }
+};
