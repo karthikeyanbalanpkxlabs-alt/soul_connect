@@ -4,3 +4,6 @@
 /Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/safeareacontext_autolinked_build/CMakeFiles/react_codegen_safeareacontext.dir
 /Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/safeareacontext_autolinked_build/CMakeFiles/edit_cache.dir
 /Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/safeareacontext_autolinked_build/CMakeFiles/rebuild_cache.dir
+/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/RNCWebViewSpec_autolinked_build/CMakeFiles/react_codegen_RNCWebViewSpec.dir
+/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/RNCWebViewSpec_autolinked_build/CMakeFiles/edit_cache.dir
+/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/RNCWebViewSpec_autolinked_build/CMakeFiles/rebuild_cache.dir

@@ -11,6 +11,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -18,7 +19,10 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <WebView 
+        source={{ uri: 'https://soulconect.com/' }} 
+        style={styles.webview}
+      />
     </SafeAreaProvider>
   );
 }

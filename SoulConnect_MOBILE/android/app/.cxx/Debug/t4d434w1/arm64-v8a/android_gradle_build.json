@@ -1,6 +1,7 @@
 {
   "buildFiles": [
     "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt",
+    "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/react-native-webview/android/build/generated/source/codegen/jni/CMakeLists.txt",
     "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/react-native/ReactAndroid/cmake-utils/default-app-setup/CMakeLists.txt"
   ],
   "cleanCommandsComponents": [
@@ -29,6 +30,11 @@
         "/Users/prabakarann/.gradle/caches/9.0.0/transforms/f3257acf57444ff38a0f449f66b9894c/transformed/react-android-0.83.10-debug/prefab/modules/jsi/libs/android.arm64-v8a/libjsi.so",
         "/Users/prabakarann/.gradle/caches/9.0.0/transforms/f3257acf57444ff38a0f449f66b9894c/transformed/react-android-0.83.10-debug/prefab/modules/reactnative/libs/android.arm64-v8a/libreactnative.so"
       ]
+    },
+    "react_codegen_RNCWebViewSpec::@eb48929f9f7453740a6c": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "react_codegen_RNCWebViewSpec"
     },
     "react_codegen_safeareacontext::@7984cd80db47aa7b952a": {
       "toolchain": "toolchain",
