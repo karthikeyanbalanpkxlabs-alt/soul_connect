@@ -1,0 +1,6 @@
+module Pods_SoulConnect {
+  umbrella header "Pods-SoulConnect-umbrella.h"
+
+  export *
+  module * { export * }
+}

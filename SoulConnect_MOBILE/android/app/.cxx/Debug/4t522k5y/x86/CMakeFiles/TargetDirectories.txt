@@ -1,0 +1,6 @@
+/Users/prabakarann/ReactNative/SoulConnect/android/app/.cxx/Debug/4t522k5y/x86/CMakeFiles/appmodules.dir
+/Users/prabakarann/ReactNative/SoulConnect/android/app/.cxx/Debug/4t522k5y/x86/CMakeFiles/edit_cache.dir
+/Users/prabakarann/ReactNative/SoulConnect/android/app/.cxx/Debug/4t522k5y/x86/CMakeFiles/rebuild_cache.dir
+/Users/prabakarann/ReactNative/SoulConnect/android/app/.cxx/Debug/4t522k5y/x86/safeareacontext_autolinked_build/CMakeFiles/react_codegen_safeareacontext.dir
+/Users/prabakarann/ReactNative/SoulConnect/android/app/.cxx/Debug/4t522k5y/x86/safeareacontext_autolinked_build/CMakeFiles/edit_cache.dir
+/Users/prabakarann/ReactNative/SoulConnect/android/app/.cxx/Debug/4t522k5y/x86/safeareacontext_autolinked_build/CMakeFiles/rebuild_cache.dir
