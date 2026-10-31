@@ -117,3 +117,16 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Ninja "clean" re-runs CMake. That fails after codegen output, or uninstalled
+// native modules, have already been removed. Skip that step and delete .cxx.
+tasks.configureEach { task ->
+    if (task.name.startsWith("externalNativeBuildClean")) {
+        task.enabled = false
+    }
+    if (task.name == "clean") {
+        task.doFirst {
+            delete(layout.projectDirectory.dir(".cxx"))
+        }
+    }
+}
