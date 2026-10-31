@@ -1,0 +1,31 @@
+export interface UserProfile {
+  _id?: string;
+  id?: string;
+  customer_id?: string;
+  keycloakId?: string;
+  firstName?: string;
+  lastName?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  gender?: string;
+  dob?: string;
+  phone?: string;
+  phone_number?: string;
+  district?: string;
+  education?: string;
+  profession?: string;
+  religion?: string;
+  caste?: string;
+  height?: string;
+  role?: string;
+  subscription_type?: string;
+  public_verify?: boolean;
+  public_verify_command_helper?: string;
+  identity_proff?: {url?: string} | string;
+  family_photos?: Array<{url?: string} | string>;
+  image?: Array<{url?: string; default?: boolean} | string>;
+  about_self?: string;
+  maritial_status?: string;
+  [key: string]: unknown;
+}

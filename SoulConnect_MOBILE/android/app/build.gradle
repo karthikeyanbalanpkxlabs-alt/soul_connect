@@ -117,3 +117,15 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// CMake clean reconfigures the native build and fails once library codegen
+// folders (for example react-native-webview) have already been deleted.
+// Remove the stale .cxx cache directly instead of invoking ninja clean.
+gradle.taskGraph.whenReady {
+    tasks.matching { it.name.startsWith("externalNativeBuildClean") }.configureEach { task ->
+        task.actions.clear()
+        task.doLast {
+            delete(layout.projectDirectory.dir(".cxx"))
+        }
+    }
+}
