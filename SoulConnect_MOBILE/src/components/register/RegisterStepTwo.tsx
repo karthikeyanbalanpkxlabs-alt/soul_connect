@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
-import {Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
-import {Camera, Check, Plus, ShieldCheck, Trash2, UploadCloud, Users, X} from 'lucide-react-native';
+import {ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Camera, Check, FileText, Images, Plus, ShieldCheck, Trash2, UploadCloud, Users, X} from 'lucide-react-native';
 import {PlanCard} from '../../services/api';
+import {MediaKind, MediaSource, pickMedia, uploadPicked} from '../../services/media';
 import {colors, radii} from '../../theme/colors';
 
 const DOC_TYPES = ['Aadhaar Card', 'Voter ID', 'Driving License', 'Passport'];
@@ -42,27 +43,34 @@ export function RegisterStepTwo({
   onSubmit,
 }: RegisterStepTwoProps) {
   const [docType, setDocType] = useState(DOC_TYPES[0]);
-  const [composer, setComposer] = useState<'profile' | 'family' | 'identity' | null>(null);
-  const [draftUrl, setDraftUrl] = useState('');
+  const [sourceFor, setSourceFor] = useState<MediaKind | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [identityName, setIdentityName] = useState('');
 
-  const openComposer = (kind: 'profile' | 'family' | 'identity') => {
-    setDraftUrl('');
-    setComposer(kind);
-  };
-
-  const confirmUrl = () => {
-    const url = draftUrl.trim();
-    if (!url || !composer) {
+  const chooseSource = async (source: MediaSource) => {
+    const kind = sourceFor;
+    setSourceFor(null);
+    if (!kind) {
       return;
     }
-    if (composer === 'profile' && profilePhotos.length < 3) {
-      onChangeProfilePhotos([...profilePhotos, url]);
-    } else if (composer === 'family') {
-      onChangeFamilyPhoto(url);
-    } else if (composer === 'identity') {
-      onChangeIdentityProof(url);
+    const file = await pickMedia(source);
+    if (!file) {
+      return;
     }
-    setComposer(null);
+    setUploading(true);
+    const picked = await uploadPicked(kind, file);
+    setUploading(false);
+    if (!picked) {
+      return;
+    }
+    if (kind === 'profile' && profilePhotos.length < 3) {
+      onChangeProfilePhotos([...profilePhotos, picked.url]);
+    } else if (kind === 'family') {
+      onChangeFamilyPhoto(picked.url);
+    } else if (kind === 'identity') {
+      setIdentityName(picked.name);
+      onChangeIdentityProof(picked.url);
+    }
   };
 
   return (
@@ -117,7 +125,7 @@ export function RegisterStepTwo({
             </View>
           ))}
           {profilePhotos.length < 3 ? (
-            <Pressable style={styles.addTile} onPress={() => openComposer('profile')}>
+            <Pressable style={styles.addTile} onPress={() => setSourceFor('profile')}>
               <Plus color={colors.ink40} size={28} />
               <Text style={styles.addLabel}>Add image</Text>
             </Pressable>
@@ -144,7 +152,7 @@ export function RegisterStepTwo({
             </Pressable>
           </View>
         ) : (
-          <Pressable style={styles.addTile} onPress={() => openComposer('family')}>
+          <Pressable style={styles.addTile} onPress={() => setSourceFor('family')}>
             <Plus color={colors.ink40} size={28} />
             <Text style={styles.addLabel}>Add family photo</Text>
           </Pressable>
@@ -216,19 +224,29 @@ export function RegisterStepTwo({
 
         {identityProof ? (
           <View style={[styles.dropZone, styles.dropReady]}>
+            {isPdf(identityProof, identityName) ? (
+              <FileText color={colors.sage} size={36} />
+            ) : (
+              <Image source={{uri: identityProof}} style={styles.idPreview} />
+            )}
             <Text style={styles.dropReadyTitle}>{docType} attached</Text>
             <Text style={styles.dropReadySub} numberOfLines={1}>
-              {identityProof}
+              {identityName || fileLabel(identityProof)}
             </Text>
-            <Pressable style={styles.dropClear} onPress={() => onChangeIdentityProof('')}>
+            <Pressable
+              style={styles.dropClear}
+              onPress={() => {
+                setIdentityName('');
+                onChangeIdentityProof('');
+              }}>
               <X color={colors.white} size={14} />
             </Pressable>
           </View>
         ) : (
-          <Pressable onPress={() => openComposer('identity')} style={styles.dropZone}>
+          <Pressable onPress={() => setSourceFor('identity')} style={styles.dropZone}>
             <UploadCloud color={colors.plum} size={36} />
             <Text style={styles.dropTitle}>Tap to add your {docType}</Text>
-            <Text style={styles.dropSub}>PNG, JPG, or PDF</Text>
+            <Text style={styles.dropSub}>Gallery or documents</Text>
           </Pressable>
         )}
         {identityError ? <Text style={styles.error}>{identityError}</Text> : null}
@@ -250,35 +268,66 @@ export function RegisterStepTwo({
         <Text style={styles.submitLabel}>{busy ? 'Please wait…' : 'Submit and complete registration ✦'}</Text>
       </Pressable>
 
-      <Modal visible={composer != null} transparent animationType="fade" onRequestClose={() => setComposer(null)}>
-        <View style={styles.modalScrim}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>
-              {composer === 'profile' ? 'Add profile image' : composer === 'family' ? 'Add family photo' : `Add ${docType}`}
+      <Modal visible={sourceFor != null} transparent animationType="slide" onRequestClose={() => setSourceFor(null)}>
+        <Pressable style={styles.sheetScrim} onPress={() => setSourceFor(null)}>
+          <Pressable style={styles.sheet} onPress={() => undefined}>
+            <Text style={styles.sheetTitle}>
+              {sourceFor === 'identity' ? `Add ${docType}` : sourceFor === 'family' ? 'Add family photo' : 'Add profile image'}
             </Text>
-            <Text style={styles.modalSub}>Paste the hosted image or document link. Gallery upload uses the same cards on the website.</Text>
-            <TextInput
-              value={draftUrl}
-              onChangeText={setDraftUrl}
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder="https://"
-              placeholderTextColor={colors.ink40}
-              style={styles.modalInput}
-            />
-            <View style={styles.modalActions}>
-              <Pressable onPress={() => setComposer(null)} style={styles.modalCancel}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable onPress={confirmUrl} style={styles.modalAdd}>
-                <Text style={styles.modalAddText}>Add</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.sheetSub}>
+              {sourceFor === 'identity' ? 'Choose a photo from your gallery, or a file from documents.' : 'Choose a photo from your gallery, or take one with the camera.'}
+            </Text>
+            <SourceButton icon={Images} label="Gallery" onPress={() => chooseSource('library')} />
+            {sourceFor === 'identity' ? (
+              <SourceButton icon={FileText} label="Documents" onPress={() => chooseSource('documents')} />
+            ) : (
+              <SourceButton icon={Camera} label="Camera" onPress={() => chooseSource('camera')} />
+            )}
+            <Pressable onPress={() => setSourceFor(null)} style={styles.sheetCancel}>
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+      <Modal visible={uploading} transparent animationType="fade">
+        <View style={styles.sheetScrim}>
+          <View style={styles.uploadingCard}>
+            <ActivityIndicator color={colors.plum} />
+            <Text style={styles.uploadingText}>Uploading…</Text>
           </View>
         </View>
       </Modal>
     </View>
   );
+}
+
+function SourceButton({
+  icon: Icon,
+  label,
+  onPress,
+}: {
+  icon: typeof Camera;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={styles.sourceBtn}>
+      <View style={styles.iconBubble}>
+        <Icon color={colors.plum} size={18} />
+      </View>
+      <Text style={styles.sourceLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function isPdf(url: string, name: string) {
+  return /\.pdf($|\?)/i.test(url) || name.toLowerCase().endsWith('.pdf');
+}
+
+function fileLabel(url: string) {
+  const clean = url.split('?')[0];
+  const name = decodeURIComponent(clean.split('/').pop() || 'Document');
+  return name || 'Document';
 }
 
 function Meter({
@@ -381,7 +430,8 @@ const styles = StyleSheet.create({
   dropReady: {borderColor: colors.sage, backgroundColor: colors.sageLight},
   dropTitle: {color: colors.ink80, fontWeight: '800', marginTop: 8},
   dropSub: {color: colors.ink40, marginTop: 4},
-  dropReadyTitle: {color: '#047857', fontWeight: '800'},
+  idPreview: {width: 72, height: 72, borderRadius: 12, marginBottom: 8},
+  dropReadyTitle: {color: '#047857', fontWeight: '800', marginTop: 8},
   dropReadySub: {color: colors.sage, marginTop: 4, maxWidth: '90%'},
   dropClear: {position: 'absolute', top: 8, right: 8, backgroundColor: colors.rose, borderRadius: 12, padding: 4},
   meterTitle: {fontWeight: '800', color: colors.ink, marginTop: 18, marginBottom: 10},
@@ -399,14 +449,14 @@ const styles = StyleSheet.create({
   submitLabel: {color: colors.white, fontWeight: '800', fontSize: 16},
   disabled: {opacity: 0.6},
   error: {color: colors.danger, marginTop: 8},
-  modalScrim: {flex: 1, backgroundColor: 'rgba(15,10,30,0.55)', justifyContent: 'center', padding: 24},
-  modalCard: {backgroundColor: colors.white, borderRadius: radii.lg, padding: 18},
-  modalTitle: {fontSize: 18, fontWeight: '800', color: colors.ink},
-  modalSub: {color: colors.ink60, marginTop: 6, marginBottom: 12, lineHeight: 20},
-  modalInput: {borderWidth: 1, borderColor: colors.borderSoft, borderRadius: radii.sm, paddingHorizontal: 12, paddingVertical: 12, color: colors.ink},
-  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', marginTop: 14},
-  modalCancel: {paddingHorizontal: 14, paddingVertical: 10},
-  modalCancelText: {color: colors.ink60, fontWeight: '700'},
-  modalAdd: {backgroundColor: colors.plum, borderRadius: radii.pill, paddingHorizontal: 18, paddingVertical: 10},
-  modalAddText: {color: colors.white, fontWeight: '800'},
+  sheetScrim: {flex: 1, backgroundColor: 'rgba(15,10,30,0.55)', justifyContent: 'flex-end'},
+  sheet: {backgroundColor: colors.white, borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg, padding: 20, paddingBottom: 28},
+  sheetTitle: {fontSize: 18, fontWeight: '800', color: colors.ink},
+  sheetSub: {color: colors.ink60, marginTop: 6, marginBottom: 16, lineHeight: 20},
+  sourceBtn: {flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSoft, borderRadius: radii.md, padding: 12, marginBottom: 10},
+  sourceLabel: {color: colors.ink, fontWeight: '800', fontSize: 16, marginLeft: 4},
+  sheetCancel: {alignItems: 'center', paddingVertical: 12},
+  sheetCancelText: {color: colors.ink60, fontWeight: '700'},
+  uploadingCard: {alignSelf: 'center', marginBottom: 120, backgroundColor: colors.white, borderRadius: radii.lg, paddingHorizontal: 28, paddingVertical: 22, alignItems: 'center'},
+  uploadingText: {color: colors.ink, fontWeight: '700', marginTop: 10},
 });

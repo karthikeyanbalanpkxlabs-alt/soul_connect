@@ -33,6 +33,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Soul Connect uses the camera so you can take profile, family, and identity photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Soul Connect uses your photo library so you can add profile, family, and identity photos.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>RCTNewArchEnabled</key>

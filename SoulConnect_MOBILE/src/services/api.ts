@@ -57,6 +57,38 @@ export async function request<T = any>(
   }
 }
 
+export async function uploadMediaFile(
+  file: {uri: string; name: string; type: string},
+  prefix: string,
+): Promise<{ok: true; url: string} | {ok: false; error: string}> {
+  const body = new FormData();
+  body.append('prefix', prefix);
+  body.append('file', {
+    uri: file.uri,
+    name: file.name,
+    type: file.type,
+  } as any);
+  try {
+    const response = await fetch(`${API_URL}/media-upload?prefix=${encodeURIComponent(prefix)}`, {
+      method: 'POST',
+      headers: {'x-prefix': prefix},
+      body,
+    });
+    const data = (await response.json().catch(() => ({}))) as {
+      success?: boolean;
+      url?: string;
+      error?: string;
+      message?: string;
+    };
+    if (!response.ok || !data.success || !data.url) {
+      return {ok: false, error: data.error || data.message || `Upload failed (${response.status})`};
+    }
+    return {ok: true, url: data.url};
+  } catch (error: any) {
+    return {ok: false, error: error?.message || 'Network error while uploading file'};
+  }
+}
+
 export async function savePublicCustomer(data: Record<string, unknown>) {
   return request('/api/public/customer_create', {
     method: 'POST',
