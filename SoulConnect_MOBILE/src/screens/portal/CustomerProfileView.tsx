@@ -246,9 +246,6 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
         <Tip done={draft.photos.length > 0} label={draft.photos.length ? 'Photos uploaded' : 'Upload photos to attract matches'} />
         <Tip done={Boolean(draft.about_self)} label={draft.about_self ? 'About you is written' : 'Write a short introduction'} />
       </View>
-      <Pressable onPress={onLogout} style={styles.logout}>
-        <Text style={styles.logoutText}>Log out</Text>
-      </Pressable>
     </View>
   );
 
@@ -397,20 +394,25 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
       <ScrollView contentContainerStyle={styles.page}>
         <View style={[styles.hero, {paddingTop: insets.top + 12}]}>
           <Text style={styles.heroTitle}>My profile</Text>
-          {!editing ? (
-            <Pressable onPress={() => setEditing(true)} style={styles.heroBtn}>
-              <Text style={styles.heroBtnText}>Edit profile</Text>
+          <View style={styles.heroActions}>
+            {!editing ? (
+              <Pressable onPress={() => setEditing(true)} style={styles.heroBtn}>
+                <Text style={styles.heroBtnText}>Edit profile</Text>
+              </Pressable>
+            ) : (
+              <>
+                <Pressable onPress={save} style={[styles.heroBtn, styles.heroSave]}>
+                  <Text style={styles.heroBtnText}>{saving ? 'Saving…' : 'Save'}</Text>
+                </Pressable>
+                <Pressable onPress={cancel} style={styles.heroBtn}>
+                  <Text style={styles.heroBtnText}>Cancel</Text>
+                </Pressable>
+              </>
+            )}
+            <Pressable onPress={onLogout} style={styles.heroBtn}>
+              <Text style={styles.heroBtnText}>Log out</Text>
             </Pressable>
-          ) : (
-            <View style={styles.heroActions}>
-              <Pressable onPress={save} style={[styles.heroBtn, styles.heroSave]}>
-                <Text style={styles.heroBtnText}>{saving ? 'Saving…' : 'Save'}</Text>
-              </Pressable>
-              <Pressable onPress={cancel} style={styles.heroBtn}>
-                <Text style={styles.heroBtnText}>Cancel</Text>
-              </Pressable>
-            </View>
-          )}
+          </View>
         </View>
         <View style={[styles.layout, wide && styles.layoutWide]}>
           {sidebar}
