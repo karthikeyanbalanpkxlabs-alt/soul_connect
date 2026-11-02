@@ -36,6 +36,30 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/CMakeFiles/cmake.verify_globs")
 endif()
 
+# react_codegen_SRCS at /Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/*.cpp")
+set(OLD_GLOB
+  "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/RNDateTimePickerCGen-generated.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/CMakeFiles/cmake.verify_globs")
+endif()
+
+# react_codegen_SRCS at /Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/react/renderer/components/RNDateTimePickerCGen/*.cpp")
+set(OLD_GLOB
+  "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/react/renderer/components/RNDateTimePickerCGen/ComponentDescriptors.cpp"
+  "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/react/renderer/components/RNDateTimePickerCGen/EventEmitters.cpp"
+  "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/react/renderer/components/RNDateTimePickerCGen/Props.cpp"
+  "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/react/renderer/components/RNDateTimePickerCGen/ShadowNodes.cpp"
+  "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/react/renderer/components/RNDateTimePickerCGen/States.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/armeabi-v7a/CMakeFiles/cmake.verify_globs")
+endif()
+
 # react_codegen_SRCS at /Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-documents/picker/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/node_modules/@react-native-documents/picker/android/build/generated/source/codegen/jni/*.cpp")
 set(OLD_GLOB

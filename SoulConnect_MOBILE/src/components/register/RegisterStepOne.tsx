@@ -1,7 +1,10 @@
 import React, {useEffect, useMemo, useState} from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import {Calendar} from 'lucide-react-native';
 import {
   FlatList,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,15 +16,12 @@ import {districts} from '../../data/districts';
 import {RegistrationValues} from '../../services/registration';
 import {colors, radii} from '../../theme/colors';
 import {
-  birthYears,
   CM_HEIGHTS,
-  daysInMonth,
   EDUCATION,
   FT_HEIGHTS,
   GENDERS,
   INCOMES,
   MARITAL,
-  MONTHS,
   MOTHER_TONGUES,
   PROFESSIONS,
   REGISTER_FOR,
@@ -71,7 +71,9 @@ export function RegisterStepOne(props: RegisterStepOneProps) {
   const [query, setQuery] = useState('');
   const [phoneWait, setPhoneWait] = useState(0);
   const [emailWait, setEmailWait] = useState(0);
-  const [dob, setDobParts] = useState(() => splitDob(props.values.dob));
+  const [showDob, setShowDob] = useState(false);
+  const latestBirthDate = useMemo(() => yearsAgo(18), []);
+  const earliestBirthDate = useMemo(() => yearsAgo(80), []);
 
   useEffect(() => {
     if (phoneWait <= 0) {
@@ -102,14 +104,8 @@ export function RegisterStepOne(props: RegisterStepOneProps) {
     return sheet.options.filter(option => option.label.toLowerCase().includes(needle));
   }, [query, sheet]);
 
-  const setDob = (part: 'year' | 'month' | 'day', value: string) => {
-    const next = {...dob, [part]: value};
-    const maxDay = daysInMonth(next.year, next.month);
-    if (next.day && Number(next.day) > maxDay) {
-      next.day = '';
-    }
-    setDobParts(next);
-    props.onChange('dob', next.year && next.month && next.day ? `${next.year}-${next.month}-${next.day}` : '');
+  const chooseDob = (date: Date) => {
+    props.onChange('dob', formatDob(date));
     props.onTouch('dob');
   };
 
@@ -185,51 +181,29 @@ export function RegisterStepOne(props: RegisterStepOneProps) {
           <Text style={styles.fieldLabel}>
             Date of birth <Text style={styles.req}>*</Text>
           </Text>
-          <View style={styles.dateRow}>
-            <SelectBox
-              flex
-              value={MONTHS.find(month => month.value === dob.month)?.label || ''}
-              placeholder="Month"
-              onPress={() =>
-                openSheet({
-                  title: 'Month',
-                  selected: dob.month,
-                  options: MONTHS,
-                  onSelect: value => setDob('month', value),
-                })
-              }
-            />
-            <SelectBox
-              flex
-              value={dob.day ? String(Number(dob.day)) : ''}
-              placeholder="Day"
-              onPress={() =>
-                openSheet({
-                  title: 'Day',
-                  selected: dob.day,
-                  options: Array.from({length: daysInMonth(dob.year, dob.month)}, (_, index) => {
-                    const day = String(index + 1).padStart(2, '0');
-                    return {label: String(index + 1), value: day};
-                  }),
-                  onSelect: value => setDob('day', value),
-                })
-              }
-            />
-            <SelectBox
-              flex
-              value={dob.year}
-              placeholder="Year"
-              onPress={() =>
-                openSheet({
-                  title: 'Year',
-                  selected: dob.year,
-                  options: birthYears().map(year => ({label: year, value: year})),
-                  onSelect: value => setDob('year', value),
-                })
-              }
-            />
-          </View>
+          <Pressable
+            onPress={() => setShowDob(true)}
+            style={[styles.input, styles.select, props.errorFor('dob') ? styles.inputError : null]}>
+            <Calendar color={colors.plum} size={18} style={styles.calendarIcon} />
+            <Text style={[styles.inputText, !props.values.dob && styles.placeholderText]}>
+              {props.values.dob ? formatDobLabel(props.values.dob) : 'Select date'}
+            </Text>
+          </Pressable>
           <ErrorText message={props.errorFor('dob')} />
+          {showDob && Platform.OS === 'android' ? (
+            <DateTimePicker
+              value={parseDob(props.values.dob, latestBirthDate)}
+              mode="date"
+              display="calendar"
+              maximumDate={latestBirthDate}
+              minimumDate={earliestBirthDate}
+              onValueChange={(_event, date) => {
+                chooseDob(date);
+                setShowDob(false);
+              }}
+              onDismiss={() => setShowDob(false)}
+            />
+          ) : null}
         </View>
         <SelectField
           fill={paired}
@@ -571,6 +545,25 @@ export function RegisterStepOne(props: RegisterStepOneProps) {
         </View>
       </View>
 
+      <Modal visible={showDob && Platform.OS === 'ios'} transparent animationType="fade" onRequestClose={() => setShowDob(false)}>
+        <Pressable style={[styles.scrim, styles.calendarScrim]} onPress={() => setShowDob(false)}>
+          <Pressable style={styles.calendarCard} onPress={() => undefined}>
+            <Text style={styles.sheetTitle}>Date of birth</Text>
+            <DateTimePicker
+              value={parseDob(props.values.dob, latestBirthDate)}
+              mode="date"
+              display="inline"
+              maximumDate={latestBirthDate}
+              minimumDate={earliestBirthDate}
+              onValueChange={(_event, date) => chooseDob(date)}
+            />
+            <Pressable onPress={() => setShowDob(false)} style={styles.calendarDone}>
+              <Text style={styles.calendarDoneText}>Done</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <Modal visible={sheet != null} transparent animationType="slide" onRequestClose={() => setSheet(null)}>
         <Pressable style={styles.scrim} onPress={() => setSheet(null)}>
           <Pressable style={styles.sheet} onPress={() => undefined}>
@@ -763,9 +756,31 @@ function OtpCard({
   );
 }
 
-function splitDob(dob: string) {
-  const [year = '', month = '', day = ''] = dob.split('-');
-  return {year, month, day};
+function yearsAgo(years: number) {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - years);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function parseDob(value: string, fallback: Date) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return fallback;
+  }
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) ? fallback : date;
+}
+
+function formatDob(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function formatDobLabel(value: string) {
+  const date = parseDob(value, new Date());
+  return date.toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'});
 }
 
 function districtLabel(name: string) {
@@ -844,11 +859,16 @@ const styles = StyleSheet.create({
   },
   inputText: {flex: 1, color: colors.ink, fontSize: 15},
   placeholder: {flex: 1, color: colors.ink40, fontSize: 15},
+  placeholderText: {color: colors.ink40},
   multiline: {minHeight: 96, textAlignVertical: 'top'},
   inputError: {borderColor: colors.danger},
   select: {flexDirection: 'row', alignItems: 'center'},
   chevron: {color: colors.ink40, marginLeft: 8},
-  dateRow: {flexDirection: 'row', gap: 8},
+  calendarIcon: {marginRight: 8},
+  calendarScrim: {justifyContent: 'center'},
+  calendarCard: {backgroundColor: colors.white, borderRadius: radii.lg, marginHorizontal: 16, padding: 16},
+  calendarDone: {backgroundColor: colors.plum, borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 8},
+  calendarDoneText: {color: colors.white, fontWeight: '800'},
   phoneBox: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -45,6 +45,7 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/x86/AsyncStorageSpec_autolinked_build/cmake_install.cmake")
+  include("/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/x86/RNDateTimePickerCGen_autolinked_build/cmake_install.cmake")
   include("/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/x86/rndocumentpickerCGen_autolinked_build/cmake_install.cmake")
   include("/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/x86/rngesturehandler_codegen_autolinked_build/cmake_install.cmake")
   include("/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/x86/RNImagePickerSpec_autolinked_build/cmake_install.cmake")

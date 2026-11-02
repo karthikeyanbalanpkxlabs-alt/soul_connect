@@ -33,21 +33,6 @@ export const PROFESSIONS = [
 
 export const INCOMES = ['Prefer not to say', 'Below 3 LPA', '3–6 LPA', '6–10 LPA', '10–15 LPA', '15–25 LPA', '25 LPA+'];
 
-export const MONTHS = [
-  {value: '01', label: 'January'},
-  {value: '02', label: 'February'},
-  {value: '03', label: 'March'},
-  {value: '04', label: 'April'},
-  {value: '05', label: 'May'},
-  {value: '06', label: 'June'},
-  {value: '07', label: 'July'},
-  {value: '08', label: 'August'},
-  {value: '09', label: 'September'},
-  {value: '10', label: 'October'},
-  {value: '11', label: 'November'},
-  {value: '12', label: 'December'},
-];
-
 export const FT_HEIGHTS = [
   "Below 4'0\"",
   "4'0\" - 122 cm",
@@ -131,15 +116,3 @@ export const WHY_REGISTER = [
     body: 'Once submitted, the validation team reviews your credentials within 24 hours.',
   },
 ];
-
-export function birthYears() {
-  const latest = new Date().getFullYear() - 18;
-  return Array.from({length: 63}, (_, index) => String(latest - index));
-}
-
-export function daysInMonth(year: string, month: string) {
-  if (!year || !month) {
-    return 31;
-  }
-  return new Date(Number(year), Number(month), 0).getDate();
-}
