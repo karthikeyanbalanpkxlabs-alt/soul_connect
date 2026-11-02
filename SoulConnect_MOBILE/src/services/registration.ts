@@ -31,9 +31,9 @@ export const registrationSchema = Yup.object({
   district: Yup.string().required('Please select a district'),
   motherTongue: Yup.string().required('Mother tongue is required'),
   maritalStatus: Yup.string().required('Marital status is required'),
-  profilePhoto: Yup.string().trim().required('Profile photo URL is required'),
-  familyPhoto: Yup.string().trim().required('Family photo URL is required'),
-  identityProof: Yup.string().trim().required('ID proof URL is required'),
+  profilePhoto: Yup.string().trim().required('Please upload at least 1 profile image.'),
+  familyPhoto: Yup.string().trim().required('Please upload a family photo.'),
+  identityProof: Yup.string().trim().required('Please upload a scanned copy of your ID.'),
 });
 
 export interface RegistrationValues {

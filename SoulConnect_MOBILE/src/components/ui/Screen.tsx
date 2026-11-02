@@ -3,9 +3,9 @@ import {StyleSheet} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {colors} from '../../theme/colors';
 
-export function Screen({children}: {children: React.ReactNode}) {
+export function Screen({children, backgroundColor}: {children: React.ReactNode; backgroundColor?: string}) {
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safe, backgroundColor ? {backgroundColor} : null]} edges={['top', 'left', 'right']}>
       {children}
     </SafeAreaView>
   );

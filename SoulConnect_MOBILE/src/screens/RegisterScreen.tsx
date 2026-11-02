@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {
   Alert,
   FlatList,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useFormik} from 'formik';
+import {RegisterStepTwo} from '../components/register/RegisterStepTwo';
 import {Button} from '../components/ui/Button';
 import {Field} from '../components/ui/Field';
 import {Screen} from '../components/ui/Screen';
@@ -46,6 +47,7 @@ export function RegisterScreen({navigation}: Props) {
   const [busy, setBusy] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
   const [notice, setNotice] = useState('');
+  const [profilePhotos, setProfilePhotos] = useState<string[]>([]);
 
   useEffect(() => {
     fetchSubscriptions()
@@ -80,6 +82,9 @@ export function RegisterScreen({navigation}: Props) {
         email: emailVerified,
         phone: phoneVerified,
       });
+      if (profilePhotos.length) {
+        fixture.image = profilePhotos.map((url, index) => ({url, default: index === 0}));
+      }
       if (isFreePrice(selectedPlan.price)) {
         setBusy(true);
         const result = await savePublicCustomer(fixture);
@@ -142,6 +147,14 @@ export function RegisterScreen({navigation}: Props) {
     setNotice(type === 'phone' ? 'Mobile verified.' : 'Email verified.');
   };
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerStyle: {backgroundColor: step === 2 ? colors.ink : colors.white},
+      headerTintColor: step === 2 ? colors.white : colors.plum,
+      headerTitleStyle: {color: step === 2 ? colors.white : colors.ink},
+    });
+  }, [navigation, step]);
+
   const goToPlans = async () => {
     const errors = await formik.validateForm();
     const stepOneKeys = [
@@ -170,11 +183,11 @@ export function RegisterScreen({navigation}: Props) {
   };
 
   return (
-    <Screen>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.kicker}>Step {step} of 2</Text>
-          <Text style={styles.title}>{step === 1 ? 'Create your profile' : 'Plan and documents'}</Text>
+    <Screen backgroundColor={step === 2 ? colors.ink : colors.surface}>
+      <KeyboardAvoidingView style={[styles.fill, step === 2 && styles.stepTwoBg]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={step === 2 ? styles.stepTwoContent : styles.content} keyboardShouldPersistTaps="handled">
+          {step === 1 ? <Text style={styles.kicker}>Step 1 of 2</Text> : null}
+          {step === 1 ? <Text style={styles.title}>Create your profile</Text> : null}
           {notice ? <Text style={styles.notice}>{notice}</Text> : null}
 
           {step === 1 ? (
@@ -246,24 +259,29 @@ export function RegisterScreen({navigation}: Props) {
               <Button label="Continue to plans" onPress={goToPlans} />
             </>
           ) : (
-            <>
-              {plans.map(plan => (
-                <Pressable key={plan.id} onPress={() => setSelectedPlan(plan)} style={[styles.plan, selectedPlan?.id === plan.id && styles.planOn]}>
-                  <Text style={styles.planPrice}>{plan.price}</Text>
-                  <Text style={styles.planName}>{plan.name}</Text>
-                  <Text style={styles.planSub}>{plan.sub}</Text>
-                </Pressable>
-              ))}
-              <Text style={styles.help}>
-                Gallery and camera upload needs the image picker native module. Until that rebuild, paste hosted image URLs. The website uploads files directly.
-              </Text>
-              <Field label="Profile photo URL" autoCapitalize="none" value={formik.values.profilePhoto} onChangeText={value => formik.setFieldValue('profilePhoto', value)} error={touchedError(formik, 'profilePhoto')} />
-              <Field label="Family photo URL" autoCapitalize="none" value={formik.values.familyPhoto} onChangeText={value => formik.setFieldValue('familyPhoto', value)} error={touchedError(formik, 'familyPhoto')} />
-              <Field label="ID proof URL" autoCapitalize="none" value={formik.values.identityProof} onChangeText={value => formik.setFieldValue('identityProof', value)} error={touchedError(formik, 'identityProof')} />
-              <Button label="Back" variant="outline" onPress={() => setStep(1)} />
-              <View style={styles.spacer} />
-              <Button label={busy ? 'Please wait…' : 'Finish registration'} disabled={busy} onPress={() => formik.handleSubmit()} />
-            </>
+            <RegisterStepTwo
+              plans={plans}
+              selectedPlan={selectedPlan}
+              onSelectPlan={setSelectedPlan}
+              profilePhotos={profilePhotos}
+              familyPhoto={formik.values.familyPhoto}
+              identityProof={formik.values.identityProof}
+              onChangeProfilePhotos={photos => {
+                setProfilePhotos(photos);
+                formik.setFieldValue('profilePhoto', photos[0] || '');
+              }}
+              onChangeFamilyPhoto={url => formik.setFieldValue('familyPhoto', url)}
+              onChangeIdentityProof={url => formik.setFieldValue('identityProof', url)}
+              profileError={touchedError(formik, 'profilePhoto')}
+              familyError={touchedError(formik, 'familyPhoto')}
+              identityError={touchedError(formik, 'identityProof')}
+              busy={busy}
+              onBack={() => {
+                setNotice('');
+                setStep(1);
+              }}
+              onSubmit={() => formik.handleSubmit()}
+            />
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -306,7 +324,9 @@ function touchedError(formik: {touched: Record<string, boolean | undefined>; err
 
 const styles = StyleSheet.create({
   fill: {flex: 1},
+  stepTwoBg: {backgroundColor: colors.ink},
   content: {padding: 20, paddingBottom: 40},
+  stepTwoContent: {padding: 20, paddingBottom: 48, backgroundColor: colors.ink},
   kicker: {color: colors.rose, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase'},
   title: {fontSize: 28, fontWeight: '800', color: colors.ink, marginBottom: 12, marginTop: 4},
   notice: {backgroundColor: colors.amberLight, color: colors.ink, padding: 12, borderRadius: radii.sm, marginBottom: 12},
@@ -321,13 +341,8 @@ const styles = StyleSheet.create({
   pickerValue: {color: colors.ink, fontSize: 16},
   pickerPlaceholder: {color: colors.ink40, fontSize: 16},
   error: {color: colors.danger, marginBottom: 10},
-  plan: {backgroundColor: colors.white, borderRadius: radii.md, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.borderSoft},
-  planOn: {borderColor: colors.plum, backgroundColor: colors.plumLight},
-  planPrice: {fontSize: 22, fontWeight: '800', color: colors.ink},
   planName: {fontSize: 16, fontWeight: '700', color: colors.ink, marginTop: 4},
   planSub: {color: colors.ink60, marginTop: 2},
-  help: {color: colors.ink60, marginVertical: 12, lineHeight: 20},
-  spacer: {height: 10},
   modal: {flex: 1, backgroundColor: colors.surface, padding: 20, paddingTop: 56},
   district: {paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderSoft},
 });
