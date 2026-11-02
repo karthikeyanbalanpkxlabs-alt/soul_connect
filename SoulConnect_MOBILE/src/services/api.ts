@@ -125,6 +125,10 @@ export async function fetchSubscriptions(token?: string | null) {
   return {...result, list: Array.isArray(list) ? list : []};
 }
 
+export async function updateCustomerProfile(token: string, body: Record<string, unknown>) {
+  return request('/api/customer_edit', {method: 'POST', token, body});
+}
+
 export async function fetchProfile(token: string, keycloakId?: string, email?: string) {
   return request('/api/profile_detail', {
     method: 'POST',
