@@ -49,8 +49,22 @@ const LIFESTYLE = {
   family_type: ['Nuclear Family', 'Joint Family', 'Extended Family'],
   family_status: ['Middle Class', 'Upper Middle Class', 'Rich', 'Affluent'],
   family_values: ['Traditional', 'Moderate', 'Liberal'],
-  dosham: ['No Dosham', 'Chevvai Dosham', 'Rahu Ketu Dosham', 'Other'],
+  dosham: ['No Dosham', 'Chevvai Dosham', 'Rahu-Ketu Dosham', 'Naga Dosham'],
 };
+
+const NAKSHATRAS = [
+  'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashirsha', 'Ardra',
+  'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni',
+  'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshta',
+  'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha',
+  'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati',
+];
+
+const RASIS = [
+  'Mesham (Aries)', 'Rishabam (Taurus)', 'Mithunam (Gemini)', 'Katagam (Cancer)',
+  'Simmam (Leo)', 'Kanni (Virgo)', 'Thulaam (Libra)', 'Vrichigam (Scorpio)',
+  'Dhanusu (Sagittarius)', 'Makaram (Capricorn)', 'Kumbam (Aquarius)', 'Meenam (Pisces)',
+];
 
 interface CustomerProfileViewProps {
   profile: any;
@@ -422,13 +436,20 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
         onSave={save}
         onCancel={cancelEdit}>
           <Grid paired={paired}>
-            <Detail label="Star" value={draft.star || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.star} onChangeText={value => setField('star', value)} style={styles.editInput} />} />
-            <Detail label="Rasi" value={draft.rasi || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.rasi} onChangeText={value => setField('rasi', value)} style={styles.editInput} />} />
-            <Detail label="Gothram" value={draft.gothram || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.gothram} onChangeText={value => setField('gothram', value)} style={styles.editInput} />} />
-            <Detail label="Dosham" value={draft.dosham || 'N/A'} editing={sectionEditing('horoscope')} editor={<Chooser value={draft.dosham} placeholder="Dosham" onPress={() => setSheet({title: 'Dosham', options: LIFESTYLE.dosham, selected: draft.dosham, onSelect: value => setField('dosham', value)})} />} />
-            <Detail label="Time of birth" value={draft.tob || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.tob} onChangeText={value => setField('tob', value)} style={styles.editInput} placeholder="HH:MM" placeholderTextColor={colors.ink40} />} />
-            <Detail label="Place of birth" value={draft.pob || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.pob} onChangeText={value => setField('pob', value)} style={styles.editInput} />} />
+            <Detail label="Star (Nakshatra)" value={draft.star || 'N/A'} editing={sectionEditing('horoscope')} editor={<Chooser value={draft.star} placeholder="Select Star (Nakshatra)" onPress={() => setSheet({title: 'Star (Nakshatra)', options: NAKSHATRAS, selected: draft.star, onSelect: value => setField('star', value)})} />} />
+            <Detail label="Rasi (Moon Sign)" value={draft.rasi || 'N/A'} editing={sectionEditing('horoscope')} editor={<Chooser value={draft.rasi} placeholder="Select Rasi (Moon Sign)" onPress={() => setSheet({title: 'Rasi (Moon Sign)', options: RASIS, selected: draft.rasi, onSelect: value => setField('rasi', value)})} />} />
+            <Detail label="Lagnam (Ascendant)" value={draft.lagnam || 'N/A'} editing={sectionEditing('horoscope')} editor={<Chooser value={draft.lagnam} placeholder="Select Lagnam (Ascendant)" onPress={() => setSheet({title: 'Lagnam (Ascendant)', options: RASIS, selected: draft.lagnam, onSelect: value => setField('lagnam', value)})} />} />
+            <Detail label="Gothram" value={draft.gothram || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.gothram} onChangeText={value => setField('gothram', value)} style={styles.editInput} placeholder="Gothram" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Date of birth" value={displayDob(draft.dob)} editing={sectionEditing('horoscope')} editor={<Pressable onPress={() => setShowDob(true)} style={[styles.editInput, styles.chooser]}><Text style={draft.dob ? styles.editValue : styles.placeholder}>{draft.dob ? displayDob(draft.dob) : 'Select date'}</Text><Text style={styles.chooserChevron}>📅</Text></Pressable>} />
+            <Detail label="Time of birth" value={draft.tob || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.tob} onChangeText={value => setField('tob', value)} style={styles.editInput} placeholder="e.g. 06:34 AM" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Place of birth" value={draft.pob || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.pob} onChangeText={value => setField('pob', value)} style={styles.editInput} placeholder="Place of birth" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Dosham" value={draft.dosham || 'No Dosham'} editing={sectionEditing('horoscope')} editor={<Chooser value={draft.dosham} placeholder="Select Dosham" onPress={() => setSheet({title: 'Dosham', options: LIFESTYLE.dosham, selected: draft.dosham, onSelect: value => setField('dosham', value)})} />} />
           </Grid>
+          <View style={styles.badgeRow}>
+            <HoroBadge color={colors.sage} label={`Manglik: ${profile?.horoscopeDetails?.manglik || profile?.manglik || 'No'}`} />
+            <HoroBadge color={colors.plum} label={`Chevvai Dosham: ${profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || 'No'}`} />
+            <HoroBadge color={colors.rose} label={`Rahu-Ketu: ${profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || 'Neutral'}`} />
+          </View>
       </Accordion>
     </View>
   );
@@ -576,9 +597,19 @@ function Detail({label, value, editing, editor, wide}: {label: string; value: st
 
 function Chooser({value, placeholder, onPress}: {value: string; placeholder: string; onPress: () => void}) {
   return (
-    <Pressable onPress={onPress} style={styles.editInput}>
-      <Text style={value ? styles.editValue : styles.placeholder}>{value || placeholder}</Text>
+    <Pressable onPress={onPress} style={[styles.editInput, styles.chooser]}>
+      <Text style={[value ? styles.editValue : styles.placeholder, styles.chooserText]} numberOfLines={1}>{value || placeholder}</Text>
+      <Text style={styles.chooserChevron}>▾</Text>
     </Pressable>
+  );
+}
+
+function HoroBadge({color, label}: {color: string; label: string}) {
+  return (
+    <View style={styles.horoBadge}>
+      <View style={[styles.horoDot, {backgroundColor: color}]} />
+      <Text style={styles.horoBadgeText}>{label}</Text>
+    </View>
   );
 }
 
@@ -603,6 +634,11 @@ function parseDob(value: string, fallback: Date) {
 
 function formatDob(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function displayDob(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : value || 'N/A';
 }
 
 const styles = StyleSheet.create({
@@ -701,6 +737,13 @@ const styles = StyleSheet.create({
   detailLabel: {color: colors.ink40, fontSize: 12, marginBottom: 4},
   detailValue: {color: colors.ink, fontWeight: '700'},
   editInput: {backgroundColor: '#F9F9FB', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, color: colors.ink},
+  chooser: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
+  chooserText: {flex: 1, marginRight: 8},
+  chooserChevron: {color: colors.ink40, fontSize: 14},
+  badgeRow: {flexDirection: 'row', flexWrap: 'wrap', marginTop: 12},
+  horoBadge: {flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSoft, borderRadius: radii.pill, paddingHorizontal: 10, paddingVertical: 6, marginRight: 8, marginBottom: 8},
+  horoDot: {width: 8, height: 8, borderRadius: 4, marginRight: 6},
+  horoBadgeText: {color: colors.ink, fontWeight: '700', fontSize: 12},
   editValue: {color: colors.ink, fontWeight: '700'},
   placeholder: {color: colors.ink40},
   area: {minHeight: 110, textAlignVertical: 'top'},
@@ -716,7 +759,7 @@ const styles = StyleSheet.create({
   scrim: {flex: 1, backgroundColor: 'rgba(15,10,30,0.55)', justifyContent: 'flex-end'},
   sheetCard: {backgroundColor: colors.white, borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg, padding: 16, maxHeight: '70%'},
   sheetTitle: {fontSize: 18, fontWeight: '800', color: colors.ink, marginBottom: 8},
-  sheetList: {flexGrow: 0},
+  sheetList: {maxHeight: 420},
   sheetRow: {paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderSoft},
   sheetLabel: {color: colors.ink, fontSize: 16},
   sheetLabelOn: {color: colors.plum, fontWeight: '800'},

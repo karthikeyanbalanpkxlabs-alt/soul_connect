@@ -39,6 +39,7 @@ export interface ProfileDraft {
   pref_overview: string;
   star: string;
   rasi: string;
+  lagnam: string;
   gothram: string;
   dosham: string;
   tob: string;
@@ -122,8 +123,9 @@ export function draftFromProfile(profile: any): ProfileDraft {
     pref_location: read(pref, 'location', 'Tamil Nadu or willing to relocate'),
     pref_values: read(pref, 'values', 'Family-oriented, respectful, grounded'),
     pref_overview: read(pref, 'overview') || read(profile, 'partner_preference'),
-    star: read(horo, 'star') || read(profile, 'star'),
+    star: read(horo, 'star') || read(profile, 'star') || read(profile, 'nakshatra'),
     rasi: read(horo, 'rasi') || read(profile, 'rasi'),
+    lagnam: read(horo, 'lagnam') || read(profile, 'lagnam') || read(profile, 'ascendant'),
     gothram: read(horo, 'gothram') || read(profile, 'gothram'),
     dosham: read(horo, 'dosham') || read(profile, 'dosham', 'No Dosham'),
     tob: read(horo, 'tob') || read(profile, 'tob'),
@@ -198,8 +200,12 @@ export function profilePayload(profile: any, draft: ProfileDraft) {
       dob: draft.dob,
       star: draft.star,
       rasi: draft.rasi,
+      lagnam: draft.lagnam,
       gothram: draft.gothram,
       dosham: draft.dosham,
+      manglik: profile?.horoscopeDetails?.manglik || profile?.manglik || 'No',
+      chevvai_dosham: profile?.horoscopeDetails?.chevvai_dosham || profile?.chevvai_dosham || 'No',
+      rahu_ketu_dosham: profile?.horoscopeDetails?.rahu_ketu_dosham || profile?.rahu_ketu_dosham || 'Neutral',
       tob: draft.tob,
       pob: draft.pob,
       jathagam: draft.jathagam || profile?.horoscopeDetails?.jathagam || profile?.jathagam || null,
