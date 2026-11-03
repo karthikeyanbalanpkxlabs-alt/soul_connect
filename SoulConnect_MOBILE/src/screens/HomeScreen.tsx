@@ -49,7 +49,7 @@ export function HomeScreen({navigation}: Props) {
           All 38 districts, every community, every dream.
         </Text>
         <Text style={styles.tamil}>அனைத்து 38 மாவட்டங்களிலும் உங்கள் வாழ்க்கை துணையை கண்டுபிடியுங்கள்</Text>
-        <Button label="Register free" onPress={() => navigation.navigate('Register')} />
+        <Button label="Register" onPress={() => navigation.navigate('Register')} />
         <Button
           label="Sign in"
           variant="outline"
