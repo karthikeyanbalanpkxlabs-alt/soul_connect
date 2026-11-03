@@ -1,0 +1,4 @@
+/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir
+/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir
+/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/edit_cache.dir
+/Users/prabakarann/React/Personal/soul_connect/SoulConnect_MOBILE/android/app/.cxx/Debug/t4d434w1/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/rebuild_cache.dir

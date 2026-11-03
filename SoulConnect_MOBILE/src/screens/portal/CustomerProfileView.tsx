@@ -66,8 +66,9 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
   const {width} = useWindowDimensions();
   const wide = width >= 900;
   const paired = width >= 700;
-  const [tab, setTab] = useState<TabId>('about');
-  const [editing, setEditing] = useState(false);
+  const [openId, setOpenId] = useState<TabId | null>('about');
+  const [editingId, setEditingId] = useState<TabId | null>(null);
+  const [backup, setBackup] = useState<ProfileDraft | null>(null);
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [showDob, setShowDob] = useState(false);
@@ -108,14 +109,42 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
       Alert.alert('Could not save', result.error || 'Profile update failed.');
       return;
     }
-    setEditing(false);
+    setEditingId(null);
+    setBackup(null);
     await onSaved();
-    Alert.alert('Saved', 'Profile changes saved.');
+    Alert.alert('Saved', 'This section was saved.');
   };
 
-  const cancel = () => {
-    setDraft(draftFromProfile(profile));
-    setEditing(false);
+  const beginEdit = (id: TabId) => {
+    const base = editingId && editingId !== id && backup ? backup : draft;
+    if (base) {
+      setDraft(base);
+      setBackup(base);
+    }
+    setEditingId(id);
+    setOpenId(id);
+  };
+
+  const cancelEdit = () => {
+    if (backup) {
+      setDraft(backup);
+    }
+    setBackup(null);
+    setEditingId(null);
+  };
+
+  const toggleSection = (id: TabId) => {
+    if (openId === id) {
+      if (editingId === id) {
+        cancelEdit();
+      }
+      setOpenId(null);
+      return;
+    }
+    if (editingId && editingId !== id) {
+      cancelEdit();
+    }
+    setOpenId(id);
   };
 
   const addPhoto = async (source: 'library' | 'camera') => {
@@ -171,35 +200,14 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
             </View>
           ) : null}
         </View>
-        {editing ? (
-          <View style={styles.nameEdit}>
-            <Text style={styles.editHint}>Editing name</Text>
-            <View style={styles.nameRow}>
-              <TextInput value={draft.first_name} onChangeText={value => setField('first_name', value)} placeholder="First name" placeholderTextColor={colors.ink40} style={[styles.editInput, styles.nameInput]} />
-              <TextInput value={draft.last_name} onChangeText={value => setField('last_name', value)} placeholder="Last name" placeholderTextColor={colors.ink40} style={[styles.editInput, styles.nameInput]} />
-            </View>
-          </View>
-        ) : (
-          <Text style={styles.name}>{name}</Text>
-        )}
+        <Text style={styles.name}>{name}</Text>
         <View style={styles.badges}>
           {profile?.subscription_type ? <Text style={styles.planBadge}>{String(profile.subscription_type)} plan</Text> : null}
           <Text style={profile?.public_verify ? styles.verifiedBadge : styles.pendingBadge}>
             {profile?.public_verify ? '✓ Publicly verified' : '⏳ Verification pending'}
           </Text>
         </View>
-        {editing ? (
-          <TextInput
-            value={draft.about_self}
-            onChangeText={value => setField('about_self', value)}
-            placeholder="Short headline"
-            placeholderTextColor={colors.ink40}
-            multiline
-            style={[styles.editInput, styles.headline]}
-          />
-        ) : (
-          <Text style={styles.tagline}>{draft.about_self || 'Looking for a partner equally at home with traditional values and modern growth.'}</Text>
-        )}
+        <Text style={styles.tagline}>{draft.about_self || 'Looking for a partner equally at home with traditional values and modern growth.'}</Text>
         <Text style={styles.location}>📍 {location || 'Tamil Nadu'}</Text>
         <Text style={styles.customerId}>{profile?.customer_id || 'Member'}</Text>
         <View style={styles.scoreRow}>
@@ -212,27 +220,13 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
             <Text style={styles.scoreBody}>Photos, family and horoscope raise your profile.</Text>
           </View>
         </View>
-        {editing ? (
-          <>
-            <Pressable onPress={save} disabled={saving} style={[styles.primaryBtn, styles.saveBtn]}>
-              <Text style={styles.primaryText}>{saving ? 'Saving…' : 'Save changes'}</Text>
-            </Pressable>
-            <Pressable onPress={cancel} style={styles.secondaryBtn}>
-              <Text style={styles.secondaryText}>Cancel</Text>
-            </Pressable>
-          </>
-        ) : (
-          <Pressable onPress={() => setEditing(true)} style={styles.primaryBtn}>
-            <Text style={styles.primaryText}>Edit profile</Text>
-          </Pressable>
-        )}
         <Text style={styles.factsTitle}>Quick snapshot</Text>
-        <Fact icon="🎂" label="Age / DOB" value={age ? `${age} years` : draft.dob || 'N/A'} editing={editing} editor={<Pressable onPress={() => setShowDob(true)} style={styles.editInput}><Text style={draft.dob ? styles.editValue : styles.placeholder}>{draft.dob || 'Select date'}</Text></Pressable>} />
-        <Fact icon="💼" label="Profession" value={draft.profession || 'N/A'} editing={editing} editor={<Chooser value={draft.profession} placeholder="Select profession" onPress={() => setSheet({title: 'Profession', options: PROFESSIONS, selected: draft.profession, onSelect: value => setField('profession', value)})} />} />
-        <Fact icon="🎓" label="Education" value={draft.education || 'N/A'} editing={editing} editor={<Chooser value={draft.education} placeholder="Select education" onPress={() => setSheet({title: 'Education', options: EDUCATION, selected: draft.education, onSelect: value => setField('education', value)})} />} />
-        <Fact icon="💰" label="Income" value={draft.annual_income || 'N/A'} editing={editing} editor={<Chooser value={draft.annual_income} placeholder="Select income" onPress={() => setSheet({title: 'Income', options: INCOMES, selected: draft.annual_income, onSelect: value => setField('annual_income', value)})} />} />
-        <Fact icon="📍" label="District" value={draft.district || 'N/A'} editing={editing} editor={<Chooser value={draft.district} placeholder="Select district" onPress={() => setSheet({title: 'District', options: districts.map(item => item.name), selected: draft.district, onSelect: value => setField('district', value)})} />} />
-        <Fact icon="🌐" label="Languages" value={draft.mother_tongue || 'Tamil'} editing={editing} editor={<Chooser value={draft.mother_tongue} placeholder="Mother tongue" onPress={() => setSheet({title: 'Mother tongue', options: MOTHER_TONGUES, selected: draft.mother_tongue, onSelect: value => setField('mother_tongue', value)})} />} />
+        <Fact icon="🎂" label="Age / DOB" value={age ? `${age} years` : draft.dob || 'N/A'} />
+        <Fact icon="💼" label="Profession" value={draft.profession || 'N/A'} />
+        <Fact icon="🎓" label="Education" value={draft.education || 'N/A'} />
+        <Fact icon="💰" label="Income" value={draft.annual_income || 'N/A'} />
+        <Fact icon="📍" label="District" value={draft.district || 'N/A'} />
+        <Fact icon="🌐" label="Languages" value={draft.mother_tongue || 'Tamil'} />
       </View>
       <View style={styles.complete}>
         <View style={styles.completeHead}>
@@ -249,117 +243,138 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
     </View>
   );
 
+  const sectionEditing = (id: TabId) => editingId === id;
   const panels = (
     <View style={wide ? styles.main : undefined}>
-      {editing ? (
-        <View style={styles.editBanner}>
-          <Text style={styles.editBannerTitle}>Profile editing mode</Text>
-          <Text style={styles.editBannerBody}>Update the fields below, then save.</Text>
-        </View>
-      ) : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-        {TABS.map(item => (
-          <Pressable key={item.id} onPress={() => setTab(item.id)} style={[styles.tab, tab === item.id && styles.tabOn]}>
-            <Text style={[styles.tabText, tab === item.id && styles.tabTextOn]}>{item.label}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-      {tab === 'about' ? (
-        <Panel icon="✍" title="About me" editing={editing} onEdit={() => setEditing(true)}>
-          {editing ? (
-            <TextInput value={draft.about_self} onChangeText={value => setField('about_self', value)} multiline placeholder="Write about your values, personality, and hobbies" placeholderTextColor={colors.ink40} style={[styles.editInput, styles.area]} />
-          ) : (
-            <Text style={styles.body}>{draft.about_self || 'Welcome to my profile. I am looking for a partner with shared values and mutual respect.'}</Text>
-          )}
-        </Panel>
-      ) : null}
-      {tab === 'details' ? (
-        <>
-          <Panel icon="👤" title="Personal details" editing={editing} onEdit={() => setEditing(true)}>
+      <Accordion
+        icon="✍"
+        title="About"
+        open={openId === 'about'}
+        editing={sectionEditing('about')}
+        saving={saving && sectionEditing('about')}
+        onToggle={() => toggleSection('about')}
+        onEdit={() => beginEdit('about')}
+        onSave={save}
+        onCancel={cancelEdit}>
+        {sectionEditing('about') ? (
+          <TextInput value={draft.about_self} onChangeText={value => setField('about_self', value)} multiline placeholder="Write about your values, personality, and hobbies" placeholderTextColor={colors.ink40} style={[styles.editInput, styles.area]} />
+        ) : (
+          <Text style={styles.body}>{draft.about_self || 'Welcome to my profile. I am looking for a partner with shared values and mutual respect.'}</Text>
+        )}
+      </Accordion>
+      <Accordion
+        icon="👤"
+        title="Details"
+        open={openId === 'details'}
+        editing={sectionEditing('details')}
+        saving={saving && sectionEditing('details')}
+        onToggle={() => toggleSection('details')}
+        onEdit={() => beginEdit('details')}
+        onSave={save}
+        onCancel={cancelEdit}>
+          <Text style={styles.groupTitle}>Personal details</Text>
             <Grid paired={paired}>
-              <Detail label="Full name" value={name} editing={editing} editor={<View style={styles.nameRow}><TextInput value={draft.first_name} onChangeText={value => setField('first_name', value)} style={[styles.editInput, styles.nameInput]} placeholder="First" placeholderTextColor={colors.ink40} /><TextInput value={draft.last_name} onChangeText={value => setField('last_name', value)} style={[styles.editInput, styles.nameInput]} placeholder="Last" placeholderTextColor={colors.ink40} /></View>} />
-              <Detail label="Date of birth" value={draft.dob || 'N/A'} editing={editing} editor={<Pressable onPress={() => setShowDob(true)} style={styles.editInput}><Text>{draft.dob || 'Select date'}</Text></Pressable>} />
+              <Detail label="Full name" value={name} editing={sectionEditing('details')} editor={<View style={styles.nameRow}><TextInput value={draft.first_name} onChangeText={value => setField('first_name', value)} style={[styles.editInput, styles.nameInput]} placeholder="First" placeholderTextColor={colors.ink40} /><TextInput value={draft.last_name} onChangeText={value => setField('last_name', value)} style={[styles.editInput, styles.nameInput]} placeholder="Last" placeholderTextColor={colors.ink40} /></View>} />
+              <Detail label="Date of birth" value={draft.dob || 'N/A'} editing={sectionEditing('details')} editor={<Pressable onPress={() => setShowDob(true)} style={styles.editInput}><Text>{draft.dob || 'Select date'}</Text></Pressable>} />
               <Detail label="Age" value={age ? `${age} years` : 'N/A'} />
-              <Detail label="Gender" value={draft.gender || 'N/A'} editing={editing} editor={<Chooser value={draft.gender} placeholder="Select gender" onPress={() => setSheet({title: 'Gender', options: GENDERS, selected: draft.gender, onSelect: value => setField('gender', value)})} />} />
-              <Detail label="Height" value={draft.height || 'N/A'} editing={editing} editor={<TextInput value={draft.height} onChangeText={value => setField('height', value)} style={styles.editInput} placeholder="Height" placeholderTextColor={colors.ink40} />} />
-              <Detail label="Marital status" value={draft.maritial_status || 'N/A'} editing={editing} editor={<Chooser value={draft.maritial_status} placeholder="Select status" onPress={() => setSheet({title: 'Marital status', options: MARITAL, selected: draft.maritial_status, onSelect: value => setField('maritial_status', value)})} />} />
+              <Detail label="Gender" value={draft.gender || 'N/A'} editing={sectionEditing('details')} editor={<Chooser value={draft.gender} placeholder="Select gender" onPress={() => setSheet({title: 'Gender', options: GENDERS, selected: draft.gender, onSelect: value => setField('gender', value)})} />} />
+              <Detail label="Height" value={draft.height || 'N/A'} editing={sectionEditing('details')} editor={<TextInput value={draft.height} onChangeText={value => setField('height', value)} style={styles.editInput} placeholder="Height" placeholderTextColor={colors.ink40} />} />
+              <Detail label="Marital status" value={draft.maritial_status || 'N/A'} editing={sectionEditing('details')} editor={<Chooser value={draft.maritial_status} placeholder="Select status" onPress={() => setSheet({title: 'Marital status', options: MARITAL, selected: draft.maritial_status, onSelect: value => setField('maritial_status', value)})} />} />
               <Detail label="Email" value={profile?.email || 'N/A'} />
               <Detail label="Phone" value={`${profile?.phone_code || '+91'} ${profile?.phone_number || 'N/A'}`} />
-              <Detail label="Taluk / town" value={draft.taluk_town || 'N/A'} editing={editing} editor={<TextInput value={draft.taluk_town} onChangeText={value => setField('taluk_town', value)} style={styles.editInput} placeholder="Taluk or town" placeholderTextColor={colors.ink40} />} />
-              <Detail label="Religion" value={draft.religion || 'N/A'} editing={editing} editor={<Chooser value={draft.religion} placeholder="Select religion" onPress={() => setSheet({title: 'Religion', options: RELIGIONS, selected: draft.religion, onSelect: value => setField('religion', value)})} />} />
-              <Detail label="Community" value={draft.caste || 'N/A'} editing={editing} editor={<TextInput value={draft.caste} onChangeText={value => setField('caste', value)} style={styles.editInput} placeholder="Community" placeholderTextColor={colors.ink40} />} />
+              <Detail label="Taluk / town" value={draft.taluk_town || 'N/A'} editing={sectionEditing('details')} editor={<TextInput value={draft.taluk_town} onChangeText={value => setField('taluk_town', value)} style={styles.editInput} placeholder="Taluk or town" placeholderTextColor={colors.ink40} />} />
+              <Detail label="Religion" value={draft.religion || 'N/A'} editing={sectionEditing('details')} editor={<Chooser value={draft.religion} placeholder="Select religion" onPress={() => setSheet({title: 'Religion', options: RELIGIONS, selected: draft.religion, onSelect: value => setField('religion', value)})} />} />
+              <Detail label="Community" value={draft.caste || 'N/A'} editing={sectionEditing('details')} editor={<TextInput value={draft.caste} onChangeText={value => setField('caste', value)} style={styles.editInput} placeholder="Community" placeholderTextColor={colors.ink40} />} />
             </Grid>
-          </Panel>
-          <Panel icon="🎓" title="Education and career">
+          <Text style={styles.groupTitle}>Education and career</Text>
             <Grid paired={paired}>
-              <Detail label="Education" value={draft.education || 'N/A'} editing={editing} editor={<Chooser value={draft.education} placeholder="Select education" onPress={() => setSheet({title: 'Education', options: EDUCATION, selected: draft.education, onSelect: value => setField('education', value)})} />} />
-              <Detail label="Profession" value={draft.profession || 'N/A'} editing={editing} editor={<Chooser value={draft.profession} placeholder="Select profession" onPress={() => setSheet({title: 'Profession', options: PROFESSIONS, selected: draft.profession, onSelect: value => setField('profession', value)})} />} />
-              <Detail label="Annual income" value={draft.annual_income || 'N/A'} editing={editing} editor={<Chooser value={draft.annual_income} placeholder="Select income" onPress={() => setSheet({title: 'Income', options: INCOMES, selected: draft.annual_income, onSelect: value => setField('annual_income', value)})} />} />
+              <Detail label="Education" value={draft.education || 'N/A'} editing={sectionEditing('details')} editor={<Chooser value={draft.education} placeholder="Select education" onPress={() => setSheet({title: 'Education', options: EDUCATION, selected: draft.education, onSelect: value => setField('education', value)})} />} />
+              <Detail label="Profession" value={draft.profession || 'N/A'} editing={sectionEditing('details')} editor={<Chooser value={draft.profession} placeholder="Select profession" onPress={() => setSheet({title: 'Profession', options: PROFESSIONS, selected: draft.profession, onSelect: value => setField('profession', value)})} />} />
+              <Detail label="Annual income" value={draft.annual_income || 'N/A'} editing={sectionEditing('details')} editor={<Chooser value={draft.annual_income} placeholder="Select income" onPress={() => setSheet({title: 'Income', options: INCOMES, selected: draft.annual_income, onSelect: value => setField('annual_income', value)})} />} />
             </Grid>
-          </Panel>
-          <Panel icon="🌿" title="Lifestyle">
+          <Text style={styles.groupTitle}>Lifestyle</Text>
             <Grid paired={paired}>
-              <Detail label="Diet" value={draft.diet} editing={editing} editor={<Chooser value={draft.diet} placeholder="Diet" onPress={() => setSheet({title: 'Diet', options: LIFESTYLE.diet, selected: draft.diet, onSelect: value => setField('diet', value)})} />} />
-              <Detail label="Smoking" value={draft.smoking} editing={editing} editor={<Chooser value={draft.smoking} placeholder="Smoking" onPress={() => setSheet({title: 'Smoking', options: LIFESTYLE.smoking, selected: draft.smoking, onSelect: value => setField('smoking', value)})} />} />
-              <Detail label="Drinking" value={draft.drinking} editing={editing} editor={<Chooser value={draft.drinking} placeholder="Drinking" onPress={() => setSheet({title: 'Drinking', options: LIFESTYLE.drinking, selected: draft.drinking, onSelect: value => setField('drinking', value)})} />} />
-              <Detail label="Living with" value={draft.living_with} editing={editing} editor={<Chooser value={draft.living_with} placeholder="Living with" onPress={() => setSheet({title: 'Living with', options: LIFESTYLE.living_with, selected: draft.living_with, onSelect: value => setField('living_with', value)})} />} />
-              <Detail label="Relocate" value={draft.willing_to_relocate} editing={editing} editor={<Chooser value={draft.willing_to_relocate} placeholder="Relocate" onPress={() => setSheet({title: 'Relocate', options: LIFESTYLE.willing_to_relocate, selected: draft.willing_to_relocate, onSelect: value => setField('willing_to_relocate', value)})} />} />
-              <Detail label="Interests" value={draft.interests || 'N/A'} editing={editing} editor={<TextInput value={draft.interests} onChangeText={value => setField('interests', value)} style={styles.editInput} placeholder="Interests" placeholderTextColor={colors.ink40} />} />
+              <Detail label="Diet" value={draft.diet} editing={sectionEditing('details')} editor={<Chooser value={draft.diet} placeholder="Diet" onPress={() => setSheet({title: 'Diet', options: LIFESTYLE.diet, selected: draft.diet, onSelect: value => setField('diet', value)})} />} />
+              <Detail label="Smoking" value={draft.smoking} editing={sectionEditing('details')} editor={<Chooser value={draft.smoking} placeholder="Smoking" onPress={() => setSheet({title: 'Smoking', options: LIFESTYLE.smoking, selected: draft.smoking, onSelect: value => setField('smoking', value)})} />} />
+              <Detail label="Drinking" value={draft.drinking} editing={sectionEditing('details')} editor={<Chooser value={draft.drinking} placeholder="Drinking" onPress={() => setSheet({title: 'Drinking', options: LIFESTYLE.drinking, selected: draft.drinking, onSelect: value => setField('drinking', value)})} />} />
+              <Detail label="Living with" value={draft.living_with} editing={sectionEditing('details')} editor={<Chooser value={draft.living_with} placeholder="Living with" onPress={() => setSheet({title: 'Living with', options: LIFESTYLE.living_with, selected: draft.living_with, onSelect: value => setField('living_with', value)})} />} />
+              <Detail label="Relocate" value={draft.willing_to_relocate} editing={sectionEditing('details')} editor={<Chooser value={draft.willing_to_relocate} placeholder="Relocate" onPress={() => setSheet({title: 'Relocate', options: LIFESTYLE.willing_to_relocate, selected: draft.willing_to_relocate, onSelect: value => setField('willing_to_relocate', value)})} />} />
+              <Detail label="Interests" value={draft.interests || 'N/A'} editing={sectionEditing('details')} editor={<TextInput value={draft.interests} onChangeText={value => setField('interests', value)} style={styles.editInput} placeholder="Interests" placeholderTextColor={colors.ink40} />} />
             </Grid>
-          </Panel>
-        </>
-      ) : null}
-      {tab === 'family' ? (
-        <Panel icon="🏠" title="Family background" editing={editing} onEdit={() => setEditing(true)}>
+      </Accordion>
+      <Accordion
+        icon="🏠"
+        title="Family"
+        open={openId === 'family'}
+        editing={sectionEditing('family')}
+        saving={saving && sectionEditing('family')}
+        onToggle={() => toggleSection('family')}
+        onEdit={() => beginEdit('family')}
+        onSave={save}
+        onCancel={cancelEdit}>
           <Grid paired={paired}>
-            <Detail label="Father" value={draft.father_name || 'N/A'} editing={editing} editor={<TextInput value={draft.father_name} onChangeText={value => setField('father_name', value)} style={styles.editInput} placeholder="Father's name" placeholderTextColor={colors.ink40} />} />
-            <Detail label="Father's work" value={draft.father_occupation || 'N/A'} editing={editing} editor={<TextInput value={draft.father_occupation} onChangeText={value => setField('father_occupation', value)} style={styles.editInput} placeholder="Occupation" placeholderTextColor={colors.ink40} />} />
-            <Detail label="Mother" value={draft.mother_name || 'N/A'} editing={editing} editor={<TextInput value={draft.mother_name} onChangeText={value => setField('mother_name', value)} style={styles.editInput} placeholder="Mother's name" placeholderTextColor={colors.ink40} />} />
-            <Detail label="Mother's work" value={draft.mother_occupation || 'N/A'} editing={editing} editor={<TextInput value={draft.mother_occupation} onChangeText={value => setField('mother_occupation', value)} style={styles.editInput} placeholder="Occupation" placeholderTextColor={colors.ink40} />} />
-            <Detail label="Family type" value={draft.family_type || 'N/A'} editing={editing} editor={<Chooser value={draft.family_type} placeholder="Family type" onPress={() => setSheet({title: 'Family type', options: LIFESTYLE.family_type, selected: draft.family_type, onSelect: value => setField('family_type', value)})} />} />
-            <Detail label="Family status" value={draft.family_status || 'N/A'} editing={editing} editor={<Chooser value={draft.family_status} placeholder="Family status" onPress={() => setSheet({title: 'Family status', options: LIFESTYLE.family_status, selected: draft.family_status, onSelect: value => setField('family_status', value)})} />} />
-            <Detail label="Family values" value={draft.family_values || 'N/A'} editing={editing} editor={<Chooser value={draft.family_values} placeholder="Family values" onPress={() => setSheet({title: 'Family values', options: LIFESTYLE.family_values, selected: draft.family_values, onSelect: value => setField('family_values', value)})} />} />
+            <Detail label="Father" value={draft.father_name || 'N/A'} editing={sectionEditing('family')} editor={<TextInput value={draft.father_name} onChangeText={value => setField('father_name', value)} style={styles.editInput} placeholder="Father's name" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Father's work" value={draft.father_occupation || 'N/A'} editing={sectionEditing('family')} editor={<TextInput value={draft.father_occupation} onChangeText={value => setField('father_occupation', value)} style={styles.editInput} placeholder="Occupation" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Mother" value={draft.mother_name || 'N/A'} editing={sectionEditing('family')} editor={<TextInput value={draft.mother_name} onChangeText={value => setField('mother_name', value)} style={styles.editInput} placeholder="Mother's name" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Mother's work" value={draft.mother_occupation || 'N/A'} editing={sectionEditing('family')} editor={<TextInput value={draft.mother_occupation} onChangeText={value => setField('mother_occupation', value)} style={styles.editInput} placeholder="Occupation" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Family type" value={draft.family_type || 'N/A'} editing={sectionEditing('family')} editor={<Chooser value={draft.family_type} placeholder="Family type" onPress={() => setSheet({title: 'Family type', options: LIFESTYLE.family_type, selected: draft.family_type, onSelect: value => setField('family_type', value)})} />} />
+            <Detail label="Family status" value={draft.family_status || 'N/A'} editing={sectionEditing('family')} editor={<Chooser value={draft.family_status} placeholder="Family status" onPress={() => setSheet({title: 'Family status', options: LIFESTYLE.family_status, selected: draft.family_status, onSelect: value => setField('family_status', value)})} />} />
+            <Detail label="Family values" value={draft.family_values || 'N/A'} editing={sectionEditing('family')} editor={<Chooser value={draft.family_values} placeholder="Family values" onPress={() => setSheet({title: 'Family values', options: LIFESTYLE.family_values, selected: draft.family_values, onSelect: value => setField('family_values', value)})} />} />
           </Grid>
           <Text style={styles.subHead}>About the family</Text>
-          {editing ? (
+          {sectionEditing('family') ? (
             <TextInput value={draft.about_family} onChangeText={value => setField('about_family', value)} multiline style={[styles.editInput, styles.area]} placeholder="About your family" placeholderTextColor={colors.ink40} />
           ) : (
             <Text style={styles.body}>{draft.about_family || 'Family details have not been added yet.'}</Text>
           )}
-        </Panel>
-      ) : null}
-      {tab === 'partner' ? (
-        <Panel icon="💖" title="Partner preferences" editing={editing} onEdit={() => setEditing(true)}>
+      </Accordion>
+      <Accordion
+        icon="💖"
+        title="Partner Prefs"
+        open={openId === 'partner'}
+        editing={sectionEditing('partner')}
+        saving={saving && sectionEditing('partner')}
+        onToggle={() => toggleSection('partner')}
+        onEdit={() => beginEdit('partner')}
+        onSave={save}
+        onCancel={cancelEdit}>
           <Grid paired={paired}>
-            <Detail label="Age range" value={draft.pref_age_range || 'N/A'} editing={editing} editor={<TextInput value={draft.pref_age_range} onChangeText={value => setField('pref_age_range', value)} style={styles.editInput} />} />
-            <Detail label="Height" value={draft.pref_height || 'N/A'} editing={editing} editor={<TextInput value={draft.pref_height} onChangeText={value => setField('pref_height', value)} style={styles.editInput} />} />
-            <Detail label="Education" value={draft.pref_education || 'N/A'} editing={editing} editor={<TextInput value={draft.pref_education} onChangeText={value => setField('pref_education', value)} style={styles.editInput} />} />
-            <Detail label="Occupation" value={draft.pref_occupation || 'N/A'} editing={editing} editor={<TextInput value={draft.pref_occupation} onChangeText={value => setField('pref_occupation', value)} style={styles.editInput} />} />
-            <Detail label="Location" value={draft.pref_location || 'N/A'} editing={editing} editor={<TextInput value={draft.pref_location} onChangeText={value => setField('pref_location', value)} style={styles.editInput} />} />
-            <Detail label="Values" value={draft.pref_values || 'N/A'} editing={editing} editor={<TextInput value={draft.pref_values} onChangeText={value => setField('pref_values', value)} style={styles.editInput} />} />
+            <Detail label="Age range" value={draft.pref_age_range || 'N/A'} editing={sectionEditing('partner')} editor={<TextInput value={draft.pref_age_range} onChangeText={value => setField('pref_age_range', value)} style={styles.editInput} />} />
+            <Detail label="Height" value={draft.pref_height || 'N/A'} editing={sectionEditing('partner')} editor={<TextInput value={draft.pref_height} onChangeText={value => setField('pref_height', value)} style={styles.editInput} />} />
+            <Detail label="Education" value={draft.pref_education || 'N/A'} editing={sectionEditing('partner')} editor={<TextInput value={draft.pref_education} onChangeText={value => setField('pref_education', value)} style={styles.editInput} />} />
+            <Detail label="Occupation" value={draft.pref_occupation || 'N/A'} editing={sectionEditing('partner')} editor={<TextInput value={draft.pref_occupation} onChangeText={value => setField('pref_occupation', value)} style={styles.editInput} />} />
+            <Detail label="Location" value={draft.pref_location || 'N/A'} editing={sectionEditing('partner')} editor={<TextInput value={draft.pref_location} onChangeText={value => setField('pref_location', value)} style={styles.editInput} />} />
+            <Detail label="Values" value={draft.pref_values || 'N/A'} editing={sectionEditing('partner')} editor={<TextInput value={draft.pref_values} onChangeText={value => setField('pref_values', value)} style={styles.editInput} />} />
           </Grid>
           <Text style={styles.subHead}>Overview</Text>
-          {editing ? (
+          {sectionEditing('partner') ? (
             <TextInput value={draft.pref_overview} onChangeText={value => setField('pref_overview', value)} multiline style={[styles.editInput, styles.area]} placeholder="Describe your ideal partner" placeholderTextColor={colors.ink40} />
           ) : (
             <Text style={styles.body}>{draft.pref_overview || 'Partner preferences have not been added yet.'}</Text>
           )}
-        </Panel>
-      ) : null}
-      {tab === 'photos' ? (
-        <Panel icon="📷" title="Profile photos" editing={editing} onEdit={() => setEditing(true)}>
+      </Accordion>
+      <Accordion
+        icon="📷"
+        title="Photos"
+        open={openId === 'photos'}
+        editing={sectionEditing('photos')}
+        saving={saving && sectionEditing('photos')}
+        onToggle={() => toggleSection('photos')}
+        onEdit={() => beginEdit('photos')}
+        onSave={save}
+        onCancel={cancelEdit}>
           <View style={styles.photoRow}>
             {draft.photos.map((url, index) => (
               <View key={`${url}-${index}`} style={styles.photoTile}>
                 <Image source={{uri: url}} style={styles.photo} />
-                {editing ? (
+                {sectionEditing('photos') ? (
                   <Pressable style={styles.photoRemove} onPress={() => setDraft(current => (current ? {...current, photos: current.photos.filter((_, photoIndex) => photoIndex !== index)} : current))}>
                     <Text style={styles.photoRemoveText}>✕</Text>
                   </Pressable>
                 ) : null}
               </View>
             ))}
-            {editing && draft.photos.length < 3 ? (
+            {sectionEditing('photos') && draft.photos.length < 3 ? (
               <Pressable style={styles.addPhoto} onPress={() => setPhotoFor('profile')}>
                 <Text style={styles.addPhotoText}>Add photo</Text>
               </Pressable>
@@ -367,25 +382,31 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
           </View>
           <Text style={styles.subHead}>Family photo</Text>
           {draft.familyPhoto ? <Image source={{uri: draft.familyPhoto}} style={styles.familyPhoto} /> : <Text style={styles.body}>No family photo yet.</Text>}
-          {editing ? (
+          {sectionEditing('photos') ? (
             <Pressable onPress={() => setPhotoFor('family')} style={styles.secondaryBtn}>
               <Text style={styles.secondaryText}>{draft.familyPhoto ? 'Replace family photo' : 'Add family photo'}</Text>
             </Pressable>
           ) : null}
-        </Panel>
-      ) : null}
-      {tab === 'horoscope' ? (
-        <Panel icon="✨" title="Horoscope" editing={editing} onEdit={() => setEditing(true)}>
+      </Accordion>
+      <Accordion
+        icon="✨"
+        title="Horoscope"
+        open={openId === 'horoscope'}
+        editing={sectionEditing('horoscope')}
+        saving={saving && sectionEditing('horoscope')}
+        onToggle={() => toggleSection('horoscope')}
+        onEdit={() => beginEdit('horoscope')}
+        onSave={save}
+        onCancel={cancelEdit}>
           <Grid paired={paired}>
-            <Detail label="Star" value={draft.star || 'N/A'} editing={editing} editor={<TextInput value={draft.star} onChangeText={value => setField('star', value)} style={styles.editInput} />} />
-            <Detail label="Rasi" value={draft.rasi || 'N/A'} editing={editing} editor={<TextInput value={draft.rasi} onChangeText={value => setField('rasi', value)} style={styles.editInput} />} />
-            <Detail label="Gothram" value={draft.gothram || 'N/A'} editing={editing} editor={<TextInput value={draft.gothram} onChangeText={value => setField('gothram', value)} style={styles.editInput} />} />
-            <Detail label="Dosham" value={draft.dosham || 'N/A'} editing={editing} editor={<Chooser value={draft.dosham} placeholder="Dosham" onPress={() => setSheet({title: 'Dosham', options: LIFESTYLE.dosham, selected: draft.dosham, onSelect: value => setField('dosham', value)})} />} />
-            <Detail label="Time of birth" value={draft.tob || 'N/A'} editing={editing} editor={<TextInput value={draft.tob} onChangeText={value => setField('tob', value)} style={styles.editInput} placeholder="HH:MM" placeholderTextColor={colors.ink40} />} />
-            <Detail label="Place of birth" value={draft.pob || 'N/A'} editing={editing} editor={<TextInput value={draft.pob} onChangeText={value => setField('pob', value)} style={styles.editInput} />} />
+            <Detail label="Star" value={draft.star || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.star} onChangeText={value => setField('star', value)} style={styles.editInput} />} />
+            <Detail label="Rasi" value={draft.rasi || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.rasi} onChangeText={value => setField('rasi', value)} style={styles.editInput} />} />
+            <Detail label="Gothram" value={draft.gothram || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.gothram} onChangeText={value => setField('gothram', value)} style={styles.editInput} />} />
+            <Detail label="Dosham" value={draft.dosham || 'N/A'} editing={sectionEditing('horoscope')} editor={<Chooser value={draft.dosham} placeholder="Dosham" onPress={() => setSheet({title: 'Dosham', options: LIFESTYLE.dosham, selected: draft.dosham, onSelect: value => setField('dosham', value)})} />} />
+            <Detail label="Time of birth" value={draft.tob || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.tob} onChangeText={value => setField('tob', value)} style={styles.editInput} placeholder="HH:MM" placeholderTextColor={colors.ink40} />} />
+            <Detail label="Place of birth" value={draft.pob || 'N/A'} editing={sectionEditing('horoscope')} editor={<TextInput value={draft.pob} onChangeText={value => setField('pob', value)} style={styles.editInput} />} />
           </Grid>
-        </Panel>
-      ) : null}
+      </Accordion>
     </View>
   );
 
@@ -394,25 +415,9 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
       <ScrollView contentContainerStyle={styles.page}>
         <View style={[styles.hero, {paddingTop: insets.top + 12}]}>
           <Text style={styles.heroTitle}>My profile</Text>
-          <View style={styles.heroActions}>
-            {!editing ? (
-              <Pressable onPress={() => setEditing(true)} style={styles.heroBtn}>
-                <Text style={styles.heroBtnText}>Edit profile</Text>
-              </Pressable>
-            ) : (
-              <>
-                <Pressable onPress={save} style={[styles.heroBtn, styles.heroSave]}>
-                  <Text style={styles.heroBtnText}>{saving ? 'Saving…' : 'Save'}</Text>
-                </Pressable>
-                <Pressable onPress={cancel} style={styles.heroBtn}>
-                  <Text style={styles.heroBtnText}>Cancel</Text>
-                </Pressable>
-              </>
-            )}
-            <Pressable onPress={onLogout} style={styles.heroBtn}>
-              <Text style={styles.heroBtnText}>Log out</Text>
-            </Pressable>
-          </View>
+          <Pressable onPress={onLogout} style={styles.heroBtn}>
+            <Text style={styles.heroBtnText}>Log out</Text>
+          </Pressable>
         </View>
         <View style={[styles.layout, wide && styles.layoutWide]}>
           {sidebar}
@@ -478,17 +483,53 @@ function Fact({icon, label, value, editing, editor}: {icon: string; label: strin
   );
 }
 
-function Panel({icon, title, children, editing, onEdit}: {icon: string; title: string; children: React.ReactNode; editing?: boolean; onEdit?: () => void}) {
+function Accordion({
+  icon,
+  title,
+  open,
+  editing,
+  saving,
+  onToggle,
+  onEdit,
+  onSave,
+  onCancel,
+  children,
+}: {
+  icon: string;
+  title: string;
+  open: boolean;
+  editing: boolean;
+  saving: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <View style={styles.panel}>
-      <View style={styles.panelHead}>
-        <Text style={styles.panelIcon}>{icon}</Text>
-        <Text style={styles.panelTitle}>{title}</Text>
-        {!editing && onEdit ? (
-          <Pressable onPress={onEdit}><Text style={styles.panelEdit}>Edit</Text></Pressable>
-        ) : null}
+    <View style={styles.accordion}>
+      <View style={styles.accordionHead}>
+        <Pressable onPress={onToggle} style={styles.accordionTitle}>
+          <Text style={styles.panelIcon}>{icon}</Text>
+          <Text style={styles.panelTitle}>{title}</Text>
+          <Text style={styles.chevron}>{open ? '▴' : '▾'}</Text>
+        </Pressable>
+        {editing ? (
+          <View style={styles.accordionActions}>
+            <Pressable onPress={onSave} disabled={saving} style={styles.saveChip}>
+              <Text style={styles.saveChipText}>{saving ? 'Saving…' : 'Save'}</Text>
+            </Pressable>
+            <Pressable onPress={onCancel} style={styles.cancelChip}>
+              <Text style={styles.cancelChipText}>Cancel</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable onPress={onEdit} style={styles.editChip}>
+            <Text style={styles.editChipText}>Edit</Text>
+          </Pressable>
+        )}
       </View>
-      {children}
+      {open ? <View style={styles.accordionBody}>{children}</View> : null}
     </View>
   );
 }
@@ -611,6 +652,19 @@ const styles = StyleSheet.create({
   tabOn: {backgroundColor: colors.plum},
   tabText: {color: colors.ink60, fontWeight: '700'},
   tabTextOn: {color: colors.white},
+  accordion: {backgroundColor: colors.white, borderRadius: radii.md, marginBottom: 12, borderWidth: 1, borderColor: colors.borderSoft, overflow: 'hidden'},
+  accordionHead: {flexDirection: 'row', alignItems: 'center', paddingRight: 12},
+  accordionTitle: {flex: 1, flexDirection: 'row', alignItems: 'center', padding: 14},
+  accordionActions: {flexDirection: 'row', alignItems: 'center'},
+  accordionBody: {paddingHorizontal: 16, paddingBottom: 16},
+  chevron: {color: colors.ink40, fontSize: 16, marginLeft: 6},
+  editChip: {backgroundColor: colors.plumLight, borderRadius: radii.pill, paddingHorizontal: 12, paddingVertical: 6},
+  editChipText: {color: colors.plum, fontWeight: '800', fontSize: 12},
+  saveChip: {backgroundColor: colors.sage, borderRadius: radii.pill, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6},
+  saveChipText: {color: colors.white, fontWeight: '800', fontSize: 12},
+  cancelChip: {backgroundColor: '#F1F5F9', borderRadius: radii.pill, paddingHorizontal: 12, paddingVertical: 6},
+  cancelChipText: {color: colors.ink60, fontWeight: '800', fontSize: 12},
+  groupTitle: {marginTop: 8, marginBottom: 4, color: colors.plum, fontWeight: '800'},
   panel: {backgroundColor: colors.white, borderRadius: radii.md, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.borderSoft},
   panelHead: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
   panelIcon: {width: 32, height: 32, borderRadius: 10, backgroundColor: colors.plumLight, textAlign: 'center', lineHeight: 32, marginRight: 8, overflow: 'hidden'},
