@@ -74,12 +74,29 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
   const [showDob, setShowDob] = useState(false);
   const [sheet, setSheet] = useState<{title: string; options: string[]; onSelect: (value: string) => void; selected?: string} | null>(null);
   const [photoFor, setPhotoFor] = useState<'profile' | 'family' | null>(null);
+  const [familyRatio, setFamilyRatio] = useState(4 / 3);
 
   useEffect(() => {
     if (profile) {
       setDraft(draftFromProfile(profile));
     }
   }, [profile]);
+
+  useEffect(() => {
+    const url = draft?.familyPhoto;
+    if (!url) {
+      return;
+    }
+    Image.getSize(
+      url,
+      (width, height) => {
+        if (width > 0 && height > 0) {
+          setFamilyRatio(width / height);
+        }
+      },
+      () => setFamilyRatio(4 / 3),
+    );
+  }, [draft?.familyPhoto]);
 
   const score = draft ? completeness(draft) : 0;
   const name = `${draft?.first_name || ''} ${draft?.last_name || ''}`.trim() || 'Profile';
@@ -366,7 +383,7 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
           <View style={styles.photoRow}>
             {draft.photos.map((url, index) => (
               <View key={`${url}-${index}`} style={styles.photoTile}>
-                <Image source={{uri: url}} style={styles.photo} />
+                <Image source={{uri: url}} style={styles.photo} resizeMode="cover" />
                 {sectionEditing('photos') ? (
                   <Pressable style={styles.photoRemove} onPress={() => setDraft(current => (current ? {...current, photos: current.photos.filter((_, photoIndex) => photoIndex !== index)} : current))}>
                     <Text style={styles.photoRemoveText}>✕</Text>
@@ -381,7 +398,13 @@ export function CustomerProfileView({profile, token, loading, error, onSaved, on
             ) : null}
           </View>
           <Text style={styles.subHead}>Family photo</Text>
-          {draft.familyPhoto ? <Image source={{uri: draft.familyPhoto}} style={styles.familyPhoto} /> : <Text style={styles.body}>No family photo yet.</Text>}
+          {draft.familyPhoto ? (
+            <View style={styles.familyFrame}>
+              <Image source={{uri: draft.familyPhoto}} style={[styles.familyPhoto, {aspectRatio: familyRatio}]} resizeMode="contain" />
+            </View>
+          ) : (
+            <Text style={styles.body}>No family photo yet.</Text>
+          )}
           {sectionEditing('photos') ? (
             <Pressable onPress={() => setPhotoFor('family')} style={styles.secondaryBtn}>
               <Text style={styles.secondaryText}>{draft.familyPhoto ? 'Replace family photo' : 'Add family photo'}</Text>
@@ -688,7 +711,8 @@ const styles = StyleSheet.create({
   photoRemoveText: {color: colors.white, fontWeight: '800'},
   addPhoto: {width: 104, height: 136, borderRadius: 14, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center'},
   addPhotoText: {color: colors.plum, fontWeight: '800'},
-  familyPhoto: {width: 140, height: 100, borderRadius: 12},
+  familyFrame: {width: '100%', borderRadius: 14, overflow: 'hidden', backgroundColor: '#F4F2FA'},
+  familyPhoto: {width: '100%', borderRadius: 14},
   scrim: {flex: 1, backgroundColor: 'rgba(15,10,30,0.55)', justifyContent: 'flex-end'},
   sheetCard: {backgroundColor: colors.white, borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg, padding: 16, maxHeight: '70%'},
   sheetTitle: {fontSize: 18, fontWeight: '800', color: colors.ink, marginBottom: 8},
