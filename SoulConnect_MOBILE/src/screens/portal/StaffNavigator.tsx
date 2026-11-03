@@ -60,9 +60,12 @@ export function StaffNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: {backgroundColor: colors.surface},
+        headerStyle: {backgroundColor: colors.white},
         headerTintColor: colors.plum,
+        headerTitleStyle: {color: colors.ink},
         contentStyle: {backgroundColor: colors.surface},
+        statusBarStyle: 'dark',
+        statusBarBackgroundColor: colors.white,
       }}>
       <Stack.Screen name="StaffMenu" component={StaffMenuScreen} options={{title: 'Portal'}} />
       <Stack.Screen name="Dashboard" component={DashboardScreen} />

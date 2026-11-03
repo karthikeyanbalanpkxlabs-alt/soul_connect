@@ -24,10 +24,12 @@ export function RootNavigator() {
     <Stack.Navigator
       initialRouteName={initialRouteName}
       screenOptions={{
-        headerStyle: {backgroundColor: colors.surface},
+        headerStyle: {backgroundColor: colors.white},
         headerTintColor: colors.plum,
         headerTitleStyle: {color: colors.ink},
         contentStyle: {backgroundColor: colors.surface},
+        statusBarStyle: 'dark',
+        statusBarBackgroundColor: colors.white,
       }}>
       <Stack.Screen name="Home" component={HomeScreen} options={{headerShown: false}} />
       <Stack.Screen name="Register" component={RegisterScreen} options={{title: 'Register'}} />

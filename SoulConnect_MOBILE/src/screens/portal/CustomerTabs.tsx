@@ -14,7 +14,7 @@ export function CustomerTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerStyle: {backgroundColor: colors.surface},
+        headerStyle: {backgroundColor: colors.white},
         headerTitleStyle: {color: colors.ink, fontWeight: '700'},
         tabBarActiveTintColor: colors.rose,
         tabBarInactiveTintColor: colors.ink40,
