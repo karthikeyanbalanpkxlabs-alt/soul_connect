@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
   factLabel: {width: 88, color: colors.ink40, fontSize: 12},
   factValue: {flex: 1},
   factText: {color: colors.ink, fontWeight: '600'},
-  complete: {backgroundColor: colors.white, borderRadius: radii.md, padding: 16, marginTop: 14, borderWidth: 1, borderColor: colors.borderSoft},
+  complete: {backgroundColor: colors.white, borderRadius: radii.md, padding: 16, marginTop: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.borderSoft},
   completeHead: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8},
   completeLabel: {fontWeight: '700', color: colors.ink},
   completePct: {color: colors.plum, fontWeight: '800'},

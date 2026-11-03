@@ -102,7 +102,7 @@ export function HomeScreen({navigation}: Props) {
           <Text style={styles.ctaBody}>
             Join families finding verified, compatible matches on Tamil Nadu's matrimony platform.
           </Text>
-          <Button label="Register free now" onPress={() => navigation.navigate('Register')} />
+          <Button label="Register Now" onPress={() => navigation.navigate('Register')} />
         </View>
 
         <View style={styles.links}>
