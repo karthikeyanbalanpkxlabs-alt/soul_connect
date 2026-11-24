@@ -560,13 +560,22 @@ export function verifyOmniwareResponseHash(
  */
 const DEFAULT_OMNIWARE_CONFIG = {
   api_key:
-    process.env.OMNIWARE_API_KEY || "fb6bca86-b429-4abf-a42f-824bdd29022e",
-  salt: process.env.OMNIWARE_SALT || "80c67bfdf027da08de88ab5ba903fecafaab8f6d",
+    process.env.OMNIWARE_API_KEY || "a7ed2331-91f0-4a5f-a804-eb30a61ba91e",
+  salt: process.env.OMNIWARE_SALT || "7eae79da7982dfddd2f8c07d0b77a46ee4876970",
   merchant_id: "291499",
-  api_url: process.env.OMNIWARE_API_URL || "https://pgbiz.omniware.in",
-  environment: "TEST",
+  api_url: process.env.OMNIWARE_API_URL || "https://mrm.omniware.in",
+  environment: "LIVE",
   currency: "INR",
 };
+// const DEFAULT_OMNIWARE_CONFIG = {
+//   api_key:
+//     process.env.OMNIWARE_API_KEY || "fb6bca86-b429-4abf-a42f-824bdd29022e",
+//   salt: process.env.OMNIWARE_SALT || "80c67bfdf027da08de88ab5ba903fecafaab8f6d",
+//   merchant_id: "291499",
+//   api_url: process.env.OMNIWARE_API_URL || "https://pgbiz.omniware.in",
+//   environment: "TEST",
+//   currency: "INR",
+// };
 
 /**
  * Initiate Omniware Payment Order and obtain payment URL (Two-Step API)
@@ -633,9 +642,15 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
 
     // Default backend callback return_url
     const host = req.get("host") || "";
-    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
-    const rawProto = (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
-    const protocol = isLocalhost ? (rawProto.includes("https") ? "https" : "http") : "https";
+    const isLocalhost =
+      host.includes("localhost") || host.includes("127.0.0.1");
+    const rawProto =
+      (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
+    const protocol = isLocalhost
+      ? rawProto.includes("https")
+        ? "https"
+        : "http"
+      : "https";
     const backendCallbackUrl =
       return_url ||
       cfg.return_url ||
@@ -770,9 +785,15 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     const custCountry = (country || "IND").toString().trim();
     const custZip = (zip_code || "600001").toString().trim();
     const host = req.get("host") || "";
-    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
-    const rawProto = (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
-    const protocol = isLocalhost ? (rawProto.includes("https") ? "https" : "http") : "https";
+    const isLocalhost =
+      host.includes("localhost") || host.includes("127.0.0.1");
+    const rawProto =
+      (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
+    const protocol = isLocalhost
+      ? rawProto.includes("https")
+        ? "https"
+        : "http"
+      : "https";
     const backendCallbackUrl = return_url
       ? String(return_url)
       : cfg.return_url ||

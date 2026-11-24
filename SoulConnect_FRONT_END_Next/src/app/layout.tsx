@@ -95,6 +95,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  console.log("Build Deployed Test Nov 24");
   return (
     <html
       lang="en"
