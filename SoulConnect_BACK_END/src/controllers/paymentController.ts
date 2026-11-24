@@ -558,12 +558,14 @@ export function verifyOmniwareResponseHash(
 /**
  * Default fallback credentials for Omniware Test Kit
  */
+const DEFAULT_OMNIWARE_API_URL = "https://pgbiz.omniware.in";
+
 const DEFAULT_OMNIWARE_CONFIG = {
   api_key:
     process.env.OMNIWARE_API_KEY || "a7ed2331-91f0-4a5f-a804-eb30a61ba91e",
   salt: process.env.OMNIWARE_SALT || "7eae79da7982dfddd2f8c07d0b77a46ee4876970",
-  merchant_id: "291499",
-  api_url: process.env.OMNIWARE_API_URL || "https://mrm.omniware.in",
+  merchant_id: "808366",
+  api_url: process.env.OMNIWARE_API_URL || DEFAULT_OMNIWARE_API_URL,
   environment: "LIVE",
   currency: "INR",
 };
@@ -576,6 +578,85 @@ const DEFAULT_OMNIWARE_CONFIG = {
 //   environment: "TEST",
 //   currency: "INR",
 // };
+
+/**
+ * Normalize Omniware Payment Gateway API base URL.
+ * mrm.omniware.in / pgmrm.omniware.in are merchant dashboard portals and return 404 HTML for PG API calls;
+ * the Payment Gateway API host is pgbiz.omniware.in.
+ */
+function normalizeOmniwareApiUrl(rawUrl?: string): string {
+  const cleaned = (rawUrl || DEFAULT_OMNIWARE_CONFIG.api_url)
+    .trim()
+    .replace(/\/+$/, "");
+  if (!cleaned) return DEFAULT_OMNIWARE_API_URL;
+  if (/^https?:\/\/(mrm|pgmrm)\.omniware\.in$/i.test(cleaned)) {
+    console.warn(
+      `Replacing Omniware MRM portal URL (${cleaned}) with PG API URL (${DEFAULT_OMNIWARE_API_URL})`,
+    );
+    return DEFAULT_OMNIWARE_API_URL;
+  }
+  return cleaned;
+}
+
+/**
+ * Resolve Omniware backend callback URL from request headers/host.
+ */
+function resolveOmniwareCallbackUrl(
+  req: Request,
+  cfg: Record<string, any>,
+  explicitReturnUrl?: any,
+): string {
+  if (explicitReturnUrl) return String(explicitReturnUrl);
+  if (cfg.return_url) return String(cfg.return_url);
+
+  const host = req.get("host") || "";
+  const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+  const rawProto =
+    (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
+  const protocol = isLocalhost
+    ? rawProto.includes("https")
+      ? "https"
+      : "http"
+    : "https";
+  return `${protocol}://${host}/api/public/payment/omniware/callback`;
+}
+
+/**
+ * Call Omniware /v2/getpaymentrequesturl and safely parse JSON response.
+ */
+async function requestOmniwarePaymentUrl(
+  apiUrl: string,
+  requestParams: Record<string, string>,
+): Promise<{ ok: boolean; status: number; data: any; rawText?: string }> {
+  const postBody = new URLSearchParams(requestParams).toString();
+  const endpoint = `${apiUrl}/v2/getpaymentrequesturl`;
+  const pgRes = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: postBody,
+  });
+
+  const rawText = await pgRes.text();
+  try {
+    const parsed = JSON.parse(rawText);
+    return { ok: pgRes.ok, status: pgRes.status, data: parsed };
+  } catch {
+    console.error(
+      `Omniware non-JSON response (${pgRes.status}) from ${endpoint}:`,
+      rawText.slice(0, 300),
+    );
+    return {
+      ok: false,
+      status: pgRes.status,
+      data: {
+        error: {
+          message: `Payment gateway returned non-JSON response (HTTP ${pgRes.status})`,
+        },
+      },
+      rawText,
+    };
+  }
+}
 
 /**
  * Initiate Omniware Payment Order and obtain payment URL (Two-Step API)
@@ -617,10 +698,7 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
       cfg.mode ||
       DEFAULT_OMNIWARE_CONFIG.environment
     ).toUpperCase();
-    const apiUrl = (cfg.api_url || DEFAULT_OMNIWARE_CONFIG.api_url).replace(
-      /\/+$/,
-      "",
-    );
+    const apiUrl = normalizeOmniwareApiUrl(cfg.api_url);
 
     // Generate unique order ID (max 30 chars per Omniware spec)
     const timestamp = Date.now().toString().slice(-8);
@@ -640,21 +718,7 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
     const custCountry = (country || "IND").trim();
     const custZip = (zip_code || "600001").trim();
 
-    // Default backend callback return_url
-    const host = req.get("host") || "";
-    const isLocalhost =
-      host.includes("localhost") || host.includes("127.0.0.1");
-    const rawProto =
-      (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
-    const protocol = isLocalhost
-      ? rawProto.includes("https")
-        ? "https"
-        : "http"
-      : "https";
-    const backendCallbackUrl =
-      return_url ||
-      cfg.return_url ||
-      `${protocol}://${host}/api/public/payment/omniware/callback`;
+    const backendCallbackUrl = resolveOmniwareCallbackUrl(req, cfg, return_url);
 
     const requestParams: Record<string, string> = {
       api_key: apiKey,
@@ -678,16 +742,12 @@ export async function handleOmniwareInitiate(req: Request, res: Response) {
     const hash = generateOmniwareHash(requestParams, salt);
     requestParams.hash = hash;
 
-    const postBody = new URLSearchParams(requestParams).toString();
-    const pgRes = await fetch(`${apiUrl}/v2/getpaymentrequesturl`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: postBody,
-    });
+    const { ok: pgOk, data: pgData } = await requestOmniwarePaymentUrl(
+      apiUrl,
+      requestParams,
+    );
 
-    const pgData: any = await pgRes.json();
-
-    if (!pgRes.ok || !pgData?.data?.url) {
+    if (!pgOk || !pgData?.data?.url) {
       console.error("Omniware getpaymentrequesturl error response:", pgData);
       return res.status(400).json({
         success: false,
@@ -763,10 +823,7 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
       cfg.mode ||
       DEFAULT_OMNIWARE_CONFIG.environment
     ).toUpperCase();
-    const apiUrl = (cfg.api_url || DEFAULT_OMNIWARE_CONFIG.api_url).replace(
-      /\/+$/,
-      "",
-    );
+    const apiUrl = normalizeOmniwareApiUrl(cfg.api_url);
 
     const timestamp = Date.now().toString().slice(-8);
     const rand = Math.floor(1000 + Math.random() * 9000);
@@ -784,20 +841,7 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     const custCity = (city || "Chennai").toString().trim();
     const custCountry = (country || "IND").toString().trim();
     const custZip = (zip_code || "600001").toString().trim();
-    const host = req.get("host") || "";
-    const isLocalhost =
-      host.includes("localhost") || host.includes("127.0.0.1");
-    const rawProto =
-      (req.headers["x-forwarded-proto"] as string) || req.protocol || "";
-    const protocol = isLocalhost
-      ? rawProto.includes("https")
-        ? "https"
-        : "http"
-      : "https";
-    const backendCallbackUrl = return_url
-      ? String(return_url)
-      : cfg.return_url ||
-        `${protocol}://${host}/api/public/payment/omniware/callback`;
+    const backendCallbackUrl = resolveOmniwareCallbackUrl(req, cfg, return_url);
 
     let redirectFrontend = frontend_redirect ? String(frontend_redirect) : "";
     if (!redirectFrontend) {
@@ -832,16 +876,12 @@ export async function handleOmniwareRedirect(req: Request, res: Response) {
     const hash = generateOmniwareHash(requestParams, salt);
     requestParams.hash = hash;
 
-    const postBody = new URLSearchParams(requestParams).toString();
-    const pgRes = await fetch(`${apiUrl}/v2/getpaymentrequesturl`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: postBody,
-    });
+    const { ok: pgOk, data: pgData } = await requestOmniwarePaymentUrl(
+      apiUrl,
+      requestParams,
+    );
 
-    const pgData: any = await pgRes.json();
-
-    if (!pgRes.ok || !pgData?.data?.url) {
+    if (!pgOk || !pgData?.data?.url) {
       console.error("Omniware getpaymentrequesturl error in redirect:", pgData);
       return res
         .status(500)
