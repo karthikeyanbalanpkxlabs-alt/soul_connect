@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { Customers } from "../models/customer";
+import { UserInfo } from "../models/userInfo";
 import { GLOBAL_DETAILS } from "../config/keycloak-admin";
 import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
 import { EMAIL_TRIGGER_ENABLE_FLAG, sendGridEmail } from "../config/email";
@@ -386,24 +387,87 @@ export async function handleCustomerDetailGet(req: Request, res: Response) {
   }
 }
 
+function escapeProfileRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function handleProfileDetail(req: Request, res: Response) {
   try {
-    const { email } = {
-      ...req.query,
-      ...req.body,
+    const { email, keycloakId } = {
+      ...(req.query || {}),
+      ...(req.body || {}),
     };
 
-    const targetEmail =
-      (email as string) ||
-      (req as any).kauth?.grant?.access_token?.content?.email;
+    const tokenContent = (req as any).kauth?.grant?.access_token?.content;
+    const targetEmail = String(
+      email ||
+        tokenContent?.email ||
+        (typeof tokenContent?.preferred_username === "string" &&
+        tokenContent.preferred_username.includes("@")
+          ? tokenContent.preferred_username
+          : "") ||
+        "",
+    ).trim();
+    const targetKeycloakId = String(
+      keycloakId || tokenContent?.sub || "",
+    ).trim();
 
-    if (!targetEmail) {
+    if (!targetEmail && !targetKeycloakId) {
       return res.status(400).json({
-        error: "Missing email parameter in request",
+        error: "Missing email or keycloakId parameter in request",
       });
     }
 
-    const profile = await Customers.findOne({ email: targetEmail });
+    const buildOrFilters = () => {
+      const filters: any[] = [];
+      if (targetKeycloakId) filters.push({ keycloakId: targetKeycloakId });
+      if (targetEmail) {
+        filters.push({
+          email: {
+            $regex: `^${escapeProfileRegex(targetEmail)}$`,
+            $options: "i",
+          },
+        });
+      }
+      return filters;
+    };
+
+    const orFilters = buildOrFilters();
+
+    let profile: any =
+      (await Customers.findOne({ $or: orFilters })) ||
+      (await UserInfo.findOne({ $or: orFilters }));
+
+    if (!profile && tokenContent) {
+      const realmRoles: string[] = Array.isArray(
+        tokenContent?.realm_access?.roles,
+      )
+        ? tokenContent.realm_access.roles
+        : [];
+      const appRole =
+        realmRoles.find((r) =>
+          ["manager_g", "assit_g", "assist_g", "customer_g", "admin"].includes(
+            r,
+          ),
+        ) ||
+        realmRoles[0] ||
+        "customer_g";
+
+      profile = {
+        keycloakId: targetKeycloakId || tokenContent.sub,
+        email: targetEmail || tokenContent.email || "",
+        firstName: (tokenContent.given_name || "").trim(),
+        lastName: (tokenContent.family_name || "").trim(),
+        first_name: (tokenContent.given_name || "").trim(),
+        last_name: (tokenContent.family_name || "").trim(),
+        name: (tokenContent.name || "").trim(),
+        role: appRole,
+        roles: realmRoles,
+        status: "Active",
+        source: "keycloak",
+      };
+    }
+
     if (!profile) {
       return res.status(404).json({ error: "Profile not found" });
     }

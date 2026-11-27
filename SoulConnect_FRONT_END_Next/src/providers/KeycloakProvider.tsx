@@ -78,6 +78,7 @@ export default function KeycloakProvider({
     setLoadingProfile(true);
     setProfileError(null);
     try {
+      await keycloak.updateToken(30).catch(() => {});
       const apiUrl = configUrls?.apiUrl || "http://localhost:3000";
       const tokenParsed: any = keycloak.tokenParsed;
       const keycloakId = tokenParsed?.sub;
