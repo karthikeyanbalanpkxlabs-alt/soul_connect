@@ -29,6 +29,7 @@ import {
 } from "../controllers/userController";
 import { handleSendEmail } from "../controllers/emailController";
 import {
+  handleCheckVerificationExists,
   handleSendOTP,
   handleVerifyOTP,
 } from "../controllers/verificationController";
@@ -240,8 +241,17 @@ router.get("/public", (req, res) => {
 router.post("/send-email", handleSendEmail);
 
 // --- VERIFICATION ROUTES ---
+router.post(
+  "/verification/check-exists",
+  keycloak.protect(),
+  handleCheckVerificationExists,
+);
 router.post("/verification/send-otp", keycloak.protect(), handleSendOTP);
 router.post("/verification/verify-otp", keycloak.protect(), handleVerifyOTP);
+router.post(
+  "/public/verification/check-exists",
+  handleCheckVerificationExists,
+);
 router.post("/public/verification/send-otp", handleSendOTP);
 router.post("/public/verification/verify-otp", handleVerifyOTP);
 

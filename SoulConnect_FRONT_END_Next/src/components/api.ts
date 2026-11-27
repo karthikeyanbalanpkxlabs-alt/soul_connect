@@ -41,6 +41,38 @@ export const onSaveCustomer = async (data: any) => {
 };
 
 /**
+ * Check if email or phone number already exists before sending verification OTP
+ */
+export const onCheckVerificationExistsApi = async (payload: {
+  email?: string;
+  type: "email" | "phone";
+  phone_number?: string;
+}): Promise<{
+  success: boolean;
+  exists?: boolean;
+  field?: string;
+  message?: string;
+  error?: string;
+}> => {
+  try {
+    const apiUrl = configUrls?.apiUrl || "https://api.soulconect.com";
+    const endpoint = `${apiUrl}/api/public/verification/check-exists`;
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: data.error || `HTTP ${res.status}` };
+    }
+    return data;
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+};
+
+/**
  * Send Verification OTP (Email or Phone)
  */
 export const onSendOtpApi = async (payload: {

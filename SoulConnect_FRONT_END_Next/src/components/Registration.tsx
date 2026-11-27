@@ -24,9 +24,15 @@ import {
   Upload,
   Users,
   Plus,
-  Trash2
+  Trash2,
 } from "lucide-react";
-import { onSaveCustomer, onSendOtpApi, onVerifyOtpApi, uploadMediaFile } from './api'
+import {
+  onCheckVerificationExistsApi,
+  onSaveCustomer,
+  onSendOtpApi,
+  onVerifyOtpApi,
+  uploadMediaFile,
+} from "./api";
 import configUrls from "../../configUrls";
 import keycloak from "@/lib/keycloak";
 
@@ -45,14 +51,14 @@ interface ChatMessage {
 
 // Yup Validation Schema for Step 1 Manual Registration
 const registrationValidationSchema = Yup.object().shape({
-  registerFor: Yup.string().required("Please select who you are registering for"),
+  registerFor: Yup.string().required(
+    "Please select who you are registering for",
+  ),
   firstName: Yup.string()
     .trim()
     .required("First name is required")
     .min(2, "First name must be at least 2 characters"),
-  lastName: Yup.string()
-    .trim()
-    .required("Last name is required"),
+  lastName: Yup.string().trim().required("Last name is required"),
   dob: Yup.string()
     .required("Date of birth is required")
     .test("age-check", "Must be at least 18 years old", (value) => {
@@ -174,15 +180,24 @@ export default function Registration({
     validationSchema: registrationValidationSchema,
     onSubmit: () => {
       if (!mobileVerified) {
-        showToast("Please verify your Mobile Number using OTP before proceeding.", "error");
+        showToast(
+          "Please verify your Mobile Number using OTP before proceeding.",
+          "error",
+        );
         return;
       }
       if (!emailVerified) {
-        showToast("Please verify your Email Address using OTP before proceeding.", "error");
+        showToast(
+          "Please verify your Email Address using OTP before proceeding.",
+          "error",
+        );
         return;
       }
       setRegStep(2);
-      showToast("Profile drafted successfully! Please choose a plan, upload photos, and verify your ID.", "success");
+      showToast(
+        "Profile drafted successfully! Please choose a plan, upload photos, and verify your ID.",
+        "success",
+      );
       const regSection = document.getElementById("register");
       if (regSection) {
         regSection.scrollIntoView({ behavior: "smooth" });
@@ -211,6 +226,31 @@ export default function Registration({
     return () => clearInterval(timer);
   }, [emailTimer]);
 
+  const verifyFieldAvailable = async (
+    field: "mobile" | "email",
+    payload: { type: "email" | "phone"; email?: string; phone_number?: string },
+  ): Promise<boolean> => {
+    const checkResp = await onCheckVerificationExistsApi(payload);
+    if (!checkResp || !checkResp.success) {
+      showToast(
+        checkResp?.error ||
+          `Unable to verify ${field === "mobile" ? "mobile number" : "email address"}. Please try again.`,
+        "error",
+      );
+      return false;
+    }
+    if (checkResp.exists) {
+      const existsMsg =
+        checkResp.message ||
+        `Customer with this ${field === "mobile" ? "phone number" : "email"} already exists`;
+      formik.setFieldTouched(field, true, false);
+      formik.setFieldError(field, existsMsg);
+      showToast(existsMsg, "error");
+      return false;
+    }
+    return true;
+  };
+
   const handleSendMobileOtp = async () => {
     const mobileVal = formik.values.mobile?.trim();
     if (!mobileVal || mobileVal.length !== 10) {
@@ -220,6 +260,14 @@ export default function Registration({
     setMobileOtpSending(true);
 
     try {
+      const isAvailable = await verifyFieldAvailable("mobile", {
+        type: "phone",
+        phone_number: mobileVal,
+      });
+      if (!isAvailable) {
+        return;
+      }
+
       const payload: {
         type: "phone";
         phone_number: string;
@@ -329,6 +377,14 @@ export default function Registration({
     setEmailOtpSending(true);
 
     try {
+      const isAvailable = await verifyFieldAvailable("email", {
+        type: "email",
+        email: emailVal,
+      });
+      if (!isAvailable) {
+        return;
+      }
+
       const resp = await onSendOtpApi({ email: emailVal, type: "email" });
 
       if (resp && resp.success) {
@@ -360,7 +416,11 @@ export default function Registration({
 
     setEmailOtpVerifying(true);
     try {
-      const resp = await onVerifyOtpApi({ email: emailVal, type: "email", otp });
+      const resp = await onVerifyOtpApi({
+        email: emailVal,
+        type: "email",
+        otp,
+      });
       if (resp && resp.success) {
         setEmailVerified(true);
         setEmailOtpSent(false);
@@ -449,16 +509,10 @@ export default function Registration({
           regData?.name ||
           "";
         const lName =
-          fixture?.last_name ||
-          regData?.lastName ||
-          regData?.last_name ||
-          "";
+          fixture?.last_name || regData?.lastName || regData?.last_name || "";
         const emailVal = fixture?.email || regData?.email || "";
         const mobileVal =
-          fixture?.phone_number ||
-          regData?.mobile ||
-          regData?.phone ||
-          "";
+          fixture?.phone_number || regData?.mobile || regData?.phone || "";
 
         formik.setValues({
           registerFor: who,
@@ -490,11 +544,7 @@ export default function Registration({
         ) {
           setMobileVerified(true);
         }
-        if (
-          fixture?.email_verified ||
-          fixture?.is_email_verified ||
-          emailVal
-        ) {
+        if (fixture?.email_verified || fixture?.is_email_verified || emailVal) {
           setEmailVerified(true);
         }
 
@@ -549,11 +599,16 @@ export default function Registration({
     };
   }, []);
 
-  const handleFamilyPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFamilyPhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
-        showToast("Please upload a valid image file (JPEG, PNG, WebP).", "error");
+        showToast(
+          "Please upload a valid image file (JPEG, PNG, WebP).",
+          "error",
+        );
         return;
       }
       if (file.size > 20 * 1024 * 1024) {
@@ -586,7 +641,10 @@ export default function Registration({
         return;
       }
       if (!file.type.startsWith("image/")) {
-        showToast("Please upload valid image files (JPEG, PNG, WebP).", "error");
+        showToast(
+          "Please upload valid image files (JPEG, PNG, WebP).",
+          "error",
+        );
         return;
       }
       if (file.size > 20 * 1024 * 1024) {
@@ -597,10 +655,7 @@ export default function Registration({
       const res = await uploadMediaFile(file, "profile");
       if (res.success && res.url) {
         const isFirst = validImages.length === 0;
-        const newImages = [
-          ...validImages,
-          { url: res.url, default: isFirst },
-        ];
+        const newImages = [...validImages, { url: res.url, default: isFirst }];
         setImages(newImages);
         showToast("Image uploaded successfully!", "success");
       } else {
@@ -636,7 +691,9 @@ export default function Registration({
   const ENABLE_FACE_RECOGNITION = false;
 
   // Live Face Match Simulation States
-  const [faceMatchStatus, setFaceMatchStatus] = useState<"pending" | "scanning" | "matched">("pending");
+  const [faceMatchStatus, setFaceMatchStatus] = useState<
+    "pending" | "scanning" | "matched"
+  >("pending");
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [scanningProgress, setScanningProgress] = useState(0);
 
@@ -691,11 +748,11 @@ export default function Registration({
         "Create profile (Tamil & English)",
         "Basic district filters",
         "Aadhaar verification request",
-        "Receive match suggestions"
+        "Receive match suggestions",
       ],
       badge: "Free",
       colorClass: "free",
-      isPopular: false
+      isPopular: false,
     },
     {
       id: "premium",
@@ -707,11 +764,11 @@ export default function Registration({
         "Unlimited candidate views",
         "Psychology compatibility index",
         "Highlight profile in searches",
-        "Advanced education/job filters"
+        "Advanced education/job filters",
       ],
       badge: "Premium",
       colorClass: "premium",
-      isPopular: true
+      isPopular: true,
     },
     {
       id: "elite",
@@ -723,11 +780,11 @@ export default function Registration({
         "Dedicated relationship manager",
         "1 Free pre-marital counselling session",
         "Featured badge next to name",
-        "Enhanced privacy control options"
+        "Enhanced privacy control options",
       ],
       badge: "Elite",
       colorClass: "elite",
-      isPopular: false
+      isPopular: false,
     },
     {
       id: "vip",
@@ -739,12 +796,12 @@ export default function Registration({
         "Direct family-to-family meetings",
         "Background verification audit",
         "Unlimited counselling reviews",
-        "Premium boosting algorithms"
+        "Premium boosting algorithms",
       ],
       badge: "VIP",
       colorClass: "vip",
-      isPopular: false
-    }
+      isPopular: false,
+    },
   ];
 
   const activeSubscriptions = subscriptions
@@ -763,7 +820,7 @@ export default function Registration({
             ? rawFeatures.map((f: any) =>
                 typeof f === "object"
                   ? f.value || f.name || f.title || ""
-                  : String(f)
+                  : String(f),
               )
             : [];
 
@@ -781,19 +838,27 @@ export default function Registration({
             : "";
 
           const isPopular = Boolean(
-            sub.most_popluar || sub.most_popular || sub.isPopular
+            sub.most_popluar || sub.most_popular || sub.isPopular,
           );
 
           return {
             id: sub._id || sub.id || sub.type || `plan-${idx}`,
             name: sub.name || sub.type || "Subscription Plan",
             price: formattedPrice,
-            description: sub.description || sub.sub || periodStr || "Membership plan",
+            description:
+              sub.description || sub.sub || periodStr || "Membership plan",
             features:
               features.length > 0
                 ? features
-                : staticMembershipPlans[idx % staticMembershipPlans.length]?.features || [],
-            badge: sub.badge || sub.tagLabel || sub.tag_label || sub.type || sub.name || "Plan",
+                : staticMembershipPlans[idx % staticMembershipPlans.length]
+                    ?.features || [],
+            badge:
+              sub.badge ||
+              sub.tagLabel ||
+              sub.tag_label ||
+              sub.type ||
+              sub.name ||
+              "Plan",
             colorClass:
               sub.colorClass ||
               sub.tagClass ||
@@ -804,7 +869,9 @@ export default function Registration({
       : staticMembershipPlans;
 
   const generateId = () => {
-    return Date.now().toString(16) + Math.random().toString(16).substring(2, 10);
+    return (
+      Date.now().toString(16) + Math.random().toString(16).substring(2, 10)
+    );
   };
 
   // Final step submit
@@ -819,10 +886,15 @@ export default function Registration({
       return;
     }
     if (!uploadedFile) {
-      showToast("Please upload a scanned copy of your ID document to complete verification.", "error");
+      showToast(
+        "Please upload a scanned copy of your ID document to complete verification.",
+        "error",
+      );
       return;
     }
-    const selectedPlanData = membershipPlans.find(p => p.name === selectedPlan);
+    const selectedPlanData = membershipPlans.find(
+      (p) => p.name === selectedPlan,
+    );
 
     const handleRegistrationError = (errMsg: string) => {
       const lowerMsg = errMsg.toLowerCase();
@@ -900,7 +972,10 @@ export default function Registration({
         localStorage.setItem("pending_customer_registration", fixtureStr);
         sessionStorage.setItem("pending_customer_registration", fixtureStr);
       } catch (err) {
-        console.warn("Storage quota warning, storing lightweight fixture:", err);
+        console.warn(
+          "Storage quota warning, storing lightweight fixture:",
+          err,
+        );
         try {
           const lightweightFixture = {
             ...createFixture,
@@ -976,7 +1051,9 @@ export default function Registration({
       }, 2000);
     } catch (error: any) {
       console.error("Registration error:", error);
-      const errMsg = error?.message || "Failed to create customer profile. Please try again.";
+      const errMsg =
+        error?.message ||
+        "Failed to create customer profile. Please try again.";
       showToast(errMsg, "error");
       handleRegistrationError(errMsg);
     }
@@ -988,7 +1065,14 @@ export default function Registration({
 
     const newMsgs = [
       ...chatMessages,
-      { sender: "user", text: textToSend, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+      {
+        sender: "user",
+        text: textToSend,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
     ] as ChatMessage[];
 
     setChatMessages(newMsgs);
@@ -996,7 +1080,7 @@ export default function Registration({
     setParsing(true);
 
     setTimeout(() => {
-      const foundPreset = quickBios.find(p => p.text === textToSend);
+      const foundPreset = quickBios.find((p) => p.text === textToSend);
       const mockResult = foundPreset
         ? foundPreset.parsed
         : {
@@ -1008,7 +1092,7 @@ export default function Registration({
             education: "UG Degree",
           };
 
-      setChatMessages(prev => [
+      setChatMessages((prev) => [
         ...prev,
         {
           sender: "ai",
@@ -1018,7 +1102,10 @@ export default function Registration({
 • Hometown: ${mockResult.location}
 • Education: ${mockResult.education}
 Click 'Apply & Complete Profile' below to populate these fields.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         },
       ]);
       setParsing(false);
@@ -1121,7 +1208,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
         setTimeout(() => {
           setFaceMatchStatus("matched");
           setShowCameraModal(false);
-          showToast("Live Face Verification successful! Biometric ID matches uploaded document.", "success");
+          showToast(
+            "Live Face Verification successful! Biometric ID matches uploaded document.",
+            "success",
+          );
         }, 600);
       }
     }, 300);
@@ -1131,7 +1221,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
     <section id="register" className="reg-section">
       <div className="eyebrow">Registration</div>
       <h2 className="section-title">
-        {regStep === 1 ? "Join in your own way" : "Choose Plan & Verify Identity"}
+        {regStep === 1
+          ? "Join in your own way"
+          : "Choose Plan & Verify Identity"}
       </h2>
       <p className="section-sub">
         {regStep === 1
@@ -1142,27 +1234,31 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       {/* STEP INDICATOR */}
       <div className="flex justify-center items-center gap-4 my-8">
         <div className="flex items-center gap-2">
-          <span className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs ${
-            regStep === 1 
-              ? "bg-rose text-white" 
-              : "bg-emerald-500 text-white"
-          }`}>
+          <span
+            className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs ${
+              regStep === 1 ? "bg-rose text-white" : "bg-emerald-500 text-white"
+            }`}
+          >
             {regStep === 1 ? "1" : "✓"}
           </span>
-          <span className={`text-xs font-bold uppercase tracking-wider ${regStep === 1 ? "text-rose" : "text-emerald-500"}`}>
+          <span
+            className={`text-xs font-bold uppercase tracking-wider ${regStep === 1 ? "text-rose" : "text-emerald-500"}`}
+          >
             Profile Details
           </span>
         </div>
         <div className="h-0.5 w-12 bg-white/10" />
         <div className="flex items-center gap-2">
-          <span className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs ${
-            regStep === 2 
-              ? "bg-rose text-white" 
-              : "bg-white/10 text-white/40"
-          }`}>
+          <span
+            className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs ${
+              regStep === 2 ? "bg-rose text-white" : "bg-white/10 text-white/40"
+            }`}
+          >
             2
           </span>
-          <span className={`text-xs font-bold uppercase tracking-wider ${regStep === 2 ? "text-rose" : "text-white/40"}`}>
+          <span
+            className={`text-xs font-bold uppercase tracking-wider ${regStep === 2 ? "text-rose" : "text-white/40"}`}
+          >
             Plans & Verification
           </span>
         </div>
@@ -1172,12 +1268,15 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       {regStep === 1 && (
         <>
           {/* MANUAL PANEL */}
-          <div className={`reg-panel ${activeTab === "manual" ? "active" : ""}`}>
+          <div
+            className={`reg-panel ${activeTab === "manual" ? "active" : ""}`}
+          >
             <div className="reg-layout">
               <form onSubmit={formik.handleSubmit} className="reg-form-card">
                 <div className="reg-form-title">Create your profile</div>
                 <div className="reg-form-sub">
-                  Fill in your details. Takes about 10 minutes. All fields are private by default.
+                  Fill in your details. Takes about 10 minutes. All fields are
+                  private by default.
                 </div>
 
                 <div className="form-section-label">Personal Information</div>
@@ -1190,17 +1289,29 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   <div className="flex flex-wrap gap-3">
                     {[
                       { id: "myself", label: "For myself", icon: "🙋‍♂️" },
-                      { id: "son", label: "For my son", icon: "👦", gender: "Male" },
-                      { id: "daughter", label: "For my daughter", icon: "👧", gender: "Female" },
+                      {
+                        id: "son",
+                        label: "For my son",
+                        icon: "👦",
+                        gender: "Male",
+                      },
+                      {
+                        id: "daughter",
+                        label: "For my daughter",
+                        icon: "👧",
+                        gender: "Female",
+                      },
                     ].map((opt) => {
-                      const isSelected = formik.values.registerFor === opt.label;
+                      const isSelected =
+                        formik.values.registerFor === opt.label;
                       return (
                         <button
                           key={opt.id}
                           type="button"
                           onClick={() => {
                             formik.setFieldValue("registerFor", opt.label);
-                            if (opt.gender) formik.setFieldValue("gender", opt.gender);
+                            if (opt.gender)
+                              formik.setFieldValue("gender", opt.gender);
                           }}
                           className={`flex items-center gap-2 px-5 py-3 rounded-2xl border-2 font-semibold text-sm transition-all shadow-sm ${
                             isSelected
@@ -1223,7 +1334,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>First Name <span className="text-red-500">*</span></label>
+                    <label>
+                      First Name <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       name="firstName"
@@ -1239,7 +1352,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     )}
                   </div>
                   <div className="form-group">
-                    <label>Last Name <span className="text-red-500">*</span></label>
+                    <label>
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       name="lastName"
@@ -1257,7 +1372,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Date of Birth <span className="text-red-500">*</span></label>
+                    <label>
+                      Date of Birth <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="date"
                       name="dob"
@@ -1272,7 +1389,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     )}
                   </div>
                   <div className="form-group">
-                    <label>Gender <span className="text-red-500">*</span></label>
+                    <label>
+                      Gender <span className="text-red-500">*</span>
+                    </label>
                     <select
                       name="gender"
                       value={formik.values.gender}
@@ -1306,7 +1425,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     <div className="relative flex items-center">
                       <div
                         className={`phone-input-container w-full ${
-                          mobileVerified ? "!border-emerald-500 bg-emerald-50/20" : ""
+                          mobileVerified
+                            ? "!border-emerald-500 bg-emerald-50/20"
+                            : ""
                         }`}
                       >
                         <span className="phone-code-prefix">🇮🇳 +91</span>
@@ -1319,7 +1440,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           disabled={mobileVerified}
                           className="!pr-24"
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            const val = e.target.value
+                              .replace(/\D/g, "")
+                              .slice(0, 10);
                             formik.setFieldValue("mobile", val);
                             if (mobileVerified) setMobileVerified(false);
                             if (mobileOtpSent) setMobileOtpSent(false);
@@ -1334,7 +1457,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                             setMobileVerified(false);
                             setMobileOtpSent(false);
                             setMobileOtpInput("");
-                            showToast("Mobile number unlocked for editing.", "info");
+                            showToast(
+                              "Mobile number unlocked for editing.",
+                              "info",
+                            );
                           }}
                           className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors shadow-sm z-10 cursor-pointer flex items-center gap-1"
                         >
@@ -1343,15 +1469,18 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       ) : (
                         <button
                           type="button"
-                          disabled={formik.values.mobile.length !== 10 || mobileOtpSending}
+                          disabled={
+                            formik.values.mobile.length !== 10 ||
+                            mobileOtpSending
+                          }
                           onClick={handleSendMobileOtp}
                           className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-white bg-rose hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm z-10"
                         >
                           {mobileOtpSending
                             ? "Sending..."
                             : mobileOtpSent
-                            ? "Resend OTP"
-                            : "Send OTP"}
+                              ? "Resend OTP"
+                              : "Send OTP"}
                         </button>
                       )}
                     </div>
@@ -1374,7 +1503,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                             placeholder="6-digit OTP"
                             value={mobileOtpInput}
                             onChange={(e) =>
-                              setMobileOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))
+                              setMobileOtpInput(
+                                e.target.value.replace(/\D/g, "").slice(0, 6),
+                              )
                             }
                             className="w-32 px-3 py-1 text-xs font-bold tracking-widest text-center bg-white border border-rose-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
                           />
@@ -1383,7 +1514,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           <button
                             type="button"
                             onClick={handleVerifyMobileOtp}
-                            disabled={mobileOtpInput.length !== 6 || mobileOtpVerifying}
+                            disabled={
+                              mobileOtpInput.length !== 6 || mobileOtpVerifying
+                            }
                             className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm"
                           >
                             {mobileOtpVerifying ? "Verifying..." : "Verify OTP"}
@@ -1432,7 +1565,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     <div className="relative flex items-center">
                       <div
                         className={`phone-input-container w-full ${
-                          emailVerified ? "!border-emerald-500 bg-emerald-50/20" : ""
+                          emailVerified
+                            ? "!border-emerald-500 bg-emerald-50/20"
+                            : ""
                         }`}
                       >
                         <input
@@ -1457,7 +1592,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                             setEmailVerified(false);
                             setEmailOtpSent(false);
                             setEmailOtpInput("");
-                            showToast("Email address unlocked for editing.", "info");
+                            showToast(
+                              "Email address unlocked for editing.",
+                              "info",
+                            );
                           }}
                           className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors shadow-sm z-10 cursor-pointer flex items-center gap-1"
                         >
@@ -1466,15 +1604,19 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       ) : (
                         <button
                           type="button"
-                          disabled={!formik.values.email || !/\S+@\S+\.\S+/.test(formik.values.email) || emailOtpSending}
+                          disabled={
+                            !formik.values.email ||
+                            !/\S+@\S+\.\S+/.test(formik.values.email) ||
+                            emailOtpSending
+                          }
                           onClick={handleSendEmailOtp}
                           className="absolute right-1.5 px-3 py-1.5 text-xs font-bold text-white bg-rose hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm z-10"
                         >
                           {emailOtpSending
                             ? "Sending..."
                             : emailOtpSent
-                            ? "Resend OTP"
-                            : "Send OTP"}
+                              ? "Resend OTP"
+                              : "Send OTP"}
                         </button>
                       )}
                     </div>
@@ -1497,7 +1639,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                             placeholder="6-digit OTP"
                             value={emailOtpInput}
                             onChange={(e) =>
-                              setEmailOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))
+                              setEmailOtpInput(
+                                e.target.value.replace(/\D/g, "").slice(0, 6),
+                              )
                             }
                             className="w-32 px-3 py-1 text-xs font-bold tracking-widest text-center bg-white border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                           />
@@ -1506,7 +1650,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                           <button
                             type="button"
                             onClick={handleVerifyEmailOtp}
-                            disabled={emailOtpInput.length !== 6 || emailOtpVerifying}
+                            disabled={
+                              emailOtpInput.length !== 6 || emailOtpVerifying
+                            }
                             className="px-3 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-sm"
                           >
                             {emailOtpVerifying ? "Verifying..." : "Verify OTP"}
@@ -1544,7 +1690,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="form-section-label">Location — Tamil Nadu</div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>District (மாவட்டம்) <span className="text-red-500">*</span></label>
+                    <label>
+                      District (மாவட்டம்){" "}
+                      <span className="text-red-500">*</span>
+                    </label>
                     <select
                       id="districtSelect"
                       name="district"
@@ -1611,7 +1760,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Mother Tongue <span className="text-red-500">*</span></label>
+                    <label>
+                      Mother Tongue <span className="text-red-500">*</span>
+                    </label>
                     <select
                       name="motherTongue"
                       value={formik.values.motherTongue}
@@ -1625,14 +1776,17 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       <option value="Hindi">Hindi</option>
                       <option value="Other">Other</option>
                     </select>
-                    {formik.touched.motherTongue && formik.errors.motherTongue && (
-                      <span className="text-xs text-red-500 font-medium mt-1 block">
-                        {formik.errors.motherTongue}
-                      </span>
-                    )}
+                    {formik.touched.motherTongue &&
+                      formik.errors.motherTongue && (
+                        <span className="text-xs text-red-500 font-medium mt-1 block">
+                          {formik.errors.motherTongue}
+                        </span>
+                      )}
                   </div>
                   <div className="form-group">
-                    <label>Marital Status <span className="text-red-500">*</span></label>
+                    <label>
+                      Marital Status <span className="text-red-500">*</span>
+                    </label>
                     <select
                       name="maritalStatus"
                       value={formik.values.maritalStatus}
@@ -1644,11 +1798,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       <option value="Widowed">Widowed</option>
                       <option value="Awaiting Divorce">Awaiting Divorce</option>
                     </select>
-                    {formik.touched.maritalStatus && formik.errors.maritalStatus && (
-                      <span className="text-xs text-red-500 font-medium mt-1 block">
-                        {formik.errors.maritalStatus}
-                      </span>
-                    )}
+                    {formik.touched.maritalStatus &&
+                      formik.errors.maritalStatus && (
+                        <span className="text-xs text-red-500 font-medium mt-1 block">
+                          {formik.errors.maritalStatus}
+                        </span>
+                      )}
                   </div>
                 </div>
 
@@ -1684,11 +1839,15 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       <option value="Software / IT">Software / IT</option>
                       <option value="Doctor">Doctor</option>
                       <option value="Engineer">Engineer</option>
-                      <option value="Teacher / Academic">Teacher / Academic</option>
+                      <option value="Teacher / Academic">
+                        Teacher / Academic
+                      </option>
                       <option value="Govt. Employee">Govt. Employee</option>
                       <option value="Business Owner">Business Owner</option>
                       <option value="Lawyer">Lawyer</option>
-                      <option value="Chartered Accountant">Chartered Accountant</option>
+                      <option value="Chartered Accountant">
+                        Chartered Accountant
+                      </option>
                       <option value="Agriculture">Agriculture</option>
                       <option value="Student">Student</option>
                       <option value="Other">Other</option>
@@ -1704,7 +1863,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                     >
-                      <option value="Prefer not to say">Prefer not to say</option>
+                      <option value="Prefer not to say">
+                        Prefer not to say
+                      </option>
                       <option value="Below 3 LPA">Below 3 LPA</option>
                       <option value="3–6 LPA">3–6 LPA</option>
                       <option value="6–10 LPA">6–10 LPA</option>
@@ -1852,38 +2013,54 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   Create Profile & Get Started →
                 </button>
                 <p className="text-center text-xs text-gray-400 mt-3">
-                  Free registration. Document verification and plans are configured in the next step.
+                  Free registration. Document verification and plans are
+                  configured in the next step.
                 </p>
               </form>
 
               <div className="reg-info-panel">
-                <h3 className="font-display text-2xl text-white mb-6 font-bold">Why register manually?</h3>
+                <h3 className="font-display text-2xl text-white mb-6 font-bold">
+                  Why register manually?
+                </h3>
                 <div className="reg-step">
                   <div className="reg-step-num">1</div>
                   <div>
                     <h4>Full control</h4>
-                    <p>Every field is yours to fill — no assumptions, no auto-fill surprises. Tell your story exactly as you want it told.</p>
+                    <p>
+                      Every field is yours to fill — no assumptions, no
+                      auto-fill surprises. Tell your story exactly as you want
+                      it told.
+                    </p>
                   </div>
                 </div>
                 <div className="reg-step">
                   <div className="reg-step-num">2</div>
                   <div>
                     <h4>Tamil & English</h4>
-                    <p>Registration available in both Tamil and English. Switch between languages at any time.</p>
+                    <p>
+                      Registration available in both Tamil and English. Switch
+                      between languages at any time.
+                    </p>
                   </div>
                 </div>
                 <div className="reg-step">
                   <div className="reg-step-num">3</div>
                   <div>
                     <h4>Family-assisted</h4>
-                    <p>Parents or siblings can help fill in the form together — ideal for traditional family-led matchmaking.</p>
+                    <p>
+                      Parents or siblings can help fill in the form together —
+                      ideal for traditional family-led matchmaking.
+                    </p>
                   </div>
                 </div>
                 <div className="reg-step">
                   <div className="reg-step-num">4</div>
                   <div>
                     <h4>Verified within 24 hrs</h4>
-                    <p>Once submitted, our validation team reviews and confirms your credentials within 24 hours.</p>
+                    <p>
+                      Once submitted, our validation team reviews and confirms
+                      your credentials within 24 hours.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1893,15 +2070,19 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
           {/* AI ASSISTED PANEL */}
           <div className={`reg-panel ${activeTab === "auto" ? "active" : ""}`}>
             <div className="reg-layout">
-              <div className="bg-[#17112E] border border-white/10 rounded-3xl p-6 flex flex-col justify-between" style={{ minHeight: "560px" }}>
-
+              <div
+                className="bg-[#17112E] border border-white/10 rounded-3xl p-6 flex flex-col justify-between"
+                style={{ minHeight: "560px" }}
+              >
                 {/* Chat header */}
                 <div className="flex items-center gap-3 border-b border-white/10 pb-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-pink-500 to-violet-600">
                     <Bot className="h-5 w-5 text-white" />
                   </div>
                   <div className="text-left">
-                    <h4 className="text-sm font-bold text-white">Soul AI Matchmaker</h4>
+                    <h4 className="text-sm font-bold text-white">
+                      Soul AI Matchmaker
+                    </h4>
                     <p className="text-[10px] text-emerald-400 flex items-center gap-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                       Active NLP Agent
@@ -1910,7 +2091,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 </div>
 
                 {/* Chat message viewport */}
-                <div className="flex-1 overflow-y-auto my-4 pr-2 flex flex-col gap-3" style={{ maxHeight: "320px", minHeight: "260px" }}>
+                <div
+                  className="flex-1 overflow-y-auto my-4 pr-2 flex flex-col gap-3"
+                  style={{ maxHeight: "320px", minHeight: "260px" }}
+                >
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
@@ -1922,24 +2106,45 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       style={{ whiteSpace: "pre-line" }}
                     >
                       <p>{msg.text}</p>
-                      <span className="block text-[9px] text-white/40 mt-1">{msg.timestamp}</span>
+                      <span className="block text-[9px] text-white/40 mt-1">
+                        {msg.timestamp}
+                      </span>
                     </div>
                   ))}
 
                   {parsing && (
                     <div className="bg-white/5 border border-white/10 text-white rounded-2xl p-4 max-w-[80%] self-start flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4 text-pink-400" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <svg
+                        className="animate-spin h-4 w-4 text-pink-400"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
                       </svg>
-                      <span className="text-xs text-gray-400">Soul AI is extracting details...</span>
+                      <span className="text-xs text-gray-400">
+                        Soul AI is extracting details...
+                      </span>
                     </div>
                   )}
                 </div>
 
                 {/* Presets suggestions */}
                 <div className="border-t border-white/5 pt-3 mb-2 text-left">
-                  <span className="text-[10px] text-gray-400 uppercase block mb-1.5 font-bold tracking-wider">Try quick preset bios:</span>
+                  <span className="text-[10px] text-gray-400 uppercase block mb-1.5 font-bold tracking-wider">
+                    Try quick preset bios:
+                  </span>
                   <div className="flex gap-2 flex-wrap">
                     {quickBios.map((preset, index) => (
                       <button
@@ -1961,7 +2166,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     placeholder="Type your bio (e.g. I am Anand, 27, IT Analyst from Salem...)"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendAiMessage(chatInput)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && handleSendAiMessage(chatInput)
+                    }
                   />
                   <button
                     onClick={() => handleSendAiMessage(chatInput)}
@@ -1970,14 +2177,17 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                     <Send className="h-4 w-4 text-white" />
                   </button>
                 </div>
-
               </div>
 
               <div className="reg-info-panel flex flex-col justify-between">
                 <div>
-                  <h3 className="font-display text-2xl text-white mb-4 font-bold">⚡ AI-Assisted matching</h3>
+                  <h3 className="font-display text-2xl text-white mb-4 font-bold">
+                    ⚡ AI-Assisted matching
+                  </h3>
                   <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                    Save time and avoid manual registration. Simply write down your profile summary or paste your biodata, and let our NLP model parse and fill the details instantly.
+                    Save time and avoid manual registration. Simply write down
+                    your profile summary or paste your biodata, and let our NLP
+                    model parse and fill the details instantly.
                   </p>
 
                   <div className="auto-features">
@@ -1985,21 +2195,30 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       <div className="auto-feat-icon">🚀</div>
                       <div className="auto-feat-text">
                         <h5>3x Faster Setup</h5>
-                        <p>Completes profile attributes in under 30 seconds rather than filling form sections one by one.</p>
+                        <p>
+                          Completes profile attributes in under 30 seconds
+                          rather than filling form sections one by one.
+                        </p>
                       </div>
                     </div>
                     <div className="auto-feat">
                       <div className="auto-feat-icon">🗣️</div>
                       <div className="auto-feat-text">
                         <h5>Natural Language Recognition</h5>
-                        <p>Type in Tamil, English, or mixed Tanglish text naturally. Our parser maps synonyms instantly.</p>
+                        <p>
+                          Type in Tamil, English, or mixed Tanglish text
+                          naturally. Our parser maps synonyms instantly.
+                        </p>
                       </div>
                     </div>
                     <div className="auto-feat">
                       <div className="auto-feat-icon">🎯</div>
                       <div className="auto-feat-text">
                         <h5>Dynamic Preview</h5>
-                        <p>Review the parsed parameters immediately. Click apply to move them to the form.</p>
+                        <p>
+                          Review the parsed parameters immediately. Click apply
+                          to move them to the form.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -2011,7 +2230,10 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       <span>✓</span> Parsed Attributes Ready
                     </h4>
                     <p className="text-xs text-gray-300 mb-4">
-                      Extracted values: <strong>{parsedData.name}</strong>, <strong>{parsedData.age} yrs</strong>, <strong>{parsedData.profession}</strong> in <strong>{parsedData.location}</strong>.
+                      Extracted values: <strong>{parsedData.name}</strong>,{" "}
+                      <strong>{parsedData.age} yrs</strong>,{" "}
+                      <strong>{parsedData.profession}</strong> in{" "}
+                      <strong>{parsedData.location}</strong>.
                     </p>
                     <button
                       onClick={applyAiProfile}
@@ -2033,8 +2255,13 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
           {/* Photo Upload Section */}
           <div className="mb-12 text-left">
             <div className="mb-6 text-center">
-              <h3 className="font-display text-xl font-bold mb-2 text-white">1. Upload Profile & Family Photos</h3>
-              <p className="text-sm text-gray-400">Add high quality photos to make your profile stand out and gain verified responses.</p>
+              <h3 className="font-display text-xl font-bold mb-2 text-white">
+                1. Upload Profile & Family Photos
+              </h3>
+              <p className="text-sm text-gray-400">
+                Add high quality photos to make your profile stand out and gain
+                verified responses.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2189,8 +2416,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
           </div>
 
           <div className="mb-8">
-            <h3 className="font-display text-xl font-bold mb-2">2. Select Membership Plan</h3>
-            <p className="text-sm text-gray-400">Choose the membership level that suits your matchmaking goals.</p>
+            <h3 className="font-display text-xl font-bold mb-2">
+              2. Select Membership Plan
+            </h3>
+            <p className="text-sm text-gray-400">
+              Choose the membership level that suits your matchmaking goals.
+            </p>
           </div>
 
           {/* Membership Grid */}
@@ -2201,9 +2432,7 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div
                   key={plan.id}
                   onClick={() => setSelectedPlan(plan.name)}
-                  className={`plan-step-card ${
-                    isSelected ? "selected" : ""
-                  }`}
+                  className={`plan-step-card ${isSelected ? "selected" : ""}`}
                 >
                   {plan.id === "premium" && (
                     <div className="plan-popular-badge">Most Popular</div>
@@ -2220,7 +2449,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   <ul className="plan-features">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="feature-item">
-                        <Check className={`h-4 w-4 ${isSelected ? "text-white" : "text-emerald-500"}`} />
+                        <Check
+                          className={`h-4 w-4 ${isSelected ? "text-white" : "text-emerald-500"}`}
+                        />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -2244,10 +2475,13 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
           <div className="id-verify-card">
             <div className="flex items-center gap-2 mb-2">
               <ShieldCheck className="h-6 w-6 text-violet-500" />
-              <h3 className="id-verify-title">Secure Government ID Verification</h3>
+              <h3 className="id-verify-title">
+                Secure Government ID Verification
+              </h3>
             </div>
             <p className="id-verify-sub">
-              All uploads are encrypted and processed in compliance with Aadhaar vault directives.
+              All uploads are encrypted and processed in compliance with Aadhaar
+              vault directives.
             </p>
 
             <input
@@ -2264,20 +2498,25 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
               <span>Select Identity Document Type</span>
             </div>
             <div className="doc-pills">
-              {["Aadhaar Card", "Voter ID", "Driving License", "Passport"].map((type) => (
-                <button
-                  key={type}
-                  className={`doc-pill ${docType === type ? "active" : ""}`}
-                  onClick={() => {
-                    setDocType(type);
-                    if (uploadedFile) {
-                      showToast(`Switched verification document type to ${type}. Please re-upload if needed.`, "info");
-                    }
-                  }}
-                >
-                  {type}
-                </button>
-              ))}
+              {["Aadhaar Card", "Voter ID", "Driving License", "Passport"].map(
+                (type) => (
+                  <button
+                    key={type}
+                    className={`doc-pill ${docType === type ? "active" : ""}`}
+                    onClick={() => {
+                      setDocType(type);
+                      if (uploadedFile) {
+                        showToast(
+                          `Switched verification document type to ${type}. Please re-upload if needed.`,
+                          "info",
+                        );
+                      }
+                    }}
+                  >
+                    {type}
+                  </button>
+                ),
+              )}
             </div>
 
             {/* Step 2: Upload File */}
@@ -2298,15 +2537,22 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 onClick={triggerDocUpload}
               >
                 <UploadCloud className="h-10 w-10 text-violet-500" />
-                <span className="drag-drop-title">Drag & Drop or Click to Select File</span>
-                <span className="drag-drop-sub">Max file size: 5MB (PNG, JPG, PDF)</span>
+                <span className="drag-drop-title">
+                  Drag & Drop or Click to Select File
+                </span>
+                <span className="drag-drop-sub">
+                  Max file size: 5MB (PNG, JPG, PDF)
+                </span>
               </div>
             ) : (
               <div className="drag-drop-zone file-active relative">
                 <FileText className="h-10 w-10 text-emerald-500" />
-                <span className="drag-drop-title text-emerald-700">{uploadedFile.name}</span>
+                <span className="drag-drop-title text-emerald-700">
+                  {uploadedFile.name}
+                </span>
                 <span className="drag-drop-sub text-emerald-600">
-                  Ready to verify ({(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  Ready to verify (
+                  {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB)
                 </span>
                 <button
                   className="absolute top-2 right-2 bg-rose text-white p-1 rounded-full hover:bg-rose-dark transition"
@@ -2323,7 +2569,9 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
 
             {/* Account Verification & Trust Meter */}
             <div className="trust-meter">
-              <h4 className="trust-meter-title">Account Verification & Trust Meter</h4>
+              <h4 className="trust-meter-title">
+                Account Verification & Trust Meter
+              </h4>
 
               <div className="trust-meter-row">
                 <span className="meter-label">Level 1: Basic Profile</span>
@@ -2334,11 +2582,18 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
               </div>
 
               <div className="trust-meter-row">
-                <span className="meter-label">Level 2: ID Document Approved</span>
+                <span className="meter-label">
+                  Level 2: ID Document Approved
+                </span>
                 <div className="meter-track">
-                  <div className="meter-fill" style={{ width: uploadedFile ? "100%" : "0%" }}></div>
+                  <div
+                    className="meter-fill"
+                    style={{ width: uploadedFile ? "100%" : "0%" }}
+                  ></div>
                 </div>
-                <span className={`trust-badge font-bold ${uploadedFile ? "text-emerald-500 approved" : "text-slate-400 pending"}`}>
+                <span
+                  className={`trust-badge font-bold ${uploadedFile ? "text-emerald-500 approved" : "text-slate-400 pending"}`}
+                >
                   {uploadedFile ? "Submitted" : "Pending"}
                 </span>
               </div>
@@ -2347,7 +2602,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                 <div className="trust-meter-row">
                   <span className="meter-label">Level 3: Live Face Match</span>
                   <div className="meter-track">
-                    <div className="meter-fill" style={{ width: faceMatchStatus === "matched" ? "100%" : "0%" }}></div>
+                    <div
+                      className="meter-fill"
+                      style={{
+                        width: faceMatchStatus === "matched" ? "100%" : "0%",
+                      }}
+                    ></div>
                   </div>
                   {faceMatchStatus === "pending" && uploadedFile ? (
                     <button
@@ -2357,11 +2617,13 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                       Start Match
                     </button>
                   ) : (
-                    <span className={`trust-badge font-bold ${
-                      faceMatchStatus === "matched"
-                        ? "text-emerald-500 approved"
-                        : "text-slate-400 pending"
-                    }`}>
+                    <span
+                      className={`trust-badge font-bold ${
+                        faceMatchStatus === "matched"
+                          ? "text-emerald-500 approved"
+                          : "text-slate-400 pending"
+                      }`}
+                    >
                       {faceMatchStatus === "matched" ? "Matched" : "Pending"}
                     </span>
                   )}
@@ -2386,8 +2648,12 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
       {ENABLE_FACE_RECOGNITION && showCameraModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-white/10 p-6 shadow-2xl text-center text-white">
-            <h3 className="font-display text-lg font-bold mb-1">Face Recognition Simulator</h3>
-            <p className="text-xs text-gray-400 mb-6">Analyzing facial contours to match with uploaded {docType}.</p>
+            <h3 className="font-display text-lg font-bold mb-1">
+              Face Recognition Simulator
+            </h3>
+            <p className="text-xs text-gray-400 mb-6">
+              Analyzing facial contours to match with uploaded {docType}.
+            </p>
 
             <div className="relative w-48 h-48 mx-auto rounded-full border-4 border-violet-500 overflow-hidden bg-slate-950 flex items-center justify-center mb-6">
               {/* Mock camera profile silhouette */}
@@ -2400,14 +2666,16 @@ Click 'Apply & Complete Profile' below to populate these fields.`,
                   className="absolute left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 shadow-md shadow-emerald-500"
                   style={{
                     top: `${scanningProgress}%`,
-                    transition: "top 0.2s linear"
+                    transition: "top 0.2s linear",
                   }}
                 />
               )}
             </div>
 
             <div className="text-sm font-semibold tracking-wider uppercase animate-pulse text-violet-400 mb-1">
-              {scanningProgress < 100 ? "Scanning contours..." : "Verification complete"}
+              {scanningProgress < 100
+                ? "Scanning contours..."
+                : "Verification complete"}
             </div>
             <div className="text-xs text-gray-400">
               Progress: {scanningProgress}%

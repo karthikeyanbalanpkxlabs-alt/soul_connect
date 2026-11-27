@@ -12,6 +12,97 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Check whether an email or phone number already exists in Customers before sending OTP.
+ * Public endpoint: POST /api/public/verification/check-exists
+ */
+export async function handleCheckVerificationExists(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const { email, phone_number, type } = req.body || {};
+    const resolvedType =
+      type === "email" || type === "phone"
+        ? type
+        : email
+        ? "email"
+        : phone_number
+        ? "phone"
+        : "";
+
+    if (resolvedType === "email") {
+      const cleanEmail = String(email || "").trim();
+      if (!cleanEmail) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Missing email parameter" });
+      }
+
+      const existing = await Customers.findOne({
+        email: { $regex: `^${escapeRegex(cleanEmail)}$`, $options: "i" },
+      })
+        .select("_id")
+        .lean();
+
+      return res.status(200).json({
+        success: true,
+        exists: Boolean(existing),
+        field: "email",
+        message: existing
+          ? "Customer with this email already exists"
+          : "Email address is available",
+      });
+    }
+
+    if (resolvedType === "phone") {
+      const cleanPhoneDigits = String(phone_number || "")
+        .replace(/[^\d]/g, "")
+        .slice(-10);
+
+      if (cleanPhoneDigits.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          error: "Valid 10-digit phone_number is required",
+        });
+      }
+
+      const existing = await Customers.findOne({
+        $or: [
+          { phone_number: cleanPhoneDigits },
+          { phone_number: { $regex: `${escapeRegex(cleanPhoneDigits)}$` } },
+        ],
+      })
+        .select("_id")
+        .lean();
+
+      return res.status(200).json({
+        success: true,
+        exists: Boolean(existing),
+        field: "phone",
+        message: existing
+          ? "Customer with this phone number already exists"
+          : "Mobile number is available",
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: "Invalid verification type. Expected 'email' or 'phone'",
+    });
+  } catch (err: any) {
+    console.error("handleCheckVerificationExists error:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Failed to check verification availability",
+    });
+  }
+}
+
 /**
  * Initiate verification by generating and sending a 6-digit OTP.
  */
